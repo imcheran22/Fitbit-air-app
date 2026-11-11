@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chart copy. All names are prefixed apex_chart_ so they cannot collide with strings.xml. -->
+<resources>
+    <!-- Shared -->
+    <string name="apex_chart_value_missing" translatable="false">--</string>
+    <string name="apex_chart_value_missing_spoken">no value</string>
+    <string name="apex_chart_gaps">Gaps in the line: %1$d.</string>
+    <string name="apex_chart_missing_days">Missing days: %1$d.</string>
+    <string name="apex_chart_band_caption">Shaded: your normal range</string>
+    <string name="apex_chart_band_desc">Shaded normal range %1$s to %2$s.</string>
+    <string name="apex_chart_target_desc">Target range %1$s to %2$s.</string>
+    <string name="apex_chart_legend_item">%1$s %2$s</string>
+    <string name="apex_chart_duration_hm">%1$dh %2$02dm</string>
+    <string name="apex_chart_duration_m">%1$dm</string>
+    <string name="apex_chart_duration_hms" translatable="false">%1$d:%2$02d:%3$02d</string>
+    <string name="apex_chart_duration_spoken">%1$d hours, %2$d minutes, %3$d seconds</string>
+
+    <!-- Empty states -->
+    <string name="apex_chart_empty_hr">No heart-rate readings for this period.</string>
+    <string name="apex_chart_empty_hypnogram">No stage data for this night.</string>
+    <string name="apex_chart_empty_zones">No time-in-zone data yet.</string>
+    <string name="apex_chart_empty_acwr">Not enough training history to show load yet.</string>
+    <string name="apex_chart_empty_trend">No readings in this range yet.</string>
+    <string name="apex_chart_empty_bars">No readings in these days yet.</string>
+    <string name="apex_chart_empty_sparkline">No readings in the last 14 days.</string>
+
+    <!-- Intraday heart rate -->
+    <string name="apex_chart_hr_readout_latest">Latest %1$s: %2$s bpm</string>
+    <string name="apex_chart_hr_readout_point">%1$s: %2$s bpm</string>
+    <string name="apex_chart_hr_desc">Heart rate from %1$s to %2$s. Latest %3$s bpm at %4$s. Range %5$s to %6$s bpm.</string>
+    <string name="apex_chart_workouts_desc">Workouts shaded: %1$s.</string>
+
+    <!-- Hypnogram -->
+    <string name="apex_chart_stage_awake">Awake</string>
+    <string name="apex_chart_stage_rem">REM</string>
+    <string name="apex_chart_stage_light">Light</string>
+    <string name="apex_chart_stage_deep">Deep</string>
+    <string name="apex_chart_stage_asleep">Asleep</string>
+    <string name="apex_chart_stage_restless">Restless</string>
+    <string name="apex_chart_hypno_span">%1$s to %2$s</string>
+    <string name="apex_chart_hypno_readout_segment">%1$s to %2$s: %3$s, %4$s</string>
+    <string name="apex_chart_hypno_desc">Sleep stages, %1$s.</string>
+
+    <!-- Zone bars -->
+    <string name="apex_chart_zone_total">Total %1$d:%2$02d:%3$02d</string>
+    <string name="apex_chart_share_percent">%1$d%%</string>
+    <string name="apex_chart_share_under_one" formatted="false">&lt;1%</string>
+    <string name="apex_chart_zone_row_desc">%1$s, %2$s, %3$s of the time, %4$s</string>
+
+    <!-- Training load -->
+    <string name="apex_chart_acwr_band_low">below optimal</string>
+    <string name="apex_chart_acwr_band_optimal">optimal</string>
+    <string name="apex_chart_acwr_band_elevated">elevated</string>
+    <string name="apex_chart_acwr_band_high">high</string>
+    <string name="apex_chart_acwr_legend_acute">Acute load, left axis</string>
+    <string name="apex_chart_acwr_legend_chronic">Chronic load, left axis (dashed)</string>
+    <string name="apex_chart_acwr_legend_ratio">Acute to chronic ratio, right axis (shaded: optimal %1$s - %2$s)</string>
+    <string name="apex_chart_acwr_readout_day">%1$s: acute %2$s, chronic %3$s, ratio %4$s (%5$s)</string>
+    <string name="apex_chart_acwr_readout_latest">Latest ratio %1$s (%2$s)</string>
+    <string name="apex_chart_acwr_readout_none">No ratio yet</string>
+    <string name="apex_chart_acwr_monotony">Monotony %1$s</string>
+    <string name="apex_chart_acwr_desc">Training load from %1$s to %2$s: acute and chronic load on the left axis, acute to chronic ratio on the right axis. Optimal ratio is %3$s to %4$s.</string>
+
+    <!-- Trend line -->
+    <string name="apex_chart_trend_readout_summary">Average %1$s, latest %2$s</string>
+    <string name="apex_chart_trend_readout_day">%1$s: %2$s</string>
+    <string name="apex_chart_trend_desc">%1$s over the last %2$d days: average %3$s, range %4$s to %5$s, latest %6$s on %7$s.</string>
+
+    <!-- Daily bars -->
+    <string name="apex_chart_bars_readout_latest">Latest, %1$s: %2$s</string>
+    <string name="apex_chart_bars_readout_day">%1$s: %2$s</string>
+    <string name="apex_chart_bars_readout_empty">%1$s: no reading</string>
+    <string name="apex_chart_bars_desc">%1$s over %2$d days: range %3$s to %4$s, latest %5$s on %6$s.</string>
+
+    <!-- Biometric sparkline card -->
+    <string name="apex_chart_z_badge">Z %1$s</string>
+    <string name="apex_chart_z_desc">Z-score %1$s against your 28-day baseline</string>
+    <string name="apex_chart_z_desc_none">Baseline comparison unavailable</string>
+    <string name="apex_chart_baseline_range">28-day baseline %1$s - %2$s</string>
+    <string name="apex_chart_baseline_none">No baseline yet</string>
+    <string name="apex_chart_sparkline_desc">Last %1$d days: lowest %2$s, highest %3$s. Missing days: %4$d.</string>
+</resources>
