@@ -7,6 +7,28 @@ it outranks everything else here except the user's direct instructions.
 ## Resume point
 Work is mid-way. Read `docs/PROGRESS.md` first: it lists what is done, what is not, and the next three actions.
 
+## Model routing (protect tokens, keep quality)
+Run the **main session on Opus**. It plans, splits work and reviews; it does not write bulk code itself.
+Delegate to the agents in `.claude/agents/` (each pins its own model and effort):
+
+| Task | Agent | Model |
+|---|---|---|
+| Formulas, constants, evidence, FORMULAS.md, coach wording | `science-reviewer` | Fable, high |
+| Takeout ZIP engine, watermarks/resume, de-duplication, time zones, replay | `takeout-engineer` | Fable, high |
+| Compose components, charts, screens, onboarding, settings UI | `screen-builder` | Sonnet, medium |
+| Google Health client/DTOs, OAuth, Health Connect, workers, export, manifest, DI | `integration-coder` | Sonnet, medium |
+| Look up a Pulse screen/spec, find code, summarise a doc or the API snapshot | `reference-finder` | Haiku, low |
+| Run Gradle and summarise results | `build-runner` | Haiku, low |
+
+Rules:
+- One focused task per agent call, with a brief naming the files, the design-doc or prompt section to follow,
+  and what "done" means. Agents start with no memory of the conversation.
+- Independent tasks (for example two different screens) may run in parallel; never two agents on the same files.
+- Nothing is accepted until `build-runner` reports green and the main session has read the diff.
+- Fable only for the two Fable rows above, plus a final `science-reviewer` pass before each milestone is marked done.
+  Escalate a Sonnet task to Fable only after it fails review twice, and record why in `docs/DECISIONS.md`.
+- Use `reference-finder` instead of reading large reference files in the main session.
+
 ## Read first (in order)
 1. `docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md` — mission, invariants, module manifest, milestones, done gate
 2. `README.md`, `docs/ARCHITECTURE.md`, `docs/FORMULAS.md` — what exists (Phases 1-2)
