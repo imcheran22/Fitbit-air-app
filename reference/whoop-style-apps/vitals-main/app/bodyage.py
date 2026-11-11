@@ -1,0 +1,453 @@
+"""
+bodyage.py — compute_body_age portado EXACTO de vitals_sync.py.
+VO2máx NTNU/Nes 2011. NO cambiar fórmulas, percentiles, pesos ni constantes.
+
+Añadidos aditivos (Tier 1):
+- confidence: dict con rhr_days/hrv_days/sleep_days/exercise_sessions + level
+- vo2max_percentile: percentil 0-100 por edad+sexo (normas Cooper Institute/ACSM)
+- vo2max_label: etiqueta por percentil ("Superior (top 10%)", "Excelente", etc.)
+
+Añadido aditivo (roadmap edad-corporal-estable, modelo dos-números estilo
+WHOOP): compute_body_age_stable() promedia body_age_raw sobre una ventana de
+días CERRADOS para dar un número que no salta a diario. NO reimplementa la
+fórmula: solo LLAMA a compute_body_age() y promedia sus salidas crudas.
+
+Añadidos roadmap edad-corporal-credibilidad (VO2 medido + piso relativo +
+pace robusto + atribución de perfil — ver _dev-harness/edad-corporal-
+credibilidad/ROADMAP.md):
+- VO2 MEDIDO del reloj (clave "vo2" en >=3 days de las últimas 60 entradas)
+  manda sobre la regresión NTNU: vo2max_source ("measured"/"estimated"),
+  vo2max_estimated (el valor de la regresión, siempre presente) y
+  confidence.vo2_readings. La regresión SIGUE siendo el fallback — cero
+  cambio de comportamiento cuando no hay lecturas medidas (golden intacto).
+- Piso relativo de DISPLAY (nunca mostrar una edad >15 años bajo la
+  cronológica): fitness_age_display, body_age_display, age_floored en
+  compute_body_age(); body_age_stable_display en compute_body_age_stable().
+  Los valores crudos (fitness_age/body_age/body_age_raw/body_age_stable) NO
+  se tocan — el piso es puramente aditivo, solo para mostrar.
+"""
+import statistics
+import datetime as _dt
+
+# ── Tabla de normas VO₂máx por sexo y grupo etario ────────────────────────────
+# Fuente: Cooper Institute / ACSM (Percentiles: 10/25/50/75/90/95 aprox.)
+# Formato: {(sexo, grupo): [(percentil, vo2), ...]} donde sexo='M'/'F'
+# y grupo = límite inferior del decenio etario (20, 30, 40, 50, 60)
+# Valores de referencia tablas normativas ACSM's Guidelines for Exercise Testing
+# and Prescription, 11th ed. (masculino) y Cooper Institute data (femenino).
+_VO2_NORMS = {
+    # ── MASCULINO ────────────────────────────────────────────────────────────
+    ("M", 20): [(10, 38), (25, 43), (50, 49), (75, 55), (90, 60), (95, 64)],
+    ("M", 30): [(10, 36), (25, 41), (50, 47), (75, 53), (90, 58), (95, 62)],
+    ("M", 40): [(10, 33), (25, 38), (50, 44), (75, 50), (90, 55), (95, 59)],
+    ("M", 50): [(10, 30), (25, 35), (50, 41), (75, 46), (90, 51), (95, 55)],
+    ("M", 60): [(10, 27), (25, 31), (50, 37), (75, 42), (90, 47), (95, 51)],
+    # ── FEMENINO ─────────────────────────────────────────────────────────────
+    ("F", 20): [(10, 31), (25, 36), (50, 41), (75, 47), (90, 52), (95, 56)],
+    ("F", 30): [(10, 29), (25, 33), (50, 38), (75, 44), (90, 49), (95, 53)],
+    ("F", 40): [(10, 26), (25, 30), (50, 35), (75, 41), (90, 46), (95, 50)],
+    ("F", 50): [(10, 23), (25, 27), (50, 32), (75, 37), (90, 42), (95, 46)],
+    ("F", 60): [(10, 20), (25, 24), (50, 29), (75, 34), (90, 38), (95, 42)],
+}
+
+_AGE_GROUPS = [20, 30, 40, 50, 60]
+
+# Roadmap vo2-sin-inventar Paso 1: ventana de validez (días) para que una
+# medición real de VO2máx cuente como vigente. Relativa a la fecha del ÚLTIMO
+# day del dataset (nunca date.today() — el motor debe seguir siendo puro y
+# los tests deterministas, ver ROADMAP riesgo #4).
+MEASUREMENT_VALIDITY_DAYS = 180
+
+
+def _age_group(age: float) -> int:
+    """Devuelve el límite inferior del grupo etario más apropiado para la edad."""
+    for g in reversed(_AGE_GROUPS):
+        if age >= g:
+            return g
+    return _AGE_GROUPS[0]  # <20 → usar grupo 20
+
+
+def _vo2_percentile(vo2: float, age: float, sex: str) -> int:
+    """
+    Interpola linealmente el percentil de VO₂máx según edad y sexo.
+    Clamp [1, 99]. Edad fuera de 20–70+ → usa el grupo extremo.
+    """
+    sex_key = "M" if str(sex).upper().startswith("M") else "F"
+    group = _age_group(age)
+    breakpoints = _VO2_NORMS[(sex_key, group)]
+
+    # Extraer puntos de la curva percentil
+    bp_vo2 = [b[1] for b in breakpoints]
+    bp_pct  = [b[0] for b in breakpoints]
+
+    # Interpolación lineal entre breakpoints
+    if vo2 <= bp_vo2[0]:
+        # Extrapolación baja: proyectar desde primer segmento
+        if len(bp_vo2) >= 2:
+            slope = (bp_pct[1] - bp_pct[0]) / (bp_vo2[1] - bp_vo2[0])
+            p = bp_pct[0] + slope * (vo2 - bp_vo2[0])
+        else:
+            p = float(bp_pct[0])
+    elif vo2 >= bp_vo2[-1]:
+        # Extrapolación alta: proyectar desde último segmento
+        if len(bp_vo2) >= 2:
+            slope = (bp_pct[-1] - bp_pct[-2]) / (bp_vo2[-1] - bp_vo2[-2])
+            p = bp_pct[-1] + slope * (vo2 - bp_vo2[-1])
+        else:
+            p = float(bp_pct[-1])
+    else:
+        # Interpolación entre breakpoints
+        for i in range(len(bp_vo2) - 1):
+            if bp_vo2[i] <= vo2 <= bp_vo2[i + 1]:
+                t = (vo2 - bp_vo2[i]) / (bp_vo2[i + 1] - bp_vo2[i])
+                p = bp_pct[i] + t * (bp_pct[i + 1] - bp_pct[i])
+                break
+
+    return int(max(1, min(99, round(p))))
+
+
+def _vo2_label(percentile: int) -> str:
+    """Etiqueta basada en percentil (distinta de category, que es valor absoluto)."""
+    if percentile >= 90:
+        return "Superior (top 10%)"
+    if percentile >= 70:
+        return "Excelente"
+    if percentile >= 50:
+        return "Sobre promedio"
+    if percentile >= 30:
+        return "Promedio"
+    return "Bajo"
+
+
+def compute_body_age(days, exercises, age, waist, sex="M", sleep_penalty_h: float = 7.0):
+    """Edad corporal: VO2máx (NTNU/Nes 2011) -> edad de fitness validada,
+    + edad compuesta (HRV y sueño solo pueden envejecer, no rejuvenecer bajo la base cardiaca).
+
+    Ronda 5: sleep_penalty_h parametriza el umbral de horas de sueño bajo el cual
+    se aplica penalty en body_age (antes era 7 literal). Default 7.0 = comportamiento
+    IDÉNTICO a antes. sync.py lo deriva de (sleep_target_min - 60) / 60 para que
+    los tres consumidores del umbral de sueño (recovery, insights, bodyage) se
+    muevan juntos cuando el perfil cambia su sleep_target_min."""
+
+    def recent(k, n=14):
+        return [v[k] for v in days[-n:] if v.get(k) is not None]
+
+    rhr_v = recent("rhr"); hrv_v = recent("hrv"); slp_v = recent("asleep")
+    rhr = round(statistics.mean(rhr_v), 1) if rhr_v else 55.0
+    hrv = round(statistics.mean(hrv_v), 1) if hrv_v else None
+    sleep_h = (statistics.mean(slp_v) / 60) if slp_v else None
+    ref = days[-1]["date"] if days else _dt.date.today().isoformat()
+    cutoff = (_dt.date.fromisoformat(ref) - _dt.timedelta(days=28)).isoformat()
+    rec = [e for e in exercises if e.get("date", "") >= cutoff]
+    freq = len(set(e["date"] for e in rec)) / 4.0
+    hrs = [e["avg_hr"] for e in rec if e.get("avg_hr")]
+    durs = [e["dur_min"] for e in rec if e.get("dur_min")]
+    ahr = statistics.mean(hrs) if hrs else 0
+    adur = statistics.mean(durs) if durs else 0
+    fs = 5 if freq >= 5 else 4 if freq >= 3 else 3 if freq >= 2 else 2 if freq >= 1 else 0
+    iss = 5 if ahr >= 120 else 4 if ahr >= 105 else 3 if ahr >= 90 else 2 if ahr > 0 else 0
+    ds = 5 if adur >= 60 else 4 if adur >= 30 else 3 if adur >= 15 else 2 if adur > 0 else 0
+    PA = fs + iss + ds
+    male = str(sex).upper().startswith("M")
+    if male:
+        vo2 = 100.27 - 0.296*age + 0.226*PA - 0.369*waist - 0.155*rhr
+    else:
+        vo2 = 74.736 - 0.247*age + 0.198*PA - 0.259*waist - 0.114*rhr
+    vo2 = round(vo2, 1)
+
+    # Roadmap vo2-sin-inventar Paso 1: VO2 MEDIDO del reloj manda, pero se
+    # cuenta por MEDICIONES (deduplicadas), no por entradas repetidas, y solo
+    # dentro de una ventana de validez de MEASUREMENT_VALIDITY_DAYS respecto a
+    # la fecha del ÚLTIMO day (nunca date.today()). Reemplaza el umbral
+    # anterior del roadmap edad-corporal-credibilidad (>=3 ENTRADAS de las
+    # últimas 60) — ese umbral premiaba al aparato que re-emite el MISMO valor
+    # a diario (caso real observado: el mismo valor repetido 75 veces). Días
+    # sin clave "vo2" (golden, datasets viejos) → camino idéntico al de
+    # siempre (0 lecturas → estimated). La regresión NTNU queda intacta como
+    # fallback.
+    vo2_estimated = vo2
+    vo2_source = "estimated"
+    vo2_last_measured_date = None
+
+    # "Última vez medido" es diagnóstico puro: el más reciente de TODAS las
+    # lecturas del dataset, exista o no dentro de la ventana de validez — así
+    # la UI puede mostrar "última medición: <fecha>" incluso cuando ya no
+    # cuenta para el gate (criterio 6 del roadmap / _renderFitnessDeep).
+    vo2_readings_raw = []  # [(fecha, valor), ...] SIN filtrar por ventana
+    for d in days:
+        v = d.get("vo2")
+        if v is None:
+            continue
+        try:
+            dt = _dt.date.fromisoformat(d.get("date"))
+        except (TypeError, ValueError):
+            continue
+        vo2_readings_raw.append((dt, v))
+
+    if vo2_readings_raw:
+        vo2_last_measured_date = max(dt for dt, _v in vo2_readings_raw).isoformat()
+
+    try:
+        ref_date = _dt.date.fromisoformat(ref)
+    except (TypeError, ValueError):
+        ref_date = None
+
+    vo2_in_window = []
+    if ref_date is not None:
+        window_start = ref_date - _dt.timedelta(days=MEASUREMENT_VALIDITY_DAYS)
+        vo2_in_window = [(dt, v) for dt, v in vo2_readings_raw if window_start <= dt <= ref_date]
+
+    # Dedup: agrupar por round(valor, 2) — mediciones (incluso no consecutivas)
+    # con el mismo valor cuentan como UNA (caso Fitbit: el mismo vo2 re-emitido
+    # a diario). Aceptable que dos mediciones legítimas coincidentes se
+    # colapsen (ver ROADMAP riesgo #5) — no cambia el vo2max resultante ni el
+    # gate con umbral 1.
+    vo2_groups: dict = {}
+    for dt, v in vo2_in_window:
+        vo2_groups.setdefault(round(v, 2), []).append(dt)
+
+    vo2_measurements = len(vo2_groups)  # nº de MEDICIONES deduplicadas
+    vo2_readings = len(vo2_in_window)   # nº de ENTRADAS crudas dentro de la ventana (diagnóstico)
+    if vo2_groups:
+        vo2 = round(statistics.mean(vo2_groups.keys()), 1)
+        vo2_source = "measured"
+
+    intercept = 55.1 if male else 49.0
+    fitness_age = max(20, min(80, (intercept - vo2) / 0.363))
+    pen = 0.0
+    if hrv is not None:
+        exp_hrv = 50 - 0.5*(age - 20)
+        if hrv < exp_hrv:
+            pen += min(5, (exp_hrv - hrv) / 5)
+    if sleep_h is not None and sleep_h < sleep_penalty_h:
+        pen += min(6, (sleep_penalty_h - sleep_h) * 2)
+    body_age = max(18, min(90, fitness_age + pen))
+    cat = ("Superior" if vo2 > 53 else "Excelente" if vo2 >= 48 else "Sobre promedio"
+           if vo2 >= 43 else "Promedio" if vo2 >= 36 else "Bajo")
+
+    # ── Roadmap edad-corporal-credibilidad Paso 2: piso relativo de DISPLAY ──
+    # Solo afecta cómo se MUESTRA (claves *_display, aditivas) — fitness_age/
+    # body_age crudos siguen intactos para healthspan/series/golden. Nunca
+    # mostrar una edad más de 15 años menor que la cronológica (el piso solo
+    # SUBE el valor, jamás lo baja).
+    floor_age = max(18.0, age - 15)
+    fitness_age_display = round(max(fitness_age, floor_age))
+    body_age_display = round(max(body_age, floor_age))
+    age_floored = fitness_age < floor_age or body_age < floor_age
+
+    # ── Tier 1 aditivos ──────────────────────────────────────────────────────
+    # confidence: cobertura de datos que alimentó este cómputo
+    n = {
+        "rhr_days": len(rhr_v),
+        "hrv_days": len(hrv_v),
+        "sleep_days": len(slp_v),
+        "exercise_sessions": len(rec),
+        # Roadmap vo2-sin-inventar Paso 1: vo2_readings = nº de ENTRADAS
+        # crudas de VO2 dentro de la ventana de validez (diagnóstico, puede
+        # tener duplicados); vo2_measurements = nº de MEDICIONES deduplicadas
+        # (lo que realmente cuenta para vo2_source) — presentes SIEMPRE (0 si
+        # no hay ninguna) — ver vo2_source abajo para saber si mandó o no.
+        "vo2_readings": vo2_readings,
+        "vo2_measurements": vo2_measurements,
+    }
+    min_core = min(n["rhr_days"], n["hrv_days"], n["sleep_days"])
+    conf_level = "high" if min_core >= 10 else ("med" if min_core >= 5 else "low")
+    confidence = {**n, "level": conf_level}
+
+    # vo2max_percentile + label (aditivos, no tocan ninguna fórmula existente)
+    v2p = _vo2_percentile(vo2, age, sex)
+    v2l = _vo2_label(v2p)
+
+    return {"vo2max": vo2, "fitness_age": round(fitness_age), "body_age": round(body_age),
+            "category": cat, "rhr": rhr, "hrv": hrv,
+            "sleep_h": round(sleep_h, 1) if sleep_h else None, "pa_index": PA,
+            "waist": waist, "age": age, "penalty": round(pen, 1),
+            "confidence": confidence,
+            "vo2max_percentile": v2p,
+            "vo2max_label": v2l,
+            # Aditivo (roadmap edad-corporal-estable, paso 1): valor crudo SIN
+            # redondear, para que compute_body_age_stable pueda promediar sin
+            # duplicar la fórmula (evita drift si esta función cambia).
+            "body_age_raw": body_age,
+            # Roadmap edad-corporal-credibilidad Paso 1: de dónde salió el
+            # vo2max final ("measured" = media de lecturas reales del reloj,
+            # "estimated" = regresión NTNU de siempre) + el valor estimado
+            # crudo (por si se quiere comparar/mostrar ambos).
+            "vo2max_source": vo2_source,
+            "vo2max_estimated": vo2_estimated,
+            # Roadmap vo2-sin-inventar Paso 1: fecha ISO de la lectura de VO2
+            # MEDIDO más reciente en `days` (diagnóstico puro, independiente
+            # de si cuenta o no para el gate — ver comentario arriba). None si
+            # nunca hubo una lectura de vo2 en el dataset.
+            "vo2_last_measured_date": vo2_last_measured_date,
+            # Roadmap edad-corporal-credibilidad Paso 2: valores de display
+            # con piso relativo (nunca >15 años por debajo de la edad
+            # cronológica) + flag para que la UI muestre la nota "tope
+            # aplicado" cuando el piso realmente actuó.
+            "fitness_age_display": fitness_age_display,
+            "body_age_display": body_age_display,
+            "age_floored": age_floored}
+
+
+# ── Gate "sin VO2 medido NO hay edad corporal" (roadmap vo2-sin-inventar) ────
+# compute_body_age() sigue siendo matemática pura e intocada (protege el
+# golden). gate_unmeasured() es una función SEPARADA que sync.py aplica al
+# dict YA ARMADO: con vo2max_source != "measured" anula todos los números
+# derivados que dependerían de un VO2máx no confiable (mostrarlos sería
+# inventar), pero CONSERVA los campos de diagnóstico (vo2max_estimated,
+# vo2_last_measured_date, age, rhr, hrv, sleep_h, confidence, etc.). Con
+# source == "measured" devuelve el dict intacto (identidad) — nunca muta el
+# input, siempre devuelve una copia.
+_GATED_NONE_FIELDS = (
+    "vo2max", "fitness_age", "body_age", "category", "vo2max_percentile",
+    "vo2max_label", "fitness_age_display", "body_age_display", "age_floored",
+    "penalty", "body_age_stable", "body_age_stable_display", "pace",
+)
+
+
+def gate_unmeasured(ba: dict) -> dict:
+    """Devuelve una COPIA de `ba` (dict de compute_body_age, ya con
+    stable/pace/profile_note si sync.py los añadió). Si `vo2max_source` no es
+    "measured", anula _GATED_NONE_FIELDS (todos los números derivados que
+    mostrarían una edad inventada) y agrega `unavailable_reason:
+    "no_vo2_measurement"`. Si es "measured", devuelve el dict SIN TOCAR
+    (identidad). Nunca lanza; `ba` falsy (None/{}) se devuelve tal cual."""
+    if not ba:
+        return ba
+    if ba.get("vo2max_source") == "measured":
+        return ba
+    out = dict(ba)
+    for k in _GATED_NONE_FIELDS:
+        out[k] = None
+    out["unavailable_reason"] = "no_vo2_measurement"
+    return out
+
+
+# ── Edad corporal ESTABLE (roadmap edad-corporal-estable, paso 2) ────────────
+# Modelo "dos números" estilo WHOOP: el body_age instantáneo salta a diario
+# porque compute_body_age recalcula sobre una ventana de solo 14 días,
+# incluyendo el día "de hoy" a medio llenar. compute_body_age_stable() NO
+# reimplementa la fórmula — LLAMA a compute_body_age una vez por cada día
+# CERRADO de la ventana y promedia sus salidas crudas (body_age_raw), para
+# que el número mostrado se mueva lento y sea idéntico a lo largo de un
+# mismo día calendario.
+MIN_STABLE_DAYS = 14
+
+
+def compute_body_age_stable(days, exercises, age_at, waist, sex,
+                             sleep_penalty_h: float = 7.0, window: int = 30):
+    """Edad corporal ESTABLE: media de body_age crudo sobre los últimos
+    `window` días CERRADOS (excluye el día en curso = último del dataset).
+    Suaviza el jitter diario del instantáneo. NO toca compute_body_age:
+    la LLAMA por cada día cerrado y promedia sus salidas crudas (fitness+penalty
+    sin el round() final), redondeando UNA sola vez al final.
+
+    `age_at` (nombre tomado literal del contrato del roadmap) es el
+    BIRTHDATE en formato ISO (el mismo valor que profile.effective(
+    'birthdate')) — se usa para evaluar la edad cronológica EN LA FECHA de
+    cada día cerrado (nunca la edad de "hoy"), replicando la lógica de
+    app.healthspan._chrono_age_at SIN importar ese módulo (evita un import
+    circular: healthspan.py ya importa compute_body_age desde este archivo).
+
+    Días cerrados = todos los días del dataset MENOS el último (el "hoy"
+    parcial que llena el auto-sync). Con <2 días no hay nada que promediar
+    -> cae al instantáneo. Con <MIN_STABLE_DAYS (14) días cerrados
+    computables en la ventana -> también cae al instantáneo
+    (stable_confidence="low"). Nunca lanza si hay al menos 1 día en el
+    dataset; con 0 días usa "hoy" como referencia (mismo comportamiento por
+    defecto que compute_body_age)."""
+
+    def _parse_date(s):
+        if not isinstance(s, str):
+            return None
+        try:
+            return _dt.date.fromisoformat(s)
+        except Exception:
+            return None
+
+    def _chrono_age_at(ref_date):
+        bd = _parse_date(age_at)
+        if bd is None:
+            return None
+        delta = (ref_date - bd).days
+        if delta < 0:
+            return None
+        return delta / 365.25
+
+    valid = sorted(
+        ((dt, d) for d in (days or []) for dt in [_parse_date(d.get("date"))] if dt is not None),
+        key=lambda x: x[0],
+    )
+
+    today_ref = valid[-1][0] if valid else _dt.date.today()
+    age_now = _chrono_age_at(today_ref)
+
+    def _fallback():
+        age_val = age_now if age_now is not None else 0.0
+        instant = compute_body_age(days or [], exercises or [], age_val, waist, sex,
+                                    sleep_penalty_h=sleep_penalty_h)
+        return {"body_age_stable": instant["body_age"], "n_days_stable": 0,
+                "stable_confidence": "low",
+                # Roadmap edad-corporal-credibilidad Paso 2: en el fallback el
+                # display es el mismo body_age_display del instantáneo (ya
+                # trae su propio piso relativo calculado con age_val).
+                "body_age_stable_display": instant["body_age_display"]}
+
+    if len(valid) < 2:
+        # 0 ó 1 día: nada que promediar -> instantáneo (criterio 4 /
+        # equivalencia single-day, criterio "test_stable_equivalence_single_day").
+        return _fallback()
+
+    closed = valid[:-1]  # excluye el último (día "de hoy" parcial)
+    last_closed_date = closed[-1][0]
+    window_start = last_closed_date - _dt.timedelta(days=window)
+
+    raws = []
+    for idx, (dt, _d) in enumerate(closed):
+        if not (window_start < dt <= last_closed_date):
+            continue
+        # closed es un prefijo de valid (mismos índices 0..len(closed)-1) ->
+        # idx en closed == idx en valid; days_upto = todo lo que compute_body_age
+        # vería si este día cerrado fuera "hoy" (su recent(k,14) interno corta
+        # a los últimos 14 de esta lista).
+        days_upto = [orig for _, orig in valid[:idx + 1]]
+        date_str = dt.isoformat()
+        exercises_upto = [e for e in (exercises or []) if e.get("date", "") <= date_str]
+        age_d = _chrono_age_at(dt)
+        if age_d is None:
+            continue
+        try:
+            ba = compute_body_age(days_upto, exercises_upto, age_d, waist, sex,
+                                   sleep_penalty_h=sleep_penalty_h)
+        except Exception:
+            continue
+        # Roadmap stable-solo-medido: SOLO promediar días respaldados por una
+        # medición real de VO2máx. Sin este filtro el promedio de 30 días metía
+        # los días sin medición —que caen a la regresión NTNU inflada— y el
+        # número GRANDE de la card (que usa el estable) mostraba dato inventado
+        # aunque el gate de sync.py estuviera activo: bug real en prod
+        # 2026-07-29 (instantáneo medido 37 vs estable fabricado 25).
+        # Con <MIN_STABLE_DAYS días medidos cae al instantáneo, que es el
+        # comportamiento que esta función ya tiene para datos insuficientes.
+        if ba.get("vo2max_source") != "measured":
+            continue
+        raw = ba.get("body_age_raw")
+        if raw is not None:
+            raws.append(raw)
+
+    if len(raws) < MIN_STABLE_DAYS:
+        return _fallback()
+
+    stable_raw = statistics.mean(raws)
+    stable = round(stable_raw)
+    # Roadmap edad-corporal-credibilidad Paso 2: piso relativo también sobre
+    # el ESTABLE, evaluado con la edad cronológica EN LA FECHA del último día
+    # cerrado (age_now), no la de "hoy" — consistente con el resto de esta
+    # función. Si age_now no se pudo calcular (birthdate inválido/ausente),
+    # el display es el estable SIN piso (nunca lanza).
+    if age_now is not None:
+        stable_display = round(max(stable_raw, max(18.0, age_now - 15)))
+    else:
+        stable_display = stable
+    return {"body_age_stable": stable, "n_days_stable": len(raws), "stable_confidence": "ok",
+            "body_age_stable_display": stable_display}

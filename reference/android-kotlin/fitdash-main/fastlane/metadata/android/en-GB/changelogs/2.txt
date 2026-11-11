@@ -1,0 +1,6 @@
+A new Today, Sleep, Activity and Trends experience.
+- Recovery score, sleep score and movement at a glance
+- Day picker: look back at any recent day
+- Five themes: Midnight Teal, Pastel, Techno, Graphite and Sunrise
+- Ask AI and Share day through the Android share sheet
+- Normal ranges for HRV, resting heart rate and overnight vitals

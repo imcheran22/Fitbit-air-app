@@ -1,0 +1,3 @@
+Sleep regularity: a new card on the Sleep page scores how consistent your sleep and wake times are over 14 nights, with the formula and research one tap away. Regularity predicts health outcomes more strongly than hours alone.
+Calmer sleep: a single short night never shows red, reads "below your usual", and the page reminds you that one night says little.
+Show sleep score toggle: turn it off to see hours and regularity instead.

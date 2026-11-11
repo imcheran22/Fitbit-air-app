@@ -1,0 +1,65 @@
+<h2>The blend: talk first, then an answer card when your data is involved</h2>
+<p class="subtitle">Three kinds of question. The card only appears when the answer uses your numbers; its shape follows the answer (tiles for a snapshot, a ranked list for "which habits…"). Tap a card's source line to see the underlying data.</p>
+
+<style>
+  .phone { background:#0c0c0d; color:#f5f5f4; border-radius:28px; padding:18px 16px; font-family:-apple-system, system-ui, sans-serif; font-size:14px; line-height:1.45; }
+  .me { background:#2dd4bf; color:#062b27; border-radius:18px 18px 4px 18px; padding:9px 13px; margin:10px 0 10px auto; max-width:78%; width:fit-content; font-size:13.5px; }
+  .who { display:flex; align-items:center; gap:7px; color:#a8a29e; font-size:12px; margin:14px 0 6px; }
+  .av { width:22px; height:22px; border-radius:50%; background:#7dd3fc; display:inline-block; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .chip { border:1px solid #2a2d34; border-radius:999px; padding:4px 10px; font-size:11.5px; color:#d6d3d1; }
+  .card { background:#14161b; border:1px solid #23262d; border-radius:16px; padding:12px; margin-top:10px; }
+  .h { font-weight:650; font-size:14.5px; margin-bottom:8px; }
+  .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:8px; }
+  .tile { background:#1b1e24; border-radius:10px; padding:8px; }
+  .tile b { display:block; font-size:16px; color:#fff; }
+  .tile span { font-size:10.5px; color:#a8a29e; }
+  .row { display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px solid #1f2228; font-size:13px; }
+  .row:first-of-type { border-top:none; }
+  .rank { width:18px; color:#78716c; }
+  .bar { height:6px; border-radius:3px; background:#2dd4bf; }
+  .neg { background:#fb7185; }
+  .eff { margin-left:auto; font-size:12px; color:#d6d3d1; white-space:nowrap; }
+  .tip { background:#0f2a2a; border-radius:10px; padding:8px 10px; font-size:12.5px; margin-top:8px; color:#ccfbf1; }
+  .src { font-size:10.5px; color:#78716c; margin-top:8px; }
+  .foot { font-size:10.5px; color:#57534e; text-align:center; margin-top:14px; }
+</style>
+
+<div class="split">
+<div class="mockup"><div class="mockup-header">Snapshot + general question</div><div class="mockup-body"><div class="phone">
+  <div class="me">How did I sleep last night?</div>
+  <div class="who"><span class="av"></span>Nimbus</div>
+  <div>Mostly clear skies, one patch of cloud. Less sleep than usual, but the deep stuff held up. The cloud was the early wake-ups. Did something wake you, or was it the heat again?</div>
+  <div class="card">
+    <div class="h">Decent night, broken after 4am</div>
+    <div class="tiles">
+      <div class="tile"><b>6h 48m</b><span>total · −25m vs usual</span></div>
+      <div class="tile"><b>1h 12m</b><span>deep · on par</span></div>
+      <div class="tile"><b>4</b><span>wake-ups</span></div>
+    </div>
+    <div class="tip">Try: a cooler room tonight, then see if the early wake-ups drop.</div>
+    <div class="src">Sleep · last night vs your 30-day usual ›</div>
+  </div>
+  <div class="chips"><span class="chip">Why after 4am?</span><span class="chip">How's my week?</span></div>
+
+  <div class="me">What actually is HRV?</div>
+  <div class="who"><span class="av"></span>Nimbus</div>
+  <div>Think of it as your body's weather gauge. It's how much the gap between heartbeats varies. More variation usually means you're relaxed and ready; a dip often means stress, a hard session or poor sleep is still hanging around. It's most useful against your own normal, not anyone else's.</div>
+  <div class="chips"><span class="chip">What's my HRV lately?</span></div>
+</div></div></div>
+
+<div class="mockup"><div class="mockup-header">Ranked answer (habits)</div><div class="mockup-body"><div class="phone">
+  <div class="me">Which of my habits affect my scores the most?</div>
+  <div class="who"><span class="av"></span>Nimbus</div>
+  <div>Good question. Two things move your forecast more than anything: late caffeine clouds things over, and an evening walk clears them up. Alcohol shows up too, but you've only logged it a few times, so I'd take that one with a grain of salt.</div>
+  <div class="card">
+    <div class="h">What moves your recovery</div>
+    <div class="row"><span class="rank">1</span>Caffeine after 2pm<div class="bar neg" style="width:70px"></div><span class="eff">−8 pts</span></div>
+    <div class="row"><span class="rank">2</span>Evening walk<div class="bar" style="width:55px"></div><span class="eff">+6 pts</span></div>
+    <div class="row"><span class="rank">3</span>Alcohol<div class="bar neg" style="width:30px"></div><span class="eff">−4 pts · low confidence</span></div>
+    <div class="src">Habit correlations · last 90 days ›</div>
+  </div>
+  <div class="chips"><span class="chip">How sure is that?</span><span class="chip">Log a walk</span></div>
+  <div class="foot">Comparisons against your own readings, not medical advice.</div>
+</div></div></div>
+</div>

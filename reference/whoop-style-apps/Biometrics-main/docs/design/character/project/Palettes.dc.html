@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pip colourways</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 960px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">COLOURWAYS</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5">Every colourway is two hexes, body and accent. The other seven slots are derived, so a new colour never needs a redraw.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{ways}}" as="c" hint-placeholder-count="12">
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+        <div style="line-height: 0; border-radius: 6px; overflow: hidden"><dc-import name="Sprite" colorway="{{c.id}}" scale="5" bg="tint" hint-size="120px,120px"></dc-import></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; width: 100%">
+          <span style="font-family: Silkscreen, monospace; font-size: 14px; color: #E7E9EE">{{c.label}}</span>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">{{c.body}}</span>
+        </div>
+        <div style="display: flex; gap: 3px">
+          <sc-for list="{{c.sw}}" as="s" hint-placeholder-count="7"><span style="width: 18px; height: 18px; border-radius: 3px; background: {{s}}"></span></sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">DERIVING THE RAMP</h2>
+      <div style="display: flex; flex-direction: column; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 13px; color: #C9CDD5">
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #8EE3C8"></span><span>body &#160;&#160;&#160;&#160;&#160;&#160;= input</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #C1F0E1"></span><span>light &#160;&#160;&#160;&#160;&#160;= mix(body, white, 45%)</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #6FB19C"></span><span>shade &#160;&#160;&#160;&#160;&#160;= body × 0.78</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #3D6156"></span><span>outline &#160;&#160;&#160;= shade × 0.55</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #FB7185"></span><span>accent &#160;&#160;&#160;&#160;= input</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #B04F5D"></span><span>accentDark = accent × 0.70</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #1C2D28"></span><span>eye, mouth = body × 0.20</span></div>
+        <div style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; height: 18px; border-radius: 3px; background: #C1ABBF"></span><span>cheek &#160;&#160;&#160;&#160;&#160;= mix(body, #F472B6, 50%)</span></div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">RULES</h2>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.5; color: #C9CDD5">
+        <li>Same maths as the coach compositor: <span style="font-family: 'Geist Mono', monospace">mixHex</span> and <span style="font-family: 'Geist Mono', monospace">darkenHex</span> from sprites/compose.ts, so no new colour code.</li>
+        <li>Dark bodies (luminance under 0.18, like Slate, Night, Cocoa) flip the eye to mix(body, white, 88%) and the shine to the body colour.</li>
+        <li>Pick the accent at least 40° of hue away from the body so the bulb never melts into the head.</li>
+        <li>Cosmetics may use @accent and @accentDark, so a beanie or scarf follows the colourway for free.</li>
+        <li>Swatch order in each card: light, body, shade, outline, accent, accentDark, eye.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":960}}'>
+var WAYS = [
+  ["mint", "#8EE3C8", "#FB7185"], ["sky", "#93C5FD", "#FDE047"], ["lilac", "#C4B5FD", "#4ADE80"],
+  ["rose", "#F9A8D4", "#A78BFA"], ["lemon", "#FDE68A", "#FB923C"], ["peach", "#FDBA74", "#38BDF8"],
+  ["lime", "#BEF264", "#F472B6"], ["snow", "#E2E8F0", "#F87171"], ["coral", "#FB7185", "#FDE047"],
+  ["slate", "#64748B", "#5EEAD4"], ["night", "#4338CA", "#FDE68A"], ["cocoa", "#9A5B3B", "#FDBA74"]
+];
+function hx2(n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? "0" + s : s; }
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function mix(a, b, k) { var x = rgb(a), y = rgb(b); return "#" + hx2(x[0] * (1 - k) + y[0] * k) + hx2(x[1] * (1 - k) + y[1] * k) + hx2(x[2] * (1 - k) + y[2] * k); }
+function darken(a, k) { var x = rgb(a); return "#" + hx2(x[0] * k) + hx2(x[1] * k) + hx2(x[2] * k); }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+class Component extends DCLogic {
+  renderVals() {
+    var ways = WAYS.map(function (w) {
+      var body = w[1], accent = w[2];
+      var shade = darken(body, 0.78);
+      var eye = lum(body) < 0.18 ? mix(body, "#FFFFFF", 0.88) : darken(body, 0.2);
+      return {
+        id: w[0], label: w[0].toUpperCase(), body: body,
+        sw: [mix(body, "#FFFFFF", 0.45), body, shade, darken(shade, 0.55), accent, darken(accent, 0.7), eye]
+      };
+    });
+    return { ways: ways };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pip variation system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1100px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">VARIATION SYSTEM</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5">A variant is data, not art: base + two colours + up to five items + a mood. It composes into one 24 × 24 cell grid, the same shape the coach compositor already returns, so CharacterCanvas can draw it unchanged.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <section style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">LAYER STACK · BACK TO FRONT</h2>
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #C9CDD5">
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">0</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">background</b><span>optional plate: tint, night, meadow</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">1</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">back items</b><span>slot back (cape), drawn before the body</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">2</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">body</b><span>base half mirrored; b auto-split into h / b / s</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">3</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">antenna</b><span>a bulb + k stalk; skipped if a head item hides it</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">4</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">face</b><span>mood cells: eyes, mouth, cheeks, fx glyph</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">5</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">front items</b><span>head → face → neck → hand, one per slot</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">6</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">outline pass</b><span>1 px in outline colour around the union of 1–5</span></div>
+          <div style="display: flex; gap: 12px; align-items: center; background: #1B1E25; border-radius: 6px; padding: 8px 12px"><span style="font-family: Silkscreen, monospace; font-size: 12px; color: #A3A9B5; width: 16px">7</span><b style="font-weight: 600; color: #E7E9EE; width: 120px">frame</b><span>bob shifts all but the shadow up 1; blink, pulse</span></div>
+        </div>
+      </section>
+
+      <section style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">PALETTE SLOTS</h2>
+        <div style="display: grid; grid-template-columns: 44px 120px minmax(0, 1fr); row-gap: 7px; column-gap: 12px; font-size: 13px; color: #C9CDD5">
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">b</span><span style="color: #E7E9EE">body</span><span>input 1</span>
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">h</span><span style="color: #E7E9EE">light</span><span>body cells with nothing above</span>
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">s / f</span><span style="color: #E7E9EE">shade</span><span>bottom two rows, and the feet</span>
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">k</span><span style="color: #E7E9EE">outline</span><span>auto ring and antenna stalk</span>
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">a</span><span style="color: #E7E9EE">accent</span><span>input 2: bulb, @accent in items</span>
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">—</span><span style="color: #E7E9EE">accentDark</span><span>@accentDark in items</span>
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">e / m</span><span style="color: #E7E9EE">eye, mouth</span><span>body × 0.20, flips light on dark bodies</span>
+          <span style="font-family: 'Geist Mono', monospace; color: #A3A9B5">w / c</span><span style="color: #E7E9EE">shine, cheek</span><span>white / mix(body, #F472B6, 50%)</span>
+        </div>
+        <p style="margin: 0; font-size: 12px; color: #A3A9B5">Letters b h s e w c m match sprites/data.ts, so the art ports with the existing script.</p>
+      </section>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 24px">
+      <section style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">ANCHORS · GRID CELLS</h2>
+        <div style="display: grid; grid-template-columns: 90px 140px minmax(0, 1fr); row-gap: 7px; column-gap: 12px; font-size: 13px; color: #C9CDD5">
+          <span style="color: #FDE047">head</span><span style="font-family: 'Geist Mono', monospace">x 11–12, y 9</span><span>hats sit on rows ≤ 11</span>
+          <span style="color: #38BDF8">face</span><span style="font-family: 'Geist Mono', monospace">x 4–19, y 12–15</span><span>eyes at 7–8 and 15–16</span>
+          <span style="color: #F472B6">neck</span><span style="font-family: 'Geist Mono', monospace">x 3–20, y 16–18</span><span>below the mouth row 15</span>
+          <span style="color: #4ADE80">hand L / R</span><span style="font-family: 'Geist Mono', monospace">x 2 / 21, y 16–17</span><span>items sit at x 0–1 or 21–23</span>
+          <span style="color: #A3A9B5">back</span><span style="font-family: 'Geist Mono', monospace">full grid</span><span>shows only past the body edge</span>
+        </div>
+      </section>
+
+      <section style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">A VARIANT</h2>
+        <div style="display: flex; gap: 20px; align-items: flex-start">
+          <div style="flex: 1; min-width: 0; background: #0F1115; border-radius: 8px; padding: 14px 16px; font-family: 'Geist Mono', monospace; font-size: 13px; line-height: 1.6; color: #C9CDD5; white-space: pre">{
+  "base": "pip",
+  "colorway": "sky",
+  "palette": { "body": "#93C5FD", "accent": "#FDE047" },
+  "cosmetics": ["hat.beanie", "neck.scarf"],
+  "mood": "happy",
+  "bg": "night"
+}</div>
+          <div style="line-height: 0; border-radius: 8px; overflow: hidden"><dc-import name="Sprite" colorway="sky" cosmetics="hat.beanie, neck.scarf" mood="happy" bg="night" scale="5" hint-size="120px,120px"></dc-import></div>
+        </div>
+      </section>
+
+      <section style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">AN ITEM</h2>
+        <div style="background: #0F1115; border-radius: 8px; padding: 14px 16px; font-family: 'Geist Mono', monospace; font-size: 13px; line-height: 1.6; color: #C9CDD5; white-space: pre">"hat.crown": {
+  "slot": "head", "hideAntenna": true, "at": [7, 4],
+  "rows": ["g...gg...g", "gg..gg..gg", "gggggggggg",
+           "ggjgbbgjgg", "dddddddddd"],
+  "pal": { "g": "#FACC15", "d": "#CA8A04",
+           "j": "#EF4444", "b": "#60A5FA" }
+}</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #A3A9B5">Rows are read left to right from the origin; a dot is empty. A pal value of @accent or @accentDark pulls from the variant's colourway. Adding an item is one entry here and zero changes to the body.</p>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

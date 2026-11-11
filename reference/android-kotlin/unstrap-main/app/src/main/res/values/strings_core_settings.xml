@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Choices on the Phone alerts page, stored as settings (data/settings/SettingsStore.kt). Each is one segment of a row of buttons, so one short word. -->
+<resources>
+    <!-- How the strap buzzes for a notification: once. -->
+    <string name="core_settings_buzz_single">Single</string>
+    <!-- Twice. -->
+    <string name="core_settings_buzz_double">Double</string>
+    <!-- Three times. -->
+    <string name="core_settings_buzz_triple">Triple</string>
+    <!-- One long buzz. -->
+    <string name="core_settings_buzz_long">Long</string>
+    <!-- How the strap buzzes while a call rings: without a break. -->
+    <string name="core_settings_call_steady">Steady</string>
+    <!-- While a call rings: a pulse once a second. -->
+    <string name="core_settings_call_pulsed">Pulsed</string>
+    <!-- How long the strap buzzes for a call: 5 seconds. -->
+    <string name="core_settings_call_5s">5 s</string>
+    <!-- 10 seconds. -->
+    <string name="core_settings_call_10s">10 s</string>
+    <!-- 15 seconds. -->
+    <string name="core_settings_call_15s">15 s</string>
+    <!-- The whole time the call rings, until it is answered or ends. -->
+    <string name="core_settings_call_until_answered">Full ring</string>
+</resources>

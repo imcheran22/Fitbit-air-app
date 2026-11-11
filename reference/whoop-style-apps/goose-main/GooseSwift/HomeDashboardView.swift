@@ -1,0 +1,466 @@
+import SwiftUI
+
+struct HomeDashboardView: View {
+  @Environment(GooseAppModel.self) private var model
+  @Environment(HealthState.self) private var healthState
+  @EnvironmentObject private var router: AppRouter
+  @Environment(HealthDataStore.self) private var healthStore
+  @Binding var selectedDate: Date
+  let openHealthRoute: (HealthRoute) -> Void
+  @State private var showingScoreDatePicker = false
+  @State private var showingCardioLoadSheet = false
+  @State private var selectedHealthMonitorTrend: HealthMetricSnapshot?
+  @State private var cachedLandingSnapshots: [HealthMetricSnapshot] = []
+  @State private var cachedCardioLoadDays: [CardioLoadDay] = []
+  @State private var cachedHealthMonitorSnapshots: [HealthMetricSnapshot] = []
+  @State private var bpmRefreshTask: Task<Void, Never>?
+
+  var body: some View {
+    // Compute once per render — avoids calling healthStore.landingSnapshots(…) 9× per body pass.
+    let cached = landingSnapshots
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 18) {
+        HomeDailyScoreCard(
+          scores: scoreSnapshots(using: cached),
+          coachTip: CoachTipFactory.homeTip(healthStore: healthStore, appModel: model),
+          openScore: openHealth,
+          openCoach: openCoach
+        )
+
+        if !baselineProgress.allReady {
+          HomeBaselineProgressCard(progress: baselineProgress)
+        }
+
+        HomeStressEnergySection(
+          stress: landingSnapshot(for: .stress, in: cached),
+          energy: landingSnapshot(for: .energyBank, in: cached),
+          openStress: { openHealth(.stress) }
+        )
+
+        HomeCardioLoadWidget(
+          snapshot: landingSnapshot(for: .cardioLoad, in: cached),
+          days: healthStore.cardioLoadWeeklyPoints()
+        ) {
+          showingCardioLoadSheet = true
+          model.recordUIAction("health.sheet.opened", detail: "Cardio Load home widget")
+        }
+
+        HomeHealthMonitorSection(
+          snapshots: cachedHealthMonitorSnapshots,
+          openSnapshot: openHealthMonitorSnapshot
+        )
+
+        HomeTimelineSection(
+          sleep: homeSnapshot(for: .sleep, in: cached),
+          activity: homeSnapshot(for: .strain, in: cached),
+          recovery: homeSnapshot(for: .recovery, in: cached),
+          activities: healthState.homeActivityTimelineItems,
+          openSleep: { openHealth(.sleep) },
+          openActivity: { openHealth(.strain) },
+          openRecovery: { openHealth(.recovery) }
+        )
+
+        HomeDeviceStatusCard(
+          ble: model.ble,
+          onReconnect: { model.ble.reconnectRemembered() }
+        )
+
+        HomeToolsGrid(
+          catalogReady: healthStore.catalogStatus.localizedCaseInsensitiveContains("loaded") && !healthStore.catalogStatus.localizedCaseInsensitiveContains("not loaded"),
+          openSleepCoach: {
+            router.openCoach(prompt: "Sleep coach: review my sleep quality and give me advice")
+          },
+          openActivity: { openHealth(.strain) },
+          openCoach: { router.openCoach() },
+          openCalibration: { router.openMore(.algorithms) }
+        )
+
+      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 18)
+    }
+    .scrollClipDisabled()
+    .gooseScreenBackground()
+    .navigationTitle("Today")
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbarBackground(.hidden, for: .navigationBar)
+    .overlay(alignment: .top) {
+      HomeTopScrollFade()
+        .allowsHitTesting(false)
+    }
+    .safeAreaInset(edge: .bottom, alignment: .trailing) {
+      HomeStartActivityFloatingButton(session: model.activitySession)
+        .padding(.trailing, 18)
+        .padding(.bottom, 10)
+    }
+    .toolbar {
+      ToolbarItem(placement: .principal) {
+        ScoreDateTitleButton(
+          title: homeTitle,
+          subtitle: nil,
+          action: { showingScoreDatePicker = true }
+        )
+      }
+      ToolbarItem(placement: .topBarTrailing) {
+        NavigationLink {
+          DeviceView()
+        } label: {
+          Image(systemName: "applewatch")
+            .font(.system(size: 17, weight: .semibold))
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(deviceToolbarTint)
+        }
+        .accessibilityLabel("Device")
+        .accessibilityValue(deviceToolbarAccessibilityValue)
+      }
+    }
+    .onAppear {
+      model.recordUIAction("page.opened", detail: "Home")
+      refreshSnapshots()
+    }
+    .task {
+      await healthStore.loadBridgeCatalogsIfNeeded()
+      // Fire-and-forget: this spawns its own Task internally, so the view task
+      // intentionally does not await the packet-input run; results publish later.
+      healthStore.refreshPacketInputsIfNeeded()
+      model.refreshActivityTimeline(for: selectedDate)
+      refreshSnapshots()
+    }
+    .onChange(of: selectedDate) { _, newValue in
+      model.refreshActivityTimeline(for: newValue)
+      refreshSnapshots()
+    }
+    .onChange(of: model.ble.liveHeartRateBPM) { _, _ in
+      bpmRefreshTask?.cancel()
+      bpmRefreshTask = Task {
+        try? await Task.sleep(for: .milliseconds(500))
+        if !Task.isCancelled { refreshSnapshots() }
+      }
+    }
+    .onChange(of: healthStore.catalogStatus) { _, _ in
+      refreshSnapshots()
+    }
+    .sheet(isPresented: $showingScoreDatePicker) {
+      let cached = landingSnapshots
+      ScoreDatePickerSheet(
+        title: "Daily Scores",
+        routes: [.sleep, .recovery, .strain],
+        snapshots: scorePickerSnapshots(using: cached),
+        selectedDate: $selectedDate
+      )
+    }
+    .sheet(isPresented: $showingCardioLoadSheet) {
+      CardioLoadSheet()
+    }
+    .sheet(item: $selectedHealthMonitorTrend) { snapshot in
+      SleepV2BevelTrendSheet(snapshot: snapshot)
+    }
+  }
+
+  private var dailyActionSummary: String {
+    let inputAction = healthStore.metricInputReadinessNextActionSummary()
+    if !inputAction.isEmpty {
+      return inputAction
+    }
+    return healthStore.packetDerivedScoreNextActionSummary()
+  }
+
+  private var landingSnapshots: [HealthMetricSnapshot] {
+    healthStore.landingSnapshots(
+      liveHeartRateBPM: model.ble.liveHeartRateBPM,
+      liveHeartRateSource: model.ble.liveHeartRateSource,
+      liveHeartRateUpdatedAt: model.ble.liveHeartRateUpdatedAt,
+      stableDailyMetrics: true
+    )
+  }
+
+  private func scoreSnapshots(using cached: [HealthMetricSnapshot]) -> [HealthMetricSnapshot] {
+    [
+      datedHomeSnapshot(for: .sleep, in: cached),
+      datedHomeSnapshot(for: .recovery, in: cached),
+      datedHomeSnapshot(for: .strain, in: cached),
+    ]
+  }
+
+  private func scorePickerSnapshots(using cached: [HealthMetricSnapshot]) -> [HealthMetricSnapshot] {
+    [
+      homeSnapshot(for: .sleep, in: cached),
+      homeSnapshot(for: .recovery, in: cached),
+      homeSnapshot(for: .strain, in: cached),
+    ]
+  }
+
+  private var homeTitle: String {
+    ScoreDateTimeline.dateLabel(for: selectedDate)
+  }
+
+  private var deviceToolbarTint: Color {
+    deviceToolbarConnected ? .green : .red
+  }
+
+  private var deviceToolbarAccessibilityValue: String {
+    deviceToolbarConnected ? "Connected" : "Disconnected"
+  }
+
+  private var deviceToolbarConnected: Bool {
+    let state = model.ble.connectionState.lowercased()
+    return state == "ready" || state == "connected"
+  }
+
+  private var baselineProgress: BaselineProgressModel {
+    healthStore.baselineProgress()
+  }
+
+  private func refreshSnapshots() {
+    cachedLandingSnapshots = healthStore.landingSnapshots(
+      liveHeartRateBPM: model.ble.liveHeartRateBPM,
+      liveHeartRateSource: model.ble.liveHeartRateSource,
+      liveHeartRateUpdatedAt: model.ble.liveHeartRateUpdatedAt,
+      stableDailyMetrics: true
+    )
+    cachedCardioLoadDays = healthStore.cardioLoadWeeklyPoints()
+    cachedHealthMonitorSnapshots = healthStore.healthMonitorSnapshots(allowLiveFallbacks: false)
+  }
+
+  private func landingSnapshot(for route: HealthRoute, in snapshots: [HealthMetricSnapshot]) -> HealthMetricSnapshot {
+    snapshots.first { $0.route == route } ?? healthStore.snapshot(for: route)
+  }
+
+  private func homeSnapshot(for route: HealthRoute, in snapshots: [HealthMetricSnapshot]) -> HealthMetricSnapshot {
+    let snapshot = landingSnapshot(for: route, in: snapshots)
+    guard route == .strain, snapshot.unit != "%" else {
+      return snapshot
+    }
+    let rawValue = firstNumber(in: snapshot.displayValue) ?? firstNumber(in: snapshot.value) ?? 0
+    let percent = min(max(Int((rawValue / 21 * 100).rounded()), 0), 100)
+    return HealthMetricSnapshot(
+      id: snapshot.id,
+      route: snapshot.route,
+      group: snapshot.group,
+      title: snapshot.title,
+      value: "\(percent)",
+      unit: "%",
+      status: snapshot.status,
+      freshness: snapshot.freshness,
+      provenance: snapshot.provenance,
+      source: snapshot.source,
+      systemImage: snapshot.systemImage,
+      tint: snapshot.tint,
+      trend: snapshot.trend,
+      stealthKey: snapshot.stealthKey
+    )
+  }
+
+  private func datedHomeSnapshot(for route: HealthRoute, in snapshots: [HealthMetricSnapshot]) -> HealthMetricSnapshot {
+    ScoreDateTimeline.datedSnapshot(from: homeSnapshot(for: route, in: snapshots), date: selectedDate)
+  }
+
+  private func openHealth(_ route: HealthRoute) {
+    openHealthRoute(route)
+    model.recordUIAction("health.deep_link.opened", detail: route.title)
+  }
+
+  private func openHealthMonitorSnapshot(_ snapshot: HealthMetricSnapshot) {
+    if snapshot.id == "resting-hr" {
+      selectedHealthMonitorTrend = snapshot
+    } else {
+      openHealth(.healthMonitor)
+    }
+  }
+
+  private func openCoach(_ prompt: String) {
+    router.openCoach(prompt: prompt)
+    model.recordUIAction("coach.opened", detail: "Home daily score card")
+  }
+}
+
+// MARK: - HOME-01: Device Status Card
+
+private struct HomeDeviceStatusCard: View {
+  let ble: any BLETransport
+  let onReconnect: () -> Void
+
+  private var isConnected: Bool {
+    let s = ble.connectionState.lowercased()
+    return s == "ready" || s == "connected" || s == "discovering"
+  }
+
+  private var stateColor: Color { isConnected ? .green : .red }
+
+  private var lastSyncText: String {
+    guard let date = ble.lastSyncAt else { return "Never" }
+    let rel = RelativeDateTimeFormatter()
+    rel.unitsStyle = .short
+    return rel.localizedString(for: date, relativeTo: Date()).capitalized
+  }
+
+  private var syncProgressText: String {
+    if let fraction = ble.historicalSyncFraction {
+      let percentText = "\(Int((fraction * 100).rounded()))%"
+      return String(localized: "Syncing \(percentText) — \(ble.historicalPacketCount) packets")
+    }
+    return String(localized: "Syncing — \(ble.historicalPacketCount) packets")
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      HStack {
+        Circle()
+          .fill(stateColor)
+          .frame(width: 8, height: 8)
+        Text(ble.activeDeviceName)
+          .font(.subheadline.weight(.semibold))
+          .foregroundStyle(.primary)
+        Spacer()
+        Text(ble.connectionState.localizedConnectionState)
+          .font(.caption.weight(.medium))
+          .foregroundStyle(stateColor)
+        if isConnected, let onWrist = ble.isOnWrist {
+          HStack(spacing: 4) {
+            Image(systemName: onWrist ? "applewatch" : "applewatch.slash")
+              .font(.caption2)
+            Text(onWrist ? "On wrist" : "Off wrist")
+              .font(.caption.weight(.medium))
+          }
+          .foregroundStyle(onWrist ? Color.green : Color.orange)
+        }
+      }
+
+      if ble.isHistoricalSyncing {
+        HStack(spacing: 8) {
+          SyncProgressRing(fraction: ble.historicalSyncFraction, lineWidth: 3, tint: .blue)
+            .frame(width: 18, height: 18)
+          Text(syncProgressText)
+            .font(.caption.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+      }
+
+      HStack(spacing: 20) {
+        HomeDeviceStat(
+          label: "Battery",
+          value: ble.batteryLevelPercent.map { "\($0)%" } ?? "--"
+        )
+        HomeDeviceStat(
+          label: "HR",
+          value: ble.liveHeartRateBPM.map { "\($0) bpm" } ?? "--"
+        )
+        HomeDeviceStat(label: "Last Sync", value: lastSyncText)
+        Spacer()
+        if !isConnected && ble.hasRememberedDevice {
+          Button(action: onReconnect) {
+            Text("Reconnect")
+              .font(.caption.weight(.semibold))
+              .padding(.horizontal, 10)
+              .padding(.vertical, 5)
+              .background(.blue.opacity(0.15), in: Capsule())
+              .foregroundStyle(.blue)
+          }
+          .buttonStyle(.plain)
+        }
+      }
+    }
+    .padding(14)
+    .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+  }
+}
+
+private struct HomeDeviceStat: View {
+  let label: String
+  let value: String
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 2) {
+      Text(label)
+        .font(.system(size: 10, weight: .semibold))
+        .foregroundStyle(.secondary)
+        .textCase(.uppercase)
+      Text(value)
+        .font(.system(size: 13, weight: .bold))
+        .foregroundStyle(.primary)
+    }
+  }
+}
+
+// MARK: - HOME-02: Tools Grid
+
+private struct HomeToolsGrid: View {
+  let catalogReady: Bool
+  let openSleepCoach: () -> Void
+  let openActivity: () -> Void
+  let openCoach: () -> Void
+  let openCalibration: () -> Void
+
+  private let columns = [GridItem(.flexible()), GridItem(.flexible())]
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Text("TOOLS")
+        .font(.system(size: 11, weight: .black))
+        .foregroundStyle(.secondary)
+
+      LazyVGrid(columns: columns, spacing: 10) {
+        HomeToolButton(
+          title: "Sleep Coach",
+          systemImage: "moon.zzz",
+          ready: catalogReady,
+          action: openSleepCoach
+        )
+        HomeToolButton(
+          title: "Activity",
+          systemImage: "figure.run",
+          ready: catalogReady,
+          action: openActivity
+        )
+        HomeToolButton(
+          title: "Journal",
+          systemImage: "book.pages",
+          ready: true,
+          action: openCoach
+        )
+        HomeToolButton(
+          title: "Calibration",
+          systemImage: "slider.horizontal.3",
+          ready: catalogReady,
+          action: openCalibration
+        )
+      }
+    }
+  }
+}
+
+private struct HomeToolButton: View {
+  let title: String
+  let systemImage: String
+  let ready: Bool
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: 8) {
+        Image(systemName: systemImage)
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(ready ? .primary : .tertiary)
+        VStack(alignment: .leading, spacing: 1) {
+          Text(title)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(.primary)
+          Text(ready ? "Ready" : "Loading")
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(ready ? .green : .secondary)
+        }
+        Spacer()
+      }
+      .padding(10)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+// HOME-03 (evidence footer) moved to More → Developer → Debug as the
+// "Data Provenance" section — see MoreDebugViews.swift.
+

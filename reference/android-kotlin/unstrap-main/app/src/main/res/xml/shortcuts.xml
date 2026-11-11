@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press the app icon: each opens the workout ready screen with its sport (MainActivity.EXTRA_READY_SPORT). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="start_run"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_run"
+        android:shortcutShortLabel="@string/shortcut_run"
+        android:shortcutLongLabel="@string/shortcut_run_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="org.openstrap.app"
+            android:targetClass="org.openstrap.app.MainActivity">
+            <extra android:name="ready_sport" android:value="1" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="start_strength"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_strength"
+        android:shortcutShortLabel="@string/shortcut_strength"
+        android:shortcutLongLabel="@string/shortcut_strength_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="org.openstrap.app"
+            android:targetClass="org.openstrap.app.MainActivity">
+            <extra android:name="ready_sport" android:value="52" />
+        </intent>
+    </shortcut>
+</shortcuts>

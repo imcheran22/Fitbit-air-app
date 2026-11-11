@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pixel campfire scene</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.px{font-family:'Silkscreen',monospace}
+.pbub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@keyframes fa{0%,49.9%{opacity:1}50%,100%{opacity:0}}
+@keyframes fb{0%,49.9%{opacity:0}50%,100%{opacity:1}}
+@keyframes pglow{0%,100%{opacity:1}50%{opacity:.75}}
+@keyframes pspark{0%{transform:translateY(0);opacity:0}10%{opacity:1}100%{transform:translateY(-112px);opacity:0}}
+@keyframes ptw{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes pbreathe{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+@keyframes pz{0%{transform:translate(0,0);opacity:0}25%{opacity:1}100%{transform:translate(8px,-16px);opacity:0}}
+.fa{animation:fa .5s steps(1) infinite}
+.fb{animation:fb .5s steps(1) infinite}
+.pglow{animation:pglow 1.6s steps(2) infinite}
+.pspark{animation:pspark 2.4s steps(14) infinite}
+.ptw{animation:ptw 2.8s steps(3) infinite}
+.pbreathe{animation:pbreathe 2.6s steps(2) infinite}
+.pz{animation:pz 2.2s steps(5) infinite}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: {{sky}}">
+  <sc-for list="{{back}}" as="r" hint-placeholder-count="40">
+    <div style="position: absolute; left: {{r.x}}px; top: {{r.y}}px; width: {{r.w}}px; height: {{r.h}}px; background: {{r.c}}"></div>
+  </sc-for>
+  <sc-for list="{{twinkles}}" as="r" hint-placeholder-count="10">
+    <div class="ptw" style="position: absolute; left: {{r.x}}px; top: {{r.y}}px; width: {{r.w}}px; height: {{r.h}}px; background: {{r.c}}; animation-delay: {{r.d}}s"></div>
+  </sc-for>
+  <sc-if value="{{night}}" hint-placeholder-val="{{ true }}">
+    <div class="px" style="position: absolute; left: 236px; top: 100px; font-size: 8px; letter-spacing: 1px; color: #6E78C8">CASSIOPEIA</div>
+    <div class="px" style="position: absolute; left: 200px; top: 240px; font-size: 8px; letter-spacing: 1px; color: #6E78C8">BIG DIPPER</div>
+    <div class="pglow" style="position: absolute; inset: 0">
+      <sc-for list="{{glow}}" as="r" hint-placeholder-count="20">
+        <div style="position: absolute; left: {{r.x}}px; top: {{r.y}}px; width: {{r.w}}px; height: {{r.h}}px; background: {{r.c}}"></div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-for list="{{front}}" as="r" hint-placeholder-count="20">
+    <div style="position: absolute; left: {{r.x}}px; top: {{r.y}}px; width: {{r.w}}px; height: {{r.h}}px; background: {{r.c}}"></div>
+  </sc-for>
+
+  <sc-for list="{{coaches}}" as="c" hint-placeholder-count="8">
+    <button aria-label="{{c.label}}" style="position: absolute; left: {{c.left}}px; top: {{c.top}}px; width: {{c.w}}px; height: {{c.h}}px; padding: 0; border: 0; background: transparent; cursor: pointer">
+      <div class="{{c.anim}}" style="position: absolute; left: 0; top: 0; width: {{c.w}}px; height: {{c.h}}px">
+        <sc-for list="{{c.cells}}" as="p" hint-placeholder-count="40">
+          <div style="position: absolute; left: {{p.x}}px; top: {{p.y}}px; width: {{p.s}}px; height: {{p.s}}px; background: {{p.c}}"></div>
+        </sc-for>
+      </div>
+      <sc-if value="{{c.asleep}}" hint-placeholder-val="{{ false }}">
+        <div class="px pz" style="position: absolute; right: -14px; top: -6px; font-size: 10px; color: #C7D2FE">z</div>
+        <div class="px pz" style="position: absolute; right: -20px; top: -14px; font-size: 8px; color: #C7D2FE; animation-delay: 1.1s">z</div>
+      </sc-if>
+    </button>
+  </sc-for>
+  <sc-for list="{{coaches}}" as="c" hint-placeholder-count="8">
+    <div class="px" style="position: absolute; left: {{c.nameX}}px; top: {{c.nameY}}px; width: 80px; text-align: center; font-size: 9px; letter-spacing: 1px; color: {{nameColor}}">{{c.name}}</div>
+    <sc-if value="{{c.hasNote}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; left: {{c.bubX}}px; top: {{c.bubY}}px; width: 112px; display: flex; justify-content: center">
+        <div style="position: relative; max-width: 112px; padding: 4px 6px; background: #FAFAF9; box-shadow: 0 0 0 2px #14161B, 4px 4px 0 0 rgba(0,0,0,.35)">
+          <div class="px pbub" style="font-size: 8px; line-height: 10px; letter-spacing: .5px; color: #14161B">{{c.note}}</div>
+          <div style="position: absolute; left: 10px; bottom: -6px; width: 4px; height: 4px; background: #FAFAF9; box-shadow: 0 0 0 2px #14161B"></div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{c.addNote}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; left: {{c.bubX}}px; top: {{c.bubY}}px; width: 112px; display: flex; justify-content: center">
+        <div class="px" style="padding: 4px 6px; background: #0F2E2A; box-shadow: 0 0 0 2px #2DD4BF; font-size: 8px; line-height: 10px; letter-spacing: .5px; color: #5EEAD4">+ ADD A NOTE</div>
+      </div>
+    </sc-if>
+  </sc-for>
+
+  <div style="position: absolute; left: {{fireX}}px; top: {{fireY}}px; width: 44px; height: 64px">
+    <sc-if value="{{night}}" hint-placeholder-val="{{ true }}">
+      <div class="fa" style="position: absolute; inset: 0" role="img" aria-label="The fire is lit">
+        <sc-for list="{{flameA}}" as="p" hint-placeholder-count="60">
+          <div style="position: absolute; left: {{p.x}}px; top: {{p.y}}px; width: 4px; height: 4px; background: {{p.c}}"></div>
+        </sc-for>
+      </div>
+      <div class="fb" style="position: absolute; inset: 0">
+        <sc-for list="{{flameB}}" as="p" hint-placeholder-count="60">
+          <div style="position: absolute; left: {{p.x}}px; top: {{p.y}}px; width: 4px; height: 4px; background: {{p.c}}"></div>
+        </sc-for>
+      </div>
+      <sc-for list="{{sparks}}" as="s" hint-placeholder-count="5">
+        <div class="pspark" style="position: absolute; left: {{s.x}}px; top: 8px; width: 4px; height: 4px; background: #FDBA74; animation-delay: {{s.d}}s"></div>
+      </sc-for>
+    </sc-if>
+    <sc-for list="{{logs}}" as="p" hint-placeholder-count="20">
+      <div style="position: absolute; left: {{p.x}}px; top: {{p.y}}px; width: 4px; height: 4px; background: {{p.c}}"></div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"night":{"editor":"boolean","default":true},"noteShared":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const night = this.props.night !== false;
+    const shared = this.props.noteShared === true;
+    const P = 4;
+    const snap = (v) => Math.round(v / P) * P;
+    const back = [];
+    const front = [];
+    const glow = [];
+    const twinkles = [];
+    const add = (list, x, y, w, h, c) => list.push({ x: snap(x), y: snap(y), w: Math.max(P, snap(w)), h: Math.max(P, snap(h)), c: c });
+
+    const C = night
+      ? { s1: '#0B0E26', s2: '#10143A', s3: '#171C4A', mt: '#1C2150', ridge: '#2A3170', tree: '#0B0D28', ground: '#151936', speck: '#1C2148', tent: '#3B2F6B', tentHi: '#4C3F86', door: '#F59E0B', star: '#E0E7FF', dim: '#3B4080' }
+      : { s1: '#6FB1E6', s2: '#86C0EC', s3: '#A3D2F2', mt: '#7FA3C4', ridge: '#A7C3DC', tree: '#2F5A33', ground: '#5B7F3A', speck: '#6A9045', tent: '#E07A3F', tentHi: '#F0965E', door: '#7C2D12', star: '#FFFFFF', dim: '#FFFFFF' };
+
+    add(back, 0, 188, 390, 112, C.s2);
+    add(back, 0, 300, 390, 80, C.s3);
+    for (let x = 0; x < 390; x += 8) { add(back, x, 188, P, P, C.s2); add(back, x + 4, 184, P, P, C.s2); add(back, x, 300, P, P, C.s3); add(back, x + 4, 296, P, P, C.s3); }
+
+    if (night) {
+      for (let i = 0; i < 40; i++) {
+        const x = (i * 97 + 31) % 376 + 6, y = (i * 53 + 17) % 240 + 36;
+        if (i % 9 === 0) {
+          const s = { x: snap(x), y: snap(y) };
+          twinkles.push({ x: s.x, y: s.y, w: P, h: P, c: C.star, d: (i % 5) * 0.5 });
+          [[-4, 0], [4, 0], [0, -4], [0, 4]].forEach((o) => twinkles.push({ x: s.x + o[0], y: s.y + o[1], w: P, h: P, c: '#8B95E0', d: (i % 5) * 0.5 }));
+        } else if (i % 3 === 0) {
+          twinkles.push({ x: snap(x), y: snap(y), w: P, h: P, c: C.star, d: (i % 7) * 0.4 });
+        } else {
+          add(back, x, y, P, P, i % 2 ? '#7C86C8' : '#B9C2F2');
+        }
+      }
+      const seg = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], n = Math.floor(Math.hypot(dx, dy) / 8); for (let k = 1; k < n; k++) add(back, a[0] + dx * k / n, a[1] + dy * k / n, P, P, C.dim); };
+      const cas = [[196, 48], [222, 74], [246, 56], [270, 82], [298, 60]];
+      const dip = [[196, 206], [226, 198], [252, 210], [276, 214], [300, 228], [334, 222], [340, 252], [304, 258], [300, 228]];
+      for (let i = 1; i < cas.length; i++) seg(cas[i - 1], cas[i]);
+      for (let i = 1; i < dip.length; i++) seg(dip[i - 1], dip[i]);
+      cas.concat(dip).forEach((p, i) => twinkles.push({ x: snap(p[0]) - 4, y: snap(p[1]) - 4, w: 8, h: 8, c: '#EEF2FF', d: (i % 4) * 0.6 }));
+      const mx = 320, my = 148;
+      for (let gx = -8; gx <= 8; gx++) for (let gy = -8; gy <= 8; gy++) {
+        const d = Math.hypot(gx, gy);
+        const cut = Math.hypot(gx - 3, gy + 2) <= 4.6;
+        if (d <= 5.2 && !cut) add(back, mx + gx * P, my + gy * P, P, P, gy < 0 ? '#F8FAFC' : '#E2E8F0');
+        else if (d > 6.2 && d <= 7.2) add(back, mx + gx * P, my + gy * P, P, P, '#1A2052');
+      }
+    } else {
+      const sx = 316, sy = 150;
+      for (let gx = -8; gx <= 8; gx++) for (let gy = -8; gy <= 8; gy++) {
+        const d = Math.hypot(gx, gy);
+        if (d <= 5.2) add(back, sx + gx * P, sy + gy * P, P, P, d < 3 ? '#FEF3C7' : '#FDE68A');
+        else if (d > 6.2 && d <= 7.2 && (gx + gy) % 2 === 0) add(back, sx + gx * P, sy + gy * P, P, P, '#FDE68A');
+      }
+      [[40, 170, 24], [64, 160, 12], [232, 224, 16]].forEach((cl) => { add(back, cl[0], cl[1], cl[2] * P, 12, '#F8FAFC'); add(back, cl[0] + 8, cl[1] - 8, (cl[2] - 4) * P, 8, '#F8FAFC'); });
+    }
+
+    const peaks = [[0, 330], [48, 290], [92, 322], [140, 274], [196, 326], [238, 298], [286, 332], [332, 290], [390, 326]];
+    const peakY = (x) => { for (let i = 1; i < peaks.length; i++) { if (x <= peaks[i][0]) { const a = peaks[i - 1], b = peaks[i]; return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]); } } return 330; };
+    for (let x = 0; x < 390; x += P) { const y = snap(peakY(x)); add(back, x, y, P, 384 - y, C.mt); add(back, x, y, P, P, C.ridge); }
+
+    const pine = (cx, base, size) => { for (let r = 0; r < size; r++) { const w = (Math.floor(r / 2) % 3 + 1 + Math.floor(r / 3)) * 2 - 1; add(back, cx - (w * P) / 2, base - (size - r) * P, w * P, P, C.tree); } add(back, cx - 2, base, P, 8, C.tree); };
+    [[8, 380, 13], [28, 384, 10], [50, 380, 15], [74, 386, 9], [96, 384, 11], [292, 386, 10], [314, 380, 14], [338, 384, 11], [360, 380, 15], [384, 384, 10]].forEach((t) => pine(t[0], t[1], t[2]));
+    add(back, 104, 372, 186, 16, C.tree);
+
+    add(back, 0, 384, 390, 460, C.ground);
+    for (let i = 0; i < 46; i++) add(back, (i * 71 + 13) % 386, 392 + (i * 37) % 440, P, P, C.speck);
+
+    if (night) {
+      const ell = (cx, cy, a, b, c) => { for (let dy = -b; dy <= b; dy += P) { const w = 2 * a * Math.sqrt(1 - (dy / b) * (dy / b)); const ww = Math.round(w / 8) * 8; if (ww > 0) add(glow, cx - ww / 2, cy + dy, ww, P, c); } };
+      ell(195, 556, 168, 92, '#24203A');
+      ell(195, 556, 124, 66, '#3A2433');
+      ell(195, 560, 76, 38, '#56302A');
+    }
+
+    for (let r = 0; r < 13; r++) { const w = 2 * r + 1; add(front, 50 - (w * P) / 2, 356 + r * P, w * P, P, r % 4 === 0 ? C.tentHi : C.tent); }
+    for (let r = 6; r < 13; r++) { const w = 2 * (r - 6) + 1; add(front, 50 - (w * P) / 2, 356 + r * P, w * P, P, C.door); }
+
+    const palette = [['#2DD4BF', '#14917F'], ['#A78BFA', '#6D4FD1'], ['#FB7185', '#C7465A'], ['#FBBF24', '#C98B0A'], ['#60A5FA', '#2F6FC4'], ['#34D399', '#1F9A6C'], ['#F472B6', '#BE3E83'], ['#FB923C', '#C9611A']];
+    const sprite = ['..CCCCC..', '.CCCCCCC.', '.CCCCCCC.', '.CCCCCCC.', '.CCCCCCC.', '..CCCCC..', '.DDDDDDD.', 'DDDDDDDDD', 'DDDDDDDDD', 'DD.DDD.DD'];
+    const seats = [[150, 472, 3], [240, 472, 3], [60, 524, 4], [330, 524, 4], [70, 640, 4], [320, 640, 4], [150, 676, 4], [240, 676, 4]];
+    const people = [
+      { name: 'BEA', asleep: true, note: 'bed soon, night all' },
+      { name: 'SAM', asleep: false, note: 'run at 6, who is in?' },
+      { name: 'ANA', asleep: true, note: '' },
+      { name: 'KAI', asleep: false, note: '' },
+      { name: 'BEN', asleep: true, note: 'early flight' },
+      { name: 'LEO', asleep: false, note: 'gn camp' },
+      { name: 'YOU', asleep: false, note: '', mine: true },
+      { name: 'MIA', asleep: false, note: '' }
+    ];
+    const coaches = people.map((p, i) => {
+      const s = seats[i][2];
+      const asleep = night && p.asleep;
+      const w = 9 * s, h = 10 * s;
+      const left = seats[i][0] - w / 2, top = seats[i][1] - h;
+      const cells = [];
+      const facingRight = seats[i][0] < 195;
+      sprite.forEach((row, ry) => row.split('').forEach((ch, rx) => {
+        if (ch === '.') return;
+        let col = ch === 'C' ? palette[i][0] : palette[i][1];
+        const rim = night && ((facingRight && rx === 7) || (!facingRight && rx === 1)) && ry >= 1 && ry <= 4;
+        if (rim) col = '#FDBA74';
+        cells.push({ x: rx * s, y: ry * s, s: s, c: col });
+      }));
+      const eyeRow = asleep ? 3 : 2;
+      cells.push({ x: 3 * s, y: eyeRow * s, s: s, c: '#0A0B0E' }, { x: 5 * s, y: eyeRow * s, s: s, c: '#0A0B0E' });
+      if (!asleep) cells.push({ x: 3 * s, y: 3 * s, s: s, c: '#0A0B0E' }, { x: 5 * s, y: 3 * s, s: s, c: '#0A0B0E' });
+      for (let k = -1; k <= 9; k++) cells.push({ x: k * s, y: 10 * s, s: s, c: k % 2 ? '#5B341A' : '#7C4A26' });
+      const mineNote = p.mine && shared ? 'off to bed early' : p.note;
+      return {
+        name: p.name, asleep: asleep, anim: asleep ? 'pbreathe' : '',
+        left: left, top: top, w: w, h: h + s, cells: cells,
+        nameX: seats[i][0] - 40, nameY: seats[i][1] + s + 4,
+        bubX: seats[i][0] - 56, bubY: top - 26,
+        note: mineNote, hasNote: mineNote.length > 0, addNote: !!p.mine && !shared,
+        label: p.mine ? 'You. Write your camp note' : p.name + ', ' + (asleep ? 'asleep' : 'awake')
+      };
+    });
+
+    const toCells = (rows, map) => { const out = []; rows.forEach((row, ry) => row.split('').forEach((ch, rx) => { if (map[ch]) out.push({ x: rx * 4, y: ry * 4, c: map[ch] }); })); return out; };
+    const fmap = { o: '#F97316', y: '#FBBF24', w: '#FEF3C7', r: '#DC2626' };
+    const flameA = toCells(['....r......', '....oo.....', '...ooo.....', '...oyor....', '..ooyyo..r.', '..oyyyoo.o.', '.ooyyyyooo.', '.oyywyyyoo.', 'ooyywwyyyoo', 'ooyywwwyyoo', 'oyywwwwwyyo', 'oyywwwwwyyo', '.oyywwwyyo.'], fmap);
+    const flameB = toCells(['......r....', '.....oo....', '.....ooo...', '....royo...', '.r..oyyoo..', '.o.ooyyyo..', '.oooyyyyoo.', '.ooyyywyyo.', 'ooyyywwyyoo', 'ooyywwwyyoo', 'oyywwwwwyyo', 'oyywwwwwyyo', '.oyywwwyyo.'], fmap);
+    const logs = toCells(['...........', '...........', '...........', '...........', '...........', '...........', '...........', '...........', '...........', '...........', '...........', '...........', '...........', 'LL.......LL', 'BLLL...LLLB', '.BBLLLLLBB.'], { L: '#7C4A26', B: '#5B341A' });
+    if (!night) logs.push({ x: 16, y: 48, c: '#A8A29E' }, { x: 24, y: 48, c: '#D6D3D1' }, { x: 20, y: 44, c: '#A8A29E' });
+
+    return {
+      night: night,
+      sky: C.s1,
+      nameColor: night ? '#E0E7FF' : '#FFFFFF',
+      back: back, front: front, glow: glow, twinkles: twinkles,
+      coaches: coaches,
+      fireX: 173, fireY: 504,
+      flameA: flameA, flameB: flameB, logs: logs,
+      sparks: [12, 20, 28, 16, 24].map((x, i) => ({ x: x, d: i * 0.48 }))
+    };
+  }
+}
+</script>
+</body>
+</html>

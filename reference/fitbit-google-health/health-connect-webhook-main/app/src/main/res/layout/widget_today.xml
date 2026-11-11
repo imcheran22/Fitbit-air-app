@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_today_title"
+        android:textColor="@color/widget_brand"
+        android:textSize="16sp"
+        android:fontFamily="@font/bricolage_grotesque" />
+
+    <TextView
+        android:id="@+id/widget_locked"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:text="@string/widget_locked"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/widget_values"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout style="@style/WidgetTodayRow">
+            <TextView android:id="@+id/widget_steps" style="@style/WidgetTodayValue" />
+            <TextView android:id="@+id/widget_sleep" style="@style/WidgetTodayValue" />
+        </LinearLayout>
+        <LinearLayout style="@style/WidgetTodayRow">
+            <TextView android:text="@string/widget_today_steps" style="@style/WidgetTodayLabel" />
+            <TextView android:text="@string/widget_today_sleep" style="@style/WidgetTodayLabel" />
+        </LinearLayout>
+        <LinearLayout style="@style/WidgetTodayRow" android:layout_marginTop="8dp">
+            <TextView android:id="@+id/widget_weight" style="@style/WidgetTodayValue" />
+            <TextView android:id="@+id/widget_heart" style="@style/WidgetTodayValue" />
+        </LinearLayout>
+        <LinearLayout style="@style/WidgetTodayRow">
+            <TextView android:text="@string/widget_today_weight" style="@style/WidgetTodayLabel" />
+            <TextView android:text="@string/widget_today_heart" style="@style/WidgetTodayLabel" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_updated"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="12sp" />
+</LinearLayout>

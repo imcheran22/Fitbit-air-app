@@ -1,0 +1,1157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HealthConnectionStatus {
+  CONNECTED
+  DISCONNECTED
+}
+
+enum BiometricMetricType {
+  HRV
+  RESTING_HR
+  SLEEP
+  STEPS
+}
+
+// Identity is the Better Auth user: one row per person, email unique. Sign-in
+// methods (Apple, Google, email+password) are Account rows. A new method whose
+// VERIFIED email matches a VERIFIED user is linked to that user automatically
+// (spec 2026-09-23-better-auth-migration-design.md, decision 3); an unverified
+// sign-up can never attach to an existing account.
+model User {
+  id                    String              @id @default(uuid())
+  name                  String
+  email                 String              @unique
+  emailVerified         Boolean             @default(false)
+  image                 String?
+  updatedAt             DateTime            @updatedAt
+  sessions              Session[]
+  accounts              Account[]
+  createdAt             DateTime            @default(now())
+  healthConnection      HealthConnection?
+  biometricRecords      BiometricRecord[]
+  sleepSessions         SleepSession[]
+  baselineSnapshots     BaselineSnapshot[]
+  dailyFeatures         UserDailyFeatures[]
+  dailyScores           DailyScore[]
+  scoreInputFlags       ScoreInputFlag[]
+  habitTypes            HabitType[]
+  habitLogs             HabitLog[]
+  habitCheckIns         HabitCheckIn[]
+  habitCorrelations     HabitCorrelation[]
+  coachConsents         CoachConsent[]
+  coachConversations    CoachConversation[]
+  coachMessages         CoachMessage[]
+  coachMemories         CoachMemory[]
+  coachDigests          CoachDigest[]
+  coachDaySummaries     CoachDaySummary[]
+  pushTokens            PushToken[]
+  recaps                Recap[]
+  achievements          Achievement[]
+  goalChanges           GoalChange[]
+  buddyPairsA           BuddyPair[]         @relation("BuddyPairA")
+  buddyPairsB           BuddyPair[]         @relation("BuddyPairB")
+  buddyRequestsSent     BuddyRequest[]      @relation("BuddyRequestFrom")
+  buddyRequestsReceived BuddyRequest[]      @relation("BuddyRequestTo")
+  buddyCodesOwned       BuddyCode[]         @relation("BuddyCodeOwner")
+  buddyCodesUsed        BuddyCode[]         @relation("BuddyCodeUsedBy")
+  blocksMade            BuddyBlock[]        @relation("BuddyBlocker")
+  blocksReceived        BuddyBlock[]        @relation("BuddyBlocked")
+  mutesMade             BuddyMute[]         @relation("BuddyMuter")
+  mutesReceived         BuddyMute[]         @relation("BuddyMuted")
+  stickersSent          Sticker[]           @relation("StickerFrom")
+  stickersReceived      Sticker[]           @relation("StickerTo")
+  buddyActivityReceived BuddyActivity[]     @relation("BuddyActivityRecipient")
+  buddyActivityCaused   BuddyActivity[]     @relation("BuddyActivityActor")
+  handleHolds           HandleHold[]        @relation("HandleHoldOwner")
+  checkIns              CheckIn[]           @relation("CheckInAuthor")
+  storiesSeen           StorySeen[]         @relation("StorySeenViewer")
+  storySeenBy           StorySeen[]         @relation("StorySeenAuthor")
+  recapShares           RecapShare[]        @relation("RecapShareSharer")
+  stepGoalEvents        StepGoalEvent[]     @relation("StepGoalAuthor")
+  weeklyHighlights      WeeklyHighlights[]  @relation("WeeklyHighlightsViewer")
+  goodnights            Goodnight[]         @relation("GoodnightAuthor")
+  campNote              CampNote?           @relation("CampNoteAuthor")
+  conversationsA        Conversation[]      @relation("ConversationA")
+  conversationsB        Conversation[]      @relation("ConversationB")
+  messagesSent          Message[]           @relation("MessageSender")
+  messageReactions      MessageReaction[]   @relation("MessageReactor")
+  conversationReads     ConversationRead[]  @relation("ConversationReader")
+  statusNote            StatusNote?         @relation("StatusNoteAuthor")
+  reportsMade           Report[]            @relation("ReportReporter")
+  reportsAgainst        Report[]            @relation("ReportReported")
+
+  // The coach persona the user picked in Settings (an id from
+  // src/coach/personas). Null means the default persona.
+  coachPersonaId          String?
+  /// The KIP mascot's colour, by name (backend/src/kip/colours.ts); buddies see it.
+  kipColour               String              @default("coral")
+  /// Thinking attachment shown next to the coach while it works; null = default ('bulb').
+  coachThinkingAttachment String?
+  /// How the chat shows a reply is on its way; null = default ('steps').
+  coachThinkingText       String?
+
+  // Which model answers this user's coach messages (spec 2026-09-30 section 3).
+  // HOSTED is honoured only while the hosted engine is offered and the user
+  // holds a current HOSTED consent; otherwise the local model answers.
+  coachEngine CoachEngine @default(LOCAL)
+
+  // The single source of the sleep goal: scoring's sleep-debt factor, the
+  // dashboard goal and the coach's getUserGoals() must all read this one value
+  // (src/users/goals.ts) so they cannot drift apart. The 480 here must match
+  // DEFAULT_SLEEP_GOAL_MINUTES in that file.
+  sleepGoalMinutes Int @default(480)
+
+  /// Target bedtime and wake time, local "HH:MM"; null = not set. Display and reminder only, never scoring.
+  bedtimeGoal String?
+  wakeGoal    String?
+
+  /// "Recap ready" pushes (spec 2026-10-04 §2). App-level: independent of the coach.
+  recapPushEnabled Boolean @default(true)
+
+  /// Achievements start date (spec 2026-10-06 §3): the user's local date on launch day (launch
+  /// job) or on their first badge load. Only days/months from it count. Set once, never changed.
+  achievementsSince DateTime? @db.Date
+
+  /// Buddies (spec 2026-10-06 buddies §2-§3). Unique, lowercase [a-z0-9_]{3,20}; null until set up.
+  handle                     String?   @unique
+  /// Sanitised, 1-30 code points; null until set up.
+  displayName                String?
+  /// Share switches: one set for all buddies, all off. Read through effectiveSharing (sharing.ts):
+  /// with a stale consent version every switch reads as off.
+  shareRecovery              Boolean   @default(false)
+  shareSleepScore            Boolean   @default(false)
+  shareHoursSlept            Boolean   @default(false)
+  shareSteps                 Boolean   @default(false)
+  shareStreaks               Boolean   @default(false)
+  buddySharingConsentVersion Int?
+  buddySharingConsentAt      DateTime?
+  /// The one-time "mood is always shared" notice; every pairing action needs it.
+  buddyMoodNoticeAt          DateTime?
+  notifyBuddyStickers        Boolean   @default(true)
+  notifyBuddyRequests        Boolean   @default(true)
+  notifyBuddyBadges          Boolean   @default(true)
+  /// Chats (spec 2026-10-07 social §8.4): touched at most once a minute (presence). Shown to a buddy only while both
+  /// have chatActivityStatus on.
+  lastActiveAt               DateTime?
+  /// Reciprocal (spec §8.2, §8.4): off → you neither send nor see "Seen" / activity status.
+  chatReadReceipts           Boolean   @default(true)
+  chatActivityStatus         Boolean   @default(true)
+  /// dm_message pushes (spec §10); previews (the message text in the push) are off by default.
+  notifyDirectMessages       Boolean   @default(true)
+  showMessagePreviews        Boolean   @default(false)
+
+  // IANA zone name (e.g. "America/Los_Angeles"), client-supplied. It defines
+  // which local civil date a sleep session's end instant belongs to, so the
+  // derived SLEEP daily rollup lines up with the civil dates Google reports
+  // for STEPS/RESTING_HR/HRV. "UTC" is the fallback until the client reports.
+  timezone String @default("UTC")
+}
+
+// Better Auth core tables. Field names are Better Auth's; do not rename.
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  // The provider's subject ("sub") for apple/google; the user id for "credential".
+  accountId             String
+  // "apple" | "google" | "credential" (email + password)
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model HealthConnection {
+  id                       String                 @id @default(uuid())
+  userId                   String                 @unique
+  user                     User                   @relation(fields: [userId], references: [id])
+  healthUserId             String                 @unique
+  encryptedAccessToken     String
+  encryptedRefreshToken    String
+  tokenExpiresAt           DateTime
+  webhookSubscriptionId    String?
+  status                   HealthConnectionStatus @default(CONNECTED)
+  lastSyncedAt             DateTime?
+  // Set once the one-off 365-day STEPS history backfill (activity heat map)
+  // has succeeded; null means it still needs to run (see sync/stepsHistory.ts).
+  stepsHistoryBackfilledAt DateTime?
+  // The same for the one-off 365-day sleep history behind the activity heat
+  // map's Sleep page (see sync/sleepHistory.ts).
+  sleepHistoryBackfilledAt DateTime?
+  sleepStagesBackfilledAt  DateTime?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+}
+
+model BiometricRecord {
+  id         String              @id @default(uuid())
+  userId     String
+  user       User                @relation(fields: [userId], references: [id])
+  metricType BiometricMetricType
+  value      Float
+  recordedAt DateTime
+  syncedAt   DateTime            @default(now())
+
+  @@unique([userId, metricType, recordedAt])
+  @@index([userId, recordedAt])
+}
+
+// One row per Sleep object returned by Google, keyed by its start instant so a
+// re-fetch of the same session overwrites in place (idempotent). The
+// BiometricRecord SLEEP row for a day is a rollup *derived* from these rows
+// (sum of minutesAsleep for sessions ending on that local civil date), never
+// accumulated across syncs.
+model SleepSession {
+  id                    String       @id @default(uuid())
+  userId                String
+  user                  User         @relation(fields: [userId], references: [id])
+  startTime             DateTime
+  endTime               DateTime
+  minutesAsleep         Float
+  // The record's own UTC offsets (sleep.interval.startUtcOffset / endUtcOffset,
+  // "-14400s" -> -14400), in seconds east of UTC. They are Google's local-time
+  // basis for this session, so the day key and bedtime follow the traveller
+  // rather than User.timezone. Null on rows stored before they were captured
+  // (or when Google omitted them): those fall back to User.timezone until a
+  // re-fetch fills them in.
+  startUtcOffsetSeconds Int?
+  endUtcOffsetSeconds   Int?
+  // Google's night summary (spec 2026-10-03 §1). Null when Google omitted or garbled a value.
+  sleepType             String?
+  mainSleep             Boolean?
+  minutesInSleepPeriod  Float?
+  minutesAwake          Float?
+  minutesToFallAsleep   Float?
+  minutesAfterWakeUp    Float?
+  deepMinutes           Float?
+  lightMinutes          Float?
+  remMinutes            Float?
+  awakeMinutes          Float?
+  stages                SleepStage[]
+  syncedAt              DateTime     @default(now())
+
+  @@unique([userId, startTime])
+  @@index([userId, endTime])
+}
+
+enum SleepStageType {
+  AWAKE
+  LIGHT
+  DEEP
+  REM
+}
+
+/// One segment of a night's stage timeline, from Google's sleep.stages[] (spec 2026-10-03 §2).
+model SleepStage {
+  id        String         @id @default(uuid())
+  sessionId String
+  session   SleepSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  type      SleepStageType
+  startTime DateTime
+  endTime   DateTime
+
+  @@index([sessionId, startTime])
+}
+
+enum ScoreType {
+  RECOVERY
+  SLEEP
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ScoreInputFlagType {
+  OUTLIER
+}
+
+// Stage 3 output: the baseline a day's z-scores were computed against, so a
+// score is reproducible after the rolling window has moved on. `metric` is a
+// string (HRV | RESTING_HR | SLEEP | SLEEP_DEBT, later sleep-efficiency and
+// circadian) so Slice 1.5 can add series without a migration. While a metric
+// is cold-starting the stat columns are null and only daysOfHistory is
+// meaningful (it drives the "Building your baseline (9/14)" state).
+model BaselineSnapshot {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  metric           String
+  date             DateTime @db.Date
+  ewma             Float?
+  // sigma-hat = 1.4826 x MAD: on the same scale as a standard deviation.
+  spread           Float?
+  // Raw (unscaled) median absolute deviation.
+  mad              Float?
+  daysOfHistory    Int
+  algorithmVersion String
+
+  @@unique([userId, metric, date])
+  @@index([userId, date])
+}
+
+// Stage 2 output: one row per user per civil date, reused by every later
+// stage and (later) the coach. Z columns are nullable while cold-starting.
+model UserDailyFeatures {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  date             DateTime @db.Date
+  algorithmVersion String
+
+  sleepDebtRolling14d     Float?
+  hrvBaselineDeviationPct Float?
+  rhrBaselineDeviationPct Float?
+  // Computed and stored so the series exists to validate later, but
+  // deliberately EXCLUDED from the Recovery composite (steps are not a
+  // validated training-load proxy).
+  acuteChronicLoadRatio   Float?
+
+  // Correlation series for the habit engine (imputed days are excludable).
+  hrvZ                  Float?
+  hrvZImputed           Boolean @default(false)
+  rhrZ                  Float?
+  rhrZImputed           Boolean @default(false)
+  sleepDurationZ        Float?
+  sleepDurationZImputed Boolean @default(false)
+
+  // Slice 1.5 (Sleep Score) columns; nothing writes them yet.
+  sleepEfficiency              Float?
+  sleepEfficiencyZ             Float?
+  sleepEfficiencyZImputed      Boolean @default(false)
+  circadianConsistencyScore    Float?
+  circadianConsistencyZ        Float?
+  circadianConsistencyZImputed Boolean @default(false)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+// Stage 4/5 output. `factors` is the per-factor vector
+// [{factor, z, weight, contribution, points, imputed, excluded}]. `score` is
+// null when every factor is excluded (cold start): the row is still written so
+// the client can show baseline progress.
+model DailyScore {
+  id               String          @id @default(uuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id])
+  date             DateTime        @db.Date
+  type             ScoreType
+  algorithmVersion String
+  score            Float?
+  confidenceLevel  ConfidenceLevel
+  factors          Json
+  // Bumped on every recompute; the nightly sweep compares it with the inputs'
+  // syncedAt to find scores older than their data.
+  updatedAt        DateTime        @updatedAt
+
+  @@unique([userId, date, type])
+  @@index([userId, date])
+}
+
+// Persisted Stage-1 verdicts. The raw BiometricRecord is never altered or
+// deleted; the score computation just skips a flagged value.
+model ScoreInputFlag {
+  id        String             @id @default(uuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  metric    String
+  date      DateTime           @db.Date
+  flag      ScoreInputFlagType
+  value     Float
+  median    Float
+  mad       Float
+  createdAt DateTime           @default(now())
+
+  @@unique([userId, metric, date, flag])
+}
+
+enum HabitCorrelationStatus {
+  CANDIDATE
+  CONFIRMED
+  RETIRED
+}
+
+// User-defined habit types only. The built-ins (ALCOHOL, CAFFEINE, WORKOUT) live
+// in code (src/habits/config.ts) so their thresholds ship with a deploy instead
+// of needing a per-user seed. `type` is the stable id HabitLog rows reference;
+// it is generated once and never derived from the (editable-looking) label.
+model HabitType {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  type              String
+  label             String
+  unit              String
+  exposureThreshold Float
+  createdAt         DateTime @default(now())
+
+  @@unique([userId, type])
+}
+
+// `value` 0 is a real entry meaning "none", not a missing value. `habitDay` is
+// derived once at write time (04:00-local boundary, the timezone then in
+// effect) and stored, so a later timezone change never rewrites history.
+model HabitLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  habitType String
+  value     Float
+  unit      String
+  loggedAt  DateTime
+  habitDay  DateTime @db.Date
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, habitDay])
+}
+
+// "Everything for this day is logged, including nothing."
+model HabitCheckIn {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  habitDay  DateTime @db.Date
+  createdAt DateTime @default(now())
+  /// Made during its own habit day (04:00-local boundary). Set when the row is written, never
+  /// recomputed; only on-time check-ins count toward the check-in badge (spec 2026-10-06 §3).
+  onTime    Boolean  @default(false)
+
+  @@unique([userId, habitDay])
+}
+
+// One row per (habit, factor, lag) hypothesis that has ever passed the weekly
+// BH + |r| gate. Only CONFIRMED rows are ever surfaced. The stat columns hold
+// the latest TESTED run; they are null only if the row was never tested (which
+// cannot happen for a row created by a pass, but keeps the columns honest).
+model HabitCorrelation {
+  id                String                 @id @default(uuid())
+  userId            String
+  user              User                   @relation(fields: [userId], references: [id])
+  habitType         String
+  factor            String
+  lagDays           Int
+  status            HabitCorrelationStatus
+  consecutivePasses Int                    @default(0)
+  consecutiveMisses Int                    @default(0)
+  lastEvaluatedAt   DateTime
+  // ISO week the row was last evaluated in ("2026-W38"): makes a repeated run
+  // for the same week a no-op instead of double-counting a pass or a miss.
+  lastRunKey        String
+  r                 Float?
+  pValue            Float?
+  qValue            Float?
+  effectSizePercent Float?
+  comparisonPercent Float?
+  sampleSize        Int                    @default(0)
+  direction         String?
+  series            Json?
+
+  @@unique([userId, habitType, factor, lagDays])
+  @@index([userId, status])
+}
+
+// AI Coach (spec 2026-09-20-ai-coach-design.md). One row per consent grant for a
+// consent-text version; the latest un-revoked row for the CURRENT version is
+// what lets a coach turn run (a version bump therefore requires re-consent).
+// Revocation stamps revokedAt rather than deleting the row, keeping an audit
+// trail of what was agreed to and when.
+model CoachConsent {
+  id          String            @id @default(uuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  version     String
+  // LOCAL: the coach itself (the model this server runs). HOSTED: sending the
+  // question and fact sheet to the hosted model (Anthropic). Each scope has its
+  // own versioned text, and one scope's row never satisfies the other.
+  scope       CoachConsentScope @default(LOCAL)
+  consentedAt DateTime          @default(now())
+  revokedAt   DateTime?
+
+  @@index([userId, consentedAt])
+  @@index([userId, scope, consentedAt])
+}
+
+enum CoachConsentScope {
+  LOCAL
+  HOSTED
+}
+
+model CoachConversation {
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  createdAt     DateTime       @default(now())
+  lastMessageAt DateTime       @default(now())
+  messages      CoachMessage[]
+  memories      CoachMemory[]
+
+  @@index([userId, lastMessageAt])
+}
+
+enum CoachMessageRole {
+  USER
+  ASSISTANT
+}
+
+// Where an assistant reply came from: the model (guardrail-validated), the
+// server-composed fallback, or the fixed non-LLM safety reply. Null for USER rows.
+enum CoachMessageSource {
+  MODEL
+  FALLBACK
+  SAFETY
+}
+
+model CoachMessage {
+  id              String              @id @default(uuid())
+  conversationId  String
+  conversation    CoachConversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User                @relation(fields: [userId], references: [id])
+  role            CoachMessageRole
+  text            String
+  source          CoachMessageSource?
+  // Guardrail/latency events that occurred while producing this reply (reasons
+  // and counts only, never text).
+  guardrailEvents Json?
+  // The resolved answer card (headline, tiles or ranked rows, tip, source) the
+  // server built from the fact sheet; null for talk-only replies and USER rows.
+  card            Json?
+  // Which engine wrote the reply; null for USER, SAFETY and pre-redesign rows.
+  engine          CoachEngine?
+  // Wall time from receiving the message to the reply being ready.
+  durationMs      Int?
+  createdAt       DateTime            @default(now())
+  // Memory proposals this reply made, so history shows their chips on it.
+  memories        CoachMemory[]
+
+  @@index([conversationId, createdAt])
+}
+
+// The model engine that answered a coach message: the on-device (local Ollama)
+// model or the opt-in hosted model.
+enum CoachEngine {
+  LOCAL
+  HOSTED
+}
+
+// Coach memory (spec section 5/6): an ALLOWLIST, not a free-text store. The only
+// way a row is written is a validated proposeMemory call (closed category enum,
+// value <= 140 chars, health-fact classifier as a second layer). PENDING until
+// the user's next message fails to correct or dismiss it, then CONFIRMED; only
+// CONFIRMED rows are ever surfaced into a prompt.
+enum CoachMemoryCategory {
+  TRAINING_GOAL
+  SCHEDULE
+  PREFERENCE
+}
+
+enum CoachMemoryStatus {
+  PENDING
+  CONFIRMED
+}
+
+model CoachMemory {
+  id             String              @id @default(uuid())
+  userId         String
+  user           User                @relation(fields: [userId], references: [id])
+  category       CoachMemoryCategory
+  value          String              @db.VarChar(140)
+  status         CoachMemoryStatus   @default(PENDING)
+  createdAt      DateTime            @default(now())
+  confirmedAt    DateTime?
+  // The conversation the proposal was made in. A PENDING entry is settled by
+  // the user's next message IN THAT CONVERSATION; without this, a message in
+  // any other conversation confirmed or dismissed it. Null only for rows that
+  // predate this column.
+  conversationId String?
+  conversation   CoachConversation?  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  // The assistant message that proposed it, so history can show the chip on
+  // that message. Null for rows that predate this column, and once the message
+  // is gone (retention): the memory itself outlives its transcript.
+  messageId      String?
+  message        CoachMessage?       @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  // Dedupe enforced by the database, not only by the read-then-write check in
+  // createPendingMemories, which two turns could pass at the same time.
+  @@unique([userId, category, value])
+  @@index([userId, status, createdAt])
+  @@index([conversationId, status])
+  @@index([messageId])
+}
+
+// The weekly synthesis recap. One per user per local week (weekStart is the
+// Monday of that week), which is what makes the weekly job idempotent.
+model CoachDigest {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  text      String
+  personaId String
+  weekStart DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekStart])
+  @@index([userId, createdAt])
+}
+
+// The Coach page's one-sentence picture of the day (spec 2026-09-30 section 4).
+// One per user per local day. AI when the user's engine wrote a sentence that
+// passed validation; TEMPLATE when generation failed and the server's template
+// sentence was stored instead, so a failing model is not retried on every
+// page load. `spans` marks the words that tap through to a metric.
+enum CoachSummarySource {
+  AI
+  TEMPLATE
+}
+
+model CoachDaySummary {
+  id        String             @id @default(uuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  date      DateTime           @db.Date
+  text      String
+  spans     Json
+  source    CoachSummarySource
+  createdAt DateTime           @default(now())
+
+  @@unique([userId, date])
+}
+
+enum PushPlatform {
+  ios
+  android
+}
+
+// A device push token. The token is unique across users: a device that signs in
+// as someone else moves the row rather than duplicating it.
+model PushToken {
+  id        String       @id @default(uuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  token     String       @unique
+  platform  PushPlatform
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
+}
+
+enum RecapKind {
+  WEEK
+  MONTH
+}
+
+enum RecapStatus {
+  BUILT
+  SKIPPED
+}
+
+enum RecapTextSource {
+  AI
+  TEMPLATE
+}
+
+/// A weekly or monthly recap (spec 2026-10-04 §2). SKIPPED marks a thin period so the hourly
+/// sweep does not rebuild it; only the late-data rule re-checks it.
+model Recap {
+  id               String           @id @default(uuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  kind             RecapKind
+  periodStart      DateTime         @db.Date
+  periodEnd        DateTime         @db.Date
+  status           RecapStatus
+  /// The section-1 numbers; null when SKIPPED.
+  stats            Json?
+  /// The sleep goal at build time, used for every on-goal number; never changes afterwards.
+  sleepGoalMinutes Int
+  line             String?
+  lineSource       RecapTextSource?
+  /// The weekly paragraph (the merged digest); WEEK only.
+  story            String?
+  storySource      RecapTextSource?
+  personaId        String?
+  builtAt          DateTime         @default(now())
+  /// Set by the one allowed late-data rebuild.
+  rebuiltAt        DateTime?
+  openedAt         DateTime?
+  pushedAt         DateTime?
+  /// The late-data filter's mark: inputs stamped before it were already counted or compared. Null → builtAt.
+  inputsCheckedAt  DateTime?
+  shares           RecapShare[]
+
+  @@unique([userId, kind, periodStart])
+  @@index([userId, status, periodEnd])
+}
+
+enum AchievementFamily {
+  SLEEP_GOAL
+  STEADY_BEDTIME
+  STEP_GOAL
+  CHECK_IN
+  BEST_RECOVERY_WEEK
+  EVERY_DAY_LOGGED
+  STEADIEST_MONTH
+}
+
+/// One badge level a user earned (spec 2026-10-06 §3). Awarded once, never revoked or updated.
+model Achievement {
+  id           String            @id @default(uuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family       AchievementFamily
+  /// 1..5 (I Bronze .. V Coach); a CHECK constraint in the migration enforces the range.
+  level        Int
+  /// The threshold reached.
+  value        Int
+  /// Local date the run first reached the threshold; for a monthly family, the month's last day.
+  earnedOn     DateTime          @db.Date
+  weekStart    DateTime          @db.Date
+  monthStart   DateTime          @db.Date
+  createdAt    DateTime          @default(now())
+  celebratedAt DateTime?
+
+  @@unique([userId, family, level])
+  @@index([userId, celebratedAt])
+}
+
+enum GoalChangeKind {
+  SLEEP_MINUTES
+  BEDTIME
+}
+
+/// Sleep/bedtime goal history for the badge streaks (spec 2026-10-06 §3). Only the last change of
+/// a day is kept. A change applies to nights whose wake date is after effectiveOn.
+model GoalChange {
+  id           String         @id @default(uuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind         GoalChangeKind
+  sleepMinutes Int?
+  /// "HH:MM"; null = no bedtime goal (cleared, or none at the start).
+  bedtime      String?
+  effectiveOn  DateTime       @db.Date
+  resetsStreak Boolean
+  createdAt    DateTime       @default(now())
+
+  @@unique([userId, kind, effectiveOn])
+}
+
+// ---- Buddies (spec 2026-10-06 buddies §3) ----
+// Two-sided tables: no `userId` column, role-named user columns, every FK to User cascades
+// (BuddyCode.usedById and HandleHold.previousOwnerId set null). They stay outside
+// USER_OWNED_MODELS; tests/buddies/deletion.test.ts proves either side's deletion removes them.
+
+enum BuddyRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  EXPIRED
+}
+
+enum StickerKind {
+  CHEER
+  HEART
+  REST_UP
+  STAR
+}
+
+enum BuddyActivityKind {
+  STICKER
+  REQUEST
+  PAIRED
+  BUDDY_BADGE
+}
+
+/// One pair, stored with userAId < userBId.
+model BuddyPair {
+  id             String   @id @default(uuid())
+  userAId        String
+  userA          User     @relation("BuddyPairA", fields: [userAId], references: [id], onDelete: Cascade)
+  userBId        String
+  userB          User     @relation("BuddyPairB", fields: [userBId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  /// Set at pairing, bumped by every sticker between the two: the buddy list's order.
+  lastActivityAt DateTime @default(now())
+
+  @@unique([userAId, userBId])
+  @@index([userAId, lastActivityAt, id])
+  @@index([userBId, lastActivityAt, id])
+}
+
+/// At most one PENDING row per ordered pair: a partial unique index in the migration
+/// ("BuddyRequest_one_pending_key"), which Prisma does not model. Keep it if a future
+/// `migrate dev` proposes dropping it.
+model BuddyRequest {
+  id          String             @id @default(uuid())
+  fromUserId  String
+  fromUser    User               @relation("BuddyRequestFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId    String
+  toUser      User               @relation("BuddyRequestTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  status      BuddyRequestStatus @default(PENDING)
+  /// Never shown to the recipient (swallowed after a decline, or blocked).
+  hidden      Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  respondedAt DateTime?
+  /// The sender cancelled a request the target had declined: gone for the sender, still DECLINED.
+  withdrawnAt DateTime?
+  /// The target's handle when sent; the sender's outgoing list shows this, never the current handle.
+  toHandleAtSend String?
+
+  @@index([fromUserId, status, createdAt])
+  @@index([toUserId, status, createdAt])
+}
+
+model BuddyCode {
+  code      String    @id
+  ownerId   String
+  owner     User      @relation("BuddyCodeOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+  usedById  String?
+  usedBy    User?     @relation("BuddyCodeUsedBy", fields: [usedById], references: [id], onDelete: SetNull)
+
+  @@index([ownerId, expiresAt])
+  @@index([createdAt])
+}
+
+model BuddyBlock {
+  blockerId String
+  blocker   User     @relation("BuddyBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BuddyBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+/// Never visible to the muted person.
+model BuddyMute {
+  muterId   String
+  muter     User     @relation("BuddyMuter", fields: [muterId], references: [id], onDelete: Cascade)
+  mutedId   String
+  muted     User     @relation("BuddyMuted", fields: [mutedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([muterId, mutedId])
+  @@index([mutedId])
+}
+
+model Sticker {
+  id         String      @id @default(uuid())
+  fromUserId String
+  fromUser   User        @relation("StickerFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User        @relation("StickerTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  kind       StickerKind
+  sentAt     DateTime    @default(now())
+  seenAt     DateTime?
+
+  @@index([fromUserId, toUserId, sentAt])
+  @@index([toUserId, fromUserId, seenAt])
+}
+
+/// Ids only; the Activity DTOs are built at read time. Kept 90 days.
+model BuddyActivity {
+  id          String            @id @default(uuid())
+  recipientId String
+  recipient   User              @relation("BuddyActivityRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actorId     String
+  actor       User              @relation("BuddyActivityActor", fields: [actorId], references: [id], onDelete: Cascade)
+  kind        BuddyActivityKind
+  /// Sticker id / request id / BuddyPair id (PAIRED) / Achievement id (BUDDY_BADGE).
+  refId       String
+  createdAt   DateTime          @default(now())
+  seenAt      DateTime?
+
+  @@unique([recipientId, kind, refId])
+  @@index([recipientId, createdAt, id])
+  @@index([actorId])
+}
+
+/// A released handle, held 30 days as a keyed hash (HMAC-SHA-256), never the handle itself.
+model HandleHold {
+  handleHash      String   @id
+  previousOwnerId String?
+  previousOwner   User?    @relation("HandleHoldOwner", fields: [previousOwnerId], references: [id], onDelete: SetNull)
+  releasedAt      DateTime
+
+  @@index([previousOwnerId])
+}
+
+// ---- Social tab S1 (spec docs/superpowers/specs/2026-10-07-social-tab-design.md §4–§7) ----
+// Role-named owner columns (no `userId`), every User FK cascades — the Buddies convention.
+
+enum CheckInMood {
+  RESTED
+  OKAY
+  TIRED
+}
+
+/// One self-reported morning check-in per author per local day; always shared with buddies (spec §4.1).
+model CheckIn {
+  id        String      @id @default(uuid())
+  authorId  String
+  author    User        @relation("CheckInAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  localDate DateTime    @db.Date
+  mood      CheckInMood
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([authorId, localDate])
+  @@index([localDate])
+}
+
+/// The viewer reached the end of the author's story for that author-local day (spec §4.2).
+model StorySeen {
+  viewerId  String
+  viewer    User     @relation("StorySeenViewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("StorySeenAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  localDate DateTime @db.Date
+  seenAt    DateTime @default(now())
+  /// The newest frame the viewer reached (S3): a frame after it lights the ring again. Null on rows from before
+  /// S3, which count up to seenAt.
+  lastFrameAt DateTime?
+
+  @@id([viewerId, authorId, localDate])
+}
+
+/// The sharer explicitly shared one of their recaps with their buddies (spec §4.2 recap frame).
+model RecapShare {
+  id        String   @id @default(uuid())
+  sharerId  String
+  sharer    User     @relation("RecapShareSharer", fields: [sharerId], references: [id], onDelete: Cascade)
+  recapId   String
+  recap     Recap    @relation(fields: [recapId], references: [id], onDelete: Cascade)
+  /// The recap's headline as the sharer previewed it, trimmed. Frames read this, never the live Recap.line.
+  line      String   @default("")
+  localDate DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([sharerId, recapId])
+  @@index([sharerId, localDate])
+}
+
+/// The first sync of a local day that put the author's steps at or above STEPS_GOAL. No number stored (spec §5).
+model StepGoalEvent {
+  authorId  String
+  author    User     @relation("StepGoalAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  localDate DateTime @db.Date
+  at        DateTime @default(now())
+
+  @@id([authorId, localDate])
+  @@index([at])
+}
+
+/// Cached week highlights for one viewer's circle, built on first read after the week ends (spec §7, plan ruling).
+model WeeklyHighlights {
+  viewerId  String
+  viewer    User     @relation("WeeklyHighlightsViewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date
+  items     Json
+  builtAt   DateTime @default(now())
+
+  @@id([viewerId, weekStart])
+  @@index([weekStart])
+}
+
+// ---- Social tab S2: Campfire (spec docs/superpowers/specs/2026-10-07-social-tab-design.md §6) ----
+
+/// "Say goodnight": one per author per evening. `localDate` is the evening's date — a goodnight said between 00:00 and
+/// 05:59 local belongs to the previous date (spec §6.1). Self-reported and always shared with buddies, like CheckIn.
+model Goodnight {
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation("GoodnightAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  localDate DateTime @db.Date
+  at        DateTime
+  /// at <= bedtime goal + 15 min, or <= 23:00 local with no goal (spec §6.1), judged when it was said.
+  onTime    Boolean
+
+  @@unique([authorId, localDate])
+  @@index([at])
+}
+
+/// A camp note (spec §6.3): one per author, 1-40 code points of user free text. Never logged, never to the coach;
+/// only GET /me/camp returns it, to the author and their current buddies. Clears at expiresAt (the next 06:00 in the
+/// author's zone) or at the author's next check-in.
+model CampNote {
+  authorId  String   @id
+  author    User     @relation("CampNoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+// ---- Social tab S3: Chats (spec docs/superpowers/specs/2026-10-07-social-tab-design.md §8, §9) ----
+
+enum MessageKind {
+  TEXT
+  STICKER
+  CARD
+}
+
+enum ReportTarget {
+  MESSAGE
+  STATUS_NOTE
+  CAMP_NOTE
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  OTHER
+}
+
+/// One per buddy pair, stored once with userAId < userBId (like BuddyPair), made by the first message. Unpair and block
+/// delete it (messages, reactions and reads cascade).
+model Conversation {
+  id                String             @id @default(uuid())
+  userAId           String
+  userA             User               @relation("ConversationA", fields: [userAId], references: [id], onDelete: Cascade)
+  userBId           String
+  userB             User               @relation("ConversationB", fields: [userBId], references: [id], onDelete: Cascade)
+  createdAt         DateTime           @default(now())
+  lastMessageAt     DateTime           @default(now())
+  /// The newest LIVE message's time (the inbox order and cursor); null when every message is unsent. Set by each send,
+  /// recomputed by an unsend. lastMessageAt never goes back (it stamps sends), so it can hold an unsent message's time.
+  lastLiveMessageAt DateTime?
+  messages          Message[]
+  reads             ConversationRead[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId, lastMessageAt, id])
+  @@index([userBId, lastMessageAt, id])
+  @@index([userAId, lastLiveMessageAt, id])
+  @@index([userBId, lastLiveMessageAt, id])
+}
+
+/// A DM. text is user free text (TEXT, or a CARD's reply): never logged, never to the coach. card is the server's
+/// snapshot of a quoted item (src/chats/cards.ts). Unsend sets deletedAt and clears text, sticker and card.
+model Message {
+  id               String            @id @default(uuid())
+  conversationId   String
+  conversation     Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId         String
+  sender           User              @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  kind             MessageKind
+  text             String?
+  sticker          StickerKind?
+  card             Json?
+  replyToMessageId String?
+  replyTo          Message?          @relation("MessageReply", fields: [replyToMessageId], references: [id], onDelete: SetNull)
+  replies          Message[]         @relation("MessageReply")
+  createdAt        DateTime          @default(now())
+  deletedAt        DateTime?
+  reactions        MessageReaction[]
+
+  @@index([conversationId, createdAt, id])
+  // The reply self-FK sets null on delete, so deleting a conversation looks up replies per deleted message.
+  @@index([replyToMessageId])
+  @@index([senderId])
+}
+
+/// One reaction per person per message: one of the four sticker kinds.
+model MessageReaction {
+  messageId String
+  message   Message     @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reactorId String
+  reactor   User        @relation("MessageReactor", fields: [reactorId], references: [id], onDelete: Cascade)
+  kind      StickerKind
+  createdAt DateTime    @default(now())
+
+  @@id([messageId, reactorId])
+}
+
+/// How far each person has read a conversation ("Seen", unread counts).
+model ConversationRead {
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  readerId       String
+  reader         User         @relation("ConversationReader", fields: [readerId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime
+
+  @@id([conversationId, readerId])
+}
+
+/// A Chats note (spec §8.1): one per author, 1-60 code points of user free text, live 24 h. Never logged.
+model StatusNote {
+  authorId  String   @id
+  author    User     @relation("StatusNoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+/// A report (spec §9). excerpt: the reported text at report time, so the report outlives an unpair or block. No route
+/// reads reports; kept 90 days (social sweep). The reported person is never told.
+model Report {
+  id             String       @id @default(uuid())
+  reporterId     String
+  reporter       User         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId String
+  reportedUser   User         @relation("ReportReported", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  targetType     ReportTarget
+  /// A message id, or for a note its author's id.
+  targetId       String
+  reason         ReportReason
+  excerpt        String?
+  createdAt      DateTime     @default(now())
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([reportedUserId])
+  @@index([createdAt])
+}

@@ -1,0 +1,163 @@
+package com.hcwebhook.app
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
+import android.os.IBinder
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+
+class LocalHttpServerService : Service() {
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    override fun onCreate() {
+        super.onCreate()
+        runCatching { createNotificationChannel() }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_STOP -> {
+                // startForegroundService() obliges a startForeground() call, even to stop.
+                runCatching { promoteToForeground(buildFallbackNotification()) }
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            else -> {
+                try {
+                    val notification = buildNotification()
+                    promoteToForeground(notification)
+                } catch (_: Exception) {
+                    // Must still call startForeground(), or Android kills the app with
+                    // ForegroundServiceDidNotStartInTimeException.
+                    runCatching { promoteToForeground(buildFallbackNotification()) }
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                serviceScope.launch {
+                    LocalHttpServerManager.syncWithPreferences(applicationContext)
+                }
+            }
+        }
+        return START_STICKY
+    }
+
+    /**
+     * Android 15+ can still stop a specialUse FGS under policy. Stop cleanly
+     * within a few seconds so the system does not throw
+     * ForegroundServiceDidNotStopInTimeException.
+     */
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        Log.w(TAG, "Foreground service timeout (fgsType=$fgsType); stopping local HTTP server")
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf(startId)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Must not schedule stop() on serviceScope then cancel() — the job is cancelled
+        // before the socket closes, so the port stays open until the process dies.
+        runBlocking(Dispatchers.IO) {
+            LocalHttpServerManager.stop()
+        }
+        serviceScope.cancel()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun promoteToForeground(notification: Notification) {
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                // specialUse requires API 34+; older releases use dataSync for the same role.
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                )
+            }
+            else -> startForeground(NOTIFICATION_ID, notification)
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            getString(R.string.local_http_server_notification_channel_name),
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = getString(R.string.local_http_server_notification_channel_desc)
+        }
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(channel)
+    }
+
+    private fun buildFallbackNotification(): Notification =
+        NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(getString(R.string.local_http_server_notification_title))
+            .setOngoing(true)
+            .build()
+
+    private fun buildNotification(): Notification {
+        val port = PreferencesManager(this).getLocalTcpPort()
+        val openIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra(EXTRA_OPEN_LOCAL_HTTP, true)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(getString(R.string.local_http_server_notification_title))
+            .setContentText(getString(R.string.local_http_server_notification_text, port))
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .build()
+    }
+
+    companion object {
+        private const val TAG = "LocalHttpServerService"
+        private const val CHANNEL_ID = "local_http_server_channel"
+        private const val NOTIFICATION_ID = 1742
+        private const val ACTION_START = "com.hcwebhook.app.action.LOCAL_HTTP_SERVER_START"
+        private const val ACTION_STOP = "com.hcwebhook.app.action.LOCAL_HTTP_SERVER_STOP"
+        const val EXTRA_OPEN_LOCAL_HTTP = "extra_open_local_http"
+
+        fun start(context: Context) {
+            val intent = Intent(context, LocalHttpServerService::class.java).apply {
+                action = ACTION_START
+            }
+            runCatching {
+                androidx.core.content.ContextCompat.startForegroundService(context, intent)
+            }
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, LocalHttpServerService::class.java))
+        }
+    }
+}

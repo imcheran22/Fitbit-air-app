@@ -1,0 +1,65 @@
+name: Releaser
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  npm:
+    name: npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Pantry
+        uses: pantry-pm/pantry/packages/action@main
+        with:
+          install: 'false'
+
+      - name: Use cached node_modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            node-modules-
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build and verify package
+        run: |
+          bun --cwd packages/health run build
+          bun --cwd packages/health run check:package
+
+      - name: Publish to npm
+        working-directory: packages/health
+        run: bun publish --access public
+        env:
+          BUN_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify registry availability
+        working-directory: packages/health
+        run: |
+          package_version=$(bun -p 'require("./package.json").version')
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent "https://registry.npmjs.org/ts-health/$package_version" > /dev/null; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Published package is not available from the registry yet"
+          exit 1
+
+      - name: Create GitHub release
+        run: bunx changelogithub
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

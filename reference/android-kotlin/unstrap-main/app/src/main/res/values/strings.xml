@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Unstrap</string>
+    <string name="shortcut_run">Start run</string>
+    <string name="shortcut_strength">Start strength</string>
+    <!-- The long form of a launcher shortcut, shown where the launcher has room. -->
+    <string name="shortcut_run_long">Start a run</string>
+    <string name="shortcut_strength_long">Start a strength workout</string>
+    <string name="tile_workout">Start workout</string>
+    <!-- Home screen widgets (widgets spec 8). -->
+    <string name="widget_moment_name">Moment</string>
+    <string name="widget_moment_description">What matters now, changing through your day</string>
+    <string name="widget_recovery_name">Recovery</string>
+    <string name="widget_recovery_description">This morning\'s recovery and what\'s behind it</string>
+    <string name="widget_steps_name">Steps</string>
+    <string name="widget_steps_description">Steps today and your goal</string>
+    <string name="widget_sleep_name">Sleep</string>
+    <string name="widget_sleep_description">Last night\'s score, time asleep and stages</string>
+    <string name="widget_start_name">Start a workout</string>
+    <string name="widget_start_description">Start your usual sport in one tap</string>
+</resources>

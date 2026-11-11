@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Basic base</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 820px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">ROUND 6A · BASIC BASE</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5; max-width: 900px">Six plain bodies on a 16 × 16 grid: one flat colour, two 1 px eyes, nothing else, 52–63 cells each. They differ only in proportion and eye placement. The personality comes later, from the layers on board 6B.</p>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{bases}}" as="d" hint-placeholder-count="6">
+      <div style="background: #14161B; border: {{d.border}}; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; gap: 8px; align-items: flex-end; background: #0A0B0E; border-radius: 8px; padding: 8px">
+          <svg width="{{d.big.px}}" height="{{d.big.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 96 px on dark"><sc-for list="{{d.big.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg width="{{d.mid.px}}" height="{{d.mid.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 32 px on dark"><sc-for list="{{d.mid.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg width="{{d.small.px}}" height="{{d.small.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 16 px on dark"><sc-for list="{{d.small.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-end; background: #F4F2EE; border-radius: 8px; padding: 8px">
+          <svg width="{{d.big.px}}" height="{{d.big.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 96 px on light"><sc-for list="{{d.big.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg width="{{d.mid.px}}" height="{{d.mid.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 32 px on light"><sc-for list="{{d.mid.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg width="{{d.small.px}}" height="{{d.small.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 16 px on light"><sc-for list="{{d.small.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 16px; color: #E7E9EE">{{d.name}}</h2>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{d.cells}} cells</span>
+          <sc-if value="{{d.pick}}" hint-placeholder-val="{{ false }}"><span style="font-family: Silkscreen, monospace; font-size: 10px; color: #0A0B0E; background: #93C5FD; padding: 3px 6px 2px; border-radius: 4px">RECOMMENDED</span></sc-if>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #C9CDD5">{{d.note}}</p>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+var N = 16;
+var E = "................";
+function pad(top, rows) { var out = []; for (var i = 0; i < top; i++) out.push(E); out = out.concat(rows); while (out.length < N) out.push(E); return out; }
+var BODY = "#3B82F6";
+var BASES = [
+  { name: "SQUAT", note: "Low and wide with no legs. Calm and sturdy, and reads like a loaf at 16 px.",
+    rows: pad(7, ["...bbbbbbbbbb...", "...bbbbbbbbbb...", "...bbbebbebbb...", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "...bbbbbbbbbb..."]) },
+  { name: "TALL", note: "Eyes high on a narrow block. Alert, a little earnest, and great under tall hats.",
+    rows: pad(3, [".....bbbbbb.....", ".....bbbbbb.....", ".....bebbeb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb....."]) },
+  { name: "STUBS", pick: true, note: "A square on two stub legs. The plainest shape that clearly stands and walks, with a flat top for hats and flat sides for items.",
+    rows: pad(6, ["....bbbbbbbb....", "....bbbbbbbb....", "....bbebbebb....", "....bbbbbbbb....", "....bbbbbbbb....", "....bbbbbbbb....", "....bbbbbbbb....", ".....b....b.....", ".....b....b....."]) },
+  { name: "NUBS", note: "A narrow body with low arm nubs and two legs. The most expressive, and the busiest.",
+    rows: pad(4, [".....bbbbbb.....", ".....bbbbbb.....", ".....bebbeb.....", ".....bbbbbb.....", ".....bbbbbb.....", "....bbbbbbbb....", ".....bbbbbb.....", ".....bbbbbb.....", "......b..b......"]) },
+  { name: "SOFT", note: "A square with clipped corners. The friendliest, but it starts sliding toward blob.",
+    rows: pad(4, [".....bbbbbb.....", "....bbbbbbbb....", "....bbbbbbbb....", "....bbebbebb....", "....bbbbbbbb....", "....bbbbbbbb....", "....bbbbbbbb....", ".....bbbbbb....."]) },
+  { name: "BEAN", note: "A bean with a slight S-lean. The most organic shape, but hats sit less cleanly.",
+    rows: pad(3, [".......bbbb.....", "......bbbbbb....", ".....bbebbeb....", ".....bbbbbbb....", ".....bbbbbb.....", ".....bbbbbb.....", "....bbbbbbb.....", "....bbbbbbbb....", ".....bbbbbbb....", "......bbbbb....."]) }
+];
+
+function cellsOf(rows) {
+  var out = [];
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) { var L = rows[y][x]; out.push(L === "." ? null : L === "e" ? "#14161B" : BODY); }
+  return out;
+}
+function layers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] === c) n++;
+      if (!by[c]) { by[c] = ""; order.push(c); }
+      by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+function sprite(rows, s) { return { px: N * s, layers: layers(cellsOf(rows), s) }; }
+
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      bases: BASES.map(function (b) {
+        var count = b.rows.join("").replace(/\./g, "").length;
+        return {
+          name: b.name, note: b.note, cells: count, pick: !!b.pick,
+          border: b.pick ? "2px solid #93C5FD" : "1px solid #23262E",
+          big: sprite(b.rows, 6), mid: sprite(b.rows, 2), small: sprite(b.rows, 1)
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

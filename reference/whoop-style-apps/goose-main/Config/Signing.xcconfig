@@ -1,0 +1,13 @@
+// Shared signing config for the main app target — committed to git.
+// Override locally: create Config/Local.xcconfig (gitignored) with:
+//
+//   DEVELOPMENT_TEAM = YOUR_TEAM_ID
+//   APP_BUNDLE_ID = com.yourname.goose
+//
+// Both targets derive their bundle IDs from APP_BUNDLE_ID automatically.
+// Find your team ID at: https://developer.apple.com/account — Membership Details
+
+APP_BUNDLE_ID = com.goose.app
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID)
+
+#include? "Local.xcconfig"

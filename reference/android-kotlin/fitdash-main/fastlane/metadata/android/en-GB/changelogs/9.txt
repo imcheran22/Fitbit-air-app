@@ -1,0 +1,6 @@
+New icon.
+Water reminders: a gentle nudge when you are behind on water during your waking day, with a +250 ml button right in the notification. Turn on in Settings, Reminders.
+Move nudge after a still hour (needs background access).
+Streaks on Today for steps, sleep and water goals met in a row.
+Loading now shows which data is coming in, and the sync row confirms when you are up to date.
+Smoother rings and numbers when values change.

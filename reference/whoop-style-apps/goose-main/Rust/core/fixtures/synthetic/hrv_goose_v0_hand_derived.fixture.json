@@ -1,0 +1,22 @@
+{
+  "id": "synthetic.goose.hrv.v0.hand_derived",
+  "path": "synthetic/hrv_goose_v0_hand_derived.json",
+  "kind": "synthetic",
+  "source": "Hand-derived HRV fixture for Goose HRV v0 calculation tests.",
+  "captured_at": "2026-05-27T00:00:00Z",
+  "device_model": "not_applicable",
+  "device_firmware": "not_applicable",
+  "app_version": "not_applicable",
+  "schema": "goose.hrv-input.v1",
+  "consent": "synthetic-no-user-data",
+  "sensitivity": "public-test-fixture",
+  "notes": "20 RR intervals (700-1000 ms, ~60-85 BPM range). mean_nn=800.5 ms, RMSSD=11.3555, sample SDNN=6.6689, pNN50=0. Expanded from 4 to 20 intervals to satisfy goose_hrv_v0 minimum requirement.",
+  "expected": {
+    "algorithm_id": "goose.hrv.v0",
+    "version": "0.1.0",
+    "mean_nn_ms": 800.5,
+    "rmssd_ms": 11.355499479153378,
+    "sdnn_ms": 6.668859288553501,
+    "pnn50_fraction": 0.0
+  }
+}

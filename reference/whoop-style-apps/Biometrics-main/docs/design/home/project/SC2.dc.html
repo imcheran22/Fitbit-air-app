@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>S2 pages · Buddies, chats, blocked</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244);text-decoration:none}
+.ol{border-color:rgb(44,47,55);background:rgba(44,47,55,.3)}
+.df{background:rgb(245,245,244);color:rgb(10,11,14)}
+.cap{font-family:'Silkscreen',monospace;font-size:13px;letter-spacing:1px;color:rgb(155,157,166)}
+.phone{position:relative;width:390px;height:844px;flex:none;border-radius:28px;border:1px solid rgb(30,33,40);box-sizing:border-box;overflow:hidden;background:rgb(10,11,14);padding:54px 16px 32px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;align-items:center;gap:8px}
+.top h1{flex:1;margin:0;text-align:center;font-family:'Silkscreen',monospace;font-weight:400;font-size:18px;letter-spacing:1px}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166);padding:0 4px}
+.group{display:flex;flex-direction:column;gap:8px}
+.list{border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:54px;padding:9px 16px;box-sizing:border-box;border-top:1px solid rgb(30,33,40);text-decoration:none;color:rgb(245,245,244)}
+.row:first-child{border-top:0}
+.t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tt{font-size:15px}
+.st{font-size:13px;color:rgb(155,157,166)}
+.v{font-size:14px;color:rgb(155,157,166)}
+.chev{color:rgb(90,94,104);font-size:16px}
+.tg{width:40px;height:24px;border-radius:6px;background:rgb(245,245,244);position:relative;flex:none;border:0;padding:0;cursor:pointer}
+.tg span{position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:4px;background:rgb(10,11,14)}
+.tg.off{background:rgb(44,47,55)}
+.tg.off span{right:auto;left:3px;background:rgb(155,157,166)}
+.foot{font-size:12px;color:rgb(155,157,166);padding:0 4px;line-height:17px}
+</style>
+</helmet>
+<div style="width: 1250px; height: 920px; box-sizing: border-box; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 18px 20px 0; display: flex; gap: 40px">
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">BUDDIES &amp; SHARING</span>
+  <div class="phone">
+    <div class="top"><a href="S2.dc.html" class="b ol" aria-label="Back to Profile" style="width: 40px; height: 40px">‹</a><h1>BUDDIES</h1><span style="width: 40px"></span></div>
+    <div class="group"><div class="label">Your buddy name</div><div class="list">
+      <a href="#" class="row"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="4" y="6" width="7" height="7" fill="#FB7185"></rect><rect x="11" y="6" width="1" height="7" fill="#C4586A"></rect><rect x="5" y="13" width="1" height="2" fill="#FB7185"></rect><rect x="10" y="13" width="1" height="2" fill="#C4586A"></rect><rect x="6" y="8" width="1" height="1" fill="#14161B"></rect><rect x="9" y="8" width="1" height="1" fill="#14161B"></rect></svg><span class="t"><span class="tt">Tushar</span><span class="st">@tushar · how friends find you</span></span><span class="chev">›</span></a>
+    </div></div>
+    <div class="group"><div class="label">Shared with buddies</div><div class="list">
+      <div class="row"><span class="t"><span class="tt">Recovery score</span><span class="st">Your daily recovery score, last 7 days</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Recovery score"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Sleep score</span><span class="st">Your daily sleep score, last 7 days</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Sleep score"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Hours slept</span><span class="st">How long you slept, last 7 days</span></span><button class="tg off" role="switch" aria-checked="false" aria-label="Hours slept"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Steps</span><span class="st">Your daily steps, and “moved a lot yesterday”</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Steps"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Streaks &amp; badges</span><span class="st">Your sleep streak and badge levels</span></span><button class="tg off" role="switch" aria-checked="false" aria-label="Streaks and badges"><span></span></button></div>
+    </div><div class="foot">Buddies always see your mood and coach. Each number stays off until you turn it on.</div></div>
+    <a href="#" class="list" style="text-decoration: none; color: inherit"><span class="row"><span class="t"><span class="tt">Blocked people</span></span><span class="v">1</span><span class="chev">›</span></span></a>
+  </div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">CHATS</span>
+  <div class="phone">
+    <div class="top"><a href="S2.dc.html" class="b ol" aria-label="Back to Profile" style="width: 40px; height: 40px">‹</a><h1>CHATS</h1><span style="width: 40px"></span></div>
+    <div class="group"><div class="label">Privacy</div><div class="list">
+      <div class="row"><span class="t"><span class="tt">Read receipts</span><span class="st">Show “Seen” when you’ve read a chat. Off, you won’t see theirs either.</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Read receipts"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Show activity status</span><span class="st">Let buddies see when you were last active. Off, you won’t see theirs either.</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Show activity status"><span></span></button></div>
+    </div></div>
+    <div class="group"><div class="label">Alerts</div><div class="list">
+      <a href="#" class="row"><span class="t"><span class="tt">Message notifications</span><span class="st">Messages on · previews off</span></span><span class="chev">›</span></a>
+    </div><div class="foot">Message alerts live in Notifications; this is a shortcut.</div></div>
+  </div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">BLOCKED PEOPLE</span>
+  <div class="phone">
+    <div class="top"><a href="#" class="b ol" aria-label="Back to Buddies" style="width: 40px; height: 40px">‹</a><h1>BLOCKED</h1><span style="width: 40px"></span></div>
+    <div class="list">
+      <div class="row"><span style="width: 32px; height: 32px; border-radius: 8px; background: rgb(28,31,38); display: flex; align-items: center; justify-content: center; font-family: Silkscreen, monospace; font-size: 12px; color: rgb(155,157,166); flex: none">K</span><span class="t"><span class="tt">Kai</span><span class="st">@kai_runs · blocked Sep 21</span></span><button class="b ol" style="height: 36px; padding: 0 12px; font-size: 13px">Unblock</button></div>
+    </div>
+    <div class="foot">Blocked people can’t see you, send stickers or message you. They aren’t told.</div>
+    <div class="list" style="padding: 24px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; border-style: dashed">
+      <span class="label">Empty state</span>
+      <span class="st">You haven’t blocked anyone.</span>
+    </div>
+  </div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1250,"height":920}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

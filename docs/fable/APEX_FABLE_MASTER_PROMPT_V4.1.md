@@ -3,7 +3,7 @@
 
 > **How to use:** Open the repository as the workspace in Claude Code (or an equivalent agentic Android environment), paste this entire file, and allow a long uninterrupted session. This brief supersedes `APEX_BUILD_PROMPT_FABLE_V2.md`, `APEX_FABLE_MASTER_PROMPT_V3.md`, the long `DOC-…WA0000_` brief, and the two standalone prompts (phase manifest and Takeout engine). Where those disagreed, Section 3 states the resolution. Do not relitigate it.
 >
-> **v4.1 changes (design and workspace):** the UI/UX reference is now **Pulse Mobile 0.5.0**, translated into `docs/design/DESIGN_SYSTEM.md`; `:core:ui` already holds the theme foundation (tokens, typography, bundled fonts, contrast test); third-party reference codebases sit outside the repo in `../reference/` and are indexed in `docs/REFERENCES.md`; repo-level working rules are in `CLAUDE.md`. Changed sections: 0.3, 2, 3, 7.3, 7.4, 12. Everything else is v4.0 unchanged.
+> **v4.1 changes (design and workspace):** the UI/UX reference is now **Pulse Mobile 0.5.0**, translated into `docs/design/DESIGN_SYSTEM.md`; `:core:ui` already holds the theme foundation (tokens, typography, bundled fonts, contrast test); third-party reference codebases sit outside the repo in `reference/` and are indexed in `docs/REFERENCES.md`; repo-level working rules are in `CLAUDE.md`. Changed sections: 0.3, 2, 3, 7.3, 7.4, 12. Everything else is v4.0 unchanged.
 
 ---
 

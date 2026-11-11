@@ -1,0 +1,47 @@
+fitdash is a calm, private dashboard for the data your watch, ring or phone already writes to Health Connect. Open it, see how you are doing today, and get on with your day.
+
+There is no account to create, no cloud and no internet permission. Your data stays on your phone.
+
+WHAT YOU GET
+
+Four swipeable pages:
+
+- Today: a recovery score in a single glance, with sleep, recovery and movement shown against your own recent baseline. HRV, resting heart rate and overnight vitals are shown against your normal range, with a short suggestion for the day.
+- Sleep: last night's score, total time asleep, time in bed, stages and overnight heart rate.
+- Activity: steps against your goal, an hourly steps chart, distance, calories and active minutes.
+- Trends: week, month and six-month views of recovery, sleep, steps, resting heart rate and HRV, plus Body and Heart sections for anything else Health Connect holds for you, such as weight, blood pressure or VO2 max.
+
+Also included:
+
+- Day picker: look back at any recent day.
+- Two themes: Midnight Teal and Graphite.
+- Share day: turn the day into an image and send it wherever you choose.
+- Ask AI: build a plain-text summary of your recent data and hand it to the AI app of your choice. You pick the app; fitdash makes no network connections and hands the text or image to it.
+- Data sources: see which Health Connect data types fitdash can read and which apps supplied them.
+
+PRIVACY
+
+- No internet permission. The release APK requests no INTERNET permission, so fitdash itself cannot connect to the internet. It can open links (GitHub and the Play Store page for Health Connect) in your browser or the Play Store; these links carry none of your data.
+- No account, no sign-in, no server.
+- fitdash writes only the water and height you enter yourself. It never changes or deletes any other data. Undo deletes only the water entry you just added.
+- No analytics, advertising, crash reporting or trackers.
+- Data only leaves your phone when you choose to share it. Ask AI and Share day use the standard Android share sheet, and you choose the destination each time. The summary and image contain health metrics, so the app you pick handles them under its own privacy policy.
+- So it opens instantly, fitdash keeps a copy of the data it last read from Health Connect in its private app storage. Other apps can't read it, backup is off, and clearing storage or uninstalling removes it.
+
+You can read the privacy policy at https://mayurrawte.is-a.dev/fitdash/privacy.html
+
+OPEN SOURCE
+
+fitdash is free software under the GPL-3.0 licence. The full source code, including the build and release workflow, is public on GitHub at github.com/mayurrawte/fitdash, so you can check for yourself what the app does.
+
+WORKS WITH YOUR DEVICE
+
+fitdash works with any device or app that writes to Health Connect, including Fitbit, Pixel Watch and Galaxy Watch. It shows only what your device records. If something is missing, such as sleep stages or HRV, that device does not provide it, and fitdash simply leaves it out.
+
+REQUIREMENTS
+
+Android 8.0 or later with Health Connect. On Android 14 and later Health Connect is built in. On earlier versions, install it from Google Play. You choose which data types to allow when you first open the app, and you can change this at any time in Health Connect settings.
+
+IMPORTANT
+
+fitdash is not a medical device. Its scores, ranges and suggestions are general wellbeing information based on your own recent data. They are not a diagnosis and are not a substitute for advice from a qualified health professional.

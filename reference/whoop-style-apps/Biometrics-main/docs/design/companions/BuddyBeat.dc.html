@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Companion: Beat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#0A0B0E;color:#F5F5F4}
+.bt-beat{transform-box:view-box;transform-origin:50px 56px;animation:bt-beat 1.2s ease-in-out infinite}
+@keyframes bt-beat{0%,40%,100%{transform:scale(1)}15%{transform:scale(1.06)}25%{transform:scale(.99)}32%{transform:scale(1.03)}}
+.bt-fast{transform-box:view-box;transform-origin:50px 56px;animation:bt-beat .7s ease-in-out infinite}
+.bt-look{animation:bt-look 1.8s ease-in-out infinite}
+@keyframes bt-look{0%,100%{transform:translate(0,0)}35%{transform:translate(-4px,-3px)}70%{transform:translate(4px,-3px)}}
+.bt-blink{transform-box:fill-box;transform-origin:center;animation:bt-blink 4.2s ease-in-out infinite}
+@keyframes bt-blink{0%,45%,49%,100%{transform:scaleY(1)}47%{transform:scaleY(.1)}}
+</style>
+</helmet>
+<div style="width: 880px; height: 620px; box-sizing: border-box; padding: 40px; background: #0A0B0E; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 12px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #FB7185">Companion 8</span>
+    <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 44px; line-height: 1">Beat</span>
+    <span style="font-size: 15px; color: #9B9DA6">A heart with a face, beating gently at rest. It's the most “health app” of the ten: caring, simple and obvious.</span>
+  </div>
+  <div style="display: flex; gap: 20px; flex-grow: 1">
+    <div style="width: 300px; border-radius: 28px; background: radial-gradient(circle at 50% 45%, rgba(251,113,133,0.18), #14161B 65%); border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 26px 20px 20px 20px">
+      <svg width="190" height="190" viewBox="0 0 100 100" aria-label="Beat">
+        <defs><linearGradient id="bt-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FDA4AF"></stop><stop offset="1" stop-color="#F43F5E"></stop></linearGradient></defs>
+        <g class="bt-beat">
+          <path d="M50 88 C44 82 12 62 12 38 C12 24 22 16 33 16 C41 16 47 21 50 27 C53 21 59 16 67 16 C78 16 88 24 88 38 C88 62 56 82 50 88 Z" fill="url(#bt-body)"></path>
+          <ellipse class="bt-blink" cx="40" cy="44" rx="4" ry="5.5" fill="#4C0519"></ellipse><ellipse class="bt-blink" cx="60" cy="44" rx="4" ry="5.5" fill="#4C0519"></ellipse>
+          <path d="M45 56 Q50 60 55 56" fill="none" stroke="#4C0519" stroke-width="2.5" stroke-linecap="round"></path>
+          <ellipse cx="30" cy="52" rx="5" ry="3" fill="rgba(255,255,255,0.3)"></ellipse><ellipse cx="70" cy="52" rx="5" ry="3" fill="rgba(255,255,255,0.3)"></ellipse>
+        </g>
+      </svg>
+      <div style="width: 260px; height: 56px; border-radius: 28px; background: #1C1F26; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-around">
+        <span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span><span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span>
+        <svg width="42" height="42" viewBox="0 0 100 100"><path d="M50 92 C42 84 6 62 6 36 C6 20 18 12 30 12 C40 12 46 18 50 24 C54 18 60 12 70 12 C82 12 94 20 94 36 C94 62 58 84 50 92 Z" fill="url(#bt-body)"></path><ellipse cx="38" cy="42" rx="6" ry="8" fill="#4C0519"></ellipse><ellipse cx="62" cy="42" rx="6" ry="8" fill="#4C0519"></ellipse></svg>
+        <span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span><span style="width: 18px; height: 18px; border-radius: 9px; border: 2px solid #6B6E78"></span>
+      </div>
+    </div>
+    <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><g class="bt-beat"><path d="M50 88 C44 82 12 62 12 38 C12 24 22 16 33 16 C41 16 47 21 50 27 C53 21 59 16 67 16 C78 16 88 24 88 38 C88 62 56 82 50 88 Z" fill="url(#bt-body)"></path><ellipse class="bt-blink" cx="40" cy="44" rx="4" ry="5.5" fill="#4C0519"></ellipse><ellipse class="bt-blink" cx="60" cy="44" rx="4" ry="5.5" fill="#4C0519"></ellipse><path d="M45 56 Q50 60 55 56" fill="none" stroke="#4C0519" stroke-width="2.5" stroke-linecap="round"></path></g></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Idle · calm heartbeat</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><path d="M50 88 C44 82 12 62 12 38 C12 24 22 16 33 16 C41 16 47 21 50 27 C53 21 59 16 67 16 C78 16 88 24 88 38 C88 62 56 82 50 88 Z" fill="url(#bt-body)"></path><g class="bt-look"><ellipse cx="40" cy="42" rx="4" ry="5.5" fill="#4C0519"></ellipse><ellipse cx="60" cy="42" rx="4" ry="5.5" fill="#4C0519"></ellipse></g><circle cx="50" cy="57" r="2.5" fill="#4C0519"></circle></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Thinking · eyes wander</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><g class="bt-fast"><path d="M50 88 C44 82 12 62 12 38 C12 24 22 16 33 16 C41 16 47 21 50 27 C53 21 59 16 67 16 C78 16 88 24 88 38 C88 62 56 82 50 88 Z" fill="url(#bt-body)"></path><path d="M35 44 Q40 38 45 44" fill="none" stroke="#4C0519" stroke-width="3" stroke-linecap="round"></path><path d="M55 44 Q60 38 65 44" fill="none" stroke="#4C0519" stroke-width="3" stroke-linecap="round"></path><path d="M43 54 Q50 62 57 54" fill="#4C0519"></path></g></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Answering · happy flutter</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><path d="M50 88 C44 82 12 62 12 38 C12 24 22 16 33 16 C41 16 47 21 50 27 C53 21 59 16 67 16 C78 16 88 24 88 38 C88 62 56 82 50 88 Z" fill="#E48A9A"></path><path d="M35 46 Q40 49 45 46" fill="none" stroke="#4C0519" stroke-width="2.5" stroke-linecap="round"></path><path d="M55 46 Q60 49 65 46" fill="none" stroke="#4C0519" stroke-width="2.5" stroke-linecap="round"></path><path d="M47 57 Q50 58 53 57" fill="none" stroke="#4C0519" stroke-width="2.5" stroke-linecap="round"></path><path d="M14 80 Q50 70 86 80" fill="none" stroke="#A5B4FC" stroke-width="4" stroke-linecap="round"></path></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Resting day · slow, soft beat</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

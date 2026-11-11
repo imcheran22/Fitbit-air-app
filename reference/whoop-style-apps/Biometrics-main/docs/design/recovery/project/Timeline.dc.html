@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recovery · Day pager and calendar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244)}
+.b:active{transform:translateY(1px);filter:brightness(.9)}
+.eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:rgb(155,157,166);font-weight:600}
+.num{font-variant-numeric:tabular-nums}
+.c{height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:rgb(10,11,14)}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 1720px; overflow: hidden; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif">
+
+  <div style="position: absolute; top: 54px; left: 12px; right: 12px; display: flex; align-items: center; gap: 8px">
+    <button class="b" aria-label="Back to Home" style="width: 40px; height: 40px; border-color: rgb(44,47,55); background: rgba(44,47,55,.3)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    </button>
+    <div style="flex: 1; font-size: 16px; font-weight: 700; text-align: center">Recovery</div>
+    <button class="b" aria-label="How the score works" style="width: 40px; height: 40px; border-color: rgb(44,47,55); background: rgba(44,47,55,.3)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>
+    </button>
+  </div>
+
+  <div role="tablist" aria-label="Day" style="position: absolute; top: 110px; left: 12px; right: 12px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+    <button class="b" role="tab" aria-selected="false" style="height: 60px; flex-direction: column; gap: 2px; border-color: rgb(34,37,44)"><span style="font-size: 11px; color: rgb(155,157,166)">Thu</span><span class="num" style="font-size: 15px">58</span><span style="width: 18px; height: 3px; border-radius: 2px; background: rgb(251,191,36)"></span></button>
+    <button class="b" role="tab" aria-selected="false" style="height: 60px; flex-direction: column; gap: 2px; border-color: rgb(34,37,44)"><span style="font-size: 11px; color: rgb(155,157,166)">Fri</span><span class="num" style="font-size: 15px">72</span><span style="width: 18px; height: 3px; border-radius: 2px; background: rgb(163,230,53)"></span></button>
+    <button class="b" role="tab" aria-selected="false" style="height: 60px; flex-direction: column; gap: 2px; border-color: rgb(34,37,44)"><span style="font-size: 11px; color: rgb(155,157,166)">Sat</span><span class="num" style="font-size: 15px">81</span><span style="width: 18px; height: 3px; border-radius: 2px; background: rgb(74,222,128)"></span></button>
+    <button class="b" role="tab" aria-selected="false" style="height: 60px; flex-direction: column; gap: 2px; border-color: rgb(34,37,44)"><span style="font-size: 11px; color: rgb(155,157,166)">Sun</span><span class="num" style="font-size: 15px">66</span><span style="width: 18px; height: 3px; border-radius: 2px; background: rgb(163,230,53)"></span></button>
+    <button class="b" role="tab" aria-selected="false" style="height: 60px; flex-direction: column; gap: 2px; border-color: rgb(34,37,44)"><span style="font-size: 11px; color: rgb(155,157,166)">Mon</span><span class="num" style="font-size: 15px">38</span><span style="width: 18px; height: 3px; border-radius: 2px; background: rgb(248,113,113)"></span></button>
+    <button class="b" role="tab" aria-selected="false" style="height: 60px; flex-direction: column; gap: 2px; border-color: rgb(34,37,44)"><span style="font-size: 11px; color: rgb(155,157,166)">Tue</span><span class="num" style="font-size: 15px">62</span><span style="width: 18px; height: 3px; border-radius: 2px; background: rgb(163,230,53)"></span></button>
+    <button class="b" role="tab" aria-selected="true" style="height: 60px; flex-direction: column; gap: 2px; background: rgb(245,245,244); color: rgb(10,11,14)"><span style="font-size: 11px; color: rgb(80,82,90)">Today</span><span class="num" style="font-size: 15px; font-weight: 700">68</span><span style="width: 18px; height: 3px; border-radius: 2px; background: rgb(101,163,13)"></span></button>
+  </div>
+
+  <div style="position: absolute; top: 200px; left: 20px; right: 20px; display: flex; align-items: flex-end; gap: 16px">
+    <div class="num" style="font-family: 'Instrument Serif', serif; font-size: 112px; line-height: 100px; letter-spacing: -2px">68</div>
+    <div style="padding-bottom: 10px; display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 2px; background: rgb(163,230,53)"></span><span style="font-size: 15px; font-weight: 600">Good</span></div>
+      <div class="num" style="font-size: 13px; color: rgb(155,157,166)">+6 vs yesterday</div>
+      <div class="num" style="font-size: 13px; color: rgb(155,157,166)">+5 vs your 30-day avg</div>
+    </div>
+  </div>
+  <div style="position: absolute; top: 320px; left: 20px; right: 20px; font-size: 15px; line-height: 22px; color: rgb(200,201,207)">Bounced back from Monday's low. HRV led the way; sleep debt is still yours to pay down.</div>
+
+  <div style="position: absolute; top: 396px; left: 16px; right: 16px; padding: 18px; border-radius: 22px; background: rgb(20,22,27); display: flex; flex-direction: column; gap: 6px">
+    <div class="eyebrow" style="margin-bottom: 6px">How 50 became 68</div>
+    <div style="display: flex; align-items: center; gap: 10px; height: 34px">
+      <div style="width: 92px; font-size: 14px; color: rgb(155,157,166)">Baseline</div>
+      <div style="flex: 1; position: relative; height: 24px">
+        <div style="position: absolute; left: 0; width: 50%; top: 0; bottom: 0; border-radius: 6px; background: rgb(44,47,55)"></div>
+      </div>
+      <div class="num" style="width: 34px; text-align: right; font-size: 14px">50</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; height: 34px">
+      <div style="width: 92px; font-size: 14px">HRV 58 ms</div>
+      <div style="flex: 1; position: relative; height: 24px">
+        <div style="position: absolute; left: 50%; width: 14%; top: 0; bottom: 0; border-radius: 6px; background: rgb(45,212,191)"></div>
+      </div>
+      <div class="num" style="width: 34px; text-align: right; font-size: 14px; color: rgb(45,212,191)">+14</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; height: 34px">
+      <div style="width: 92px; font-size: 14px">RHR 54 bpm</div>
+      <div style="flex: 1; position: relative; height: 24px">
+        <div style="position: absolute; left: 64%; width: 3%; top: 0; bottom: 0; border-radius: 6px; background: rgb(45,212,191)"></div>
+      </div>
+      <div class="num" style="width: 34px; text-align: right; font-size: 14px; color: rgb(45,212,191)">+3</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; height: 34px">
+      <div style="width: 92px; font-size: 14px">Debt 3h 10m</div>
+      <div style="flex: 1; position: relative; height: 24px">
+        <div style="position: absolute; left: 62%; width: 5%; top: 0; bottom: 0; border-radius: 6px; background: rgb(251,113,133)"></div>
+      </div>
+      <div class="num" style="width: 34px; text-align: right; font-size: 14px; color: rgb(251,113,133)">−5</div>
+    </div>
+    <div style="height: 1px; background: rgb(34,37,44); margin: 4px 0"></div>
+    <div style="display: flex; align-items: center; gap: 10px; height: 34px">
+      <div style="width: 92px; font-size: 14px; font-weight: 600">Today</div>
+      <div style="flex: 1; position: relative; height: 24px">
+        <div style="position: absolute; left: 0; width: 68%; top: 0; bottom: 0; border-radius: 6px; background: rgb(163,230,53)"></div>
+      </div>
+      <div class="num" style="width: 34px; text-align: right; font-size: 14px; font-weight: 700">68</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; top: 740px; left: 16px; right: 16px; padding: 18px; border-radius: 22px; background: rgb(20,22,27); display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <div class="eyebrow">HRV vs your usual</div>
+      <div role="radiogroup" aria-label="Signal" style="display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: rgb(28,31,38)">
+        <button class="b" role="radio" aria-checked="true" style="height: 26px; padding: 0 10px; font-size: 12px; background: rgb(245,245,244); color: rgb(10,11,14)">HRV</button>
+        <button class="b" role="radio" aria-checked="false" style="height: 26px; padding: 0 10px; font-size: 12px; color: rgb(155,157,166)">RHR</button>
+        <button class="b" role="radio" aria-checked="false" style="height: 26px; padding: 0 10px; font-size: 12px; color: rgb(155,157,166)">Debt</button>
+      </div>
+    </div>
+    <svg width="326" height="130" viewBox="0 0 326 130">
+      <path d="M0,58 L40,57 L80,56 L120,57 L160,55 L200,55 L240,54 L280,54 L326,53 L326,85 L280,86 L240,86 L200,87 L160,87 L120,89 L80,88 L40,89 L0,90 Z" fill="rgb(44,47,55)" opacity=".7"></path>
+      <polyline points="0,72 22,66 44,80 66,70 88,62 110,74 132,84 154,68 176,60 198,52 220,58 242,104 264,88 286,70 308,50 326,40" fill="none" stroke="rgb(45,212,191)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+      <circle cx="242" cy="104" r="4" fill="rgb(248,113,113)"></circle>
+      <circle cx="326" cy="40" r="5" fill="rgb(45,212,191)" stroke="rgb(20,22,27)" stroke-width="2"></circle>
+    </svg>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; color: rgb(155,157,166)"><span>24 Sep</span><span>Mon dip: late night out</span><span>Today 58</span></div>
+  </div>
+
+  <div style="position: absolute; top: 1014px; left: 16px; right: 16px; padding: 18px; border-radius: 22px; background: rgb(20,22,27); display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <div class="eyebrow">October</div>
+      <div style="display: flex; gap: 6px">
+        <button class="b" aria-label="Previous month" style="width: 32px; height: 32px; border-color: rgb(44,47,55)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+        <button class="b" aria-label="Next month" style="width: 32px; height: 32px; border-color: rgb(44,47,55); color: rgb(90,92,100)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></button>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; font-size: 11px; color: rgb(155,157,166); text-align: center">
+      <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+      <div class="c" style="background: transparent"></div><div class="c" style="background: transparent"></div>
+      <div class="c" style="background: rgb(163,230,53)">64</div>
+      <div class="c" style="background: rgb(251,191,36)">58</div>
+      <div class="c" style="background: rgb(163,230,53)">72</div>
+      <div class="c" style="background: rgb(74,222,128)">81</div>
+      <div class="c" style="background: rgb(163,230,53)">66</div>
+      <div class="c" style="background: rgb(248,113,113)">38</div>
+      <div class="c" style="background: rgb(163,230,53)">62</div>
+      <div class="c" style="background: rgb(163,230,53); box-shadow: 0 0 0 2px rgb(20,22,27), 0 0 0 4px rgb(245,245,244)">68</div>
+      <div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">9</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">10</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">11</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">12</div>
+      <div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">13</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">14</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">15</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">16</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">17</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">18</div><div class="c" style="background: rgb(28,31,38); color: rgb(90,92,100)">19</div>
+    </div>
+    <div style="display: flex; gap: 12px; font-size: 11px; color: rgb(155,157,166)">
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 2px; background: rgb(74,222,128)"></span>Excellent</span>
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 2px; background: rgb(163,230,53)"></span>Good</span>
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 2px; background: rgb(251,191,36)"></span>Fair</span>
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 8px; height: 8px; border-radius: 2px; background: rgb(248,113,113)"></span>Low</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; top: 1386px; left: 16px; right: 16px; padding: 18px; border-radius: 22px; background: rgb(20,22,27); display: flex; flex-direction: column; gap: 10px">
+    <div class="eyebrow">What helps you</div>
+    <div style="font-size: 15px; line-height: 21px">On days after a <b>workout before 7pm</b>, your HRV runs <span style="color: rgb(45,212,191); font-weight: 700">8% higher</span>.</div>
+    <div style="font-size: 12px; color: rgb(155,157,166)">From your habit log · seen on 11 of 14 days</div>
+  </div>
+
+  <div style="position: absolute; top: 1530px; left: 16px; right: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+    <button class="b" style="height: 40px; font-size: 14px; border-color: rgb(44,47,55); background: rgba(44,47,55,.3)">Last night's sleep</button>
+    <button class="b" style="height: 40px; font-size: 14px; background: rgb(245,245,244); color: rgb(10,11,14)">Ask Axo</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1720}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

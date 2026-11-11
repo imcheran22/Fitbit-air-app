@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Companion: Beep</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#0A0B0E;color:#F5F5F4}
+.bp-bulb{animation:bp-bulb 2.6s ease-in-out infinite}
+@keyframes bp-bulb{0%,100%{opacity:.6}50%{opacity:1}}
+.bp-fast{animation:bp-bulb .5s ease-in-out infinite}
+.bp-scan{animation:bp-scan 1.2s ease-in-out infinite}
+@keyframes bp-scan{0%,100%{transform:translateX(-7px)}50%{transform:translateX(7px)}}
+.bp-blink{transform-box:fill-box;transform-origin:center;animation:bp-blink 4s ease-in-out infinite}
+@keyframes bp-blink{0%,45%,49%,100%{transform:scaleY(1)}47%{transform:scaleY(.15)}}
+.bp-bob{animation:bp-bob .9s ease-in-out infinite}
+@keyframes bp-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+</style>
+</helmet>
+<div style="width: 880px; height: 620px; box-sizing: border-box; padding: 40px; background: #0A0B0E; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 12px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #5EEAD4">Companion 6</span>
+    <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 44px; line-height: 1">Beep</span>
+    <span style="font-size: 15px; color: #9B9DA6">A soft, rounded robot. It's honest about being a machine but still warm, and its antenna light shows exactly what it's doing.</span>
+  </div>
+  <div style="display: flex; gap: 20px; flex-grow: 1">
+    <div style="width: 300px; border-radius: 28px; background: radial-gradient(circle at 50% 42%, rgba(45,212,191,0.16), #14161B 65%); border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 26px 20px 20px 20px">
+      <svg width="190" height="190" viewBox="0 0 100 100" aria-label="Beep">
+        <path d="M50 26 V14" stroke="#64748B" stroke-width="3" stroke-linecap="round"></path>
+        <circle class="bp-bulb" cx="50" cy="12" r="5" fill="#2DD4BF"></circle>
+        <rect x="16" y="26" width="68" height="58" rx="24" fill="#E2E8F0"></rect>
+        <rect x="24" y="38" width="52" height="30" rx="15" fill="#0F172A"></rect>
+        <rect class="bp-blink" x="34" y="46" width="8" height="12" rx="4" fill="#5EEAD4"></rect><rect class="bp-blink" x="58" y="46" width="8" height="12" rx="4" fill="#5EEAD4"></rect>
+        <rect x="10" y="48" width="6" height="16" rx="3" fill="#94A3B8"></rect><rect x="84" y="48" width="6" height="16" rx="3" fill="#94A3B8"></rect>
+      </svg>
+      <div style="width: 260px; height: 56px; border-radius: 28px; background: #1C1F26; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-around">
+        <span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span><span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span>
+        <svg width="42" height="42" viewBox="0 0 100 100"><circle cx="50" cy="10" r="7" fill="#2DD4BF"></circle><rect x="12" y="22" width="76" height="66" rx="28" fill="#E2E8F0"></rect><rect x="22" y="36" width="56" height="34" rx="17" fill="#0F172A"></rect><rect x="32" y="45" width="10" height="16" rx="5" fill="#5EEAD4"></rect><rect x="58" y="45" width="10" height="16" rx="5" fill="#5EEAD4"></rect></svg>
+        <span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span><span style="width: 18px; height: 18px; border-radius: 9px; border: 2px solid #6B6E78"></span>
+      </div>
+    </div>
+    <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><path d="M50 26 V14" stroke="#64748B" stroke-width="3" stroke-linecap="round"></path><circle class="bp-bulb" cx="50" cy="12" r="5" fill="#2DD4BF"></circle><rect x="16" y="26" width="68" height="58" rx="24" fill="#E2E8F0"></rect><rect x="24" y="38" width="52" height="30" rx="15" fill="#0F172A"></rect><rect class="bp-blink" x="34" y="46" width="8" height="12" rx="4" fill="#5EEAD4"></rect><rect class="bp-blink" x="58" y="46" width="8" height="12" rx="4" fill="#5EEAD4"></rect></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Idle · light glows softly</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><path d="M50 26 V14" stroke="#64748B" stroke-width="3" stroke-linecap="round"></path><circle class="bp-fast" cx="50" cy="12" r="5" fill="#FBBF24"></circle><rect x="16" y="26" width="68" height="58" rx="24" fill="#E2E8F0"></rect><rect x="24" y="38" width="52" height="30" rx="15" fill="#0F172A"></rect><g class="bp-scan"><rect x="36" y="50" width="28" height="5" rx="2.5" fill="#5EEAD4"></rect></g></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Thinking · scans, light blinks</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><g class="bp-bob"><path d="M50 26 V14" stroke="#64748B" stroke-width="3" stroke-linecap="round"></path><circle cx="50" cy="12" r="6" fill="#4ADE80"></circle><rect x="16" y="26" width="68" height="58" rx="24" fill="#E2E8F0"></rect><rect x="24" y="38" width="52" height="30" rx="15" fill="#0F172A"></rect><path d="M32 54 Q38 46 44 54" fill="none" stroke="#5EEAD4" stroke-width="4" stroke-linecap="round"></path><path d="M56 54 Q62 46 68 54" fill="none" stroke="#5EEAD4" stroke-width="4" stroke-linecap="round"></path></g></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Answering · green light, smiling eyes</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><path d="M50 26 V14" stroke="#475569" stroke-width="3" stroke-linecap="round"></path><circle cx="50" cy="12" r="5" fill="#818CF8" opacity="0.7"></circle><rect x="16" y="26" width="68" height="58" rx="24" fill="#94A3B8"></rect><rect x="24" y="38" width="52" height="30" rx="15" fill="#0F172A"></rect><path d="M33 53 H43" stroke="#818CF8" stroke-width="4" stroke-linecap="round"></path><path d="M57 53 H67" stroke="#818CF8" stroke-width="4" stroke-linecap="round"></path></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Resting day · low-power mode</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

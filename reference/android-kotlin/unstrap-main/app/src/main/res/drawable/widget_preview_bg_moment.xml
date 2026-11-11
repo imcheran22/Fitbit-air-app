@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Moment widget's picker preview card (widgets spec 6.4): a glow card at midday, Energy's orange from below right. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF0A0A0B" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <gradient android:type="radial" android:centerX="0.85" android:centerY="1.0" android:gradientRadius="180dp"
+                android:startColor="#B3F66C28" android:centerColor="#40F66C28" android:endColor="#00F66C28" />
+        </shape>
+    </item>
+</layer-list>

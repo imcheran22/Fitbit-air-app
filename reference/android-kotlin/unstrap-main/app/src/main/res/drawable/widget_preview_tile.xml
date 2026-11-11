@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Start preview's sport tile: Control's grey, 16 dp corners (widgets spec 3.5). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FF1F1F22" />
+    <corners android:radius="16dp" />
+</shape>

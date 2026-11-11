@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Three directions</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 600px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">THREE DIRECTIONS</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5">Same grid, same face, same palette rules. Only the body silhouette changes. Small figures are 24 px and a solid silhouette test.</p>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+
+    <div style="background: #14161B; border: 2px solid #8EE3C8; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 16px; align-items: flex-end">
+        <div style="line-height: 0; border-radius: 8px; overflow: hidden"><dc-import name="Sprite" base="pip" colorway="mint" scale="8" bg="tint" hint-size="192px,192px"></dc-import></div>
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+          <dc-import name="Sprite" base="pip" colorway="mint" scale="2" bg="none" silhouette="true" hint-size="48px,48px"></dc-import>
+          <dc-import name="Sprite" base="pip" colorway="mint" scale="1" bg="none" hint-size="24px,24px"></dc-import>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 22px; color: #8EE3C8">A · PIP</h2>
+        <span style="font-family: Silkscreen, monospace; font-size: 11px; color: #0A0B0E; background: #8EE3C8; padding: 4px 7px 3px; border-radius: 4px">RECOMMENDED</span>
+      </div>
+      <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #C9CDD5">Egg-dome with one antenna and a pulse bulb. The bulb is the accent slot and can beat with heart rate. A wide flat head takes any hat; nub arms hold items.</p>
+    </div>
+
+    <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 23px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 16px; align-items: flex-end">
+        <div style="line-height: 0; border-radius: 8px; overflow: hidden"><dc-import name="Sprite" base="tuft" colorway="lilac" scale="8" bg="tint" hint-size="192px,192px"></dc-import></div>
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+          <dc-import name="Sprite" base="tuft" colorway="lilac" scale="2" bg="none" silhouette="true" hint-size="48px,48px"></dc-import>
+          <dc-import name="Sprite" base="tuft" colorway="lilac" scale="1" bg="none" hint-size="24px,24px"></dc-import>
+        </div>
+      </div>
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 22px; color: #C4B5FD">B · TUFT</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #C9CDD5">A soft square with two ear tufts tipped in the accent. The sturdiest silhouette and the most room for the face, but the ears clash with most hats and it sits close to Kit and Bun.</p>
+    </div>
+
+    <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 23px; display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; gap: 16px; align-items: flex-end">
+        <div style="line-height: 0; border-radius: 8px; overflow: hidden"><dc-import name="Sprite" base="blip" colorway="coral" scale="8" bg="tint" hint-size="192px,192px"></dc-import></div>
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center">
+          <dc-import name="Sprite" base="blip" colorway="coral" scale="2" bg="none" silhouette="true" hint-size="48px,48px"></dc-import>
+          <dc-import name="Sprite" base="blip" colorway="coral" scale="1" bg="none" hint-size="24px,24px"></dc-import>
+        </div>
+      </div>
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 22px; color: #FB7185">C · BLIP</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #C9CDD5">A heart with a face. It says health at a glance, but the notch and the point leave no flat head, hands or feet to hang cosmetics on, and it reads as an icon more than a buddy.</p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

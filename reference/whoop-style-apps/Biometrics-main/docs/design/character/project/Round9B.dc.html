@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Top 3 deeper</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">ROUND 9B · BEAR, CAPY, OWL DEEPER</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5; max-width: 980px">Four alternative takes on each signature (ears, snout, tufts, belly, eye placement), then the round 8 base with the pose-only 2 px arms in three poses.</p>
+  </div>
+  <sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+    <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 14px 16px; display: flex; gap: 16px; align-items: flex-start">
+      <div style="width: 130px; display: flex; flex-direction: column; gap: 6px; padding-top: 4px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 18px; color: #E7E9EE">{{r.name}}</h2>
+        <span style="font-size: 12px; line-height: 1.45; color: #A3A9B5">{{r.note}}</span>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <sc-for list="{{r.alts}}" as="w" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <div style="line-height: 0; border-radius: 8px; padding: 4px; background: #0A0B0E"><svg width="{{w.s.px}}" height="{{w.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{r.name}} {{w.label}}"><sc-for list="{{w.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+            <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{w.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="width: 1px; align-self: stretch; background: #2E323C"></div>
+      <div style="display: flex; gap: 10px">
+        <sc-for list="{{r.arms}}" as="w" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <div style="line-height: 0; border-radius: 8px; padding: 4px; background: #1B1E25"><svg width="{{w.s.px}}" height="{{w.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{r.name}} {{w.label}}"><sc-for list="{{w.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+            <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{w.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+var N = 16;
+var E = "................";
+var LEGS = [".....b....s.....", ".....b....s.....", "...zzzzzzzzzz..."];
+var B = "....bbbbbbbs....";
+var EYES = "....bbebbebs....";
+function make(top, mid) { var r = []; for (var i = 0; i < 16 - top.length - mid.length - 3; i++) r.push(E); return r.concat(top, mid, LEGS); }
+var BOTTLE = { rows: ["cC", "Lw", "Lw", "lb", "lb"], pal: { c: "#F43F5E", C: "#BE123C", L: "#F0F9FF", w: "#BAE6FD", l: "#7DD3FC", b: "#0EA5E9" } };
+
+var SETS = [
+  { name: "BEAR", body: "#8B6B4E", note: "Pick: round ears with a muzzle. It reads as a teddy without getting plush.", waveLeft: false,
+    base: make(["....bb....bs...."], [B, B, EYES, "....bbbddbbs....", B, B, B]),
+    alts: [
+      ["round ears", make(["....bb....ss....", "....bh....hs...."], [B, B, EYES, "....bbbddbbs....", B, B, B])],
+      ["tiny ears", make(["....b......s...."], [B, B, EYES, "....bbbddbbs....", B, B, B])],
+      ["belly", make(["....bb....bs...."], [B, B, EYES, "....bbbddbbs....", "....bbhhhhbs....", "....bbhhhhbs....", B])],
+      ["muzzle, wide eyes", make(["....bb....bs...."], [B, B, "....bebbbbes....", "....bbhddhbs....", "....bbhhhhbs....", B, B])]] },
+  { name: "CAPY", body: "#A68A6D", note: "Pick: the long snout. It is the most unique silhouette in the whole exploration.", waveLeft: true,
+    base: make([".....b....s....."], [B, B, "....bbbebbes....", "....bbbbbbbbbd..", "....bbbbbbbbbs..", "....bbbbbbbsss..", B]),
+    alts: [
+      ["long snout", make([".....b....s....."], [B, B, "....bbbebbes....", "....bbbbbbbbbbd.", "....bbbbbbbbbbs.", "....bbbbbbbssss.", B])],
+      ["sleepy, no ears", make([], [B, B, "....beebbees....", "....bbbbbbbbbd..", "....bbbbbbbbbs..", "....bbbbbbbsss..", B])],
+      ["light chin", make([".....b....s....."], [B, B, "....bbbebbes....", "....bbbbbbbbbd..", "....bbbbbbhhhs..", "....bbbbbbbsss..", B])],
+      ["low snout", make([".....b....s....."], [B, B, "....bbbebbes....", B, "....bbbbbbbbbd..", "....bbbbbbbbbs..", "....bbbbbbbsss.."])]] },
+  { name: "OWL", body: "#8E86B5", note: "Pick: eye discs. They are the most owl with the fewest pixels, and the top stays flat.", waveLeft: false,
+    base: make(["....b......s...."], [B, B, EYES, B, "....bbhhhhbs....", "....bbhhhhbs....", "....bbhhhhbs...."]),
+    alts: [
+      ["big tufts", make(["....b......s....", "....bb....ss...."], [B, B, EYES, B, "....bbhhhhbs....", "....bbhhhhbs....", "....bbhhhhbs...."])],
+      ["eye discs", make(["....b......s...."], [B, "....hhhbhhhs....", "....hehbhehs....", "....hhhbhhhs....", B, B, B])],
+      ["beak + belly", make(["....b......s...."], [B, B, EYES, "....bbbddbbs....", "....bbhhhhbs....", "....bbhhhhbs....", B])],
+      ["face V, no tufts", make([], [B, "....hhbbbhhs....", "....hebbbbes....", "....bhbbbbhs....", "....bbhhhhbs....", B, B])]] }
+];
+
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function hx2(n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? "0" + s : s; }
+function mix(a, b, k) { var x = rgb(a), y = rgb(b); return "#" + hx2(x[0] * (1 - k) + y[0] * k) + hx2(x[1] * (1 - k) + y[1] * k) + hx2(x[2] * (1 - k) + y[2] * k); }
+function darken(a, k) { var x = rgb(a); return "#" + hx2(x[0] * k) + hx2(x[1] * k) + hx2(x[2] * k); }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function ramp(body) { return { b: body, h: mix(body, "#FFFFFF", 0.25), s: darken(body, 0.78), d: darken(body, 0.6), e: lum(body) > 0.2 ? "#14161B" : "#F5F5F4", z: "rgba(0,0,0,0.35)" }; }
+
+function compose(rows, body, opt) {
+  opt = opt || {};
+  var p = ramp(body), cells = [], lift = opt.lift || 0;
+  for (var i = 0; i < N * N; i++) cells.push(null);
+  function put(x, y, c) { if (x >= 0 && y >= 0 && x < N && y < N) cells[y * N + x] = c; }
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+    var L = rows[y][x]; if (L === ".") continue;
+    if (L === "z") put(x, y, p.z); else put(x, y - lift, p[L]);
+  }
+  (opt.arms || []).forEach(function (a) { if (!cells[(a[1] - lift) * N + a[0]]) put(a[0], a[1] - lift, p[a[2]]); });
+  if (opt.bottle) BOTTLE.rows.forEach(function (r, j) { for (var k = 0; k < r.length; k++) put(opt.bottle[0] + k, opt.bottle[1] + j, BOTTLE.pal[r[k]]); });
+  return cells;
+}
+function layers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] === c) n++;
+      if (!by[c]) { by[c] = ""; order.push(c); }
+      by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+function sprite(rows, body, opt) { return { px: N * 6, layers: layers(compose(rows, body, opt), 6) }; }
+
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      rows: SETS.map(function (st) {
+        var wave = st.waveLeft ? [[3, 9, "b"], [2, 8, "b"]] : [[12, 9, "s"], [13, 8, "s"]];
+        return {
+          name: st.name, note: st.note,
+          alts: st.alts.map(function (a) { return { label: a[0], s: sprite(a[1], st.body) }; }),
+          arms: [
+            { label: "wave", s: sprite(st.base, st.body, { arms: wave }) },
+            { label: "cheer", s: sprite(st.base, st.body, { arms: [[3, 9, "b"], [2, 8, "b"], [12, 9, "s"], [13, 8, "s"]], lift: 1 }) },
+            { label: "hold bottle", s: sprite(st.base, st.body, { arms: [[3, 10, "b"], [2, 10, "b"]], bottle: [0, 8] }) }
+          ]
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

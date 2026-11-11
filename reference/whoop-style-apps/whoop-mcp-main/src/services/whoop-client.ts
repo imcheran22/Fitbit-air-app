@@ -1,0 +1,294 @@
+import { URL, URLSearchParams } from "node:url";
+import { dirname } from "node:path";
+import { DEFAULT_LIMIT, MAX_WHOOP_LIMIT, SERVER_NAME, SERVER_VERSION, WHOOP_API_BASE_URL, WHOOP_AUTH_URL, WHOOP_TOKEN_URL } from "../constants.js";
+import type { WhoopCollection, WhoopConfig, WhoopTokenSet } from "../types.js";
+import { disabledCacheStatus, type CacheStatus } from "./cache.js";
+import { fetchWithCache, getCacheStats } from "./http-cache.js";
+import { fetchWithRetry as fetchWithRetryMiddleware } from "./http-retry.js";
+import { redactErrorMessage } from "./redaction.js";
+import { TokenStore } from "./token-store.js";
+import { PkceStore } from "./pkce-store.js";
+
+export interface ListParams {
+  start?: string;
+  end?: string;
+  limit?: number;
+  next_token?: string;
+  all_pages?: boolean;
+  max_pages?: number;
+}
+
+export class WhoopClient {
+  private readonly tokenStore: TokenStore;
+  private readonly pkceStore: PkceStore;
+
+  constructor(private readonly config: WhoopConfig) {
+    this.tokenStore = new TokenStore(config.tokenPath);
+    this.pkceStore = new PkceStore(dirname(config.tokenPath));
+  }
+
+  async authUrl(state: string, scopes?: string[]): Promise<string> {
+    const session = await this.pkceStore.createSession(state);
+    const params = new URLSearchParams({
+      client_id: this.config.clientId,
+      redirect_uri: this.config.redirectUri,
+      response_type: "code",
+      scope: (scopes?.length ? scopes : this.config.scopes).join(" "),
+      code_challenge: session.code_challenge,
+      code_challenge_method: "S256"
+    });
+    params.set("state", state);
+    return `${WHOOP_AUTH_URL}?${params.toString()}`;
+  }
+
+  async exchangeCode(input: string, state?: string): Promise<{ ok: true; token_path: string; scope?: string; expires_at?: number }> {
+    const code = this.extractCode(input);
+    const body = new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: this.config.redirectUri,
+      client_id: this.config.clientId,
+      client_secret: this.config.clientSecret
+    });
+
+    if (state) {
+      const session = await this.pkceStore.getSession(state);
+      if (session) {
+        body.set("code_verifier", session.code_verifier);
+        await this.pkceStore.deleteSession(state);
+      }
+    }
+
+    const tokens = await this.requestTokens(body);
+    await this.tokenStore.withLock(async () => this.tokenStore.write(tokens));
+    await this.pkceStore.cleanup();
+    return { ok: true, token_path: this.config.tokenPath, scope: tokens.scope, expires_at: tokens.expires_at };
+  }
+
+  async get(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
+    return this.request("GET", path, undefined, params);
+  }
+
+  async delete(path: string): Promise<unknown> {
+    return this.request("DELETE", path);
+  }
+
+  async revokeAccess(): Promise<{ ok: true; token_path: string; local_tokens_cleared: boolean }> {
+    await this.delete("/v2/user/access");
+    await this.tokenStore.withLock(async () => this.tokenStore.clear());
+    return { ok: true, token_path: this.config.tokenPath, local_tokens_cleared: true };
+  }
+
+  cacheStatus(): CacheStatus {
+    const httpStats = getCacheStats();
+    const http_cache = {
+      size: httpStats.size,
+      hit_count: httpStats.hit_count,
+      miss_count: httpStats.miss_count,
+      hit_rate: httpStats.hit_rate,
+      default_ttl_seconds: 60,
+      bypass_env_var: "WHOOP_NO_CACHE"
+    };
+    // Authenticated responses are never cached, so the SQLite cache stays off even when configured.
+    return { ...disabledCacheStatus(this.config.cachePath), http_cache };
+  }
+
+  async list(path: string, params: ListParams = {}): Promise<{ records: unknown[]; next_token?: string; pages_fetched: number }> {
+    validateWhoopDateRange(params);
+    const limit = Math.min(Math.max(params.limit ?? DEFAULT_LIMIT, 1), MAX_WHOOP_LIMIT);
+    const maxPages = params.all_pages ? Math.max(1, params.max_pages ?? 1) : 1;
+    let nextToken = params.next_token;
+    const records: unknown[] = [];
+    let pages = 0;
+
+    while (pages < maxPages) {
+      const page = await this.get(path, {
+        start: params.start,
+        end: params.end,
+        limit,
+        nextToken
+      }) as WhoopCollection;
+      const pageRecords = Array.isArray(page.records) ? page.records : [];
+      records.push(...pageRecords);
+      pages += 1;
+      nextToken = page.next_token ?? page.nextToken;
+      if (!params.all_pages || !nextToken) break;
+    }
+
+    return { records, next_token: nextToken, pages_fetched: pages };
+  }
+
+  private extractCode(input: string): string {
+    try {
+      const url = new URL(input);
+      const code = url.searchParams.get("code");
+      if (code) return code;
+    } catch {
+      // Not a URL; treat as raw code.
+    }
+    return input;
+  }
+
+  private async request(method: "GET" | "DELETE", path: string, body?: unknown, params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
+    const token = await this.getValidToken();
+    const url = this.buildUrl(path, params);
+    const response = await this.fetchWithRetry(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token.access_token}`,
+        Accept: "application/json",
+        "User-Agent": `${SERVER_NAME}/${SERVER_VERSION}`
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+
+    if (response.status === 401) {
+      const refreshed = await this.refreshToken(true);
+      const retry = await this.fetchWithRetry(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${refreshed.access_token}`,
+          Accept: "application/json",
+          "User-Agent": `${SERVER_NAME}/${SERVER_VERSION}`
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      return this.parseResponse(retry);
+    }
+
+    // Authenticated payloads must not use a persistent cache keyed only by method and URL.
+    return this.parseResponse(response);
+  }
+
+  private buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    const url = new URL(`${WHOOP_API_BASE_URL}${cleanPath}`);
+    for (const [key, value] of Object.entries(params ?? {})) {
+      if (value === undefined || value === null || value === "") continue;
+      url.searchParams.set(key, String(value));
+    }
+    return url.toString();
+  }
+
+  private async getValidToken(): Promise<WhoopTokenSet> {
+    const tokens = await this.tokenStore.read();
+    if (!tokens?.access_token) {
+      throw new Error("WHOOP token not found. Run whoop_get_auth_url, authorize the app, then run whoop_exchange_code.");
+    }
+    const expiresAt = tokens.expires_at ?? 0;
+    const shouldRefresh = Boolean(tokens.refresh_token && expiresAt && expiresAt - Math.floor(Date.now() / 1000) < 120);
+    return shouldRefresh ? this.refreshToken(false) : tokens;
+  }
+
+  private async refreshToken(force: boolean): Promise<WhoopTokenSet> {
+    return this.tokenStore.withLock(async () => {
+      const current = await this.tokenStore.read();
+      if (!current?.refresh_token) {
+        throw new Error("WHOOP refresh token not found. Re-authorize with whoop_get_auth_url and whoop_exchange_code.");
+      }
+      if (!force && current.expires_at && current.expires_at - Math.floor(Date.now() / 1000) >= 120) {
+        return current;
+      }
+
+      const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: current.refresh_token,
+        client_id: this.config.clientId,
+        client_secret: this.config.clientSecret
+      });
+      const refreshed = await this.requestTokens(body);
+      const merged = {
+        ...current,
+        ...refreshed,
+        refresh_token: refreshed.refresh_token ?? current.refresh_token
+      };
+      await this.tokenStore.write(merged);
+      return merged;
+    });
+  }
+
+  private async requestTokens(body: URLSearchParams): Promise<WhoopTokenSet> {
+    const response = await this.fetchWithRetry(WHOOP_TOKEN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        "User-Agent": `${SERVER_NAME}/${SERVER_VERSION}`
+      },
+      body: body.toString()
+    });
+    const data = await this.parseResponse(response) as Record<string, unknown>;
+    const expiresIn = typeof data.expires_in === "number" ? data.expires_in : undefined;
+    return {
+      access_token: String(data.access_token ?? ""),
+      refresh_token: typeof data.refresh_token === "string" ? data.refresh_token : undefined,
+      token_type: typeof data.token_type === "string" ? data.token_type : undefined,
+      scope: typeof data.scope === "string" ? data.scope : undefined,
+      expires_at: expiresIn ? Math.floor(Date.now() / 1000) + expiresIn : undefined
+    };
+  }
+
+  private async parseResponse(response: Response): Promise<unknown> {
+    const text = await response.text();
+    const payload = text ? safeJson(text) : null;
+    if (response.status === 429) {
+      const retryAfter = parseRetryAfterSeconds(response.headers.get("retry-after"));
+      const retryHint = retryAfter !== undefined ? `retry in ${retryAfter} seconds` : "retry after a short backoff";
+      throw new Error(`WHOOP API HTTP 429: Rate limited by WHOOP — ${retryHint}.`);
+    }
+    if (!response.ok) {
+      const details = payload && typeof payload === "object" ? JSON.stringify(payload) : text;
+      throw new Error(`WHOOP API HTTP ${response.status}: ${redactErrorMessage(details || response.statusText)}`);
+    }
+    return payload ?? {};
+  }
+
+  private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+    const retryWrappedFetch = (u: string, i?: RequestInit) => fetchWithRetryMiddleware(fetch, u, i, {
+      vendor: "whoop",
+      envFlag: "WHOOP_NO_RETRY"
+    });
+    return fetchWithCache(url, init, {
+      defaultTtlSeconds: 60,
+      envVarBypass: "WHOOP_NO_CACHE",
+      innerFetch: retryWrappedFetch
+    });
+  }
+}
+
+function validateWhoopDateRange(params: ListParams): void {
+  const start = params.start ? validateWhoopDateTime(params.start, "start") : undefined;
+  const end = params.end ? validateWhoopDateTime(params.end, "end") : undefined;
+  if (start !== undefined && end !== undefined && start > end) {
+    throw new Error("WHOOP start must not be later than end");
+  }
+}
+
+function validateWhoopDateTime(value: string, field: "start" | "end"): number {
+  const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);
+  const parsed = Date.parse(value);
+  if (!hasTimezone || !Number.isFinite(parsed)) {
+    throw new Error(`Invalid WHOOP ${field} date-time: use ISO 8601 with a timezone`);
+  }
+  return parsed;
+}
+
+function safeJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+function parseRetryAfterSeconds(header: string | null): number | undefined {
+  if (!header) return undefined;
+  const seconds = Number(header);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds);
+  const dateMs = Date.parse(header);
+  if (!Number.isNaN(dateMs)) {
+    const diff = Math.ceil((dateMs - Date.now()) / 1000);
+    return diff > 0 ? diff : 0;
+  }
+  return undefined;
+}

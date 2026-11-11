@@ -1,0 +1,43 @@
+{
+  "name": "mmm-fitbitair",
+  "version": "1.0.1",
+  "displayName": "MMM-FitbitAir",
+  "description": "Display last night's sleep from your Google Fitbit Air (or any Google Health device) on MagicMirror², via the Google Health API that replaces the retiring Fitbit Web API.",
+  "main": "MMM-FitbitAir.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hkattelu/MMM-FitbitAir.git"
+  },
+  "keywords": [
+    "MagicMirror",
+    "MagicMirror²",
+    "magicmirror-module",
+    "Fitbit",
+    "Fitbit Air",
+    "Google Health",
+    "Google Health API",
+    "Google Fit",
+    "Pixel Watch",
+    "sleep",
+    "sleep tracking",
+    "health"
+  ],
+  "author": {
+    "name": "Hkattelu",
+    "url": "https://github.com/Hkattelu"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Hkattelu/MMM-FitbitAir/issues"
+  },
+  "homepage": "https://github.com/Hkattelu/MMM-FitbitAir#readme",
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

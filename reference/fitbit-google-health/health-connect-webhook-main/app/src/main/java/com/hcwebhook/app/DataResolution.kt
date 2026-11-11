@@ -1,0 +1,66 @@
+package com.hcwebhook.app
+
+/**
+ * How export granularity can be configured for a [HealthDataType].
+ *
+ * Stored as minutes in preferences:
+ * - [RESOLUTION_DAILY] (-1): one total per calendar day (interval types only)
+ * - [RESOLUTION_FULL] (0): every raw record / sample
+ * - [SLEEP_SUMMARY] (1): sleep sessions without stage breakdown
+ * - positive N: bucket raw data into N-minute windows (default for sample series is 1)
+ */
+enum class DataResolutionFamily {
+    /** Default daily aggregate; also supports full raw and N-minute buckets. */
+    INTERVAL_WITH_DAILY,
+    /** Default raw intervals; optional daily and N-minute buckets. */
+    INTERVAL_RAW_DEFAULT,
+    /** Default 1-minute buckets; optional full samples or wider N-minute buckets. */
+    SAMPLE_SERIES,
+    /** Default full session with stages; optional summary without stages. */
+    SLEEP_SESSION,
+}
+
+const val RESOLUTION_DAILY = -1
+const val RESOLUTION_FULL = 0
+const val SLEEP_SUMMARY = 1
+
+val HealthDataType.resolutionFamily: DataResolutionFamily?
+    get() = when (this) {
+        HealthDataType.STEPS,
+        HealthDataType.DISTANCE,
+        HealthDataType.ACTIVE_CALORIES -> DataResolutionFamily.INTERVAL_WITH_DAILY
+        HealthDataType.TOTAL_CALORIES,
+        HealthDataType.HYDRATION,
+        HealthDataType.NUTRITION -> DataResolutionFamily.INTERVAL_RAW_DEFAULT
+        HealthDataType.HEART_RATE,
+        HealthDataType.HEART_RATE_VARIABILITY,
+        HealthDataType.OXYGEN_SATURATION,
+        HealthDataType.RESPIRATORY_RATE,
+        HealthDataType.SKIN_TEMPERATURE -> DataResolutionFamily.SAMPLE_SERIES
+        HealthDataType.SLEEP -> DataResolutionFamily.SLEEP_SESSION
+        else -> null
+    }
+
+/** Preserves pre-resolution behavior for interval/sleep; sample series default to 1-minute buckets to avoid OutOfMemoryError on full raw samples. */
+val HealthDataType.defaultResolutionMinutes: Int
+    get() = when (resolutionFamily) {
+        DataResolutionFamily.INTERVAL_WITH_DAILY -> RESOLUTION_DAILY
+        DataResolutionFamily.INTERVAL_RAW_DEFAULT,
+        DataResolutionFamily.SLEEP_SESSION -> RESOLUTION_FULL
+        DataResolutionFamily.SAMPLE_SERIES -> 1
+        null -> RESOLUTION_FULL
+    }
+
+/** Types whose N-minute buckets can come from the Health Connect aggregate (see PreferencesManager.isBucketDedup). */
+val HealthDataType.supportsBucketDedup: Boolean
+    get() = this == HealthDataType.STEPS || this == HealthDataType.DISTANCE || this == HealthDataType.ACTIVE_CALORIES
+
+val HealthDataType.supportsResolution: Boolean
+    get() = resolutionFamily != null
+
+fun resolutionSubtitleResId(family: DataResolutionFamily): Int = when (family) {
+    DataResolutionFamily.INTERVAL_WITH_DAILY -> R.string.config_interval_daily_resolution_hint
+    DataResolutionFamily.INTERVAL_RAW_DEFAULT -> R.string.config_interval_raw_resolution_hint
+    DataResolutionFamily.SAMPLE_SERIES -> R.string.config_sample_resolution_hint
+    DataResolutionFamily.SLEEP_SESSION -> R.string.config_sleep_resolution_hint
+}

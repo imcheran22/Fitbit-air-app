@@ -1,0 +1,37 @@
+{
+  "name": "fitbit-air",
+  "version": "0.1.0",
+  "description": "Read live heart rate over Bluetooth and steps/history via the Google Health API from a Google Fitbit Air (or any BLE heart-rate device). Ships a REST + WebSocket server and a live web dashboard.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "fitbit-air": "bin/cli.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "scan": "node bin/scan.js",
+    "hr": "node bin/hr.js",
+    "auth": "node bin/google-auth.js"
+  },
+  "keywords": [
+    "fitbit",
+    "fitbit-air",
+    "bluetooth",
+    "ble",
+    "heart-rate",
+    "google-health",
+    "wearable",
+    "websocket"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-26",
+    "express": "^4.21.2",
+    "open": "^10.1.0",
+    "ws": "^8.18.0"
+  }
+}

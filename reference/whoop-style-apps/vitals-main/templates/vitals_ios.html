@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vitals · iOS</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0c">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F2F7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vitals">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-180.png">
+<script src="/static/js/sw-register.js"></script>
+<link rel="stylesheet" href="/static/css/vitals.css">
+</head>
+<body>
+<!-- Roadmap HIG paso 3: la apariencia SIGUE AL SISTEMA (§3) — se aplica ANTES
+     de pintar nada para evitar parpadeo (flash claro/oscuro). -->
+<script>try{if(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)document.body.classList.add('light');}catch(e){}</script>
+
+<!-- ── DATA INJECTION ── -->
+<script>
+var DB = __DATA__;
+var COACH = __COACH__;
+var AUTH = __AUTH__;
+var INSIGHTS = __INSIGHTS__;
+var DRIVERS = __DRIVERS__;
+var TRENDS = __TRENDS__;
+var PROFILE = __PROFILE__;
+var CYCLE = __CYCLE__; // Fase 7: estado de ciclo (salud femenina, opt-in). {enabled:false} si el toggle está apagado.
+</script>
+<script src="/static/js/app-i18n-helpers.js"></script>
+
+<!-- ── AMBIENT BACKGROUND ── -->
+<div id="glow"></div>
+<!-- Roadmap HIG paso 4: efecto de borde de desplazamiento (§1 scroll edge) —
+     decorativo, aria-hidden, pointer-events:none (no bloquea toques del
+     encabezado). -->
+<div id="edgeTop" aria-hidden="true"></div>
+
+<!-- ── APP (responsive) ── -->
+<div class="app">
+
+  <!-- Content -->
+  <div id="scrollArea">
+
+    <!-- HOY -->
+    <div id="screenHoy" class="screen active anim-in">
+
+      <!-- Reconnect Banner (rojo — solo token expirado Y data ≥24h de antigüedad,
+           roadmap P2 paso 4: STALE_BANNER_HOURS) -->
+      <div id="reconnectBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF375F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        <span><span data-i18n="banner_expired">Acceso a Google Health expirado — </span><a href="/auth/login" data-i18n="banner_reconnect">Reconectar con Google</a></span>
+      </div>
+
+      <!-- Demo Banner (roadmap P2 paso 5) — VITALS_DEMO=1: nunca mostrar el
+           banner rojo de "acceso expirado" (el token demo es sintético, no un
+           error real). En su lugar, banner informativo neutral. -->
+      <div id="demoBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v6M12 16.5h.01"/></svg>
+        <span><span data-i18n="banner_demo">Datos de ejemplo — </span><a href="/auth/login" data-i18n="banner_demo_link">conecta una fuente para ver los tuyos</a></span>
+      </div>
+
+      <!-- Offline Banner (Fase 8C, paso C5) -->
+      <div id="offlineBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a15 15 0 0 1 18 0M6.5 12.5a10 10 0 0 1 11 0M10 16a5 5 0 0 1 4 0"/><path d="M4 4l16 16"/></svg>
+        <span id="offlineBannerText"></span>
+      </div>
+
+      <!-- Header -->
+      <div id="todayHeader">
+        <div>
+          <div id="todayTitle">Vitals</div>
+          <div id="todayDate"></div>
+        </div>
+        <div class="head-actions">
+          <div class="avatar" id="headerAvatar">M<div class="avatar-dot"></div></div>
+        </div>
+      </div>
+
+      <!-- Scrubber -->
+      <div id="scrubber">
+        <button class="scrub-btn" id="btnPrev" onclick="scrubBy(-1)">‹</button>
+        <div id="scrubDate"></div>
+        <button class="scrub-btn" id="btnNext" onclick="scrubBy(1)">›</button>
+      </div>
+
+      <div class="cards">
+
+      <!-- Insight Cards (alert/watch/positive/info) — generadas por renderInsights() -->
+      <div id="insightCards" class="span-all"></div>
+
+      <!-- HERO — Roadmap HIG paso 12: medidor único de recuperación (arco
+           abierto de 270°, §8: NO replica los Activity rings de Apple) +
+           Sueño/Esfuerzo como barras lineales. -->
+      <div class="card span-all" id="heroCard">
+        <div id="ringWrap" role="button" tabindex="0" onclick="openDetail('recovery')" aria-label="Recuperación">
+          <div id="ringSvg"></div>
+          <div class="gauge-center">
+            <div class="ring-val gauge-val" id="recVal">—<span class="ring-sub">%</span></div>
+            <div class="gauge-lbl" data-i18n="ring_recovery">Recuperación</div>
+            <div id="recConf" class="gauge-conf"></div>
+          </div>
+        </div>
+        <div id="ringLabels">
+          <div class="ring-row" onclick="goTab('screenSleep')">
+            <div class="ring-tag"><span class="ring-dot" style="background:#5E5CE6"></span><span class="ring-tag-lbl" data-i18n="ring_sleep">Sueño</span></div>
+            <div class="ring-val" id="sleepVal">—<span class="ring-sub" id="sleepPctSpan" style="margin-left:5px"></span></div>
+            <div class="hero-bar"><div class="hero-bar-fill" id="sleepBar" style="background:#5E5CE6"></div></div>
+          </div>
+          <div class="ring-row" onclick="openDetail('strain')">
+            <div class="ring-tag"><span class="ring-dot" style="background:#64D2FF"></span><span class="ring-tag-lbl" data-i18n="ring_strain">Esfuerzo</span></div>
+            <div class="ring-val" id="strainVal">—<span class="ring-sub" style="margin-left:2px">/ 21</span></div>
+            <div class="hero-bar"><div class="hero-bar-fill" id="strainBar" style="background:#64D2FF"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COACH IA -->
+      <div class="card span-all" id="coachCard">
+        <div class="coach-glow"></div>
+        <div class="coach-header">
+          <div class="coach-badge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="#30D158"><path d="M12 3.5l1.6 4.3 4.3 1.6-4.3 1.6L12 15.3l-1.6-4.3L6.1 9.4l4.3-1.6z"/></svg>
+            <span class="coach-badge-lbl" data-i18n="coach_badge">COACH IA · PREMIUM</span>
+          </div>
+          <span class="coach-date" id="coachDate"></span>
+        </div>
+        <div id="coachHeadline" style="display:none"></div>
+        <div id="coachChips"></div>
+        <div id="coachBullets"></div>
+        <div id="coachPlanBtn" onclick="goCoachWithPlanPrompt()"><span data-i18n="coach_plan_btn">Ver plan del día</span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+
+      <!-- DIARIO DE HÁBITOS (Fase 8B) — card resumen colapsada (roadmap P0 paso 3);
+           el contenido íntegro (selector Hoy/Ayer, 6 categorías, toggle, agregar
+           hábito) vive en #journalDetailModal, abierto al tocar esta card. -->
+      <div class="card span-all" id="journalCard" onclick="openJournalDetail()" style="cursor:pointer">
+        <div class="journal-hdr">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#30D158" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6M9 4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2M9 9h6M9 13h6M9 17h4"/></svg>
+          <span class="journal-lbl" data-i18n="journal_card_lbl">Diario</span>
+          <span class="journal-hdr-sub" id="journalWeekCountInline"></span>
+        </div>
+        <div id="journalSummaryLine" class="journal-summary-line"></div>
+      </div>
+
+      <!-- PLAN ACTIVO (Roadmap P1, F4, paso 8) — solo visible con un programa
+           en curso (poblado por fetchAndRenderPlanCard(); sin plan -> display:none). -->
+      <div class="card span-all" id="planCard" style="display:none">
+        <div class="ba-lbl-row">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0A84FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="ba-lbl" id="planCardTitle"></span>
+        </div>
+        <div id="planCardBody"></div>
+        <div id="planCardActions" style="margin-top:10px"></div>
+      </div>
+
+      <!-- CICLO (Fase 7: salud femenina, opt-in) — solo visible si CYCLE.enabled -->
+      <div class="card span-all" id="cycleCard" style="display:none" onclick="openDetail('cycle')">
+        <div class="ba-lbl-row">
+          <span style="font-size:15px">🌙</span>
+          <span class="ba-lbl" data-i18n="cycle_card_lbl">Ciclo</span>
+        </div>
+        <div id="cycleCardBody"></div>
+      </div>
+
+      <!-- EDAD CORPORAL -->
+      <div class="card" id="bodyAgeCard" onclick="openDetail('fitness')">
+        <div class="ba-glow"></div>
+        <div class="ba-lbl-row">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5E5CE6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+          <span class="ba-lbl" data-i18n="ba_label">Edad corporal</span>
+        </div>
+        <div class="ba-nums">
+          <div>
+            <div class="ba-num" id="fitnessAge">—</div>
+            <div class="ba-num-lbl" data-i18n="ba_fitness_lbl">Edad de fitness</div>
+            <div class="ba-num-sub" data-i18n="ba_fitness_sub">VO₂máx validada</div>
+          </div>
+          <div>
+            <div class="ba-num" id="bodyAge">—</div>
+            <div class="ba-num-lbl" data-i18n="ba_body_lbl">Edad corporal</div>
+            <div class="ba-num-sub" data-i18n="ba_body_sub">+ HRV y sueño</div>
+          </div>
+        </div>
+        <!-- Ritmo de envejecimiento (roadmap edad-corporal-estable, paso 4):
+             velocímetro ya calculado en app/healthspan.py, mostrado también
+             aquí junto al número estable. Oculto si pace es null (<120d). -->
+        <div class="ba-pace-row" id="baPaceRow" style="display:none">
+          <span class="ba-pace-lbl" data-i18n="ba_pace_lbl">Ritmo de envejecimiento</span>
+          <div class="ba-pace-main">
+            <span id="baPaceVal">—</span>
+            <span class="ba-pace-sub" data-i18n="ba_pace_sub">vs tu edad real</span>
+          </div>
+          <div class="ba-pace-note" id="baPaceNote"></div>
+        </div>
+        <div class="ba-detail" id="baDetail"></div>
+        <div id="bodyAgeBadge" style="display:none;font-size:11px;margin-top:4px"></div>
+        <div class="ba-penalty" id="baPenalty"></div>
+      </div>
+
+      <!-- MONITOR DE SALUD -->
+      <div class="card" id="healthCard" onclick="openDetail('vitals')" style="cursor:pointer">
+        <div class="hm-hdr">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#FF375F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 17 3.5 13.8 3.5 10.2 3.5 7.6 5.5 6 7.7 6c1.6 0 2.9.9 3.6 2 .7-1.1 2-2 3.6-2 2.2 0 4.2 1.6 4.2 4.2 0 3.6-3.5 6.8-8.5 10.3z"/></svg>
+          <span class="hm-hdr-lbl" data-i18n="hm_label">Monitor de salud</span>
+          <span class="hm-hdr-sub" data-i18n="hm_sub">3d vs base</span>
+        </div>
+        <div id="healthRows"></div>
+      </div>
+
+      <!-- PASOS -->
+      <div class="card" id="stepsCard">
+        <div class="steps-hdr">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#FF9F0A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4a2 2 0 1 1 2 2c-.4 1.4-.2 2.4.6 3.6.9 1.4 1 2.7.4 4.2-.6 1.6-2 2.2-3 2-1.3-.2-1.8-1.3-1.6-2.6.3-1.7 1.1-2.7 1.1-4.2A3 3 0 0 1 9 4Z"/><path d="M16 10a2 2 0 1 1 2 2c-.3 1.2-.1 2.1.6 3.2.8 1.3.9 2.5.3 3.9-.6 1.4-1.8 2-2.7 1.8-1.2-.2-1.6-1.2-1.4-2.4.2-1.5 1-2.4 1-3.7A2.8 2.8 0 0 1 16 10Z"/></svg>
+          <span class="steps-lbl" data-i18n="steps_card_title">Pasos</span>
+        </div>
+        <div class="steps-top-row">
+          <div class="steps-val" id="stepsVal">—</div>
+          <div class="steps-spark" id="stepsSpark"></div>
+        </div>
+        <div class="steps-bar"><div class="steps-fill" id="stepsFill" style="width:0%;background:var(--label3)"></div></div>
+        <div class="steps-sub" id="stepsSub"></div>
+      </div>
+
+      <!-- RESUMEN DE SUEÑO (roadmap tab Sueño, paso 6) — card compacta
+           tappable que reemplaza a bedCard; el detalle completo (hipnograma,
+           fases, scores, bedtime coach, heatmap, tendencia) vive en el tab
+           Sueño dedicado (#screenSleep). -->
+      <div class="card" id="sleepSummaryCard" onclick="goTab('screenSleep')" style="cursor:pointer">
+        <div class="bed-glow"></div>
+        <div class="bed-lbl-row">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5E5CE6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13A8 8 0 1 1 11 3.5a6.2 6.2 0 0 0 9.5 9.5z"/></svg>
+          <span class="bed-lbl" data-i18n="sleep_summary_lbl">Anoche</span>
+        </div>
+        <div id="sleepSummaryBody"></div>
+      </div>
+
+      <!-- CARGA 7 DÍAS -->
+      <div class="card" id="loadCard">
+        <div class="load-hdr">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#FF9F0A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 8v8M3.5 9.5v5M17.5 8v8M20.5 9.5v5M6.5 12h11"/></svg>
+          <span class="load-lbl" data-i18n="load_label">Carga · 7 días</span>
+        </div>
+        <div class="load-grid" id="loadGrid"></div>
+        <div id="loadWarn"></div>
+      </div>
+
+      <!-- ELECTROCARDIOGRAMAS (visor independiente — NO alimenta el motor) -->
+      <div class="card" id="ecgCard" style="display:none">
+        <div class="ecg-card-hdr">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#FF375F" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l1.5-4L11 18l2.5-11L15 12h7"/></svg>
+          <span class="ecg-card-lbl" data-i18n="ecg_card_title">Electrocardiogramas</span>
+        </div>
+        <div id="ecgCardBody"></div>
+      </div>
+
+      </div><!-- /.cards -->
+
+      <!-- SYNC BUTTON -->
+      <div id="syncWrap">
+        <div id="syncBtn" onclick="doSync()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <span data-i18n="sync_btn">Sincronizar ahora</span>
+        </div>
+      </div>
+
+    </div><!-- /screenHoy -->
+
+    <!-- SUEÑO (roadmap tab Sueño) — consolida el contenido de sueño que antes
+         vivía disperso en Hoy (bedCard) + overlay drill-down (openDetail('sleep'))
+         + Tendencias (tendSleepArchCard/tendConsistencyCard). Reusa TODO el
+         contenido vía _buildSleepContent(nightIdx); ver renderSleepTab(). -->
+    <div id="screenSleep" class="screen">
+      <div class="sleep-head">
+        <div id="sleepHeadTitle" data-i18n="tab_sleep">Sueño</div>
+      </div>
+      <!-- Selector de noche: propio del tab (sleepSel), independiente del
+           scrubber de Hoy (roadmap: navegar noches acá no debe mover Hoy). -->
+      <div id="sleepNightSel">
+        <button class="scrub-btn" id="sleepBtnPrev" onclick="sleepScrubBy(-1)">‹</button>
+        <div id="sleepSelDate"></div>
+        <button class="scrub-btn" id="sleepBtnNext" onclick="sleepScrubBy(1)">›</button>
+      </div>
+      <div id="sleepBody" class="deep-metric-list"></div>
+    </div><!-- /screenSleep -->
+
+    <!-- TENDENCIAS -->
+    <div id="screenTend" class="screen">
+
+      <div id="tendHeader">
+        <div id="tendTitle" data-i18n="tend_title">Tendencias</div>
+        <button id="tendSortBtn" class="hdr-btn" onclick="openOrderPopup('tend')" data-i18n-al="tend_sort_al" aria-label="Acomodar tarjetas de Tendencias">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+        </button>
+      </div>
+
+      <!-- Selector de periodo -->
+      <div class="tend-period-bar" id="tendPeriodBar">
+        <div class="tend-period-btn active" data-n="7"  onclick="setTendPeriod(7)">7d</div>
+        <div class="tend-period-btn"        data-n="30" onclick="setTendPeriod(30)">30d</div>
+        <div class="tend-period-btn"        data-n="90" onclick="setTendPeriod(90)">90d</div>
+        <div class="tend-period-btn"        data-n="365" onclick="setTendPeriod(365)">1a</div>
+      </div>
+
+      <!-- Comparativa semanal (Ronda 4) — fija, siempre 7d-vs-7d, NO depende del
+           selector de periodo de arriba ni del sistema de reordenar tarjetas. -->
+      <div class="tend-card span-all" id="tendWeeklyCompareCard" style="margin:0 0 12px">
+        <div class="tend-card-title" data-i18n="tend_wcompare_title">Semana vs anterior</div>
+        <div class="tend-card-sub" data-i18n="tend_wcompare_sub">Últimos 7 días con dato vs los 7 previos</div>
+        <div id="tendWeeklyCompareBody" style="margin-top:10px"></div>
+      </div>
+
+      <div class="cards">
+
+      <!-- 1. Recuperación vs Esfuerzo -->
+      <div class="tend-card" id="tendRecStrainCard">
+        <div class="tend-card-title" data-i18n="tend_rec_strain">Recuperación vs Esfuerzo</div>
+        <div class="tend-legend">
+          <span class="tend-legend-item"><span class="tend-legend-line" style="background:#30D158"></span><span data-i18n="tend_legend_recovery">Recuperación</span></span>
+          <span class="tend-legend-item"><span class="tend-legend-dash" style="color:#0A84FF"></span><span data-i18n="tend_legend_strain">Esfuerzo</span></span>
+        </div>
+        <div id="tendChartRecStrain" style="margin-top:10px"></div>
+      </div>
+
+      <!-- 2. Balance del periodo (donut) -->
+      <div class="tend-card" id="tendBalanceCard" style="padding:18px">
+        <div class="tend-balance-wrap">
+          <div class="tend-donut-wrap">
+            <div id="tendDonutBalance"></div>
+            <div class="tend-donut-center">
+              <div class="tend-donut-val" id="tendBalanceVal">—<span style="font-size:16px">%</span></div>
+              <div class="tend-donut-lbl" data-i18n="tend_donut_lbl">recovery</div>
+            </div>
+          </div>
+          <div class="tend-balance-text">
+            <div class="tend-balance-title" data-i18n="tend_balance_title">Balance del periodo</div>
+            <div class="tend-balance-desc" id="tendBalanceDesc" data-i18n="tend_balance_desc_mid">Recuperación media del periodo.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. HRV -->
+      <div class="tend-card" id="tendHrvCard">
+        <div class="tend-card-title" data-i18n="tend_hrv_title">HRV (RMSSD)</div>
+        <div class="tend-card-sub" id="tendHrvSub" data-i18n="tend_hrv_sub">Base — ms · banda = rango normal</div>
+        <div id="tendChartHrv"></div>
+      </div>
+
+      <!-- 4. FC en reposo -->
+      <div class="tend-card" id="tendRhrCard">
+        <div class="tend-card-title" data-i18n="tend_rhr_title">FC en reposo</div>
+        <div class="tend-card-sub" id="tendRhrSub" data-i18n="tend_rhr_sub">Más baja = mejor · base — lpm</div>
+        <div id="tendChartRhr"></div>
+      </div>
+
+      <!-- 5/6. Arquitectura del sueño + Consistencia de sueño — MOVIDAS al
+           tab Sueño (roadmap tab Sueño, paso 5). Sección "Tendencia" dentro
+           de _buildSleepTrendSection(), mismas funciones stackedBars/scatterChart. -->
+
+      <!-- 7. SpO₂ -->
+      <div class="tend-card" id="tendSpo2Card">
+        <div class="tend-card-title" data-i18n="tend_spo2">SpO₂ nocturno</div>
+        <div class="tend-card-sub" data-i18n="tend_spo2_sub">Oxígeno en sangre · &lt;90% = vigilar (línea roja)</div>
+        <div id="tendChartSpo2"></div>
+      </div>
+
+      <!-- 8. Temp. de piel -->
+      <div class="tend-card" id="tendTempCard">
+        <div class="tend-card-title" data-i18n="tend_temp">Temp. de piel</div>
+        <div class="tend-card-sub" data-i18n="tend_temp_sub">Desviación vs base · picos = posible enfermedad</div>
+        <div id="tendChartTemp"></div>
+      </div>
+
+      <!-- Métricas clave -->
+      <div id="tendMetricsCard" class="span-all">
+        <div id="tendMetricsLabel" data-i18n="tend_metrics_lbl">Métricas clave · promedio del periodo</div>
+        <div id="tendMetricsGrid"></div>
+      </div>
+
+      <!-- Entrenamientos recientes -->
+      <div class="tend-workouts-card" id="tendWorkoutsCard">
+        <div class="tend-workouts-hdr">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#FF9F0A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0V4ZM6 6H4v1a3 3 0 0 0 2 2.8M18 6h2v1a3 3 0 0 1-2 2.8"/></svg>
+          <span class="tend-workouts-lbl" data-i18n="tend_workouts_lbl">Entrenamientos recientes</span>
+        </div>
+        <div id="tendWorkoutsList"></div>
+      </div>
+
+      <!-- Palancas (drivers) -->
+      <div class="tend-card" id="tendPalancasCard">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5E5CE6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span style="font:650 15px/1.2 var(--font);color:var(--label)" data-i18n="tend_palancas">Palancas</span>
+        </div>
+        <div id="tendPalancas"></div>
+      </div>
+
+      <!-- Healthspan / Pace of Aging (Fase 8D, paso D2) -->
+      <div class="tend-card" id="tendHealthspanCard" style="display:none">
+        <div class="tend-card-title" data-i18n="healthspan_title">Healthspan</div>
+        <div class="tend-card-sub"><span data-i18n="healthspan_sub">Edad corporal histórica · qué tan rápido envejeces</span><span id="healthspanSubTech"></span></div>
+        <div id="healthspanPaceRow">
+          <div id="healthspanPaceVal">—</div>
+          <div id="healthspanPaceLbl" data-i18n="healthspan_pace_lbl">años/año</div>
+        </div>
+        <div id="healthspanPaceNote"></div>
+        <div id="healthspanChartSvg"></div>
+        <div id="healthspanDeltaRow"></div>
+        <div class="healthspan-empty" id="healthspanEmpty" style="display:none" data-i18n="healthspan_empty">Aún no hay suficiente historial (se necesitan ~4 meses de datos) para calcular tu Healthspan.</div>
+      </div>
+
+      <!-- Impacto de hábitos (Fase 8B — journal impact engine) -->
+      <div class="tend-card" id="tendJournalImpactCard">
+        <div class="tend-card-title" data-i18n="journal_impact_title">Impacto de hábitos</div>
+        <div class="tend-card-sub" data-i18n="journal_impact_sub">Asociación, no causa — registra al menos 5 días con y 5 sin cada hábito</div>
+        <div id="tendJournalImpact"></div>
+        <!-- Dosis-respuesta (Roadmap P2, F9, paso 9) — AUSENTE si no hay
+             hallazgos, nunca un placeholder vacío. -->
+        <div id="tendJournalDoseResponse"></div>
+      </div>
+
+      <!-- Informe narrativo semanal/mensual (Fase 8B) -->
+      <div class="tend-card" id="tendReportCard" onclick="openReportModal()">
+        <div class="report-hdr">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0A84FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 0 1 2-2h9l5 5v10.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 4v4a1 1 0 0 0 1 1h4"/><path d="M8 13h8M8 17h5"/></svg>
+          <span class="report-lbl" data-i18n="report_card_lbl">Informe</span>
+        </div>
+        <div class="report-period-toggle" onclick="event.stopPropagation()">
+          <div class="report-period-btn active" data-period="weekly" onclick="setReportPeriod('weekly')" data-i18n="report_period_weekly">Semana</div>
+          <div class="report-period-btn" data-period="monthly" onclick="setReportPeriod('monthly')" data-i18n="report_period_monthly">Mes</div>
+        </div>
+        <div class="report-preview" id="reportPreview"></div>
+      </div>
+
+      </div><!-- /.cards -->
+
+    </div><!-- /screenTend -->
+
+    <!-- COACH -->
+    <div id="screenCoach" class="screen">
+
+      <div id="coachScreenHeader">
+        <div>
+          <div id="coachScreenTitle" data-i18n="tab_coach">Coach</div>
+          <button id="coachConvSwitcher" onclick="openCoachConvModal()" aria-label="Conversaciones">
+            <span id="coachConvSwitcherTitle"></span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="head-actions">
+          <button id="coachNewConvBtn" class="hdr-btn" onclick="newConversation()" data-i18n-al="coach_new_conv" data-i18n-t="coach_new_conv" aria-label="Nueva conversación" title="Nueva conversación">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Brief card (chips + bullets del coach_card) -->
+      <div class="card coach-brief-card">
+        <div class="coach-brief-glow"></div>
+        <div class="coach-brief-header">
+          <div class="coach-brief-badge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="#30D158"><path d="M12 3.5l1.6 4.3 4.3 1.6-4.3 1.6L12 15.3l-1.6-4.3L6.1 9.4l4.3-1.6z"/></svg>
+            <span class="coach-brief-badge-lbl" data-i18n="coach_tab_badge">COACH IA · HOY</span>
+          </div>
+          <span class="coach-brief-date" id="coachBriefDate"></span>
+        </div>
+        <div id="coachBriefChips"></div>
+        <div id="coachBriefBullets"></div>
+      </div>
+
+      <!-- Coach Deportivo: Sesión Master (roadmap coach-mental) -->
+      <button id="masterSessionBtn" class="coach-suggestion" onclick="startMasterSession()"
+        style="width:100%;box-sizing:border-box;margin-bottom:14px">
+        <span data-i18n="mental_master_btn">Sesión Master</span>
+        <svg class="coach-suggestion-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button id="masterCloseBtn" class="coach-suggestion" onclick="closeMasterSession()" style="display:none;width:100%;box-sizing:border-box;margin-bottom:14px">
+        <span data-i18n="mental_close_btn">Cerrar Sesión Master</span>
+      </button>
+
+      <!-- Sugerencias -->
+      <div class="coach-suggestions-lbl" data-i18n="coach_ask_lbl">Pregúntale al coach</div>
+      <div id="coachSuggestions"></div>
+
+      <!-- Hilo de chat -->
+      <div class="coach-thread-lbl" id="coachThreadLbl" style="display:none" data-i18n="coach_thread_lbl">Conversación</div>
+      <div id="coachThread"></div>
+
+      <!-- Composer -->
+      <div id="coachComposer">
+        <textarea id="coachInput" rows="1" placeholder="Pregúntale a Vitals…" data-i18n-ph="coach_placeholder" onkeydown="coachInputKeydown(event)" oninput="autoResize(this)"></textarea>
+        <!-- Nota de voz (roadmap coach-voz): oculto por default, JS lo muestra
+             solo si el navegador soporta MediaRecorder + getUserMedia. -->
+        <button id="coachMicBtn" onclick="toggleVoiceRecording()" data-i18n-al="voice_mic_al" data-i18n-t="voice_mic_al" aria-label="Nota de voz" title="Nota de voz" style="display:none">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v3"/></svg>
+        </button>
+        <button id="coachSendBtn" onclick="sendCoach()" aria-label="Enviar">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+
+    </div><!-- /screenCoach -->
+
+    <!-- MÁS -->
+    <div id="screenMas" class="screen">
+
+      <div id="masHeader">
+        <div id="masTitle" data-i18n="mas_title">Más</div>
+      </div>
+
+      <div class="cards">
+
+        <!-- Household (Fase 8D, paso D3) — solo visible con ≥1 usuario registrado -->
+        <div class="span-all" id="masHouseholdSection" style="display:none">
+          <div class="mas-section-lbl" data-i18n="mas_household_lbl">Usuarios</div>
+          <div class="mas-sync-card">
+            <div id="masHouseholdList"></div>
+            <div class="mas-row" style="cursor:pointer;margin-bottom:0" onclick="openHouseholdAddModal()">
+              <div>
+                <div class="mas-row-label" data-i18n="household_add_btn">Agregar usuario</div>
+              </div>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--label3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Perfil — renderizado dinámico desde PROFILE -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_profile_lbl">Perfil</div>
+          <div class="mas-profile-card" id="masProfileCard">
+            <div class="mas-profile-top">
+              <div class="mas-avatar" id="masAvatarEl">?</div>
+              <div>
+                <div class="mas-name" id="masNameEl">—</div>
+                <div class="mas-email" id="masEmailEl"></div>
+              </div>
+            </div>
+            <div class="mas-stat-row">
+              <div class="mas-stat">
+                <div class="mas-stat-val" id="masAgeVal">—</div>
+                <div class="mas-stat-lbl" data-i18n="mas_age_lbl">Años</div>
+              </div>
+              <div class="mas-stat">
+                <div class="mas-stat-val" id="masHeightVal">—</div>
+                <div class="mas-stat-lbl" id="masHeightLbl" data-i18n="mas_height_lbl">cm</div>
+              </div>
+              <div class="mas-stat">
+                <div class="mas-stat-val" id="masWeightVal">—</div>
+                <div class="mas-stat-lbl" id="masWeightLbl" data-i18n="mas_weight_lbl">kg</div>
+              </div>
+            </div>
+            <button class="mas-edit-btn" onclick="openProfileForm(false)" data-i18n="mas_edit_btn">Editar perfil</button>
+          </div>
+        </div>
+
+        <!-- Idioma + Unidades (inyectado por renderMasLocaleControls) -->
+        <div class="span-all" id="masLocaleArea"></div>
+
+        <!-- Roadmap HIG paso 3: se quitó la sección "Apariencia" (toggle de modo
+             oscuro) — la apariencia sigue al sistema (§3), sin interruptor propio.
+             Claves i18n mas_appearance_lbl/mas_dark_mode_lbl/mas_dark_mode_sub
+             quedan sin uso a propósito (regla del roadmap: no borrar claves). -->
+
+        <!-- Salud — toggle de seguimiento de ciclo (Fase 7, opt-in, inclusivo) -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_health_lbl">Salud</div>
+          <div class="mas-row">
+            <div>
+              <div class="mas-row-label" data-i18n="mas_cycle_toggle_lbl">Seguimiento de ciclo</div>
+              <div class="mas-row-sub" id="masCycleToggleSub" data-i18n="mas_cycle_toggle_sub">Registra tu ciclo menstrual y ve fase, predicciones y ventana fértil.</div>
+            </div>
+            <label class="ios-toggle">
+              <input type="checkbox" id="masCycleToggle" onchange="masToggleCycle(this)">
+              <div class="ios-toggle-track"></div>
+              <div class="ios-toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="mas-row" id="masCycleDetailRow" style="display:none;cursor:pointer" onclick="openDetail('cycle')">
+            <div>
+              <div class="mas-row-label" data-i18n="mas_cycle_detail_lbl">Ver detalle de ciclo</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--label3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Programas del coach (Roadmap P1, F4, paso 8): catálogo de 4
+             plantillas fijas + iniciar/abandonar. Poblado por renderProgramsSection(). -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_programs_lbl">Programas</div>
+          <div id="masProgramsList"></div>
+        </div>
+
+        <!-- Notificaciones push (Fase 8C, paso C3). Roadmap P1 paso 2: los 3
+             inputs técnicos (ntfy/Telegram) se movieron a "Avanzado" — los 2
+             toggles se quedan visibles aquí (dependencia: hint si se activa
+             un toggle sin config técnica todavía). -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_notify_lbl">Notificaciones</div>
+          <div class="mas-sync-card">
+            <div class="mas-row-sub" style="margin-bottom:10px" data-i18n="mas_notify_hint">Configura ntfy y/o Telegram para recibir tu brief matutino y alertas.</div>
+            <div class="mas-row" style="margin-top:6px">
+              <div>
+                <div class="mas-row-label" data-i18n="mas_notify_brief_lbl">Brief matutino</div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="masNotifyBrief" onchange="masSaveNotifyField('morning_brief', this.checked)">
+                <div class="ios-toggle-track"></div>
+                <div class="ios-toggle-thumb"></div>
+              </label>
+            </div>
+            <div class="mas-row" style="margin-bottom:0">
+              <div>
+                <div class="mas-row-label" data-i18n="mas_notify_alerts_lbl">Alertas de insights</div>
+              </div>
+              <label class="ios-toggle">
+                <input type="checkbox" id="masNotifyAlerts" onchange="masSaveNotifyField('alerts', this.checked)">
+                <div class="ios-toggle-track"></div>
+                <div class="ios-toggle-thumb"></div>
+              </label>
+            </div>
+            <div class="mas-row-sub" id="masNotifyConfigHint" style="display:none;margin-top:8px" data-i18n="mas_notify_config_hint">Configura ntfy o Telegram en Avanzado.</div>
+          </div>
+        </div>
+
+        <!-- Acomodar tarjetas (abre popup) -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_custom_lbl">Personalización</div>
+          <div class="mas-row" onclick="openOrderPopup('hoy')" style="cursor:pointer">
+            <div>
+              <div class="mas-row-label" data-i18n="mas_order_lbl">Acomodar tarjetas</div>
+              <div class="mas-row-sub" data-i18n="mas_order_sub">Reordena el tablero de Hoy y Tendencias</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--label3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Cuenta / Sync -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_account_lbl">Cuenta y sincronización</div>
+          <div class="mas-sync-card">
+            <div id="masSourcesList"><!-- poblado por renderSourcesList() con una fila por fuente --></div>
+            <div class="mas-sync-row" style="border:none;padding-bottom:0;margin-bottom:0">
+              <div>
+                <div style="font:500 14px var(--font);color:var(--label)" data-i18n="mas_last_sync_lbl">Última actualización</div>
+                <div style="font:400 11px var(--font);color:var(--label3)" id="masLastSync">—</div>
+                <!-- Reconnect chip (roadmap P2 paso 4): visible SOLO si token
+                     expiró pero data <24h de antigüedad — reemplaza el banner
+                     rojo top por este aviso discreto y no urgente. -->
+                <a href="/auth/login" class="reconnect-chip" id="masReconnectChip" style="display:none">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+                  <span data-i18n="mas_reconnect_chip">Reconectar</span>
+                </a>
+              </div>
+            </div>
+            <div id="masSyncBtn" onclick="doSync()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <span data-i18n="mas_sync_btn">Sincronizar</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos — export (Ronda 4) -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_data_lbl">Datos</div>
+          <div class="mas-sync-card">
+            <div class="mas-row" style="cursor:pointer;margin-bottom:8px" onclick="window.location='/api/export?fmt=json'">
+              <div>
+                <div class="mas-row-label" data-i18n="mas_export_json_btn">Exportar JSON</div>
+                <div class="mas-row-sub" data-i18n="mas_export_hint">Descarga todos tus datos de salud sincronizados.</div>
+              </div>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--label3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+            </div>
+            <div class="mas-row" style="cursor:pointer;margin-bottom:0" onclick="window.location='/api/export?fmt=csv'">
+              <div>
+                <div class="mas-row-label" data-i18n="mas_export_csv_btn">Exportar CSV</div>
+              </div>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--label3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Laboratorios (Fase 8D, paso D1) -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_labs_lbl">Laboratorios</div>
+          <div class="mas-row" onclick="openLabsModal()" style="cursor:pointer">
+            <div>
+              <div class="mas-row-label" data-i18n="mas_labs_row_lbl">Ver laboratorios</div>
+              <div class="mas-row-sub" id="masLabsSummary" data-i18n="mas_labs_row_sub">Biomarcadores, series y rangos de referencia</div>
+            </div>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--label3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+        </div>
+
+        <!-- API pública de solo lectura (Roadmap P2, F10, paso 3) -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_api_lbl">API</div>
+          <div class="mas-profile-card">
+            <div class="mas-email" id="apiKeysHint" data-i18n="mas_api_hint" style="margin-bottom:12px;line-height:1.4">Genera claves de solo lectura para leer tus propios datos desde scripts o dashboards externos (patrón wger/Open Wearables).</div>
+            <div id="apiKeysList"></div>
+            <div class="journal-addbtn" id="apiKeysGenBtn" onclick="apiKeysGenerate()" data-i18n="mas_api_gen_btn" style="margin-top:10px">Generar clave</div>
+          </div>
+        </div>
+
+        <!-- Conectar app movil (QR) — el QR NO se mueve (roadmap P1 paso 2:
+             es el camino feliz del onboarding móvil). El token de
+             HealthKit/ECG (antes aquí, texto suelto desbordado) se movió a
+             "Avanzado". -->
+        <div class="span-all">
+          <div class="mas-section-lbl" data-i18n="mas_mobile_lbl">Conectar app móvil</div>
+          <div class="mas-profile-card" style="text-align:center">
+            <div id="qrBox" style="display:inline-block;background:#fff;border-radius:14px;padding:12px;line-height:0"></div>
+            <div class="mas-email" data-i18n="mas_mobile_hint" style="margin-top:12px;line-height:1.4">Escanea este código con la cámara de tu teléfono para abrir Vitals y agregarlo a tu pantalla de inicio.</div>
+          </div>
+        </div>
+
+        <!-- Roadmap P1 paso 2: sección "Avanzado" colapsada por default —
+             agrupa lo técnico que el roadmap identificó como ruido para el
+             usuario no-experto: token HealthKit/ECG (antes texto suelto
+             desbordado en la card de QR) + los 3 inputs técnicos de
+             notificaciones (antes sueltos en la sección de Notificaciones,
+             ahora sus 2 toggles quedan arriba, visibles). -->
+        <div class="span-all">
+          <div class="mas-section-lbl mas-advanced-toggle" onclick="toggleMasAdvanced()" role="button" aria-expanded="false">
+            <span data-i18n="mas_advanced_lbl">Avanzado</span>
+            <svg class="mas-advanced-chevron" id="masAdvancedChevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+          <div class="mas-advanced-body" id="masAdvancedBody">
+            <div class="mas-profile-card">
+              <!-- Fase 8C (paso C6): token de HealthKit/ECG, enmascarado por
+                   default + botón 👁 revelar + Copiar con estilo de pill del
+                   design system (antes reusaba .retry-toast-btn, una clase
+                   scoped al toast que fuera de ese host quedaba sin estilo). -->
+              <div class="mas-notify-field-lbl" style="text-align:left" data-i18n="mas_ingest_token_lbl">Token de HealthKit/ECG</div>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+                <input type="password" class="mas-notify-input" id="masIngestToken" readonly style="text-align:left;font:500 12px/1.3 monospace">
+                <span class="mas-token-reveal-btn" onclick="masToggleIngestTokenVisibility()" id="masTokenRevealBtn" role="button" data-i18n-al="mas_token_reveal_al" aria-label="Mostrar token">👁</span>
+                <span class="ds-pill-btn" onclick="masCopyIngestToken()" data-i18n="mas_copy_btn">Copiar</span>
+              </div>
+            </div>
+            <div class="mas-sync-card" style="margin-top:12px">
+              <label class="mas-notify-field-lbl" data-i18n="mas_notify_ntfy_lbl">URL de topic ntfy</label>
+              <input type="text" class="mas-notify-input" id="masNotifyNtfyUrl" placeholder="https://ntfy.sh/mi-topic-secreto" onchange="masSaveNotifyField('ntfy_url', this.value)">
+              <label class="mas-notify-field-lbl" data-i18n="mas_notify_tg_token_lbl">Token del bot de Telegram</label>
+              <input type="text" class="mas-notify-input" id="masNotifyTgToken" placeholder="123456:ABC-token" onchange="masSaveNotifyField('telegram_bot_token', this.value)">
+              <label class="mas-notify-field-lbl" data-i18n="mas_notify_tg_chat_lbl">Chat ID de Telegram</label>
+              <input type="text" class="mas-notify-input" id="masNotifyTgChat" placeholder="123456789" onchange="masSaveNotifyField('telegram_chat_id', this.value)" style="margin-bottom:0">
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.cards -->
+
+    </div><!-- /screenMas -->
+
+  </div><!-- /scrollArea -->
+
+  <!-- DETAIL OVERLAY -->
+  <div id="detailOverlay">
+    <div id="glow2" style="position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(50% 30% at 84% 3%, rgba(48,209,88,.16), transparent 70%), radial-gradient(56% 40% at 6% 88%, rgba(94,92,230,.18), transparent 72%)"></div>
+    <button type="button" id="detailBack" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span data-i18n="detail_back">Hoy</span>
+    </button>
+    <div style="position:relative">
+      <div id="detailTitle"></div>
+      <div id="detailValRow">
+        <span id="detailVal"></span>
+        <span id="detailUnit"></span>
+      </div>
+      <div id="detailSub"></div>
+      <div class="card" id="detailChart" style="padding:16px 14px;margin-bottom:0">
+        <div class="sec-lbl" id="detailChartLbl" style="margin:2px 4px 10px" data-i18n="detail_chart_lbl">Últimos 30 días</div>
+        <div id="detailChartSvg"></div>
+      </div>
+      <div class="card" id="detailCtxCard" style="padding:18px;margin-top:14px">
+        <div class="sec-lbl" style="margin-bottom:12px" data-i18n="detail_ctx_lbl">Contexto</div>
+        <div id="detailCtx"></div>
+        <div id="detailNorms"></div>
+      </div>
+      <!-- Deep screen (sleep / fitness) — rich metric cards list -->
+      <div id="deepScreenWrap">
+        <div id="deepMetricList" class="deep-metric-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER OVERLAY (popup reordenar tarjetas) -->
+  <div id="orderOverlay" onclick="closeOrder()">
+    <div id="orderOverlayCard" onclick="event.stopPropagation()">
+      <div id="orderOverlayHeader">
+        <div id="orderOverlayTitle" data-i18n="order_title">Acomodar tarjetas</div>
+        <button id="orderCloseBtn" onclick="closeOrder()" data-i18n-al="order_close_al" aria-label="Cerrar">✕</button>
+      </div>
+      <!-- Segmentado Hoy / Tendencias -->
+      <div class="order-seg" id="orderSeg">
+        <button class="order-seg-btn active" id="orderSegHoy" onclick="switchOrderScope('hoy')" data-i18n="order_scope_hoy">Hoy</button>
+        <button class="order-seg-btn" id="orderSegTend" onclick="switchOrderScope('tend')" data-i18n="order_scope_tend">Tendencias</button>
+      </div>
+      <!-- Lista reordenable -->
+      <div id="orderList"></div>
+      <!-- Restablecer -->
+      <button id="orderResetBtn" onclick="_orderResetActive()" data-i18n="order_reset_btn">Restablecer orden</button>
+    </div>
+  </div>
+
+  <!-- TAB BAR — Roadmap HIG paso 5: Liquid Glass (§1, §5). Botones reales con
+       role="tab"/aria-selected (accesibilidad); color monocromo salvo la
+       pestaña activa, que toma --accent vía .active (goTab() en JS). -->
+  <div id="tabBar" role="tablist">
+    <button type="button" class="tab-item active" role="tab" aria-selected="true" onclick="goTab('screenHoy')" id="tabHoy">
+      <svg class="tab-fill" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7 17 3.5 13.8 3.5 10.2 3.5 7.6 5.5 6 7.7 6c1.6 0 2.9.9 3.6 2 .7-1.1 2-2 3.6-2 2.2 0 4.2 1.6 4.2 4.2 0 3.6-3.5 6.8-8.5 10.3z"/></svg>
+      <span data-i18n="tab_hoy">Hoy</span>
+    </button>
+    <button type="button" class="tab-item" role="tab" aria-selected="false" onclick="goTab('screenSleep')" id="tabSleep">
+      <svg class="tab-fill" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13A8 8 0 1 1 11 3.5a6.2 6.2 0 0 0 9.5 9.5z"/></svg>
+      <span data-i18n="tab_sleep">Sueño</span>
+    </button>
+    <button type="button" class="tab-item" role="tab" aria-selected="false" onclick="goTab('screenTend')" id="tabTend">
+      <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 3.5 3.5L20 6M16 6h4v4"/></svg>
+      <span data-i18n="tab_tend">Tendencias</span>
+    </button>
+    <button type="button" class="tab-item" role="tab" aria-selected="false" onclick="goTab('screenCoach')" id="tabCoach">
+      <svg class="tab-fill" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.3 4.3 1.6-4.3 1.6L12 15.3l-1.6-4.3L6.1 9.4l4.3-1.6z"/></svg>
+      <span data-i18n="tab_coach">Coach</span>
+    </button>
+    <button type="button" class="tab-item" role="tab" aria-selected="false" onclick="goTab('screenMas')" id="tabMas">
+      <span class="tab-dot" id="tabMasDot"></span>
+      <svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><rect x="3.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2.2"/></svg>
+      <span data-i18n="tab_mas">Más</span>
+    </button>
+  </div>
+
+</div><!-- /.app -->
+
+<script src="/static/js/app-dashboard.js"></script>
+
+<!-- ── ONBOARDING OVERLAY ── -->
+<div id="onboardOverlay" class="hidden">
+  <div class="ob-logo">Vitals</div>
+  <div class="ob-sub" data-i18n="ob_sub">Cuéntanos un poco sobre ti para personalizar tu experiencia.</div>
+  <div id="obFormArea"></div>
+</div>
+
+<!-- ── PROFILE EDIT MODAL ── -->
+<div id="profileModal" class="hidden" onclick="if(event.target===this)closeProfileModal()">
+  <div id="profileModalSheet">
+    <div class="pm-handle"></div>
+    <div class="pm-title" data-i18n="mas_edit_btn">Editar perfil</div>
+    <div id="profileModalForm"></div>
+  </div>
+</div>
+
+<!-- ── ECG LIST MODAL (lista de lecturas) ── -->
+<div id="ecgListModal" class="hidden" onclick="if(event.target===this)closeEcgListModal()">
+  <div id="ecgListModalSheet">
+    <div class="pm-handle"></div>
+    <div class="pm-title" data-i18n="ecg_list_title">Electrocardiogramas</div>
+    <div id="ecgListModalBody"></div>
+  </div>
+</div>
+
+<!-- ── COACH CONVERSATIONS LIST MODAL ── -->
+<div id="coachConvModal" class="hidden" onclick="if(event.target===this)closeCoachConvModal()">
+  <div id="coachConvModalSheet">
+    <div class="pm-handle"></div>
+    <div class="pm-title" data-i18n="coach_conversations_title">Conversaciones</div>
+    <div class="coach-conv-new-row" onclick="newConversation()">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span data-i18n="coach_new_conv">Nueva conversación</span>
+    </div>
+    <div id="coachConvModalBody"></div>
+  </div>
+</div>
+
+<!-- ── INFORME NARRATIVO MODAL (Fase 8B) ── -->
+<div id="reportModal" class="hidden" onclick="if(event.target===this)closeReportModal()">
+  <div id="reportModalSheet">
+    <div class="pm-handle"></div>
+    <div class="pm-title" id="reportModalTitle" data-i18n="report_modal_title">Informe semanal</div>
+    <div class="report-narrative" id="reportModalNarrative"></div>
+    <div id="reportModalArchetype"></div>
+    <div class="report-metrics-grid" id="reportModalMetrics"></div>
+  </div>
+</div>
+
+<!-- ── JOURNAL: modal de nuevo hábito custom (Fase 8B) ── -->
+<div id="journalAddModal" class="hidden" onclick="if(event.target===this)closeJournalAddModal()">
+  <div id="journalAddModalSheet">
+    <div class="pm-handle"></div>
+    <div class="pm-title" data-i18n="journal_add_title">Nuevo hábito</div>
+    <input id="journalAddInput" type="text" maxlength="40" data-i18n-ph="journal_add_placeholder" placeholder="Ej. Colágeno marino" class="ob-input" style="width:100%;box-sizing:border-box;margin-bottom:6px">
+    <div id="journalAddErr" style="color:#FF375F;font:500 12.5px var(--font);margin-bottom:10px;display:none"></div>
+    <button id="journalAddSaveBtn" onclick="journalSubmitCustom()" class="journal-add-savebtn" data-i18n="journal_add_save">Agregar</button>
+  </div>
+</div>
+
+<!-- ── API: modal de clave nueva (Roadmap P2, F10, paso 3) ── -->
+<div id="apiKeyNewModal" class="hidden" onclick="if(event.target===this)apiKeysCloseNewModal()">
+  <div id="apiKeyNewModalSheet">
+    <div class="pm-handle"></div>
+    <div class="pm-title" data-i18n="mas_api_new_key_title">Copia esta clave ahora</div>
+    <div class="api-key-new-warning" data-i18n="mas_api_new_key_warning">Por seguridad, no se vuelve a mostrar. Guárdala en un lugar seguro.</div>
+    <div class="api-key-new-value" id="apiKeyNewValue"></div>
+    <button class="journal-add-savebtn" onclick="apiKeysCopyNewValue()" data-i18n="mas_copy_btn">Copiar</button>
+  </div>
+</div>
+
+<!-- ── HOUSEHOLD: modal de alta de usuario (Fase 8D, paso D3) ── -->
+<div id="householdAddModal" class="hidden" onclick="if(event.target===this)closeHouseholdAddModal()">
+  <div id="householdAddModalSheet">
+    <div class="pm-handle"></div>
+    <div class="pm-title" data-i18n="household_add_title">Nuevo usuario</div>
+    <input id="householdAddInput" type="text" maxlength="60" data-i18n-ph="household_add_placeholder" placeholder="Ej. Ana" class="ob-input" style="width:100%;box-sizing:border-box;margin-bottom:6px">
+    <div id="householdAddErr" style="color:#FF375F;font:500 12.5px var(--font);margin-bottom:10px;display:none"></div>
+    <button onclick="householdSubmitAdd()" class="journal-add-savebtn" data-i18n="household_add_save">Agregar</button>
+  </div>
+</div>
+
+<!-- ── LABORATORIOS MODAL (Fase 8D, paso D1) ── -->
+<div id="labsModal" class="hidden" onclick="if(event.target===this)closeLabsModal()">
+  <div id="labsModalSheet" onclick="event.stopPropagation()">
+    <div class="pm-handle"></div>
+    <div class="pm-title" id="labsModalTitle" data-i18n="labs_modal_title">Laboratorios</div>
+
+    <div class="labs-tabs" id="labsTabs">
+      <div class="labs-tab-btn active" data-labs-tab="list" onclick="labsSwitchTab('list')" data-i18n="labs_tab_list">Lista</div>
+      <div class="labs-tab-btn" data-labs-tab="add" onclick="labsSwitchTab('add')" data-i18n="labs_tab_add">Agregar</div>
+      <div class="labs-tab-btn" data-labs-tab="import" onclick="labsSwitchTab('import')" data-i18n="labs_tab_import">Importar CSV</div>
+    </div>
+
+    <!-- Lista de marcadores -->
+    <div id="labsPaneList">
+      <div id="labsMarkerList"></div>
+    </div>
+
+    <!-- Detalle de un marcador (historial + sparkline) -->
+    <div id="labsPaneDetail" style="display:none">
+      <div class="labs-detail-hdr">
+        <span class="labs-back-btn" onclick="labsShowList()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </span>
+        <span class="labs-detail-title" id="labsDetailTitle"></span>
+      </div>
+      <div class="labs-detail-range" id="labsDetailRange"></div>
+      <div id="labsDetailSpark"></div>
+      <div id="labsDetailHistory"></div>
+    </div>
+
+    <!-- Alta manual -->
+    <div id="labsPaneAdd" style="display:none">
+      <div class="labs-form-row">
+        <label data-i18n="labs_form_date">Fecha</label>
+        <input type="date" id="labsFormDate" class="ob-input" style="width:100%;box-sizing:border-box">
+      </div>
+      <div class="labs-form-row">
+        <label data-i18n="labs_form_marker">Biomarcador</label>
+        <select id="labsFormMarker" class="ob-input" style="width:100%;box-sizing:border-box"></select>
+      </div>
+      <div class="labs-form-row">
+        <label data-i18n="labs_form_value">Valor</label>
+        <input type="number" step="any" id="labsFormValue" class="ob-input" style="width:100%;box-sizing:border-box">
+      </div>
+      <div class="labs-form-row">
+        <label data-i18n="labs_form_note">Nota (opcional)</label>
+        <input type="text" id="labsFormNote" maxlength="500" class="ob-input" style="width:100%;box-sizing:border-box">
+      </div>
+      <div id="labsAddErr" style="color:#FF375F;font:500 12.5px var(--font);margin-bottom:10px;display:none"></div>
+      <button class="journal-add-savebtn" onclick="labsSubmitEntry()" data-i18n="labs_form_save">Guardar</button>
+    </div>
+
+    <!-- Import CSV -->
+    <div id="labsPaneImport" style="display:none">
+      <div class="labs-import-hint" data-i18n="labs_import_hint">Columnas: date,marker,value,unit (opcional),note (opcional). Encabezado opcional.</div>
+      <input type="file" id="labsImportFile" accept=".csv,text/csv" class="ob-input" style="width:100%;box-sizing:border-box">
+      <button class="journal-add-savebtn" style="margin-top:10px" onclick="labsSubmitImport()" data-i18n="labs_import_btn">Importar</button>
+      <div class="labs-import-result" id="labsImportResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ECG STRIP VIEWER MODAL (la tira, cuadrícula + trazo) ── -->
+<div id="ecgViewerModal" class="hidden" onclick="if(event.target===this)closeEcgViewer()">
+  <div id="ecgViewerSheet">
+    <div class="pm-handle"></div>
+    <button id="ecgViewerBack" onclick="closeEcgViewer()" data-i18n-al="ecg_back_al" aria-label="Volver">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      <span data-i18n="ecg_back">Lecturas</span>
+    </button>
+    <div id="ecgViewerHeader"></div>
+    <div id="ecgViewerStripWrap"></div>
+    <div id="ecgViewerDisclaimer" data-i18n="ecg_disclaimer">
+      Esto no es un diagnóstico. La clasificación la genera Apple a partir del Apple Watch;
+      Vitals solo la muestra. Consulta a un profesional de salud ante cualquier duda o síntoma.
+    </div>
+  </div>
+</div>
+
+<!-- ── JOURNAL DETAIL MODAL (sheet con el contenido íntegro, roadmap P0 paso 3) ── -->
+<div id="journalDetailModal" class="hidden" onclick="if(event.target===this)closeJournalDetail()">
+  <div id="journalDetailSheet">
+    <div class="pm-handle"></div>
+    <div id="journalDetailHeader">
+      <span id="journalDetailTitle" data-i18n="journal_deep_title">Diario de hábitos</span>
+      <button id="journalDetailClose" onclick="closeJournalDetail()" data-i18n-al="journal_close_al" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="journal-daysel">
+      <div class="journal-daysel-btn active" data-off="0" onclick="journalSelectDay(0)" data-i18n="journal_today">Hoy</div>
+      <div class="journal-daysel-btn" data-off="1" onclick="journalSelectDay(1)" data-i18n="journal_yesterday">Ayer</div>
+    </div>
+    <div id="journalChipsWrap"></div>
+    <div class="journal-week-count" id="journalWeekCount"></div>
+  </div>
+</div>
+
+<!-- Fase 8B: Journal de hábitos + Informe narrativo — JS en archivos propios
+     (roadmap regla #6: no seguir inflando el monolito inline). Cargados AL
+     FINAL, después de que t()/escHtml()/A/DB ya existen como globals. -->
+<script src="/static/js/journal.js"></script>
+<script src="/static/js/report.js"></script>
+<script src="/static/js/chart-interact.js"></script>
+<script src="/static/js/labs.js"></script>
+<script src="/static/js/healthspan.js"></script>
+<script src="/static/js/household.js"></script>
+<script src="/static/js/api_keys.js"></script>
+
+</body>
+</html>

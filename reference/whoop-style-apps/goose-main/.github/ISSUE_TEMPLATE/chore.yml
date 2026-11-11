@@ -1,0 +1,65 @@
+name: Chore
+description: Maintenance, refactoring, or technical debt — no user-facing change
+labels: ["chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for internal work with no visible behaviour change. If the change affects users, use Feature Request or Enhancement instead.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: This change has no user-facing behaviour change
+          required: true
+        - label: This is not a bug fix (use Bug Report) or new feature (use Feature Request)
+          required: true
+
+  - type: textarea
+    id: task
+    attributes:
+      label: What is the maintenance task?
+      description: Describe what needs to be done.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type of maintenance
+      options:
+        - Refactor
+        - Dependency update
+        - Test coverage
+        - Documentation
+        - Build / CI
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-state
+    attributes:
+      label: Current state
+      description: What is the specific problem with the current code or setup?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-work
+    attributes:
+      label: Proposed work
+      description: List the concrete changes to be made.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How do we know this is done?
+    validations:
+      required: true

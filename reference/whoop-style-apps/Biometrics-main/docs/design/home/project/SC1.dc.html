@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>S2 pages · Health, time zone, notifications</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244);text-decoration:none}
+.ol{border-color:rgb(44,47,55);background:rgba(44,47,55,.3)}
+.df{background:rgb(245,245,244);color:rgb(10,11,14)}
+.cap{font-family:'Silkscreen',monospace;font-size:13px;letter-spacing:1px;color:rgb(155,157,166)}
+.phone{position:relative;width:390px;height:844px;flex:none;border-radius:28px;border:1px solid rgb(30,33,40);box-sizing:border-box;overflow:hidden;background:rgb(10,11,14);padding:54px 16px 32px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;align-items:center;gap:8px}
+.top h1{flex:1;margin:0;text-align:center;font-family:'Silkscreen',monospace;font-weight:400;font-size:18px;letter-spacing:1px}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166);padding:0 4px}
+.group{display:flex;flex-direction:column;gap:8px}
+.list{border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:54px;padding:9px 16px;box-sizing:border-box;border-top:1px solid rgb(30,33,40);text-decoration:none;color:rgb(245,245,244)}
+.row:first-child{border-top:0}
+.t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tt{font-size:15px}
+.st{font-size:13px;color:rgb(155,157,166)}
+.v{font-size:14px;color:rgb(155,157,166)}
+.chev{color:rgb(90,94,104);font-size:16px}
+.tg{width:40px;height:24px;border-radius:6px;background:rgb(245,245,244);position:relative;flex:none;border:0;padding:0;cursor:pointer}
+.tg span{position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:4px;background:rgb(10,11,14)}
+.tg.off{background:rgb(44,47,55)}
+.tg.off span{right:auto;left:3px;background:rgb(155,157,166)}
+.foot{font-size:12px;color:rgb(155,157,166);padding:0 4px;line-height:17px}
+.chk{width:20px;height:20px;border-radius:5px;background:rgb(245,245,244);color:rgb(10,11,14);display:flex;align-items:center;justify-content:center;flex:none}
+.rad{width:20px;height:20px;border-radius:5px;border:1px solid rgb(58,62,72);box-sizing:border-box;flex:none;display:flex;align-items:center;justify-content:center}
+.rad.on{border-color:rgb(245,245,244)}
+.rad.on::after{content:'';width:10px;height:10px;border-radius:2px;background:rgb(245,245,244)}
+</style>
+</helmet>
+<div style="width: 1250px; height: 920px; box-sizing: border-box; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 18px 20px 0; display: flex; gap: 40px">
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">HEALTH DATA</span>
+  <div class="phone">
+    <div class="top"><a href="S2.dc.html" class="b ol" aria-label="Back to Profile" style="width: 40px; height: 40px">‹</a><h1>HEALTH DATA</h1><span style="width: 40px"></span></div>
+    <div class="list" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <svg aria-hidden="true" width="40" height="40" viewBox="0 0 10 10" shape-rendering="crispEdges"><rect x="1" y="1" width="3" height="1" fill="#F87171"></rect><rect x="6" y="1" width="3" height="1" fill="#F87171"></rect><rect x="0" y="2" width="10" height="3" fill="#F87171"></rect><rect x="1" y="5" width="8" height="1" fill="#F87171"></rect><rect x="2" y="6" width="6" height="1" fill="#EF4444"></rect><rect x="3" y="7" width="4" height="1" fill="#EF4444"></rect><rect x="4" y="8" width="2" height="1" fill="#DC2626"></rect><rect x="1" y="2" width="2" height="1" fill="#FCA5A5"></rect></svg>
+        <div class="t"><span class="tt" style="font-weight: 600">Google Health</span><span class="st">Connected · tushar@example.com</span></div>
+        <span style="font-size: 13px; font-weight: 600; color: rgb(74,222,128)">On</span>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <span class="st" style="flex: 1">Last synced 12 min ago</span>
+        <button class="b df" style="height: 36px; padding: 0 14px; font-size: 13px">Sync now</button>
+      </div>
+    </div>
+    <div class="group"><div class="label">What we read</div><div class="list">
+      <div class="row"><span class="chk">✓</span><span class="t"><span class="tt">Steps &amp; activity</span></span></div>
+      <div class="row"><span class="chk">✓</span><span class="t"><span class="tt">Sleep</span></span></div>
+      <div class="row"><span class="chk">✓</span><span class="t"><span class="tt">Resting heart rate</span></span></div>
+      <div class="row"><span class="chk">✓</span><span class="t"><span class="tt">Heart rate variability</span></span></div>
+    </div><div class="foot">You can also pull down on Activity to sync.</div></div>
+    <a href="#" class="b ol" style="height: 44px; font-size: 14px">Manage connection</a>
+  </div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">TIME ZONE</span>
+  <div class="phone">
+    <div class="top"><a href="S2.dc.html" class="b ol" aria-label="Back to Profile" style="width: 40px; height: 40px">‹</a><h1>TIME ZONE</h1><span style="width: 40px"></span></div>
+    <div class="list">
+      <div class="row"><span class="rad on"></span><span class="t"><span class="tt">Use device time zone</span><span class="st">Europe/London · 10:42 AM</span></span></div>
+      <div class="row"><span class="rad"></span><span class="t"><span class="tt">Custom time zone</span><span class="st">Pick one below</span></span></div>
+    </div>
+    <label style="display: flex; flex-direction: column; gap: 6px"><span class="label">Search</span><input type="text" placeholder="Search time zones" value="Europe" style="height: 44px; border-radius: 8px; border: 1px solid rgb(44,47,55); background: rgb(20,22,27); color: rgb(245,245,244); padding: 0 14px; font: 15px Geist, system-ui, sans-serif"></label>
+    <div class="list">
+      <a href="#" class="row" style="min-height: 46px"><span class="t"><span class="tt">Europe/Amsterdam</span></span></a>
+      <a href="#" class="row" style="min-height: 46px"><span class="t"><span class="tt">Europe/Berlin</span></span></a>
+      <a href="#" class="row" style="min-height: 46px"><span class="t"><span class="tt">Europe/Dublin</span></span></a>
+      <a href="#" class="row" style="min-height: 46px"><span class="t"><span class="tt">Europe/Lisbon</span></span></a>
+      <a href="#" class="row" style="min-height: 46px"><span class="t"><span class="tt" style="font-weight: 600">Europe/London</span></span><span class="v">Current</span></a>
+      <a href="#" class="row" style="min-height: 46px"><span class="t"><span class="tt">Europe/Madrid</span></span></a>
+    </div>
+    <div class="foot">Days, nights and streaks are counted in this time zone.</div>
+  </div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">NOTIFICATIONS</span>
+  <div class="phone">
+    <div class="top"><a href="S2.dc.html" class="b ol" aria-label="Back to Profile" style="width: 40px; height: 40px">‹</a><h1>NOTIFICATIONS</h1><span style="width: 40px"></span></div>
+    <div class="group"><div class="label">Recaps</div><div class="list">
+      <div class="row"><span class="t"><span class="tt">Recap ready</span><span class="st">A nudge when your weekly or monthly recap is ready</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Recap ready"><span></span></button></div>
+    </div></div>
+    <div class="group"><div class="label">Buddies</div><div class="list">
+      <div class="row"><span class="t"><span class="tt">Buddy stickers</span><span class="st">When a buddy sends you a sticker</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Buddy stickers"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Buddy requests</span><span class="st">When someone asks to be your buddy</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Buddy requests"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Buddy streaks &amp; badges</span><span class="st">When a buddy who shares them reaches a badge level</span></span><button class="tg off" role="switch" aria-checked="false" aria-label="Buddy streaks and badges"><span></span></button></div>
+    </div></div>
+    <div class="group"><div class="label">Chats</div><div class="list">
+      <div class="row"><span class="t"><span class="tt">Messages</span><span class="st">When a buddy sends you a message</span></span><button class="tg" role="switch" aria-checked="true" aria-label="Messages"><span></span></button></div>
+      <div class="row"><span class="t"><span class="tt">Message previews</span><span class="st">Show the message text in the notification</span></span><button class="tg off" role="switch" aria-checked="false" aria-label="Message previews"><span></span></button></div>
+    </div></div>
+    <a href="#" class="list" style="text-decoration: none; color: inherit"><span class="row"><span class="t"><span class="tt">Wind-down reminder</span><span class="st">Set in Bedtime goal · 22:30</span></span><span class="chev">›</span></span></a>
+  </div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1250,"height":920}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

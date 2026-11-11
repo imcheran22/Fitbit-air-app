@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Companion: Nimbus</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Geist',system-ui,sans-serif;background:#0A0B0E;color:#F5F5F4}
+.nb-float{animation:nb-float 4s ease-in-out infinite}
+@keyframes nb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.nb-blink{transform-box:fill-box;transform-origin:center;animation:nb-blink 4.6s ease-in-out infinite}
+@keyframes nb-blink{0%,45%,49%,100%{transform:scaleY(1)}47%{transform:scaleY(.1)}}
+.nb-drop{animation:nb-drop 1s linear infinite}
+.nb-d2{animation-delay:.33s}.nb-d3{animation-delay:.66s}
+@keyframes nb-drop{0%{transform:translateY(0);opacity:1}100%{transform:translateY(14px);opacity:0}}
+.nb-sun{transform-box:fill-box;transform-origin:center;animation:nb-sun 6s linear infinite}
+@keyframes nb-sun{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+<div style="width: 880px; height: 620px; box-sizing: border-box; padding: 40px; background: #0A0B0E; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 12px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: #7DD3FC">Companion 4</span>
+    <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 44px; line-height: 1">Nimbus</span>
+    <span style="font-size: 15px; color: #9B9DA6">A little cloud with a face. It drizzles thoughts while working, and the sun peeks out from behind it when an answer lands.</span>
+  </div>
+  <div style="display: flex; gap: 20px; flex-grow: 1">
+    <div style="width: 300px; border-radius: 28px; background: radial-gradient(circle at 50% 42%, rgba(125,211,252,0.16), #14161B 65%); border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 26px 20px 20px 20px">
+      <svg width="190" height="190" viewBox="0 0 100 100" aria-label="Nimbus">
+        <g class="nb-float">
+          <path d="M22 72 C12 72 8 62 14 56 C12 46 22 40 30 44 C32 32 46 26 56 32 C64 26 78 32 78 44 C88 44 94 54 88 62 C92 70 86 76 78 74 Z" fill="#E0F2FE"></path>
+          <ellipse class="nb-blink" cx="42" cy="56" rx="3.5" ry="5" fill="#0C4A6E"></ellipse><ellipse class="nb-blink" cx="60" cy="56" rx="3.5" ry="5" fill="#0C4A6E"></ellipse>
+          <path d="M46 64 Q51 68 56 64" fill="none" stroke="#0C4A6E" stroke-width="2.5" stroke-linecap="round"></path>
+          <ellipse cx="34" cy="63" rx="5" ry="3" fill="rgba(251,113,133,0.35)"></ellipse><ellipse cx="68" cy="63" rx="5" ry="3" fill="rgba(251,113,133,0.35)"></ellipse>
+        </g>
+      </svg>
+      <div style="width: 260px; height: 56px; border-radius: 28px; background: #1C1F26; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-around">
+        <span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span><span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span>
+        <svg width="46" height="46" viewBox="0 0 100 100"><path d="M20 76 C8 76 4 64 10 56 C8 44 20 36 30 40 C32 26 48 20 58 28 C68 20 84 28 84 42 C94 42 100 54 94 64 C98 72 90 80 80 78 Z" fill="#E0F2FE"></path><ellipse cx="42" cy="56" rx="5" ry="7" fill="#0C4A6E"></ellipse><ellipse cx="62" cy="56" rx="5" ry="7" fill="#0C4A6E"></ellipse></svg>
+        <span style="width: 18px; height: 18px; border-radius: 6px; border: 2px solid #6B6E78"></span><span style="width: 18px; height: 18px; border-radius: 9px; border: 2px solid #6B6E78"></span>
+      </div>
+    </div>
+    <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><g class="nb-float"><path d="M22 72 C12 72 8 62 14 56 C12 46 22 40 30 44 C32 32 46 26 56 32 C64 26 78 32 78 44 C88 44 94 54 88 62 C92 70 86 76 78 74 Z" fill="#E0F2FE"></path><ellipse class="nb-blink" cx="42" cy="56" rx="3.5" ry="5" fill="#0C4A6E"></ellipse><ellipse class="nb-blink" cx="60" cy="56" rx="3.5" ry="5" fill="#0C4A6E"></ellipse><path d="M46 64 Q51 68 56 64" fill="none" stroke="#0C4A6E" stroke-width="2.5" stroke-linecap="round"></path></g></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Idle · drifts</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><path class="nb-drop" d="M36 76 V82" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"></path><path class="nb-drop nb-d2" d="M52 76 V82" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"></path><path class="nb-drop nb-d3" d="M68 76 V82" stroke="#7DD3FC" stroke-width="3" stroke-linecap="round"></path><path d="M22 72 C12 72 8 62 14 56 C12 46 22 40 30 44 C32 32 46 26 56 32 C64 26 78 32 78 44 C88 44 94 54 88 62 C92 70 86 76 78 74 Z" fill="#BAE6FD"></path><ellipse cx="44" cy="52" rx="3.5" ry="5" fill="#0C4A6E"></ellipse><ellipse cx="62" cy="52" rx="3.5" ry="5" fill="#0C4A6E"></ellipse><path d="M48 63 H56" stroke="#0C4A6E" stroke-width="2.5" stroke-linecap="round"></path></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Thinking · drizzles</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><g class="nb-sun"><circle cx="72" cy="30" r="14" fill="#FDE68A"></circle><path d="M72 8 V12 M72 48 V52 M50 30 H54 M90 30 H94 M57 15 L60 18 M84 42 L87 45 M57 45 L60 42 M84 18 L87 15" stroke="#FDE68A" stroke-width="3" stroke-linecap="round"></path></g><path d="M22 76 C12 76 8 66 14 60 C12 50 22 44 30 48 C32 36 46 30 56 36 C64 30 78 36 78 48 C88 48 94 58 88 66 C92 74 86 80 78 78 Z" fill="#F0F9FF"></path><path d="M37 60 Q42 54 47 60" fill="none" stroke="#0C4A6E" stroke-width="3" stroke-linecap="round"></path><path d="M55 60 Q60 54 65 60" fill="none" stroke="#0C4A6E" stroke-width="3" stroke-linecap="round"></path><path d="M45 67 Q51 73 57 67" fill="#0C4A6E"></path></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Answering · sun peeks out</span>
+      </div>
+      <div style="border-radius: 20px; background: #14161B; border: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+        <svg width="84" height="84" viewBox="0 0 100 100"><path d="M22 76 C12 76 8 66 14 60 C12 50 22 44 30 48 C32 36 46 30 56 36 C64 30 78 36 78 48 C88 48 94 58 88 66 C92 74 86 80 78 78 Z" fill="#94A3B8"></path><path d="M37 60 Q42 63 47 60" fill="none" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round"></path><path d="M55 60 Q60 63 65 60" fill="none" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round"></path><circle cx="80" cy="22" r="7" fill="#C7D2FE"></circle><circle cx="84" cy="19" r="7" fill="#14161B"></circle></svg>
+        <span style="font-size: 12px; color: #9B9DA6">Resting day · a quiet grey cloud</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

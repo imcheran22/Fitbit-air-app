@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STEP variations</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1460px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">ROUND 4 · STEP VARIATIONS</h1>
+      <p style="margin: 0; font-size: 15px; color: #A3A9B5; max-width: 860px">Twelve takes on STEP, each changing one or two things: silhouette, eyes, limbs, a signature detail or posture. All stay on the 16 × 16 grid with flat colour, one accent and dot eyes.</p>
+    </div>
+    <div style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B5; text-align: right; line-height: 1.6">base 96 · 32 · 16 px<br>colourways 48 px</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{vars}}" as="d" hint-placeholder-count="12">
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 9px">
+        <div style="display: flex; gap: 8px; align-items: flex-end">
+          <div style="line-height: 0; background: #1B1E25; border-radius: 8px"><svg width="{{d.big.px}}" height="{{d.big.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 96 px"><sc-for list="{{d.big.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <div style="line-height: 0; background: #1B1E25; border-radius: 6px; padding: 4px"><svg width="{{d.mid.px}}" height="{{d.mid.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 32 px"><sc-for list="{{d.mid.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <div style="line-height: 0; background: #1B1E25; border-radius: 4px; padding: 4px"><svg width="{{d.small.px}}" height="{{d.small.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 16 px"><sc-for list="{{d.small.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 16px; color: #E7E9EE">{{d.name}}</h2>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{d.lever}}</span>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #C9CDD5; min-height: 38px">{{d.note}}</p>
+        <div style="display: flex; gap: 8px">
+          <sc-for list="{{d.ways}}" as="w" hint-placeholder-count="2">
+            <div style="line-height: 0; border-radius: 6px; padding: 4px; background: {{w.ground}}"><svg width="{{w.px}}" height="{{w.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} colourway"><sc-for list="{{w.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">POSE STRIP · SNOWCAP</h2>
+      <span style="font-size: 13px; color: #A3A9B5">Same character in six moments. The snow drips double as brows, so it emotes without a mouth.</span>
+    </div>
+    <div style="display: flex; gap: 16px">
+      <sc-for list="{{poses}}" as="p" hint-placeholder-count="6">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="line-height: 0; background: #1B1E25; border-radius: 8px"><svg width="{{p.px}}" height="{{p.px}}" shape-rendering="crispEdges" role="img" aria-label="Snowcap {{p.label}}"><sc-for list="{{p.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">{{p.label}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 6px; width: 240px">
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">ORIGINAL VS TOP 3 · 16 PX</h2>
+      <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #A3A9B5">1 cell = 1 px, on light and dark grounds.</p>
+    </div>
+    <div style="display: flex; gap: 32px; align-items: center; padding: 18px 28px; background: #F4F2EE; border-radius: 10px">
+      <sc-for list="{{compare}}" as="t" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center">
+          <svg width="{{t.s.px}}" height="{{t.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{t.name}} on light"><sc-for list="{{t.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <span style="font-family: Silkscreen, monospace; font-size: 10px; color: #3A3D45">{{t.name}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 32px; align-items: center; padding: 18px 28px; background: #0A0B0E; border: 1px solid #23262E; border-radius: 10px">
+      <sc-for list="{{compare}}" as="t" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center">
+          <svg width="{{t.s.px}}" height="{{t.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{t.name}} on dark"><sc-for list="{{t.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <span style="font-family: Silkscreen, monospace; font-size: 10px; color: #A3A9B5">{{t.name}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1460}}'>
+var N = 16;
+var E = "................";
+var BASE_LOW = ["....bbbbbbbb....", "....bbbbbbbb....", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "....b......b...."];
+var ORIGINAL = { name: "STEP", body: "#F87171", accent: "#F8FAFC",
+  rows: [E, E, E, E, ".......bb.......", "......bbbb......", ".....bbbbbb.....", ".....bebbeb....."].concat(BASE_LOW, [E, E, E]) };
+var SNOW_TOP = [".......aa.......", "......aaaa......", ".....babbab....."];
+var VARS = [
+  { name: "SNOWCAP", lever: "detail + brows", note: "A calm old hand. The snow drips sit over its eyes like brows.",
+    body: "#64748B", accent: "#F8FAFC", alt: ["#F87171", "#F8FAFC"],
+    rows: [E, E, E, E].concat(SNOW_TOP, [".....bebbeb....."], BASE_LOW, [E, E, E]) },
+  { name: "CROOKED", lever: "silhouette + gaze", note: "Peak knocked sideways, eyes at different heights. Always asking \"you sure?\"",
+    body: "#F87171", accent: "#F8FAFC", alt: ["#38BDF8", "#0F172A"],
+    rows: [E, E, E, E, "........bb......", ".......bbbb.....", ".....bbbbeb.....", ".....bebbbb....."].concat(BASE_LOW, [E, E, E]) },
+  { name: "LOPSIDE", lever: "asymmetric steps", note: "Steep on one side, long and shallow on the other. Built to lean into a climb.",
+    body: "#A78BFA", accent: "#F8FAFC", alt: ["#34D399", "#0F172A"],
+    rows: [E, E, E, E, ".....bb.........", ".....bbbb.......", ".....bbbbbb.....", "....bebbebbbb...", "....bbbbbbbbbb..", "...bbbbbbbbbbbb.", "...bbbbbbbbbbbb.", "....b........b..", E, E, E, E] },
+  { name: "BROW", lever: "1 px brow", note: "One raised brow. The coach who has heard every excuse, kindly.",
+    body: "#F87171", accent: "#F8FAFC", alt: ["#E5E7EB", "#3B82F6"],
+    rows: [E, E, E, E, ".......bb.......", "......bbbb......", ".....bbbbkk.....", ".....bebbeb....."].concat(BASE_LOW, [E, E, E]) },
+  { name: "CHONK", lever: "build + stance", note: "Wide, low and unbothered, with eyes set far apart. A boulder of a friend.",
+    body: "#94A3B8", accent: "#F8FAFC", alt: ["#FCA5A5", "#0F172A"],
+    rows: [E, E, E, E, E, "......bbbb......", ".....bbbbbb.....", "....bbbbbbbb....", "...bebbbbbbeb...", "..bbbbbbbbbbbb..", "..bbbbbbbbbbbb..", ".bbbbbbbbbbbbbb.", "..bb........bb..", E, E, E] },
+  { name: "SPIRE", lever: "skinny + glance", note: "Tall, narrow and a little nervous. It always glances off to the side.",
+    body: "#2DD4BF", accent: "#0F172A", alt: ["#F87171", "#F8FAFC"],
+    rows: [E, E, ".......bb.......", ".......bb.......", "......bbbb......", "......bebe......", "......bbbb......", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....", "....bbbbbbbb....", "....bbbbbbbb....", ".....b....b.....", E, E, E] },
+  { name: "PEBBLE", lever: "chip + pebble", note: "A bit clumsy. A step is chipped and a pebble always rolls off behind it.",
+    body: "#F87171", accent: "#F8FAFC", alt: ["#A8A29E", "#F8FAFC"],
+    rows: [E, E, E, E, ".......bb.......", "......bbbb......", ".....bbbbbb.....", ".....bebbeb.....", "....bbbbbbbb....", "....bbbbbbbb....", "....bbbbbbbbb...", "...bbbbbbbbbb...", ".b..b......b....", E, E, E] },
+  { name: "TRAIL", lever: "contour path", note: "Wears its own switchback trail, and every goal could add a turn.",
+    body: "#F87171", accent: "#FDE68A", alt: ["#64748B", "#FDE68A"],
+    rows: [E, E, E, E, ".......bb.......", "......bbbb......", ".....bbbbbb.....", ".....bebbeb.....", "....bbbbbbab....", "....bbbbaabb....", "...bbbbabbbbb...", "...baaabbbbbb...", "....b......b....", E, E, E] },
+  { name: "SCARF", lever: "wind detail", note: "Windswept, with the scarf tail always flying. Forever mid-adventure.",
+    body: "#F87171", accent: "#FACC15", alt: ["#ECE8DF", "#3B82F6"],
+    rows: [E, E, E, E, ".......bb.......", "......bbbb......", ".....bbbbbb.....", ".....bebbeb.....", "....aaaaaaaaaa..", "....bbbbbbbb.aa.", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "....b......b....", E, E, E] },
+  { name: "ODDEYE", lever: "eye size", note: "One big eye and one small. It looks permanently halfway through a thought.",
+    body: "#F87171", accent: "#F8FAFC", alt: ["#FDE68A", "#0F172A"],
+    rows: [E, E, E, E, ".......bb.......", "......bbbb......", ".....beebbb.....", ".....beebeb....."].concat(BASE_LOW, [E, E, E]) },
+  { name: "PEEK", lever: "eye height", note: "Nosy. Its eyes sit right under the summit, always checking the view.",
+    body: "#F87171", accent: "#F8FAFC", alt: ["#818CF8", "#F8FAFC"],
+    rows: [E, E, E, E, ".......bb.......", "......bebe......", ".....bbbbbb.....", ".....bbbbbb....."].concat(BASE_LOW, [E, E, E]) },
+  { name: "WADDLE", lever: "feet + low eyes", note: "Duck-footed, with its eyes low on the face. Waddles up anything.",
+    body: "#F87171", accent: "#F8FAFC", alt: ["#86EFAC", "#0F172A"],
+    rows: [E, E, E, E, ".......bb.......", "......bbbb......", ".....bbbbbb.....", ".....bbbbbb.....", "....bbbbbbbb....", "....bebbbbeb....", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "...bb......bb...", E, E, E] }
+];
+var POSES = [
+  { label: "idle", rows: [E, E, E, E].concat(SNOW_TOP, [".....bebbeb....."], BASE_LOW, [E, E, E]) },
+  { label: "climbing", rows: [E, E, E, E, "........aa......", ".......aaaa.....", "......babbab....", "......bbebbe....", "....bbbbbbbbb...", "....bbbbbbbbbb..", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "...b........b...", E, E, E] },
+  { label: "summit + flag", rows: [E, "........kff.....", "........kf......", "........k.......", ".......aa.......", "......aaaa......", ".....babbab.....", ".....bebbeb....."].concat(BASE_LOW, [E, E, E]) },
+  { label: "tired, sitting", rows: [E, E, E, E, E, ".......aa.......", "......aaaa......", ".....babbab.....", ".....eebbee.....", "....bbbbbbbb....", "....bbbbbbbb....", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "..bb........bb..", E, E] },
+  { label: "curious peek", rows: [E, E, E, E, "......aa........", ".....aaaa.......", "....babbab......", "....ebbebb......"].concat(BASE_LOW, [E, E, E]) },
+  { label: "celebrating", rows: [E, E, E, ".......aa.......", "......aaaa......", ".....babbab.....", "..b..bebbbe..b..", "...bbebebebeb...", "....bbbbbbbb....", "...bbbbbbbbbb...", "...bbbbbbbbbb...", "....b......b....", E, E, E, E] }
+];
+var COMPARE = ["STEP", "SNOWCAP", "LOPSIDE", "TRAIL"];
+
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+
+function cellsOf(rows, body, accent) {
+  var ink = lum(body) > 0.2 ? "#14161B" : "#F5F5F4";
+  var pal = { b: body, a: accent, e: ink, k: ink, f: "#FACC15" };
+  var out = [];
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) { var L = rows[y][x]; out.push(L === "." ? null : pal[L]); }
+  return out;
+}
+
+function layers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] === c) n++;
+      if (!by[c]) { by[c] = ""; order.push(c); }
+      by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+
+function sprite(rows, body, accent, s) { return { px: N * s, layers: layers(cellsOf(rows, body, accent), s) }; }
+function groundFor(body) { return lum(body) < 0.12 ? "#EDEBE6" : "#1B1E25"; }
+
+class Component extends DCLogic {
+  renderVals() {
+    var vars = VARS.map(function (v) {
+      return {
+        name: v.name, lever: v.lever, note: v.note,
+        big: sprite(v.rows, v.body, v.accent, 6), mid: sprite(v.rows, v.body, v.accent, 2), small: sprite(v.rows, v.body, v.accent, 1),
+        ways: [
+          { ground: "#1B1E25", px: 48, layers: layers(cellsOf(v.rows, v.body, v.accent), 3) },
+          { ground: groundFor(v.alt[0]), px: 48, layers: layers(cellsOf(v.rows, v.alt[0], v.alt[1]), 3) }
+        ]
+      };
+    });
+    var poses = POSES.map(function (p) { var s = sprite(p.rows, "#64748B", "#F8FAFC", 6); return { label: p.label, px: s.px, layers: s.layers }; });
+    var all = [ORIGINAL].concat(VARS);
+    var compare = COMPARE.map(function (n) {
+      var v = all.filter(function (x) { return x.name === n; })[0];
+      return { name: n, s: sprite(v.rows, v.body, v.accent, 1) };
+    });
+    return { vars: vars, poses: poses, compare: compare };
+  }
+}
+</script>
+</body>
+</html>

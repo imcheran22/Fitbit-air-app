@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Button standard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2DD4BF}a:hover{color:#5EEAD4}
+.b{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;transition:transform 80ms ease,filter 120ms ease}
+.b:active{transform:translateY(1px);filter:brightness(.9)}
+.b[disabled]{opacity:.5;pointer-events:none}
+.mono{font-family:'Geist Mono',ui-monospace,monospace}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .8s linear infinite}
+</style>
+</helmet>
+<div style="width: 1200px; height: 1260px; box-sizing: border-box; padding: 56px 64px; background: {{t.bg}}; color: {{t.fg}}; font-family: 'Geist', system-ui, sans-serif; display: flex; flex-direction: column; gap: 36px">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div class="mono" style="font-size: 12px; letter-spacing: .6px; color: {{t.mutedFg}}">components/ui/button.tsx</div>
+      <h1 style="margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -.6px">Button</h1>
+      <div style="font-size: 15px; color: {{t.mutedFg}}">shadcn/ui Base button, mapped onto the app's colour tokens. 6 variants · 8 sizes.</div>
+    </div>
+    <div class="mono" style="font-size: 12px; color: {{t.mutedFg}}; text-align: right">primary = {{primaryName}}<br>radius = 8 · font Geist 500</div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 13px; font-weight: 600; letter-spacing: .6px; color: {{t.mutedFg}}">VARIANTS</div>
+    <div style="display: flex; gap: 14px; align-items: center">
+      <sc-for list="{{variants}}" as="b" hint-placeholder-count="6">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start">
+          <button class="b" style="height: {{b.h}}px; padding: 0 {{b.px}}px; border-radius: {{b.r}}px; background: {{b.bg}}; color: {{b.fg}}; border: 1px solid {{b.bd}}; font-size: {{b.fs}}px; text-decoration: {{b.td}}; text-underline-offset: 4px; box-shadow: {{b.sh}}">{{b.label}}</button>
+          <div class="mono" style="font-size: 11px; color: {{t.mutedFg}}">{{b.code}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 13px; font-weight: 600; letter-spacing: .6px; color: {{t.mutedFg}}">SIZES</div>
+    <div style="display: grid; grid-template-columns: 140px repeat(4, minmax(0, 1fr)); gap: 14px 18px; align-items: center">
+      <div></div>
+      <div class="mono" style="font-size: 12px; color: {{t.mutedFg}}">xs · 24</div>
+      <div class="mono" style="font-size: 12px; color: {{t.mutedFg}}">sm · 32</div>
+      <div class="mono" style="font-size: 12px; color: {{t.mutedFg}}">default · 36</div>
+      <div class="mono" style="font-size: 12px; color: {{t.mutedFg}}">lg · 40</div>
+      <sc-for list="{{sizeRows}}" as="row" hint-placeholder-count="6">
+        <div class="mono" style="font-size: 13px; color: {{t.fg}}">{{row.name}}</div>
+        <sc-for list="{{row.cells}}" as="b" hint-placeholder-count="4">
+          <div><button class="b" style="height: {{b.h}}px; padding: 0 {{b.px}}px; border-radius: {{b.r}}px; background: {{b.bg}}; color: {{b.fg}}; border: 1px solid {{b.bd}}; font-size: {{b.fs}}px; text-decoration: {{b.td}}; text-underline-offset: 4px; box-shadow: {{b.sh}}">{{b.label}}</button></div>
+        </sc-for>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <div style="font-size: 13px; font-weight: 600; letter-spacing: .6px; color: {{t.mutedFg}}">ICON SIZES · icon-xs 24 · icon-sm 32 · icon 36 · icon-lg 40</div>
+      <sc-for list="{{iconRows}}" as="row" hint-placeholder-count="3">
+        <div style="display: flex; gap: 16px; align-items: center">
+          <div class="mono" style="width: 84px; font-size: 13px">{{row.name}}</div>
+          <sc-for list="{{row.cells}}" as="b" hint-placeholder-count="4">
+            <button class="b" aria-label="Add" style="width: {{b.h}}px; height: {{b.h}}px; border-radius: {{b.r}}px; background: {{b.bg}}; color: {{b.fg}}; border: 1px solid {{b.bd}}; box-shadow: {{b.sh}}">
+              <svg width="{{b.ic}}" height="{{b.ic}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </button>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <div style="font-size: 13px; font-weight: 600; letter-spacing: .6px; color: {{t.mutedFg}}">WITH ICON · LOADING · ROUNDED · DISABLED</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+        <button class="b" style="height: 36px; padding: 0 12px 0 10px; gap: 6px; border-radius: 8px; background: {{t.primary}}; color: {{t.primaryFg}}; border: 1px solid transparent; font-size: 14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path></svg>Send
+        </button>
+        <button class="b" style="height: 36px; padding: 0 10px 0 12px; gap: 6px; border-radius: 8px; background: {{t.outlineBg}}; color: {{t.fg}}; border: 1px solid {{t.input}}; font-size: 14px; box-shadow: {{t.shadowXs}}">Continue
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </button>
+        <button class="b" disabled="{{ true }}" style="height: 36px; padding: 0 12px 0 10px; gap: 6px; border-radius: 8px; background: {{t.primary}}; color: {{t.primaryFg}}; border: 1px solid transparent; font-size: 14px">
+          <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>Saving
+        </button>
+        <button class="b" style="height: 36px; padding: 0 16px; border-radius: 999px; background: {{t.secondary}}; color: {{t.secondaryFg}}; border: 1px solid transparent; font-size: 14px">rounded-full</button>
+        <button class="b" disabled="{{ true }}" style="height: 36px; padding: 0 10px; border-radius: 8px; background: {{t.primary}}; color: {{t.primaryFg}}; border: 1px solid transparent; font-size: 14px">Disabled</button>
+        <button class="b" style="height: 36px; padding: 0 10px 0 8px; gap: 6px; border-radius: 8px; background: {{t.destructiveBg}}; color: {{t.destructive}}; border: 1px solid transparent; font-size: 14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"></path></svg>Remove buddy
+        </button>
+      </div>
+
+      <div style="font-size: 13px; font-weight: 600; letter-spacing: .6px; color: {{t.mutedFg}}; margin-top: 10px">BUTTON GROUP</div>
+      <div style="display: flex; gap: 20px; align-items: center">
+        <div role="group" aria-label="Week actions" style="display: flex; box-shadow: {{t.shadowXs}}; border-radius: 8px">
+          <button class="b" style="height: 36px; padding: 0 12px; border-radius: 8px 0 0 8px; background: {{t.outlineBg}}; color: {{t.fg}}; border: 1px solid {{t.input}}; font-size: 14px">Day</button>
+          <button class="b" style="height: 36px; padding: 0 12px; border-radius: 0; margin-left: -1px; background: {{t.outlineBg}}; color: {{t.fg}}; border: 1px solid {{t.input}}; font-size: 14px">Week</button>
+          <button class="b" style="height: 36px; padding: 0 12px; border-radius: 0; margin-left: -1px; background: {{t.outlineBg}}; color: {{t.fg}}; border: 1px solid {{t.input}}; font-size: 14px">Month</button>
+          <button class="b" aria-label="More" style="width: 36px; height: 36px; border-radius: 0 8px 8px 0; margin-left: -1px; background: {{t.outlineBg}}; color: {{t.fg}}; border: 1px solid {{t.input}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+          </button>
+        </div>
+        <div role="group" aria-label="Reply" style="display: flex">
+          <button class="b" style="height: 36px; padding: 0 12px; border-radius: 8px 0 0 8px; background: {{t.secondary}}; color: {{t.secondaryFg}}; border: 1px solid transparent; font-size: 14px">Cheer</button>
+          <button class="b" aria-label="More stickers" style="width: 36px; height: 36px; border-radius: 0 8px 8px 0; background: {{t.secondary}}; color: {{t.secondaryFg}}; border: 1px solid transparent; border-left: 1px solid {{t.border}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 40px; align-items: center; padding: 22px 24px; border-radius: 16px; border: 1px solid {{t.border}}; background: {{t.card}}">
+    <div style="position: relative; width: 120px; height: 56px; display: flex; align-items: center; justify-content: center">
+      <div style="position: absolute; left: 0; right: 0; top: 6px; height: 44px; border: 1.5px dashed {{t.accent}}; border-radius: 10px"></div>
+      <button class="b" style="height: 32px; padding: 0 10px; border-radius: 8px; background: {{t.primary}}; color: {{t.primaryFg}}; border: 1px solid transparent; font-size: 13px">Retry</button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px; max-width: 760px">
+      <div style="font-size: 15px; font-weight: 600">On a phone every button keeps a 44-pt tap area</div>
+      <div style="font-size: 14px; line-height: 20px; color: {{t.mutedFg}}">The shadcn sizes stay exact visually; a small button (xs, sm, icon-xs, icon-sm, or any under 44) gets invisible hitSlop so it is easy to hit. Pressed = 1-px nudge + slight dim (shadcn's active translate), reduced-motion skips the nudge.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"primary":{"editor":"enum","options":["neutral","teal"],"default":"neutral"},"$preview":{"width":1200,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = (this.props.theme || 'dark') === 'dark';
+    const teal = this.props.primary === 'teal';
+    const base = dark
+      ? { bg: 'rgb(10,11,14)', fg: 'rgb(245,245,244)', card: 'rgb(20,22,27)', border: 'rgb(34,37,44)', input: 'rgb(44,47,55)', outlineBg: 'rgba(44,47,55,.3)', secondary: 'rgb(28,31,38)', mutedFg: 'rgb(155,157,166)', accent: 'rgb(45,212,191)', destructive: 'rgb(248,113,113)', destructiveBg: 'rgba(248,113,113,.2)', shadowXs: 'none' }
+      : { bg: 'rgb(246,246,247)', fg: 'rgb(17,18,22)', card: 'rgb(255,255,255)', border: 'rgb(228,228,233)', input: 'rgb(228,228,233)', outlineBg: 'rgb(255,255,255)', secondary: 'rgb(235,235,239)', mutedFg: 'rgb(98,100,110)', accent: 'rgb(13,148,136)', destructive: 'rgb(220,38,38)', destructiveBg: 'rgba(220,38,38,.1)', shadowXs: '0 1px 2px rgba(0,0,0,.05)' };
+    const t = Object.assign({}, base, {
+      primary: teal ? base.accent : base.fg,
+      primaryFg: teal ? (dark ? '#04211D' : '#FFFFFF') : base.bg,
+      secondaryFg: base.fg
+    });
+    const style = (variant) => {
+      switch (variant) {
+        case 'default': return { bg: t.primary, fg: t.primaryFg, bd: 'transparent', td: 'none', sh: 'none' };
+        case 'outline': return { bg: t.outlineBg, fg: t.fg, bd: t.input, td: 'none', sh: t.shadowXs };
+        case 'secondary': return { bg: t.secondary, fg: t.secondaryFg, bd: 'transparent', td: 'none', sh: 'none' };
+        case 'ghost': return { bg: 'transparent', fg: t.fg, bd: 'transparent', td: 'none', sh: 'none' };
+        case 'destructive': return { bg: t.destructiveBg, fg: t.destructive, bd: 'transparent', td: 'none', sh: 'none' };
+        default: return { bg: 'transparent', fg: teal ? t.accent : t.fg, bd: 'transparent', td: 'underline', sh: 'none' };
+      }
+    };
+    const sizes = { xs: { h: 24, px: 8, fs: 12, r: 8 }, sm: { h: 32, px: 10, fs: 13, r: 8 }, default: { h: 36, px: 10, fs: 14, r: 8 }, lg: { h: 40, px: 12, fs: 14, r: 8 } };
+    const names = ['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'];
+    const labels = { default: 'Button', outline: 'Outline', secondary: 'Secondary', ghost: 'Ghost', destructive: 'Destructive', link: 'Link' };
+    const make = (v, s, label) => Object.assign({ label: label }, sizes[s], style(v));
+    const variants = names.map((v) => Object.assign(make(v, 'default', labels[v]), { code: 'variant="' + v + '"' }));
+    const sizeRows = names.map((v) => ({ name: v, cells: ['xs', 'sm', 'default', 'lg'].map((s) => make(v, s, labels[v])) }));
+    const iconSizes = [{ h: 24, ic: 12, r: 8 }, { h: 32, ic: 16, r: 8 }, { h: 36, ic: 16, r: 8 }, { h: 40, ic: 18, r: 8 }];
+    const iconRows = ['default', 'outline', 'ghost'].map((v) => ({ name: v, cells: iconSizes.map((z) => Object.assign({}, z, style(v))) }));
+    return { t: t, primaryName: teal ? 'teal accent (brand)' : 'foreground (neutral shadcn)', variants: variants, sizeRows: sizeRows, iconRows: iconRows };
+  }
+}
+</script>
+</body>
+</html>

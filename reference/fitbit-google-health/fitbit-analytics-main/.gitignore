@@ -1,0 +1,36 @@
+# Environments
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# YOUR HEALTH DATA — never commit this.
+data/
+data_raw/
+takeout/
+Takeout/
+*.zip
+reports/
+*.parquet
+*.duckdb
+
+# Local config that may contain paths to personal data
+config.local.yaml
+
+# Google Health API OAuth client secret + token cache — never commit.
+secrets.local.yaml
+.google_health_token.json
+
+# dbt: local profile has DB credentials (even though they're env var refs,
+# keep the actual file out); build artifacts are regenerated every run.
+dbt/profiles.yml
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# OS
+.DS_Store

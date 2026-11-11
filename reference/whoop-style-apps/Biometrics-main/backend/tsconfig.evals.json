@@ -1,0 +1,10 @@
+{
+  // The eval harness lives outside src/ (it is test tooling, not shipped code) but
+  // imports from it, so it needs a wider rootDir than the app's tsconfig. Used by
+  // `npm run eval:coach` and to type-check the harness:
+  //   npx tsc --noEmit -p tsconfig.evals.json
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "rootDir": ".", "noEmit": true, "types": ["node"] },
+  "include": ["src", "evals"],
+  "exclude": ["node_modules", "dist", "tests", "scripts", "prisma.config.ts"]
+}

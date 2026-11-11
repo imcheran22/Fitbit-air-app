@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GROUNDED arms</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 600px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">ROUND 8A · GROUNDED + ARMS</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5; max-width: 960px">Four arm treatments on the locked GROUNDED block (shade side, ground shadow, round 7 ramp). The near arm takes the body tone and the far arm the shade tone, so arms follow the same light.</p>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{arms}}" as="d" hint-placeholder-count="4">
+      <div style="background: #14161B; border: {{d.border}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; gap: 8px; align-items: flex-end; background: #0A0B0E; border-radius: 8px; padding: 6px">
+          <svg width="{{d.big.px}}" height="{{d.big.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 96 px"><sc-for list="{{d.big.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg width="{{d.mid.px}}" height="{{d.mid.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 32 px"><sc-for list="{{d.mid.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg width="{{d.small.px}}" height="{{d.small.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 16 px"><sc-for list="{{d.small.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <sc-for list="{{d.poses}}" as="p" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <div style="line-height: 0; border-radius: 8px; padding: 4px; background: #1B1E25"><svg width="{{p.s.px}}" height="{{p.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} {{p.label}}"><sc-for list="{{p.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+              <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{p.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span style="font-family: Silkscreen, monospace; font-size: 11px; color: #A3A9B5">{{d.num}}</span>
+          <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px; color: #E7E9EE">{{d.name}}</h2>
+          <sc-if value="{{d.pick}}" hint-placeholder-val="{{ false }}"><span style="font-family: Silkscreen, monospace; font-size: 10px; color: #0A0B0E; background: #93C5FD; padding: 3px 6px 2px; border-radius: 4px">PICK</span></sc-if>
+        </div>
+        <p style="margin: 0; font-size: 12px; line-height: 1.45; color: #C9CDD5">{{d.note}}</p>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":600}}'>
+var N = 16;
+var BODY = "#3B82F6";
+var G = ["................", "................", "................", "................", "................", "................",
+  "....bbbbbbbs....", "....bbbbbbbs....", "....bbebbebs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....",
+  ".....b....s.....", ".....b....s.....", "...zzzzzzzzzz..."];
+var BOTTLE = { rows: ["cC", "Lw", "Lw", "lb", "lb"], pal: { c: "#F43F5E", C: "#BE123C", L: "#F0F9FF", w: "#BAE6FD", l: "#7DD3FC", b: "#0EA5E9" } };
+var ARMS = [
+  { name: "SIDE STUBS", base: [[3, 10, "b"], [12, 10, "s"]],
+    poses: [{ label: "wave", cells: [[3, 10, "b"], [12, 9, "s"], [12, 8, "s"]] }, { label: "hold bottle", cells: [[3, 10, "b"], [12, 10, "s"]], bottle: [1, 8] }],
+    note: "Readable and classic, but stubs sticking out of the sides drift toward the crab-like silhouette we are avoiding." },
+  { name: "LOW NUBS", base: [[3, 12, "b"], [12, 12, "s"]],
+    poses: [{ label: "wave", cells: [[3, 12, "b"], [12, 11, "s"], [12, 10, "s"]] }, { label: "hold bottle", cells: [[3, 12, "b"], [12, 12, "s"]], bottle: [1, 9] }],
+    note: "Little paws at the bottom corners. More creature than robot, and the sides stay clear for held items." },
+  { name: "2 PX ARMS", base: [[3, 10, "b"], [3, 11, "b"], [12, 10, "s"], [12, 11, "s"]],
+    poses: [{ label: "wave", cells: [[3, 10, "b"], [3, 11, "b"], [12, 9, "s"], [13, 8, "s"]] }, { label: "hold bottle", cells: [[3, 10, "b"], [2, 10, "b"], [12, 10, "s"], [12, 11, "s"]], bottle: [0, 8] }],
+    note: "Arms hang straight down and can wave or grip, so held items get a real hand. Readable, but always there." },
+  { name: "POSE-ONLY", pick: true, base: [],
+    poses: [{ label: "wave", cells: [[12, 9, "s"], [13, 8, "s"]] }, { label: "cheer", cells: [[3, 9, "b"], [2, 8, "b"], [12, 9, "s"], [13, 8, "s"]], lift: 1 }],
+    note: "A plain block at rest. 2 px arms appear only to wave, cheer or hold an item, so the resting silhouette stays the cleanest." }
+];
+
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function hx2(n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? "0" + s : s; }
+function mix(a, b, k) { var x = rgb(a), y = rgb(b); return "#" + hx2(x[0] * (1 - k) + y[0] * k) + hx2(x[1] * (1 - k) + y[1] * k) + hx2(x[2] * (1 - k) + y[2] * k); }
+function darken(a, k) { var x = rgb(a); return "#" + hx2(x[0] * k) + hx2(x[1] * k) + hx2(x[2] * k); }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function ramp(body) { return { b: body, h: mix(body, "#FFFFFF", 0.25), s: darken(body, 0.78), d: darken(body, 0.6), e: lum(body) > 0.2 ? "#14161B" : "#F5F5F4", z: "rgba(0,0,0,0.35)" }; }
+
+function compose(cellsList, bottle, lift) {
+  var p = ramp(BODY), out = [];
+  for (var i = 0; i < N * N; i++) out.push(null);
+  var dy = lift || 0;
+  function put(x, y, c) { if (x >= 0 && y >= 0 && x < N && y < N) out[y * N + x] = c; }
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+    var L = G[y][x]; if (L === ".") continue;
+    if (L === "z") put(x, y, p.z); else put(x, y - dy, p[L]);
+  }
+  cellsList.forEach(function (c) { put(c[0], c[1] - dy, p[c[2]]); });
+  if (bottle) BOTTLE.rows.forEach(function (r, j) { for (var k = 0; k < r.length; k++) put(bottle[0] + k, bottle[1] + j, BOTTLE.pal[r[k]]); });
+  return out;
+}
+function layers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] === c) n++;
+      if (!by[c]) { by[c] = ""; order.push(c); }
+      by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+function sprite(cells, s, bottle, lift) { return { px: N * s, layers: layers(compose(cells, bottle, lift), s) }; }
+
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      arms: ARMS.map(function (a, i) {
+        return {
+          num: String(i + 1), name: a.name, note: a.note, pick: !!a.pick,
+          border: a.pick ? "2px solid #93C5FD" : "1px solid #23262E",
+          big: sprite(a.base, 6), mid: sprite(a.base, 2), small: sprite(a.base, 1),
+          poses: a.poses.map(function (p) { return { label: p.label, s: sprite(p.cells, 6, p.bottle, p.lift) }; })
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

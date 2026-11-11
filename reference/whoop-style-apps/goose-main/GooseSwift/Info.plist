@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.goose.swift.health</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gooseswift</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Goose uses Bluetooth to connect to your owned WHOOP strap and read a local hello response.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Goose uses Bluetooth to connect to your owned WHOOP strap and read a local hello response.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Goose reads Apple Health to prefill your profile weight and import sleep, heart rate, and recovery data when your WHOOP is not connected.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Goose writes heart rate, HRV, and sleep data to Apple Health so your WHOOP data is available across your health apps.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Goose uses background location to keep tracking outdoor workout routes, pace, and distance when you minimize the app.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Goose uses background location to keep tracking outdoor workout routes, pace, and distance when you minimize the app.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Goose uses location to record outdoor workout routes, pace, distance, and elevation.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Goose uses the local network to send WHOOP data to your personal server</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp.</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>fetch</string>
+		<string>location</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.goose.swift.bg-sync</string>
+	</array>
+</dict>
+</plist>

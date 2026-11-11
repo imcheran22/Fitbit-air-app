@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app's brand palette (ui/theme/Theme.kt): neutral surface, brand pink for actions. -->
+    <color name="widget_background">#FFFFF0F1</color>
+    <color name="widget_text_primary">#FF22191A</color>
+    <color name="widget_text_secondary">#FF524345</color>
+    <color name="widget_brand">#FFE2175E</color>
+    <color name="widget_on_brand">#FFFFFFFF</color>
+    <color name="widget_on_brand_secondary">#D9FFFFFF</color>
+</resources>

@@ -1,0 +1,173 @@
+.fitbitair {
+  text-align: left;
+  line-height: 1.3;
+}
+
+.fitbitair-total {
+  font-size: 1.6em;
+  line-height: 1.1;
+}
+
+.fitbitair-efficiency {
+  margin-top: 2px;
+}
+
+.fitbitair-times {
+  margin-top: 6px;
+}
+
+.fitbitair-stale {
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------- donut */
+
+.fitbitair-donut {
+  display: block;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 4px;
+}
+
+/*
+ * Each stage carries both a hue and a brightness step, and the mode picks
+ * which one does the work.
+ *
+ * The hues are categorical slots 1-4 of a validated palette, kept in this
+ * order deliberately: the ring's adjacent pairs clear CVD separation
+ * (worst ΔE 8.4) and the normal-vision floor (19.8) against a black
+ * surface, and the wrap-around pair where awake meets deep is the
+ * strongest contrast of all (30.7). Reordering these breaks that.
+ *
+ * The monochrome fallback exists because a mirror is viewed through
+ * semi-transparent film that mutes hues; brightness survives that trip
+ * when colour does not.
+ */
+.fitbitair-arc-deep {
+  --fa-hue: #3987e5;
+  --fa-step: 1;
+}
+
+.fitbitair-arc-rem {
+  --fa-hue: #d95926;
+  --fa-step: 0.72;
+}
+
+.fitbitair-arc-light {
+  --fa-hue: #199e70;
+  --fa-step: 0.45;
+}
+
+.fitbitair-arc-awake {
+  --fa-hue: #c98500;
+  --fa-step: 0.22;
+}
+
+.fitbitair-arc {
+  stroke: #fff;
+  stroke-linecap: butt;
+  opacity: var(--fa-step);
+}
+
+.fitbitair-color .fitbitair-arc {
+  stroke: var(--fa-hue);
+  opacity: 1;
+}
+
+.fitbitair-donut-total {
+  fill: #fff;
+  font-size: 17px;
+  dominant-baseline: middle;
+}
+
+.fitbitair-donut-sub {
+  fill: #aaa;
+  font-size: 10px;
+  dominant-baseline: middle;
+}
+
+/* --------------------------------------------------------------- legend */
+
+.fitbitair-stages {
+  margin-top: 8px;
+  border-spacing: 0;
+  width: 100%;
+}
+
+/*
+ * The swatch is a filled square rather than a ring segment, so it needs the
+ * arc's opacity applied to a background instead of a stroke.
+ */
+.fitbitair-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  background: #fff;
+  opacity: var(--fa-step);
+  vertical-align: middle;
+}
+
+.fitbitair-color .fitbitair-swatch {
+  background: var(--fa-hue);
+  opacity: 1;
+}
+
+.fitbitair-stage-name {
+  padding-right: 12px;
+  text-align: left;
+}
+
+.fitbitair-stage-value {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fitbitair-stage-pct {
+  text-align: right;
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+.fitbitair-stage-flag {
+  padding-left: 6px;
+  width: 1em;
+  font-size: 0.8em;
+}
+
+.fitbitair-verdict {
+  margin-top: 2px;
+}
+
+/*
+ * Reserved status steps, never reused as series colours. Only two states
+ * are used: sleep varies night to night, so anything more alarming than
+ * "worth noticing" would overstate what this data can tell you. The arrow
+ * glyph carries the meaning; these tones only reinforce it.
+ */
+.fitbitair-tone-good {
+  color: #0ca30c;
+}
+
+.fitbitair-tone-warn {
+  color: #fab219;
+}
+
+/* -------------------------------------------------------------- messages */
+
+.fitbitair-message {
+  font-size: 1.1em;
+}
+
+.fitbitair-detail {
+  margin-top: 2px;
+  max-width: 260px;
+}
+
+.fitbitair-qr {
+  margin-top: 10px;
+  width: 128px;
+  height: 128px;
+  display: block;
+}

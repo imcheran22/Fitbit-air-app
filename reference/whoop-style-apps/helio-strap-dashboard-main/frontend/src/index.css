@@ -1,0 +1,203 @@
+@import 'tailwindcss';
+
+/* ───────────────────────────────────────────────────────────
+   Helio Strap — tema "instrumento solar"
+   Casi-negro cálido + acento ámbar/dorado (Helio = sol).
+   ─────────────────────────────────────────────────────────── */
+@theme {
+  /* Fondo frío tipo WHOOP / health-startup */
+  --color-bg: #090b0e;
+  --color-surface: #14181e;
+  --color-surface-2: #1c212a;
+  --color-elevated: #262d37;
+
+  --color-line: rgba(255, 255, 255, 0.1);
+  --color-line-strong: rgba(255, 255, 255, 0.18);
+
+  --color-ink: #f2f5f8;
+  --color-muted: #9aa4b2;
+  --color-faint: #69727f;
+
+  /* Acento de marca = verde recuperación (sustituye al ámbar "solar") */
+  --color-solar: #19e3a0;
+  --color-solar-bright: #5cf2c2;
+  --color-solar-deep: #0bbf86;
+
+  /* Pilares semánticos WHOOP */
+  --color-recovery: #19e3a0; /* recuperado (alto) */
+  --color-recovery-mid: #ffcf4a; /* medio */
+  --color-recovery-low: #ff5d6c; /* bajo */
+  --color-effort: #2bd4ff; /* strain / esfuerzo (cian) */
+  --color-strain: #ff5d6c; /* alerta / HR alto (rojo) */
+  --color-sleep: #8b8cff; /* sueño (índigo) */
+  --color-info: #2bd4ff;
+
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  --radius-panel: 18px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Atmósfera: halos fríos (verde recovery + cian strain) + grano sutil */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(
+        900px 600px at 12% -8%,
+        rgba(25, 227, 160, 0.09),
+        transparent 60%
+      ),
+      radial-gradient(
+        700px 500px at 100% 0%,
+        rgba(43, 212, 255, 0.06),
+        transparent 55%
+      );
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  ::selection {
+    background: rgba(25, 227, 160, 0.26);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 99px;
+    border: 2px solid var(--color-bg);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+  .panel {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.025),
+        rgba(255, 255, 255, 0)
+      ),
+      var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-panel);
+  }
+  .panel-hover {
+    transition:
+      border-color 0.25s ease,
+      transform 0.25s ease,
+      background 0.25s ease;
+  }
+  .panel-hover:hover {
+    border-color: var(--color-line-strong);
+    transform: translateY(-2px);
+  }
+  .glow-solar {
+    box-shadow:
+      0 0 0 1px rgba(25, 227, 160, 0.08),
+      0 18px 60px -28px rgba(25, 227, 160, 0.5);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sweep {
+  to {
+    stroke-dashoffset: var(--dash-to);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Latido "lub-dub": doble bombeo y descanso. La duración se fija por JS
+   según los BPM actuales, así late al ritmo real del corazón. */
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.26);
+  }
+  20% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.16);
+  }
+  45% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pip base sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 820px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 14px">
+        <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 44px; line-height: 1; letter-spacing: 1px; color: #8EE3C8">PIP</h1>
+        <span style="font-family: Silkscreen, monospace; font-size: 12px; color: #0A0B0E; background: #8EE3C8; padding: 5px 8px 4px; border-radius: 4px">BASE SHEET</span>
+      </div>
+      <p style="margin: 0; font-size: 16px; line-height: 1.5; color: #A3A9B5; max-width: 720px">A pocket-size pulse creature: egg-dome body, one antenna with a glowing bulb, nub arms, two feet. Drawn on the same 24 × 24 cell grid as the 15 coaches, left half mirrored, so it composes with the existing sprite code.</p>
+    </div>
+    <div style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #A3A9B5; text-align: right; line-height: 1.6">grid 24 × 24 · mirror x = 23 − x<br>body rows 9–21 · antenna rows 3–8</div>
+  </div>
+
+  <div style="display: flex; gap: 32px; align-items: flex-start">
+    <div style="width: 384px; display: flex; flex-direction: column; gap: 12px">
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 23px; line-height: 0">
+        <dc-import name="Sprite" colorway="mint" scale="14" grid="true" anchors="true" bg="none" hint-size="336px,336px"></dc-import>
+      </div>
+      <div style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B5">14 px per cell · grid on · anchor points boxed</div>
+    </div>
+
+    <div style="width: 360px; display: flex; flex-direction: column; gap: 22px">
+      <section style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px; color: #E7E9EE">LAYERS &amp; SLOTS</h2>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #C9CDD5">
+          <div style="display: flex; align-items: center; gap: 10px"><span style="display: flex; gap: 2px"><span style="width: 16px; height: 16px; background: #C1F0E1"></span><span style="width: 16px; height: 16px; background: #8EE3C8"></span><span style="width: 16px; height: 16px; background: #6FB19C"></span></span><span><b style="font-weight: 600; color: #E7E9EE">Body</b> · h light / b body / s shade (auto)</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="display: flex; gap: 2px"><span style="width: 16px; height: 16px; background: #3D6156"></span><span style="width: 16px; height: 16px; background: transparent"></span><span style="width: 16px; height: 16px; background: transparent"></span></span><span><b style="font-weight: 600; color: #E7E9EE">Outline</b> · 1 px around everything, auto</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="display: flex; gap: 2px"><span style="width: 16px; height: 16px; background: #FB7185"></span><span style="width: 16px; height: 16px; background: #FDBFC8"></span><span style="width: 16px; height: 16px; background: #3D6156"></span></span><span><b style="font-weight: 600; color: #E7E9EE">Antenna</b> · a bulb (accent), pulse, k stalk</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="display: flex; gap: 2px"><span style="width: 16px; height: 16px; background: #1C2D28"></span><span style="width: 16px; height: 16px; background: #FFFFFF"></span><span style="width: 16px; height: 16px; background: #C1ABBF"></span></span><span><b style="font-weight: 600; color: #E7E9EE">Face</b> · e eye + m mouth / w shine / c cheek</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="display: flex; gap: 2px"><span style="width: 16px; height: 16px; background: #6FB19C"></span><span style="width: 16px; height: 16px; background: #2E3036"></span><span style="width: 16px; height: 16px; background: transparent"></span></span><span><b style="font-weight: 600; color: #E7E9EE">Feet &amp; shadow</b> · f = shade / z black 45 %</span></div>
+        </div>
+      </section>
+      <section style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px; color: #E7E9EE">COSMETIC ANCHORS</h2>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #C9CDD5">
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 12px; height: 12px; border: 2px solid #FDE047"></span><span><b style="font-weight: 600; color: #E7E9EE">head</b> · top of dome, x 11–12, y 9</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 12px; height: 12px; border: 2px solid #38BDF8"></span><span><b style="font-weight: 600; color: #E7E9EE">face</b> · eye line, y 13–14, eyes x 7–8 / 15–16</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 12px; height: 12px; border: 2px solid #F472B6"></span><span><b style="font-weight: 600; color: #E7E9EE">neck</b> · under the mouth, y 16–17</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 12px; height: 12px; border: 2px solid #4ADE80"></span><span><b style="font-weight: 600; color: #E7E9EE">hand L / R</b> · arm nubs, x 2 and 21, y 16–17</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 12px; height: 12px; border: 2px dashed #A3A9B5"></span><span><b style="font-weight: 600; color: #E7E9EE">back</b> · full 24 × 24, drawn behind the body</span></div>
+        </div>
+      </section>
+    </div>
+
+    <div style="width: 376px; display: flex; flex-direction: column; gap: 16px">
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px; color: #E7E9EE">AT APP SIZES</h2>
+        <div style="display: flex; align-items: flex-end; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><dc-import name="Sprite" colorway="mint" scale="1" bg="none" hint-size="24px,24px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">24</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><dc-import name="Sprite" colorway="mint" scale="2" bg="none" hint-size="48px,48px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">48</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><dc-import name="Sprite" colorway="mint" scale="3" bg="none" hint-size="72px,72px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">72</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><dc-import name="Sprite" colorway="mint" scale="4" bg="tint" hint-size="96px,96px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">96 on tint</span></div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #A3A9B5">Whole cells only. A 32 pt slot on a 3× phone is 96 device px, so 4 px per cell, via the same crispLayout floor the coaches use.</p>
+      </div>
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px; color: #E7E9EE">IDLE LOOP</h2>
+        <div style="display: flex; gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><dc-import name="Sprite" colorway="mint" scale="3" bg="none" frame="still" hint-size="72px,72px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">0 rest</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><dc-import name="Sprite" colorway="mint" scale="3" bg="none" frame="bob" hint-size="72px,72px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">1 bob +1</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><dc-import name="Sprite" colorway="mint" scale="3" bg="none" frame="blink" hint-size="72px,72px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">2 blink</span></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><dc-import name="Sprite" colorway="mint" scale="3" bg="none" frame="pulse" hint-size="72px,72px"></dc-import><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B5">3 pulse</span></div>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #A3A9B5">Bob every 800 ms like the coaches, blink 140 ms every 4.2 s, and the bulb lightens once per beat. It can follow a live heart rate.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

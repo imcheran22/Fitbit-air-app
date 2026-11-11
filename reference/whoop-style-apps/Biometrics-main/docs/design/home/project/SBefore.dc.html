@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile · before</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166);padding:0 16px}
+.group{display:flex;flex-direction:column;gap:8px}
+.list{border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 16px;box-sizing:border-box;border-top:1px solid rgb(30,33,40);text-decoration:none;color:rgb(245,245,244)}
+.row:first-child{border-top:0}
+.ic{width:22px;height:22px;flex:none;border-radius:11px;border:2px solid currentColor;box-sizing:border-box}
+.t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tt{font-size:15px}
+.st{font-size:13px;color:rgb(155,157,166)}
+.v{font-size:14px;color:rgb(155,157,166)}
+.sw{width:44px;height:26px;border-radius:13px;background:rgb(165,180,252);position:relative;flex:none}
+.sw::after{content:'';position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:10px;background:#fff}
+.off{background:rgb(44,47,55)}
+.off::after{right:auto;left:3px}
+.foot{font-size:13px;color:rgb(155,157,166);padding:0 16px;line-height:18px}
+</style>
+</helmet>
+<div style="width: 390px; height: 2500px; box-sizing: border-box; overflow: hidden; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 54px 20px 40px; display: flex; flex-direction: column; gap: 24px">
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+    <div style="width: 80px; height: 80px; border-radius: 40px; border: 3px solid #C7D2FE; padding: 3px; box-sizing: border-box"><div style="width: 100%; height: 100%; border-radius: 40px; background: rgb(28,31,38); display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 600">T</div></div>
+    <div style="font-family: Silkscreen, monospace; font-size: 24px">PROFILE</div>
+    <div class="st">tushar@example.com</div>
+  </div>
+
+  <div class="list" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 15px; font-weight: 600">Badges</span><span class="st">4 of 7 · See all</span></div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; text-align: center; font-size: 11px; color: rgb(155,157,166)">
+      <div><div style="height: 36px; border-radius: 8px; background: rgba(196,181,253,.2); margin-bottom: 4px"></div>Sleep</div>
+      <div><div style="height: 36px; border-radius: 8px; background: rgba(74,222,128,.2); margin-bottom: 4px"></div>Steps</div>
+      <div><div style="height: 36px; border-radius: 8px; background: rgba(251,191,36,.2); margin-bottom: 4px"></div>Early</div>
+      <div><div style="height: 36px; border-radius: 8px; background: rgba(96,165,250,.2); margin-bottom: 4px"></div>Logs</div>
+      <div><div style="height: 36px; border-radius: 8px; background: rgb(28,31,38); margin-bottom: 4px"></div>Buddy</div>
+      <div><div style="height: 36px; border-radius: 8px; background: rgb(28,31,38); margin-bottom: 4px"></div>Recap</div>
+      <div><div style="height: 36px; border-radius: 8px; background: rgb(28,31,38); margin-bottom: 4px"></div>Coach</div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 15px"><span><b>Next up:</b> Sleep streak · level 2</span><span class="st">5/7</span></div>
+  </div>
+
+  <div class="group"><div class="label">Health data</div><div class="list">
+    <a href="#" class="row"><span class="ic" style="color: #F87171"></span><span class="t"><span class="tt">Google Health</span><span class="st">Sync steps, sleep, heart rate and HRV</span></span><span class="v">Connected</span></a>
+    <a href="#" class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Sync now</span><span class="st">Last synced 12 min ago</span></span></a>
+  </div></div>
+
+  <div class="group"><div class="label">Time zone</div><div class="list">
+    <a href="#" class="row"><span class="ic" style="color: #60A5FA"></span><span class="t"><span class="tt">Device time zone</span></span><span class="v">Europe/London</span></a>
+  </div></div>
+
+  <div class="group"><div class="label">Notifications</div><div class="list">
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Recap ready</span><span class="st">A nudge when your weekly or monthly recap is ready</span></span><span class="sw"></span></div>
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Buddy stickers</span><span class="st">When a buddy sends you a sticker</span></span><span class="sw"></span></div>
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Buddy requests</span><span class="st">When someone asks to be your buddy</span></span><span class="sw"></span></div>
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Buddy streaks &amp; badges</span><span class="st">When a buddy who shares them reaches a badge level</span></span><span class="sw off"></span></div>
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Messages</span><span class="st">When a buddy sends you a message</span></span><span class="sw"></span></div>
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Message previews</span><span class="st">Show the message text in the notification</span></span><span class="sw off"></span></div>
+  </div></div>
+
+  <div class="group"><div class="label">Buddies</div><div class="list">
+    <a href="#" class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Tushar</span><span class="st">@tushar</span></span></a>
+    <a href="#" class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Blocked people</span></span></a>
+  </div></div>
+
+  <div class="group"><div class="label">Shared with buddies</div><div class="list">
+    <div class="row"><span class="t"><span class="tt">Recovery score</span><span class="st">Your daily recovery score, last 7 days</span></span><span class="sw"></span></div>
+    <div class="row"><span class="t"><span class="tt">Sleep score</span><span class="st">Your daily sleep score, last 7 days</span></span><span class="sw"></span></div>
+    <div class="row"><span class="t"><span class="tt">Hours slept</span><span class="st">How long you slept, last 7 days</span></span><span class="sw off"></span></div>
+    <div class="row"><span class="t"><span class="tt">Steps</span><span class="st">Your daily steps, and “moved a lot yesterday”</span></span><span class="sw"></span></div>
+    <div class="row"><span class="t"><span class="tt">Streaks &amp; badges</span><span class="st">Your sleep streak and badge levels</span></span><span class="sw off"></span></div>
+  </div><div class="foot">Buddies always see your mood and coach. Each number stays off until you turn it on.</div></div>
+
+  <div class="group"><div class="label">Chats</div><div class="list">
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Read receipts</span><span class="st">Show “Seen” when you’ve read a chat. Off, you won’t see theirs either.</span></span><span class="sw"></span></div>
+    <div class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Show activity status</span><span class="st">Let buddies see when you were last active. Off, you won’t see theirs either.</span></span><span class="sw"></span></div>
+  </div></div>
+
+  <div class="group"><div class="label">Account</div><div class="list">
+    <a href="#" class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Sign-in methods</span><span class="st">Apple, Google, email and password</span></span></a>
+    <a href="#" class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Devices</span><span class="st">Where you are signed in</span></span></a>
+    <a href="#" class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Sign out</span></span></a>
+  </div></div>
+
+  <div class="group"><div class="label">Your coach</div><div class="list">
+    <a href="#" class="row"><span class="ic" style="color: #FBBF24"></span><span class="t"><span class="tt">Sage</span><span class="st">Calm, plain-spoken, sleep first</span></span></a>
+    <a href="#" class="row"><span class="t"><span class="tt">Thinking style</span></span><span class="v">Pixel dots</span></a>
+    <a href="#" class="row"><span class="t"><span class="tt">Thinking text</span></span><span class="v">Short</span></a>
+  </div><div class="foot">How your coach looks and talks to you.</div></div>
+
+  <div class="group"><div class="label">AI Coach</div><div class="list">
+    <a href="#" class="row"><span class="ic" style="color: rgb(165,180,252)"></span><span class="t"><span class="tt">Coach Memory</span><span class="st">See, edit or delete what the coach remembers</span></span></a>
+    <a href="#" class="row"><span class="ic" style="color: rgb(155,157,166)"></span><span class="t"><span class="tt">Turn off AI Coach</span></span></a>
+  </div></div>
+
+  <div class="group"><div class="list">
+    <a href="#" class="row" style="color: #F87171"><span class="ic" style="color: #F87171"></span><span class="t"><span class="tt">Delete account…</span></span></a>
+  </div><div class="foot">Permanently delete your account and all the data stored for it.</div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2500}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@
 3. Let it run M0 (audit + baseline) first. It will pick up `CLAUDE.md` automatically.
 
 What is already prepared:
-- Workspace organised: this repo, `../reference/` (categorised third-party code, read-only), `../prompts/`.
+- Workspace organised: this repo, `reference/` (categorised third-party code, read-only), `../prompts/`.
 - `:core:ui` theme foundation: Pulse-derived colour tokens (light + dark), Figtree/Barlow type roles with
   bundled OFL fonts, radii/spacing/dial/motion tokens, `ApexTheme`, contrast test.
 - `docs/design/DESIGN_SYSTEM.md`: the design source of truth and the Pulse → Apex screen map.

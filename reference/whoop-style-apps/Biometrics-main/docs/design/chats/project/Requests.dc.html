@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Buddy requests</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244)}
+.b:active{transform:translateY(1px);filter:brightness(.9)}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif">
+  <div style="position: absolute; top: 54px; left: 12px; right: 12px; display: flex; align-items: center; gap: 8px">
+    <button class="b" aria-label="Back to chats" style="width: 36px; height: 36px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+    </button>
+    <div style="font-size: 17px; font-weight: 700">Requests</div>
+  </div>
+  <div style="position: absolute; top: 104px; left: 16px; right: 16px; font-size: 13.5px; line-height: 19px; color: rgb(155,157,166)">Only buddies can message you. Accept to pair up; they won't know if you decline.</div>
+
+  <div style="position: absolute; top: 160px; left: 16px; right: 16px; display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{reqs}}" as="r" hint-placeholder-count="2">
+      <div style="padding: 14px; border-radius: 18px; background: rgb(20,22,27); border: 1px solid rgb(34,37,44); display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div style="width: 44px; height: 44px; border-radius: 22px; background: rgb(28,31,38); display: flex; align-items: center; justify-content: center">
+            <svg width="28" height="28" viewBox="0 0 12 12" shape-rendering="crispEdges"><rect x="3" y="2" width="6" height="1" fill="{{r.c}}"></rect><rect x="2" y="3" width="8" height="6" fill="{{r.c}}"></rect><rect x="3" y="9" width="6" height="1" fill="{{r.c}}"></rect><rect x="4" y="5" width="1" height="2" fill="#14161B"></rect><rect x="7" y="5" width="1" height="2" fill="#14161B"></rect></svg>
+          </div>
+          <div style="flex: 1; min-width: 0">
+            <div style="font-size: 15px; font-weight: 600">{{r.name}}</div>
+            <div style="font-size: 13px; color: rgb(155,157,166)">{{r.handle}} · {{r.when}}</div>
+          </div>
+          <button class="b" aria-label="More options for {{r.name}}" style="width: 32px; height: 32px; color: rgb(155,157,166)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+          </button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <button class="b" style="height: 36px; border-color: rgb(44,47,55); background: rgba(44,47,55,.3); font-size: 14px">Decline</button>
+          <button class="b" style="height: 36px; background: rgb(245,245,244); color: rgb(10,11,14); font-size: 14px">Accept</button>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { reqs: [
+      { name: 'Mia', handle: '@mia.runs', when: '2h', c: '#F472B6' },
+      { name: 'Jo', handle: '@jo_sleeps', when: '1d', c: '#34D399' }
+    ] };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+name: Bug Report
+description: Something is broken or behaving unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill in all required fields so we can reproduce and fix this. Remove any personal data from logs before submitting.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: Describe what went wrong...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps to trigger the bug.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: whoop-device
+    attributes:
+      label: WHOOP device
+      options:
+        - WHOOP 4.0
+        - WHOOP 5.0
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: whoop-firmware
+    attributes:
+      label: WHOOP firmware
+      description: Found in the WHOOP app → Device Settings.
+      placeholder: e.g. 50.38.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: ios-version
+    attributes:
+      label: iOS version
+      placeholder: e.g. 18.4
+    validations:
+      required: true
+
+  - type: input
+    id: device-model
+    attributes:
+      label: iPhone model
+      placeholder: e.g. iPhone 15 Pro
+    validations:
+      required: true
+
+  - type: input
+    id: goose-build
+    attributes:
+      label: Goose build
+      description: Commit SHA or release date — found in More › About.
+      placeholder: e.g. 3fb149b
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostic log
+      description: Paste relevant output from More › Debug › Export Diagnostic Log. Optional but very helpful.
+      render: text

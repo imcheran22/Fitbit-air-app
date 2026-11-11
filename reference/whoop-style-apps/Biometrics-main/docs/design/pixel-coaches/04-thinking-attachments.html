@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thinking styles</title>
+<style>
+  :root { --bg:#0B0C0F; --card:#14161B; --raised:#1A1C22; --line:rgba(255,255,255,.08); --text:#ECEDF0; --muted:#9B9DA6; --accent:#9333EA; }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 -apple-system,system-ui,sans-serif; padding:28px 20px 60px }
+  h2 { margin:0 0 4px; font-size:22px } h3 { margin:34px 0 6px; font-size:17px }
+  .sub { color:var(--muted); margin:0 0 20px; max-width:900px }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px 14px 16px; cursor:pointer; position:relative; transition:border-color .15s }
+  .card:hover { border-color:rgba(255,255,255,.2) }
+  .card.selected { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset }
+  .card.selected::after { content:'✓'; position:absolute; top:10px; right:14px; color:var(--accent); font-weight:700 }
+  .card .stage { display:flex; justify-content:center; padding:4px 0 8px }
+  .card b { font-size:15px } .card p { margin:3px 0 0; color:var(--muted); font-size:12.5px; line-height:1.4 }
+  .tagline { font-size:10.5px; letter-spacing:.06em; font-weight:700; color:#FDE047; margin-left:6px }
+  .phone { width:360px; height:740px; border-radius:44px; background:#000; padding:10px; box-shadow:0 0 0 1px #2A2C33; flex:none }
+  .screen { width:100%; height:100%; border-radius:36px; background:var(--bg); overflow:hidden; display:flex; flex-direction:column }
+  .sbar { height:44px; flex:none }
+  .nav { display:flex; align-items:center; gap:10px; padding:2px 18px 14px; font-size:17px; font-weight:600 } .nav span { color:var(--muted); font-weight:400 }
+  .section { padding:0 18px; color:var(--muted); font-size:12.5px; margin-bottom:10px; line-height:1.4 }
+  .preview { margin:0 18px 14px; border-radius:18px; background:var(--card); border:1px solid var(--line); height:150px; display:flex; align-items:center; justify-content:center }
+  .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:0 18px }
+  .tile { border-radius:14px; background:var(--card); border:1px solid var(--line); height:92px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px }
+  .tile span { font-size:11px; color:var(--muted) }
+  .tile.on { border-color:var(--text); box-shadow:0 0 0 1px var(--text) inset; background:var(--raised) } .tile.on span { color:var(--text) }
+  .wrap { display:flex; gap:28px; align-items:flex-start; flex-wrap:wrap }
+  .notes { max-width:420px; color:var(--muted); font-size:14px } .notes li { margin-bottom:8px }
+</style></head>
+<body>
+<h2>Thinking styles: pick which ones to offer</h2>
+<p class="sub">Each style is a small pixel attachment that appears next to the coach while it works on a reply. People choose their favourite in Settings. Every loop ends with an "answer's here" moment: the bulb lights up, the ? turns into !, and so on. <b>Click every style you want in the app.</b></p>
+<div class="grid" id="grid" data-multiselect></div>
+
+<h3>Choosing one in Settings</h3>
+<div class="wrap">
+  <div class="phone"><div class="screen" id="phone"></div></div>
+  <ul class="notes">
+    <li><b>Where:</b> Settings → Your coach → <i>Thinking style</i>, under the coach row. The preview at the top uses your own coach.</li>
+    <li><b>Scope:</b> one choice for the whole app. It works with every coach and is kept if you switch coach.</li>
+    <li><b>Default:</b> Lightbulb.</li>
+    <li><b>Small sizes:</b> the attachment is drawn in the same sprite pixels as the coach, so it scales with it. Below 24pt it's hidden and the text "… is thinking" carries it instead.</li>
+    <li><b>Reduce Motion:</b> the attachment shows as a still frame.</li>
+  </ul>
+</div>
+
+<script>
+const CAST = {
+  Mochi: { vibe:'Squishy rice cake. Soft, patient, never rushes you.',
+    pal:{ b:'#FFE4EC', h:'#FFF5F8', s:'#F9B8CF', e:'#3F2A35', c:'#F472B6', m:'#3F2A35', z:'rgba(0,0,0,.35)' }, ink:'#5B2E44', eyes:'e', grid:[
+    '............','............','............','............',
+    '............','............','........bbbb','......bbbbbb',
+    '.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb','..bbbbbbbbbb',
+    '..bbbbbbbbbb','.bbbbbbbebbb','.bbbbbbbebbb','.bbbccbbbmbm',
+    '.bbbbbbbbbmb','.bbbbbbbbbbb','.bbbbbbbbbbb','..bbbbbbbbbb',
+    '...bbbbbbbbb','............','..zzzzzzzzzz','............']},
+  Boba: { vibe:'Bubble tea. Upbeat, keeps your water intake honest.',
+    pal:{ b:'#E0B48A', h:'#F2D2AE', s:'#B98257', l:'#EEF2FF', t:'#F472B6', p:'#3B2A20', e:'#3B2A20', w:'#FFFFFF', c:'#F9A8D4', m:'#3B2A20' }, ink:'#3B2418', grid:[
+    '............','...........t','...........t','...........t',
+    '......lllllt','...llllllllt','..llllllllll','...bbbbbbbbb',
+    '...bbbbbbbbb','...bbbbwebbb','...bbbbeebbb','...bccbbbbbb',
+    '....bbbbbbmb','....bbbbbbbm','....bbbbbbbb','....bbpbbbpb',
+    '.....pbbpbbb','.....bpbbpbp','.....ppbpppb','......pppppp',
+    '............','............','............','............']},
+  Sprout: { vibe:'Potted seedling. Celebrates small, steady growth.',
+    pal:{ b:'#E8875A', h:'#F4A77F', s:'#C2643A', r:'#F4A77F', l:'#4ADE80', d:'#16A34A', g:'#22C55E', e:'#43200F', w:'#FFFFFF', c:'#FDA4AF', m:'#43200F' }, ink:'#3A1A0C', grid:[
+    '............','............','..llll......','.lllllll....',
+    '.lldddddll..','..lllllllllg','....lllllllg','...........g',
+    '...........g','..rrrrrrrrrr','..rrrrrrrrrr','...bbbbbbbbb',
+    '...bbbwebbbb','...bbbeebbbb','...bccbbbbbb','....bbbbbbmb',
+    '....bbbbbbbm','.....bbbbbbb','.....bbbbbbb','......bbbbbb',
+    '............','............','............','............']},
+  Avo: { vibe:'Avocado half. Calm, quietly obsessed with nutrition.',
+    pal:{ b:'#D9F99D', h:'#ECFCCB', s:'#A3E635', k:'#3F6212', p:'#92400E', q:'#C2691C', e:'#1A2E05', w:'#FFFFFF', c:'#FDA4AF', m:'#1A2E05' }, ink:'#1A2E05', grid:[
+    '............','............','........kkkk','......kkbbbb',
+    '.....kbbbbbb','....kbbbbbbb','....kbbbbbbb','...kbbbbwebb',
+    '...kbbbbeebb','..kbbccbbbmb','..kbbbbbbbbm','..kbbbbbpppp',
+    '.kbbbbbppppp','.kbbbbppqppp','.kbbbbpppppp','.kbbbbpppppp',
+    '.kbbbbbppppp','.kbbbbbbpppp','..kbbbbbbbbb','..kkbbbbbbbb',
+    '....kkkkkkkk','............','............','............']},
+  Peep: { vibe:'Baby chick. Tiny, loud, your biggest cheerleader.',
+    pal:{ b:'#FDE047', h:'#FEF08A', s:'#EAB308', g:'#FACC15', k:'#FB923C', e:'#3A2A05', w:'#FFFFFF', c:'#FDA4AF' }, ink:'#5A3A05', grid:[
+    '............','............','..........b.','...........b',
+    '........bbbb','......bbbbbb','.....bbbbbbb','....bbbbbbbb',
+    '....bbbwebbb','...bbbbeebbb','...bccbbbbkk','...bbbbbbbbk',
+    '..gbbbbbbbbb','.ggbbbbbbbbb','.ggbbbbbbbbb','..gbbbbbbbbb',
+    '...bbbbbbbbb','....bbbbbbbb','......bbbbbb','........kk..',
+    '............','............','............','............']},
+  Bun: { vibe:'Bunny. Gentle, big believer in rest days.',
+    pal:{ b:'#F8FAFC', h:'#FFFFFF', s:'#CBD5E1', p:'#F9A8D4', n:'#F472B6', e:'#334155', w:'#FFFFFF', c:'#FBCFE8', m:'#334155' }, ink:'#334155', grid:[
+    '............','....bb......','...bbbb.....','...bppb.....',
+    '...bppb.....','...bppb.....','...bppb.....','...bbbb.....',
+    '...bbbbbbbbb','..bbbbbbbbbb','.bbbbbbbbbbb','.bbbbbwebbbb',
+    '.bbbbbeebbbb','.bbccbbbbbbn','.bbbbbbbbmbm','.bbbbbbbbbmb',
+    '..bbbbbbbbbb','...bbbbbbbbb','.....bbbbbbb','............',
+    '............','............','............','............']},
+  Kit: { vibe:'Ginger cat. Dry wit, judges your bedtime.',
+    pal:{ b:'#FB923C', h:'#FDBA74', s:'#EA580C', p:'#F9A8D4', d:'#C2410C', u:'#FFF7ED', n:'#F472B6', e:'#2A1205', w:'#FFFFFF', c:'#FDA4AF', m:'#7C2D12' }, ink:'#431407', shift:3, grid:[
+    '............','............','..b.........','..bb........',
+    '..bpb.......','..bppbbbbbbb','..bbbbbbbdbd','.bbbbbbbbbbd',
+    '.bbbbbbbbbbb','.bbbbbwebbbb','.bbbbbeebbbb','.bccbbbbuuun',
+    '.bbbbbbuuumu','..bbbbbbuuum','..bbbbbbbbbb','...bbbbbbbbb',
+    '.....bbbbbbb','............','............','............',
+    '............','............','............','............']},
+  Axo: { vibe:'Axolotl. Endlessly cheerful, all about recovery.',
+    pal:{ b:'#F9A8D4', h:'#FBCFE8', s:'#EC4899', g:'#DB2777', e:'#3B0A24', c:'#F472B6', m:'#3B0A24' }, ink:'#500724', eyes:'e', grid:[
+    '............','............','............','............',
+    '............','......bbbbbb','..gg.bbbbbbb','....bbbbbbbb',
+    '.gggbbbbbbbb','...bbbbbbbbb','..ggbbebbbbb','...bbbebbbbb',
+    '...bccbbbbbb','...bbbbbmbbb','....bbbbbmmm','.....bbbbbbb',
+    '.....bbbbbbb','....bbbbbbbb','.....bbbbbbb','.....bb.....',
+    '............','............','............','............']},
+  Boo: { vibe:'Friendly ghost. Shows up for late-night check-ins.',
+    pal:{ b:'#EEF2FF', h:'#FFFFFF', s:'#C7D2FE', e:'#1E1B4B', w:'#FFFFFF', c:'#F9A8D4', m:'#1E1B4B' }, ink:'#312E81', grid:[
+    '............','............','............','........bbbb',
+    '......bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb',
+    '...bbbbwebbb','..bbbbbeebbb','..bbbbbeebbb','..bccbbbbbbb',
+    '..bbbbbbbbbm','..bbbbbbbbbm','..bbbbbbbbbb','..bbbbbbbbbb',
+    '..bbbbbbbbbb','..bbbbbbbbbb','..bbbb..bbbb','...bb....bb.',
+    '............','............','............','............']},
+  Cap: { vibe:'Mushroom. Grounded, a little whimsical.',
+    pal:{ b:'#EF4444', h:'#F87171', s:'#B91C1C', d:'#FFF1F2', u:'#FDE68A', f:'#FEF3C7', e:'#3B1D0A', w:'#FFFFFF', c:'#FDA4AF', m:'#3B1D0A' }, ink:'#450A0A', lid:'f', grid:[
+    '............','............','........bbbb','......bbbbbb',
+    '....bbbbbbdd','...bbddbbbdd','..bbbddbbbbb','.bbbbbbbbbbb',
+    '.bdbbbbbbbbb','.bbbbbbbbbbb','..uuuuuuuuuu','....ffffffff',
+    '....ffweffff','....ffeeffff','....cfffffmf','....fffffffm',
+    '....ffffffff','.....fffffff','............','............',
+    '............','............','............','............']},
+  Jelly: { vibe:'Jellyfish. Floaty and chill, loves a breathing break.',
+    pal:{ b:'#A78BFA', h:'#C4B5FD', s:'#7C3AED', t:'#C4B5FD', e:'#2E1065', w:'#FFFFFF', c:'#F9A8D4', m:'#2E1065' }, ink:'#2E1065', grid:[
+    '............','............','............','........bbbb',
+    '......bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb',
+    '...bbbbwebbb','..bbbbbeebbb','..bccbbbbbbb','..bbbbbbbbmb',
+    '..bbbbbbbbbm','..bbbbbbbbbb','...t..t..t..','....t..t..t.',
+    '...t..t..t..','....t..t..t.','...t..t..t..','......t..t..',
+    '............','............','............','............']},
+  Pengu: { vibe:'Penguin. Consistency over intensity, one waddle at a time.',
+    pal:{ b:'#3B4A63', h:'#56688A', s:'#253247', u:'#F8FAFC', k:'#FB923C', e:'#0F172A', w:'#FFFFFF', c:'#FDA4AF' }, ink:'#0B1120', lid:'u', grid:[
+    '............','............','........bbbb','......bbbbbb',
+    '.....bbbbbbb','....bbbbbbbb','....bbuuuubb','...bbuuuuuub',
+    '...buuuweuuu','...buuueeuuu','...bucuuuukk','..bbuuuuuuuk',
+    '..bbuuuuuuuu','.bbbuuuuuuuu','.bbbuuuuuuuu','.bbbuuuuuuuu',
+    '..bbuuuuuuuu','..bbbuuuuuuu','...bbbuuuuuu','....bbbbbbbb',
+    '......kkk...','............','............','............']},
+  Luna: { vibe:'Sleepy moon. Your sleep coach, obviously.',
+    pal:{ b:'#FEF08A', h:'#FEF9C3', s:'#FACC15', d:'#FDE047', e:'#713F12', c:'#FDBA74', m:'#713F12', x:'#FDE68A' }, ink:'#713F12', eyes:'', grid:[
+    '............','............','.x..........','xxx.....bbbb',
+    '.x....bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbddbbbbb',
+    '...bbddbbbbb','..bbbbbbbbbb','..bbbbebbebb','..bbbbbeebbb',
+    '..bccbbbbbbb','..bbbbbbbbbm','..bbbbbbbbbb','...bbdbbbbbb',
+    '...bbbbbbbbb','....bbbbbbbb','.....bbbbbbb','......bbbbbb',
+    '........bbbb','..x.........','.xxx........','..x.........']},
+  Gloop: { vibe:'Slime drop. Bouncy, turns workouts into play.',
+    pal:{ b:'#A3E635', h:'#D9F99D', s:'#65A30D', e:'#1A2E05', w:'#FFFFFF', c:'#FDA4AF', m:'#1A2E05' }, ink:'#1A2E05', grid:[
+    '............','............','...........b','...........b',
+    '..........bb','.........bbb','........bbbb','.......bbbbb',
+    '......bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb',
+    '...bbbbwebbb','..bbbbbeebbb','..bbbbbeebbb','..bccbbbbbbb',
+    '..bbbbbbbbmb','..bbbbbbbbbm','...bbbbbbbbb','....bbbbbbbb',
+    '......bbbbbb','............','............','............']},
+  Bao: { vibe:'Panda. Big-hearted, into snacks and stretches.',
+    pal:{ b:'#F8FAFC', h:'#FFFFFF', s:'#CBD5E1', k:'#1F2937', w:'#FFFFFF', c:'#FBCFE8', m:'#1F2937' }, ink:'#111827', eyes:'w', lid:'k', shut:'k', grid:[
+    '............','............','............','..kkk.......',
+    '.kkkkk..bbbb','.kkkkbbbbbbb','..kkbbbbbbbb','..bbbbbbbbbb',
+    '.bbbbbbbbbbb','.bbbbbkkbbbb','.bbbbkkwkbbb','.bbbbkkkkbbb',
+    '.bbbbkkkbbbb','.bccbbbbbbkk','.bbbbbbbbbbk','.bbbbbbbbbmb',
+    '..bbbbbbbbbb','...bbbbbbbbb','.....bbbbbbb','............',
+    '............','............','............','............']},
+};
+
+const WIDTH = { Luna:0, Mochi:0, Boba:0, Jelly:0, Sprout:2 };
+const N = 24, NAMES = Object.keys(CAST);
+for (const n of NAMES){ const s = CAST[n].shift; if (s) CAST[n].grid = [...CAST[n].grid.slice(-s), ...CAST[n].grid.slice(0,-s)]; }
+const full = g => g.map(r => r + [...r].reverse().join(''));
+const darken = (hex,k) => { const n=parseInt(hex.slice(1),16); return '#'+[16,8,0].map(s=>Math.round(((n>>s)&255)*k).toString(16).padStart(2,'0')).join(''); };
+const NO_OUTLINE = 'xzt.';
+function narrow(half, k){
+  let g = half.map(r=>[...r]);
+  for (let n=0; n<k; n++){
+    let best=-1, bestCost=Infinity;
+    for (let i=2; i<=10; i++){
+      let cost=0; for (const r of g) if (r[i]!==r[i-1]) cost += (r[i]==='.'||r[i-1]==='.') ? 1 : 3;
+      cost += Math.abs(i-6)*0.01;
+      if (cost < bestCost){ bestCost=cost; best=i; }
+    }
+    g = g.map(r => ['.', ...r.slice(0,best), ...r.slice(best+1)]);
+  }
+  return g.map(r=>r.join(''));
+}
+function spriteCells(name, blink, happy){
+  const ch = CAST[name], eyes = ch.eyes ?? 'ew', lid = ch.lid || 'b', shut = ch.shut || 'e';
+  const half = narrow(ch.grid, WIDTH[name] ?? 1).map(r=>[...r]);
+  const eye = []; half.forEach((r,y)=>r.forEach((L,x)=>{ if (eyes.includes(L)) eye.push([x,y,L]); }));
+  if (eye.length){
+    if (happy){
+      const xs=eye.map(c=>c[0]), ys=eye.map(c=>c[1]), x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys);
+      eye.forEach(([x,y])=>half[y][x]=lid); for (let x=x0;x<=x1;x++) half[y0][x]=shut;
+      if (half[y0+1]){ if (x0>0) half[y0+1][x0-1]=shut; if (x1<11) half[y0+1][x1+1]=shut; }
+    } else if (blink){ const cols={}; eye.forEach(([x,y])=>(cols[x]=cols[x]||[]).push(y)); for (const x in cols){ const ys=cols[x].sort((a,b)=>a-b); ys.slice(0,-1).forEach(y=>half[y][x]=lid); half[ys.at(-1)][x]=shut; } }
+    else { eye.forEach(([x,y])=>half[y][x]=lid); eye.forEach(([x,y,L])=>{ if (y>0) half[y-1][x]=L; }); }
+  }
+  const g = full(half.map(r=>r.join(''))).map(r=>[...r]);
+  const solid = (x,y) => x>=0&&y>=0&&x<N&&y<N && !NO_OUTLINE.includes(g[y][x]);
+  const out = [];
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){
+    const L = g[y][x]; let col = null;
+    if (L !== '.'){ col = ch.pal[L] || ch.pal.b; if (L === 'b'){ if (!solid(x,y-1)) col = ch.pal.h; else if (!solid(x,y+1) || !solid(x,y+2)) col = ch.pal.s; } }
+    else if ([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>solid(x+dx,y+dy))) col = darken(ch.pal.s || ch.pal.b, .6);
+    if (col) out.push([x,y,col]);
+  }
+  return out;
+}
+
+// ---- Attachments --------------------------------------------------------
+// Drawn on a 36×32 stage in sprite pixels: the coach sits at x 0–23, y 8–31,
+// the attachment lives top-right. Each returns [x, y, colour] cells.
+// A loop is 3.2s; the last 0.8s is the "answer's here" moment (done = true).
+const OUT = '#3A3D48', LIGHT = '#F1F5F9', GREY = '#94A3B8', DIM = '#52525B', GOLD = '#FDE047', GOLD2 = '#FEF08A';
+function glyph(rows, x0, y0, pal, outline = OUT){
+  const cells = [], on = new Set();
+  rows.forEach((r,y)=>[...r].forEach((L,x)=>{ if (L!=='.'){ cells.push([x0+x,y0+y,pal[L]]); on.add((x0+x)+','+(y0+y)); } }));
+  if (outline){
+    const ring = new Set();
+    cells.forEach(([x,y])=>[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{ const k=(x+dx)+','+(y+dy); if(!on.has(k)) ring.add(k); }));
+    return [...[...ring].map(k=>{ const [x,y]=k.split(',').map(Number); return [x,y,outline]; }), ...cells];
+  }
+  return cells;
+}
+function roundRect(x0,y0,w,h,fill){
+  const rows = [];
+  for (let y=0;y<h;y++){ let r=''; for (let x=0;x<w;x++){ const cut=(x===0||x===w-1)&&(y===0||y===h-1); r += cut ? '.' : 'f'; } rows.push(r); }
+  return glyph(rows, x0, y0, { f:fill });
+}
+const STYLES = {
+  bulb: { name:'Lightbulb', blurb:'Flickers while it thinks, lights up with rays when the answer lands.', fav:true,
+    draw(t, done){
+      const flick = done ? 2 : (Math.floor(t/130)%7===0 ? 1 : Math.floor(t/260)%3===0 ? 1 : 0);
+      const glass = flick===2 ? GOLD : flick===1 ? '#A8A29E' : DIM, fil = flick===2 ? '#FFFFFF' : flick===1 ? '#FB923C' : '#78716C';
+      const c = glyph(['.ggggg.','gggggHg','ggggggH','gg.f.gg','ggf.fgg','.ggggg.','..ggg..','..mmm..','..MMM..','..mmm..'], 26, 1, { g:glass, H: flick===2?'#FFFFFF':'#A1A1AA', f:fil, m:'#94A3B8', M:'#64748B' });
+      if (flick===2) [[23,1],[24,2],[37,1],[36,2],[22,5],[23,5],[36,5],[37,5],[29,-2],[29,-1]].forEach(([x,y])=>{ if (y>=0 && x<36) c.push([x,y,GOLD2]); });
+      if (flick===2) [[24,0],[34,0],[24,9],[34,9]].forEach(([x,y])=>c.push([x,y,'rgba(253,224,71,.45)']));
+      return c;
+    } },
+  cloud: { name:'Thought cloud', blurb:'A cartoon thought bubble; the dots fill in one by one.',
+    draw(t, done){
+      const k = done ? 3 : Math.floor(t/400)%3 + 1;
+      const c = roundRect(21, 0, 14, 9, LIGHT);
+      for (let i=0;i<3;i++){ const col = i<k ? (done ? '#9333EA' : '#1E293B') : '#CBD5E1'; const x=24+i*3; c.push([x,4,col],[x+1,4,col]); }
+      return c.concat(glyph(['ff','ff'], 19, 10, {f:LIGHT}), glyph(['f'], 17, 13, {f:LIGHT}));
+    } },
+  typing: { name:'Typing bubble', blurb:'Three bouncing dots, like a messaging app\'s "is typing".',
+    draw(t, done){
+      const p = Math.floor(t/170)%3;
+      const c = roundRect(20, 1, 15, 8, LIGHT).concat(glyph(['ff.','f..'], 20, 9, {f:LIGHT}));
+      for (let i=0;i<3;i++){ const up = !done && i===p ? 1 : 0; const col = done ? '#22C55E' : i===p ? '#1E293B' : '#94A3B8'; const x=23+i*3; c.push([x,4-up,col],[x+1,4-up,col],[x,5-up,col],[x+1,5-up,col]); }
+      return c;
+    } },
+  hourglass: { name:'Hourglass', blurb:'Sand trickles through one grain at a time, then it flips.',
+    draw(t, done){
+      const k = done ? 7 : Math.min(6, Math.floor(t/340));
+      const top = [[3,3],[2,2],[4,2],[3,2],[2,1],[4,1],[3,1]], bot = [[2,7],[4,7],[3,7],[2,6],[4,6],[3,6],[3,5]];
+      const rows = ['wwwwwww','.g...g.','.g...g.','..g.g..','...g...','..g.g..','.g...g.','.g...g.','wwwwwww'];
+      const c = glyph(rows, 27, 1, { w:'#B45309', g:'#CBD5E1' });
+      top.slice(k).forEach(([x,y])=>c.push([27+x,1+y,GOLD2])); bot.slice(0,k).forEach(([x,y])=>c.push([27+x,1+y,GOLD]));
+      if (!done && Math.floor(t/170)%2===0) c.push([30,5,GOLD2]);
+      if (done) [[25,0],[35,0],[25,10],[35,10]].forEach(([x,y])=>c.push([x,y,GOLD2]));
+      return c;
+    } },
+  gears: { name:'Gears', blurb:'Two cogs turning together. Clockwork, working it out.',
+    draw(t, done){
+      const f = Math.floor(t/(done?90:220))%2;
+      const A = ['...t...','..ggg..','.ggggg.','tgg.ggt','.ggggg.','..ggg..','...t...'];
+      const B = ['.t...t.','..ggg..','.ggggg.','.gg.gg.','.ggggg.','..ggg..','.t...t.'];
+      return glyph(f?A:B, 23, 1, { g:'#CBD5E1', t:'#CBD5E1' }).concat(glyph(f?B:A, 29, 5, { g: done ? GOLD : '#94A3B8', t: done ? GOLD : '#94A3B8' }));
+    } },
+  question: { name:'? → !', blurb:'A question mark bobs above the head and pops into an ! when it\'s got it.',
+    draw(t, done){
+      const bob = done ? 0 : Math.floor(t/400)%2;
+      const Q = ['.qqq.','q...q','....q','...q.','..q..','.....','..q..'], X = ['.qq.','.qq.','.qq.','.qq.','.qq.','....','.qq.'];
+      return done ? glyph(X, 28, 1, { q:GOLD }) : glyph(Q, 28, 1 + bob, { q:'#C4B5FD' });
+    } },
+  sparkles: { name:'Sparkles', blurb:'Little stars twinkle around the head, one after another.',
+    draw(t, done){
+      const S = [['x'], ['.x.','xxx','.x.'], ['..x..','..x..','xxXxx','..x..','..x..']];
+      const spots = [[23,3],[30,0],[32,8]], c = [];
+      spots.forEach(([x,y],i)=>{ const phase = done ? 2 : (Math.floor(t/220) + i*2) % 5; const size = phase>2 ? 4-phase : phase; const g = S[Math.max(0,size)]; const o = Math.floor(g.length/2);
+        g.forEach((r,yy)=>[...r].forEach((L,xx)=>{ if (L!=='.') c.push([x+xx-o, y+yy-o+2, L==='X'?'#FFFFFF':GOLD2]); })); });
+      return c.filter(([x,y])=>y>=0 && x<36);
+    } },
+  clock: { name:'Clock', blurb:'The hand sweeps round while it works; a ding when it\'s ready.',
+    draw(t, done){
+      const face = ['..fff..','.fffff.','fffffff','fffffff','fffffff','.fffff.','..fff..'];
+      const c = glyph(face, 27, 2, { f: done ? GOLD2 : LIGHT });
+      const H = [[[0,-1],[0,-2]],[[1,-1],[2,-2]],[[1,0],[2,0]],[[1,1],[2,2]],[[0,1],[0,2]],[[-1,1],[-2,2]],[[-1,0],[-2,0]],[[-1,-1],[-2,-2]]];
+      const k = done ? 0 : Math.floor(t/180)%8;
+      c.push([30,5,'#1E293B']); H[k].forEach(([dx,dy])=>c.push([30+dx,5+dy,'#1E293B']));
+      if (done) [[26,1],[34,1],[30,0]].forEach(([x,y])=>c.push([x,y,GOLD]));
+      return c;
+    } },
+  spinner: { name:'Spinner', blurb:'A ring of pixels chasing each other. Reads as "loading".',
+    draw(t, done){
+      const ring = [[2,0],[4,1],[5,3],[4,5],[2,6],[0,5],[-1,3],[0,1]], head = Math.floor(t/110)%8, c = [];
+      ring.forEach(([x,y],i)=>{ const age=(head-i+8)%8; const col = done ? '#22C55E' : age===0 ? LIGHT : age===1 ? '#CBD5E1' : age===2 ? GREY : OUT;
+        c.push([28+x,2+y,col],[29+x,2+y,col],[28+x,3+y,col],[29+x,3+y,col]); });
+      return c;
+    } },
+};
+const ORDER = ['bulb','cloud','typing','hourglass','gears','question','sparkles','clock','spinner'];
+const W = 36, H = 32, LOOP = 3200, DONE_AT = 2400;
+function paint(s, now){
+  const t = (now + s.phase) % LOOP, done = t >= DONE_AT;
+  const dpr = window.devicePixelRatio || 1, devW = Math.round(s.w*dpr), devH = Math.round(s.w*H/W*dpr), cell = Math.max(1, Math.floor(devW/W));
+  if (s.c.style.width !== s.w+'px'){ s.c.width = devW; s.c.height = devH; s.c.style.width = s.w+'px'; s.c.style.height = (s.w*H/W)+'px'; }
+  const x = s.c.getContext('2d'); x.clearRect(0,0,devW,devH);
+  const bob = done ? Math.floor(t/120)%2*2 : Math.floor(t/800)%2;
+  const blink = ((now + s.blinkAt) % 4200) < 140;
+  spriteCells(s.name, blink && !done, done).forEach(([gx,gy,col])=>{ x.fillStyle=col; x.fillRect(gx*cell, (gy+8-bob)*cell, cell, cell); });
+  STYLES[s.style].draw(t, done).forEach(([gx,gy,col])=>{ if (gy<0||gx>=W) return; x.fillStyle=col; x.fillRect(gx*cell, gy*cell, cell, cell); });
+}
+const live = [];
+function stage(name, style, w, phase){ const c = document.createElement('canvas'); live.push({ c, name, style, w, phase: phase ?? Math.random()*LOOP, blinkAt: Math.random()*4200 }); return c; }
+
+const cast = ['Mochi','Pengu','Kit','Boba','Axo','Luna','Peep','Jelly','Bao'];
+const grid = document.getElementById('grid');
+ORDER.forEach((k,i)=>{
+  const st = STYLES[k], card = document.createElement('div'); card.className='card'; card.dataset.choice=k;
+  card.onclick = () => { if (window.toggleSelect) toggleSelect(card); else card.classList.toggle('selected'); };
+  const s = document.createElement('div'); s.className='stage'; s.appendChild(stage(cast[i], k, 180, i*350)); card.appendChild(s);
+  card.insertAdjacentHTML('beforeend', `<b>${st.name}</b>${st.fav?'<span class="tagline">DEFAULT</span>':''}<p>${st.blurb}</p>`);
+  grid.appendChild(card);
+});
+
+const phone = document.getElementById('phone');
+phone.innerHTML = '<div class="sbar"></div><div class="nav"><span>‹</span>Thinking style</div><div class="section">What your coach shows while it works on a reply.</div>';
+const pv = document.createElement('div'); pv.className='preview'; pv.appendChild(stage('Mochi','bulb',150,0)); phone.appendChild(pv);
+const tiles = document.createElement('div'); tiles.className='tiles';
+ORDER.forEach((k,i)=>{ const t = document.createElement('div'); t.className='tile'+(k==='bulb'?' on':''); t.appendChild(stage('Mochi', k, 72, i*350)); t.insertAdjacentHTML('beforeend',`<span>${STYLES[k].name}</span>`); tiles.appendChild(t); });
+phone.appendChild(tiles);
+
+const t0 = performance.now();
+(function tick(now){ const t = now - t0; live.forEach(s => paint(s, t)); requestAnimationFrame(tick); })(t0);
+</script>
+</body></html>

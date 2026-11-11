@@ -1,0 +1,30 @@
+{
+  "id": "owned.history_complete.k24_normal_history_payload",
+  "path": "owned/history_complete_k24_normal_history_payload.hex",
+  "kind": "user-owned_payload_capture",
+  "source": "android_btsnoop_full_snoop_history_complete_20260528T1748Z",
+  "captured_at": "2026-05-28T17:22:29.944091Z",
+  "device_model": "WHOOP 5.0 Goose",
+  "device_firmware": "owned-capture",
+  "app_version": "whoop-official-capture",
+  "schema": "goose.payload.hex.v1",
+  "consent": "user-owned-capture",
+  "sensitivity": "user-owned-capture",
+  "notes": "Owned Android btsnoop-derived K24 V24-biometric payload from captures/android/bugreport-full-snoop-history-complete-20260528T1748Z/hci-analysis/data-packets/K24.full.bin. Reclassified from normal_history to v24_history by Phase 27 (V24 Biometric Decode).",
+  "expected": {
+    "device_type": "GOOSE",
+    "packet_type": 47,
+    "sequence": 24,
+    "command_or_event": 0,
+    "header_crc_valid": true,
+    "payload_crc_valid": true,
+    "packet_type_name": "HISTORICAL_DATA",
+    "parsed_payload": {
+      "kind": "data_packet",
+      "packet_k": 24,
+      "body_summary": {
+        "kind": "v24_history"
+      }
+    }
+  }
+}

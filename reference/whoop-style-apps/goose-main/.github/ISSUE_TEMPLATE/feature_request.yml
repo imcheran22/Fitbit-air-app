@@ -1,0 +1,48 @@
+name: Feature Request
+description: Suggest a new capability or behaviour
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem you're running into and what you'd like to see. The more specific, the faster we can move.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the gap or limitation you're hitting.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should happen? Be as specific as you can.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: whoop-device
+    attributes:
+      label: WHOOP device (if relevant)
+      options:
+        - Not device-specific
+        - WHOOP 4.0
+        - WHOOP 5.0
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you thought about?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, BLE packet traces, protocol references — anything that helps.

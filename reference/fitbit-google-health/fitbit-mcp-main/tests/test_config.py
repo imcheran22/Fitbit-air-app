@@ -1,0 +1,141 @@
+"""Tests for configuration module."""
+
+import os
+from pathlib import Path
+from unittest.mock import patch
+
+
+class TestConfigDefaults:
+    """Test default configuration values."""
+
+    def test_default_paths_exist(self):
+        from fitbit_mcp.config import CONFIG_DIR, DB_PATH
+
+        # Defaults use XDG-compatible locations under the user home directory
+        assert isinstance(CONFIG_DIR, Path)
+        assert isinstance(DB_PATH, Path)
+        assert CONFIG_DIR.name == "fitbit-mcp"
+        assert str(CONFIG_DIR).startswith(str(Path.home()))
+        assert DB_PATH.name == "fitbit.db"
+        assert str(DB_PATH).startswith(str(Path.home()))
+
+    def test_api_constants(self):
+        from fitbit_mcp.config import (
+            FITBIT_API_BASE,
+            FITBIT_AUTH_URL,
+            FITBIT_CALLBACK_PORT,
+            FITBIT_RATE_LIMIT,
+            FITBIT_REDIRECT_URI,
+            FITBIT_SCOPES,
+            FITBIT_TOKEN_URL,
+        )
+
+        assert FITBIT_API_BASE == "https://api.fitbit.com"
+        assert "oauth2/authorize" in FITBIT_AUTH_URL
+        assert "oauth2/token" in FITBIT_TOKEN_URL
+        assert "activity" in FITBIT_SCOPES
+        assert "heartrate" in FITBIT_SCOPES
+        assert "sleep" in FITBIT_SCOPES
+        assert FITBIT_CALLBACK_PORT == 8080
+        assert "localhost:8080" in FITBIT_REDIRECT_URI
+        assert FITBIT_RATE_LIMIT == 150
+
+    def test_range_limits(self):
+        from fitbit_mcp.config import (
+            AZM_MAX_RANGE_DAYS,
+            BREATHING_RATE_MAX_RANGE_DAYS,
+            CARDIO_FITNESS_MAX_RANGE_DAYS,
+            HRV_MAX_RANGE_DAYS,
+            MAX_RANGE_DAYS,
+            SKIN_TEMPERATURE_MAX_RANGE_DAYS,
+            SLEEP_MAX_RANGE_DAYS,
+            SPO2_MAX_RANGE_DAYS,
+            WEIGHT_MAX_RANGE_DAYS,
+        )
+
+        assert MAX_RANGE_DAYS == 365
+        assert SLEEP_MAX_RANGE_DAYS == 100
+        assert WEIGHT_MAX_RANGE_DAYS == 31
+        assert SPO2_MAX_RANGE_DAYS == 30
+        assert HRV_MAX_RANGE_DAYS == 30
+        assert AZM_MAX_RANGE_DAYS == 1095
+        assert BREATHING_RATE_MAX_RANGE_DAYS == 30
+        assert SKIN_TEMPERATURE_MAX_RANGE_DAYS == 30
+        assert CARDIO_FITNESS_MAX_RANGE_DAYS == 30
+
+    def test_new_scopes_present(self):
+        from fitbit_mcp.config import FITBIT_SCOPES
+
+        for scope in [
+            "respiratory_rate",
+            "temperature",
+            "cardio_fitness",
+            "location",
+            "nutrition",
+            "settings",
+        ]:
+            assert scope in FITBIT_SCOPES, f"missing scope: {scope}"
+
+
+class TestConfigOverrides:
+    """Test environment variable overrides."""
+
+    def test_config_dir_override(self, tmp_path):
+        with patch.dict(os.environ, {"FITBIT_MCP_CONFIG_DIR": str(tmp_path)}):
+            # Re-import to pick up env var
+            import importlib
+
+            import fitbit_mcp.config
+
+            importlib.reload(fitbit_mcp.config)
+            assert fitbit_mcp.config.CONFIG_DIR == tmp_path
+            # Restore
+            importlib.reload(fitbit_mcp.config)
+
+    def test_db_path_override(self, tmp_path):
+        db_path = tmp_path / "custom.db"
+        with patch.dict(os.environ, {"FITBIT_MCP_DB_PATH": str(db_path)}):
+            import importlib
+
+            import fitbit_mcp.config
+
+            importlib.reload(fitbit_mcp.config)
+            assert fitbit_mcp.config.DB_PATH == db_path
+            importlib.reload(fitbit_mcp.config)
+
+
+class TestOfflineMode:
+    """Test FITBIT_MCP_OFFLINE parsing."""
+
+    def test_offline_default_false(self):
+        import importlib
+
+        import fitbit_mcp.config
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("FITBIT_MCP_OFFLINE", None)
+            importlib.reload(fitbit_mcp.config)
+            assert fitbit_mcp.config.OFFLINE_MODE is False
+        importlib.reload(fitbit_mcp.config)
+
+    def test_offline_truthy_values(self):
+        import importlib
+
+        import fitbit_mcp.config
+
+        for val in ("1", "true", "True", "YES", "on"):
+            with patch.dict(os.environ, {"FITBIT_MCP_OFFLINE": val}):
+                importlib.reload(fitbit_mcp.config)
+                assert fitbit_mcp.config.OFFLINE_MODE is True, val
+        importlib.reload(fitbit_mcp.config)
+
+    def test_offline_falsy_values(self):
+        import importlib
+
+        import fitbit_mcp.config
+
+        for val in ("0", "false", "no", "off", "", "  "):
+            with patch.dict(os.environ, {"FITBIT_MCP_OFFLINE": val}):
+                importlib.reload(fitbit_mcp.config)
+                assert fitbit_mcp.config.OFFLINE_MODE is False, val
+        importlib.reload(fitbit_mcp.config)

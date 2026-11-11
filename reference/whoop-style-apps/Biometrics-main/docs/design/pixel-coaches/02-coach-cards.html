@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Coach cards</title>
+<style>
+  :root { --bg:#0B0C0F; --card:#14161B; --raised:#1A1C22; --line:rgba(255,255,255,.08); --text:#ECEDF0; --muted:#9B9DA6; --accent:#9333EA; }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 -apple-system,system-ui,sans-serif; padding:28px 20px 60px }
+  h2 { margin:0 0 4px; font-size:22px }
+  h3 { margin:34px 0 6px; font-size:17px }
+  .sub { color:var(--muted); margin:0 0 20px; max-width:880px }
+
+  /* Coach card */
+  .cc { width:264px; border-radius:24px; background:var(--card); border:1px solid var(--line); overflow:hidden; display:flex; flex-direction:column; flex:none }
+  .cc .art { position:relative; height:176px; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 50% 62%, var(--tint) 0, transparent 62%),
+      radial-gradient(var(--dot) 1.2px, transparent 1.3px) 0 0/12px 12px,
+      var(--panel); }
+  .cc .art::after { content:''; position:absolute; left:50%; bottom:22px; width:96px; height:10px; transform:translateX(-50%); background:rgba(0,0,0,.28); border-radius:50%; }
+  .cc .art canvas { position:relative; z-index:1; margin-bottom:6px }
+  .cc .no { position:absolute; top:12px; left:14px; font:600 11px/1 ui-monospace,Menlo,monospace; color:var(--muted); letter-spacing:.04em }
+  .cc .chip { position:absolute; top:10px; right:12px; font-size:11px; font-weight:600; padding:4px 9px; border-radius:999px; background:var(--chip); color:var(--chipText) }
+  .cc .body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:8px }
+  .cc .name { font-size:20px; font-weight:700; letter-spacing:-.01em }
+  .cc .tag { color:var(--muted); font-size:13px; line-height:1.4; min-height:36px }
+  .cc .bubble { background:var(--raised); border:1px solid var(--line); border-radius:14px; padding:9px 12px; font-size:13px; line-height:1.4; position:relative }
+  .cc .bubble::before { content:''; position:absolute; top:-6px; left:22px; width:10px; height:10px; background:var(--raised); border-left:1px solid var(--line); border-top:1px solid var(--line); transform:rotate(45deg) }
+  .deck { display:flex; flex-wrap:wrap; gap:16px }
+
+  /* Phone frames */
+  .opts { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start }
+  .opt { cursor:pointer; border-radius:28px; padding:14px; border:1px solid transparent; transition:border-color .15s }
+  .opt:hover { border-color:rgba(255,255,255,.15) }
+  .opt.selected { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset }
+  .opt h4 { margin:0 0 4px; font-size:15px } .opt h4 b { color:var(--accent); margin-right:6px }
+  .opt p { margin:0 0 12px; color:var(--muted); font-size:13px; max-width:360px }
+  .phone { width:360px; height:740px; border-radius:44px; background:#000; padding:10px; box-shadow:0 0 0 1px #2A2C33 }
+  .screen { width:100%; height:100%; border-radius:36px; background:var(--bg); overflow:hidden; position:relative; display:flex; flex-direction:column }
+  .sbar { height:44px; flex:none }
+  .top { display:flex; justify-content:space-between; align-items:center; padding:4px 20px 8px; flex:none }
+  .eyebrow { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted) }
+  .ghost { font-size:14px; color:var(--text); opacity:.8 }
+  .btn { margin:0 20px 22px; height:50px; border-radius:14px; background:var(--text); color:#0B0C0F; font-weight:600; display:flex; align-items:center; justify-content:center; flex:none }
+
+  /* A: carousel */
+  .car { flex:1; display:flex; align-items:center; gap:12px; padding:0 0 0 48px; overflow:hidden }
+  .car .cc { width:264px; }
+  .car .cc.side { opacity:.45; transform:scale(.94) }
+  .strip { display:flex; gap:6px; padding:12px 16px 14px; overflow:hidden; flex:none }
+  .strip .th { width:44px; height:44px; border-radius:12px; background:var(--card); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex:none }
+  .strip .th.on { border-color:var(--text); box-shadow:0 0 0 1px var(--text) inset; background:var(--raised) }
+
+  /* B: grid + sheet */
+  .gridwrap { flex:1; overflow:hidden; padding:2px 16px 0; position:relative }
+  .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:8px }
+  .tile { border-radius:16px; background:var(--card); border:1px solid var(--line); height:96px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px }
+  .tile span { font-size:11px; color:var(--muted) }
+  .tile.on { border-color:var(--text); box-shadow:0 0 0 1px var(--text) inset; background:var(--raised) }
+  .tile.on span { color:var(--text) }
+  .sheet { position:absolute; left:0; right:0; bottom:0; background:#121318; border-top:1px solid var(--line); border-radius:24px 24px 0 0; padding:10px 0 0; box-shadow:0 -20px 40px rgba(0,0,0,.5) }
+  .sheet .grab { width:36px; height:5px; border-radius:3px; background:#3A3C44; margin:0 auto 10px }
+  .sheet .row { display:flex; gap:14px; align-items:center; padding:0 20px 12px }
+  .sheet .mini { width:84px; height:84px; border-radius:18px; flex:none; display:flex; align-items:center; justify-content:center; background:radial-gradient(var(--dot) 1px, transparent 1.1px) 0 0/10px 10px, var(--panel) }
+  .sheet .name { font-size:19px; font-weight:700 } .sheet .tag { color:var(--muted); font-size:13px; line-height:1.35 }
+  .sheet .chip { display:inline-block; font-size:11px; font-weight:600; padding:3px 8px; border-radius:999px; margin-bottom:4px; background:var(--chip); color:var(--chipText) }
+  .sheet .bubble { margin:0 20px 14px; background:var(--raised); border:1px solid var(--line); border-radius:14px; padding:9px 12px; font-size:13px }
+</style></head>
+<body>
+<h2>Coach cards</h2>
+<p class="sub">These are the final widths (Luna, Mochi, Boba and Jelly at original width, Sprout slimmest, the rest slimmer) with the soft outline. Each card has a collectible number, a focus chip, the character on its own dotted colour panel, a tagline, and a first hello in a speech bubble. Below the cards are two ways the picker could use them. Click the picker you prefer.</p>
+
+<div class="deck" id="deck"></div>
+
+<h3>How you'd pick one</h3>
+<p class="sub">The current picker shows one character per page with 8 dots. 15 dots at 44pt each won't fit across the screen, so the dots need replacing.</p>
+<div class="opts" data-multiselect>
+  <div class="opt" data-choice="carousel" onclick="pick(this)">
+    <h4><b>A</b>Card carousel</h4>
+    <p>Swipe through full cards, with the next one peeking in. A strip of tiny sprites replaces the dots, so you can jump straight to anyone. Feels like flipping through a collection.</p>
+    <div class="phone"><div class="screen" id="phoneA"></div></div>
+  </div>
+  <div class="opt" data-choice="grid" onclick="pick(this)">
+    <h4><b>B</b>Grid + card sheet</h4>
+    <p>All 15 at a glance in a 3-column grid. Tapping one raises its card in a sheet with the hello and the Choose button. Fastest to compare.</p>
+    <div class="phone"><div class="screen" id="phoneB"></div></div>
+  </div>
+</div>
+
+<script>
+function pick(el){ if (window.toggleSelect) toggleSelect(el); else { document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected')); el.classList.add('selected'); } }
+
+const CAST = {
+  Mochi: { vibe:'Squishy rice cake. Soft, patient, never rushes you.',
+    pal:{ b:'#FFE4EC', h:'#FFF5F8', s:'#F9B8CF', e:'#3F2A35', c:'#F472B6', m:'#3F2A35', z:'rgba(0,0,0,.35)' }, ink:'#5B2E44', eyes:'e', grid:[
+    '............','............','............','............',
+    '............','............','........bbbb','......bbbbbb',
+    '.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb','..bbbbbbbbbb',
+    '..bbbbbbbbbb','.bbbbbbbebbb','.bbbbbbbebbb','.bbbccbbbmbm',
+    '.bbbbbbbbbmb','.bbbbbbbbbbb','.bbbbbbbbbbb','..bbbbbbbbbb',
+    '...bbbbbbbbb','............','..zzzzzzzzzz','............']},
+  Boba: { vibe:'Bubble tea. Upbeat, keeps your water intake honest.',
+    pal:{ b:'#E0B48A', h:'#F2D2AE', s:'#B98257', l:'#EEF2FF', t:'#F472B6', p:'#3B2A20', e:'#3B2A20', w:'#FFFFFF', c:'#F9A8D4', m:'#3B2A20' }, ink:'#3B2418', grid:[
+    '............','...........t','...........t','...........t',
+    '......lllllt','...llllllllt','..llllllllll','...bbbbbbbbb',
+    '...bbbbbbbbb','...bbbbwebbb','...bbbbeebbb','...bccbbbbbb',
+    '....bbbbbbmb','....bbbbbbbm','....bbbbbbbb','....bbpbbbpb',
+    '.....pbbpbbb','.....bpbbpbp','.....ppbpppb','......pppppp',
+    '............','............','............','............']},
+  Sprout: { vibe:'Potted seedling. Celebrates small, steady growth.',
+    pal:{ b:'#E8875A', h:'#F4A77F', s:'#C2643A', r:'#F4A77F', l:'#4ADE80', d:'#16A34A', g:'#22C55E', e:'#43200F', w:'#FFFFFF', c:'#FDA4AF', m:'#43200F' }, ink:'#3A1A0C', grid:[
+    '............','............','..llll......','.lllllll....',
+    '.lldddddll..','..lllllllllg','....lllllllg','...........g',
+    '...........g','..rrrrrrrrrr','..rrrrrrrrrr','...bbbbbbbbb',
+    '...bbbwebbbb','...bbbeebbbb','...bccbbbbbb','....bbbbbbmb',
+    '....bbbbbbbm','.....bbbbbbb','.....bbbbbbb','......bbbbbb',
+    '............','............','............','............']},
+  Avo: { vibe:'Avocado half. Calm, quietly obsessed with nutrition.',
+    pal:{ b:'#D9F99D', h:'#ECFCCB', s:'#A3E635', k:'#3F6212', p:'#92400E', q:'#C2691C', e:'#1A2E05', w:'#FFFFFF', c:'#FDA4AF', m:'#1A2E05' }, ink:'#1A2E05', grid:[
+    '............','............','........kkkk','......kkbbbb',
+    '.....kbbbbbb','....kbbbbbbb','....kbbbbbbb','...kbbbbwebb',
+    '...kbbbbeebb','..kbbccbbbmb','..kbbbbbbbbm','..kbbbbbpppp',
+    '.kbbbbbppppp','.kbbbbppqppp','.kbbbbpppppp','.kbbbbpppppp',
+    '.kbbbbbppppp','.kbbbbbbpppp','..kbbbbbbbbb','..kkbbbbbbbb',
+    '....kkkkkkkk','............','............','............']},
+  Peep: { vibe:'Baby chick. Tiny, loud, your biggest cheerleader.',
+    pal:{ b:'#FDE047', h:'#FEF08A', s:'#EAB308', g:'#FACC15', k:'#FB923C', e:'#3A2A05', w:'#FFFFFF', c:'#FDA4AF' }, ink:'#5A3A05', grid:[
+    '............','............','..........b.','...........b',
+    '........bbbb','......bbbbbb','.....bbbbbbb','....bbbbbbbb',
+    '....bbbwebbb','...bbbbeebbb','...bccbbbbkk','...bbbbbbbbk',
+    '..gbbbbbbbbb','.ggbbbbbbbbb','.ggbbbbbbbbb','..gbbbbbbbbb',
+    '...bbbbbbbbb','....bbbbbbbb','......bbbbbb','........kk..',
+    '............','............','............','............']},
+  Bun: { vibe:'Bunny. Gentle, big believer in rest days.',
+    pal:{ b:'#F8FAFC', h:'#FFFFFF', s:'#CBD5E1', p:'#F9A8D4', n:'#F472B6', e:'#334155', w:'#FFFFFF', c:'#FBCFE8', m:'#334155' }, ink:'#334155', grid:[
+    '............','....bb......','...bbbb.....','...bppb.....',
+    '...bppb.....','...bppb.....','...bppb.....','...bbbb.....',
+    '...bbbbbbbbb','..bbbbbbbbbb','.bbbbbbbbbbb','.bbbbbwebbbb',
+    '.bbbbbeebbbb','.bbccbbbbbbn','.bbbbbbbbmbm','.bbbbbbbbbmb',
+    '..bbbbbbbbbb','...bbbbbbbbb','.....bbbbbbb','............',
+    '............','............','............','............']},
+  Kit: { vibe:'Ginger cat. Dry wit, judges your bedtime.',
+    pal:{ b:'#FB923C', h:'#FDBA74', s:'#EA580C', p:'#F9A8D4', d:'#C2410C', u:'#FFF7ED', n:'#F472B6', e:'#2A1205', w:'#FFFFFF', c:'#FDA4AF', m:'#7C2D12' }, ink:'#431407', shift:3, grid:[
+    '............','............','..b.........','..bb........',
+    '..bpb.......','..bppbbbbbbb','..bbbbbbbdbd','.bbbbbbbbbbd',
+    '.bbbbbbbbbbb','.bbbbbwebbbb','.bbbbbeebbbb','.bccbbbbuuun',
+    '.bbbbbbuuumu','..bbbbbbuuum','..bbbbbbbbbb','...bbbbbbbbb',
+    '.....bbbbbbb','............','............','............',
+    '............','............','............','............']},
+  Axo: { vibe:'Axolotl. Endlessly cheerful, all about recovery.',
+    pal:{ b:'#F9A8D4', h:'#FBCFE8', s:'#EC4899', g:'#DB2777', e:'#3B0A24', c:'#F472B6', m:'#3B0A24' }, ink:'#500724', eyes:'e', grid:[
+    '............','............','............','............',
+    '............','......bbbbbb','..gg.bbbbbbb','....bbbbbbbb',
+    '.gggbbbbbbbb','...bbbbbbbbb','..ggbbebbbbb','...bbbebbbbb',
+    '...bccbbbbbb','...bbbbbmbbb','....bbbbbmmm','.....bbbbbbb',
+    '.....bbbbbbb','....bbbbbbbb','.....bbbbbbb','.....bb.....',
+    '............','............','............','............']},
+  Boo: { vibe:'Friendly ghost. Shows up for late-night check-ins.',
+    pal:{ b:'#EEF2FF', h:'#FFFFFF', s:'#C7D2FE', e:'#1E1B4B', w:'#FFFFFF', c:'#F9A8D4', m:'#1E1B4B' }, ink:'#312E81', grid:[
+    '............','............','............','........bbbb',
+    '......bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb',
+    '...bbbbwebbb','..bbbbbeebbb','..bbbbbeebbb','..bccbbbbbbb',
+    '..bbbbbbbbbm','..bbbbbbbbbm','..bbbbbbbbbb','..bbbbbbbbbb',
+    '..bbbbbbbbbb','..bbbbbbbbbb','..bbbb..bbbb','...bb....bb.',
+    '............','............','............','............']},
+  Cap: { vibe:'Mushroom. Grounded, a little whimsical.',
+    pal:{ b:'#EF4444', h:'#F87171', s:'#B91C1C', d:'#FFF1F2', u:'#FDE68A', f:'#FEF3C7', e:'#3B1D0A', w:'#FFFFFF', c:'#FDA4AF', m:'#3B1D0A' }, ink:'#450A0A', lid:'f', grid:[
+    '............','............','........bbbb','......bbbbbb',
+    '....bbbbbbdd','...bbddbbbdd','..bbbddbbbbb','.bbbbbbbbbbb',
+    '.bdbbbbbbbbb','.bbbbbbbbbbb','..uuuuuuuuuu','....ffffffff',
+    '....ffweffff','....ffeeffff','....cfffffmf','....fffffffm',
+    '....ffffffff','.....fffffff','............','............',
+    '............','............','............','............']},
+  Jelly: { vibe:'Jellyfish. Floaty and chill, loves a breathing break.',
+    pal:{ b:'#A78BFA', h:'#C4B5FD', s:'#7C3AED', t:'#C4B5FD', e:'#2E1065', w:'#FFFFFF', c:'#F9A8D4', m:'#2E1065' }, ink:'#2E1065', grid:[
+    '............','............','............','........bbbb',
+    '......bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb',
+    '...bbbbwebbb','..bbbbbeebbb','..bccbbbbbbb','..bbbbbbbbmb',
+    '..bbbbbbbbbm','..bbbbbbbbbb','...t..t..t..','....t..t..t.',
+    '...t..t..t..','....t..t..t.','...t..t..t..','......t..t..',
+    '............','............','............','............']},
+  Pengu: { vibe:'Penguin. Consistency over intensity, one waddle at a time.',
+    pal:{ b:'#3B4A63', h:'#56688A', s:'#253247', u:'#F8FAFC', k:'#FB923C', e:'#0F172A', w:'#FFFFFF', c:'#FDA4AF' }, ink:'#0B1120', lid:'u', grid:[
+    '............','............','........bbbb','......bbbbbb',
+    '.....bbbbbbb','....bbbbbbbb','....bbuuuubb','...bbuuuuuub',
+    '...buuuweuuu','...buuueeuuu','...bucuuuukk','..bbuuuuuuuk',
+    '..bbuuuuuuuu','.bbbuuuuuuuu','.bbbuuuuuuuu','.bbbuuuuuuuu',
+    '..bbuuuuuuuu','..bbbuuuuuuu','...bbbuuuuuu','....bbbbbbbb',
+    '......kkk...','............','............','............']},
+  Luna: { vibe:'Sleepy moon. Your sleep coach, obviously.',
+    pal:{ b:'#FEF08A', h:'#FEF9C3', s:'#FACC15', d:'#FDE047', e:'#713F12', c:'#FDBA74', m:'#713F12', x:'#FDE68A' }, ink:'#713F12', eyes:'', grid:[
+    '............','............','.x..........','xxx.....bbbb',
+    '.x....bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbddbbbbb',
+    '...bbddbbbbb','..bbbbbbbbbb','..bbbbebbebb','..bbbbbeebbb',
+    '..bccbbbbbbb','..bbbbbbbbbm','..bbbbbbbbbb','...bbdbbbbbb',
+    '...bbbbbbbbb','....bbbbbbbb','.....bbbbbbb','......bbbbbb',
+    '........bbbb','..x.........','.xxx........','..x.........']},
+  Gloop: { vibe:'Slime drop. Bouncy, turns workouts into play.',
+    pal:{ b:'#A3E635', h:'#D9F99D', s:'#65A30D', e:'#1A2E05', w:'#FFFFFF', c:'#FDA4AF', m:'#1A2E05' }, ink:'#1A2E05', grid:[
+    '............','............','...........b','...........b',
+    '..........bb','.........bbb','........bbbb','.......bbbbb',
+    '......bbbbbb','.....bbbbbbb','....bbbbbbbb','...bbbbbbbbb',
+    '...bbbbwebbb','..bbbbbeebbb','..bbbbbeebbb','..bccbbbbbbb',
+    '..bbbbbbbbmb','..bbbbbbbbbm','...bbbbbbbbb','....bbbbbbbb',
+    '......bbbbbb','............','............','............']},
+  Bao: { vibe:'Panda. Big-hearted, into snacks and stretches.',
+    pal:{ b:'#F8FAFC', h:'#FFFFFF', s:'#CBD5E1', k:'#1F2937', w:'#FFFFFF', c:'#FBCFE8', m:'#1F2937' }, ink:'#111827', eyes:'w', lid:'k', shut:'k', grid:[
+    '............','............','............','..kkk.......',
+    '.kkkkk..bbbb','.kkkkbbbbbbb','..kkbbbbbbbb','..bbbbbbbbbb',
+    '.bbbbbbbbbbb','.bbbbbkkbbbb','.bbbbkkwkbbb','.bbbbkkkkbbb',
+    '.bbbbkkkbbbb','.bccbbbbbbkk','.bbbbbbbbbbk','.bbbbbbbbbmb',
+    '..bbbbbbbbbb','...bbbbbbbbb','.....bbbbbbb','............',
+    '............','............','............','............']},
+};
+
+
+// Final widths: 0 = original, 1 = slimmer, 2 = slimmest.
+const WIDTH = { Luna:0, Mochi:0, Boba:0, Jelly:0, Sprout:2 };
+const INFO = {
+  Mochi:  { accent:'#F9A8D4', focus:'Rest',            tag:'Soft and gentle. Rest is never something to feel bad about.', hi:'Hey you. No pressure today. How are you feeling?' },
+  Boba:   { accent:'#E0B48A', focus:'Daily habits',    tag:'Bubbly and upbeat. Keeps your daily habits topped up.',       hi:'Sip check! Four of five habits done. Want the last one?' },
+  Sprout: { accent:'#4ADE80', focus:'Progress',        tag:'Celebrates small, steady growth, week after week.',            hi:'Look how far you\'ve come. Want to see this month?' },
+  Avo:    { accent:'#A3E635', focus:'Energy',          tag:'Calm, and quietly obsessed with what fuels you.',              hi:'Your energy dipped around 3pm. Want to look at why?' },
+  Peep:   { accent:'#FDE047', focus:'Motivation',      tag:'Tiny, loud, and your biggest cheerleader.',                    hi:'You showed up! That\'s already a win. What\'s next?' },
+  Bun:    { accent:'#CBD5E1', focus:'Rest days',       tag:'Gentle. A big believer in taking it easy.',                    hi:'You worked hard this week. Shall we plan a softer day?' },
+  Kit:    { accent:'#FB923C', focus:'Bedtime',         tag:'Dry wit. Gently judges your bedtime.',                         hi:'1:12am. Again. Want to talk about it?' },
+  Axo:    { accent:'#F472B6', focus:'Recovery',        tag:'Endlessly cheerful, all about bouncing back.',                 hi:'Your recovery is trending up! Want to see it?' },
+  Boo:    { accent:'#C7D2FE', focus:'Wind-down',       tag:'Quiet and kind. Shows up when it\'s late.',                    hi:'Still up? Let\'s wind down together.' },
+  Cap:    { accent:'#EF4444', focus:'Balance',         tag:'Grounded, with a little whimsy.',                              hi:'Busy week. Want to find a calmer rhythm?' },
+  Jelly:  { accent:'#A78BFA', focus:'Breathing',       tag:'Floaty and chill. Loves a breathing break.',                   hi:'Breathe in… and out. Want a one-minute reset?' },
+  Pengu:  { accent:'#7C93B8', focus:'Consistency',     tag:'Steady over flashy, one waddle at a time.',                    hi:'Twelve days in a row. Let\'s keep it waddling.' },
+  Luna:   { accent:'#FEF08A', focus:'Sleep',           tag:'Sleepy moon. Your sleep coach, obviously.',                     hi:'Mmm, hi. You slept 7h 12m. Want the details?' },
+  Gloop:  { accent:'#84CC16', focus:'Workouts',        tag:'Bouncy. Turns every workout into play.',                       hi:'Boing! Ready to move a little today?' },
+  Bao:    { accent:'#94A3B8', focus:'Movement',        tag:'Big-hearted, into snacks and stretches.',                      hi:'Time for a stretch? I\'ll do it with you.' },
+};
+const N = 24, NAMES = Object.keys(CAST);
+for (const n of NAMES){ const s = CAST[n].shift; if (s) CAST[n].grid = [...CAST[n].grid.slice(-s), ...CAST[n].grid.slice(0,-s)]; }
+const full = g => g.map(r => r + [...r].reverse().join(''));
+const darken = (hex,k) => { const n=parseInt(hex.slice(1),16); return '#'+[16,8,0].map(s=>Math.round(((n>>s)&255)*k).toString(16).padStart(2,'0')).join(''); };
+const rgba = (hex,a) => { const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+const NO_OUTLINE = 'xzt.';
+function narrow(half, k){
+  let g = half.map(r=>[...r]);
+  for (let n=0; n<k; n++){
+    let best=-1, bestCost=Infinity;
+    for (let i=2; i<=10; i++){
+      let cost=0; for (const r of g) if (r[i]!==r[i-1]) cost += (r[i]==='.'||r[i-1]==='.') ? 1 : 3;
+      cost += Math.abs(i-6)*0.01;
+      if (cost < bestCost){ bestCost=cost; best=i; }
+    }
+    g = g.map(r => ['.', ...r.slice(0,best), ...r.slice(best+1)]);
+  }
+  return g.map(r=>r.join(''));
+}
+// Soft outline: a deeper shade of the character's own colour.
+function cells(name, blink){
+  const ch = CAST[name], g = full(narrow(ch.grid, WIDTH[name] ?? 1)).map(r=>[...r]);
+  if (blink){
+    const eyes = ch.eyes ?? 'ew', lid = ch.lid || 'b', shut = ch.shut || 'e';
+    for (let x=0;x<N;x++){
+      const ys=[]; for (let y=0;y<N;y++) if (eyes.includes(g[y][x])) ys.push(y);
+      if (!ys.length) continue;
+      ys.slice(0,-1).forEach(y=> g[y][x]=lid); g[ys.at(-1)][x]=shut;
+    }
+  }
+  const solid = (x,y) => x>=0&&y>=0&&x<N&&y<N && !NO_OUTLINE.includes(g[y][x]);
+  const out = [];
+  for (let y=0;y<N;y++) for (let x=0;x<N;x++){
+    const L = g[y][x]; let col = null;
+    if (L !== '.'){
+      col = ch.pal[L] || ch.pal.b;
+      if (L === 'b'){ if (!solid(x,y-1)) col = ch.pal.h; else if (!solid(x,y+1) || !solid(x,y+2)) col = ch.pal.s; }
+    } else if ([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>solid(x+dx,y+dy))) col = darken(ch.pal.s || ch.pal.b, .6);
+    out.push(col);
+  }
+  return out;
+}
+function paint(c, name, blink, px){
+  const dpr = window.devicePixelRatio || 1, s = px/N;
+  c.width = c.height = Math.round(px*dpr); c.style.width = c.style.height = px+'px';
+  const x = c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,px,px);
+  cells(name, blink).forEach((col,i)=>{ if(!col) return; x.fillStyle=col; x.fillRect((i%N)*s, Math.floor(i/N)*s, s+.02, s+.02); });
+}
+const live = [];
+function sprite(name, px, still){
+  const c = document.createElement('canvas'); paint(c, name, false, px);
+  if (!still) live.push({ c, name, px, phase: Math.random()*1600, blinkAt: Math.random()*4200, blinking:false });
+  return c;
+}
+function theme(el, n){
+  const a = INFO[n].accent;
+  el.style.setProperty('--tint', rgba(a,.30));
+  el.style.setProperty('--dot', rgba(a,.16));
+  el.style.setProperty('--panel', `linear-gradient(180deg, ${rgba(a,.10)}, ${rgba(a,.04)})`);
+  el.style.setProperty('--chip', rgba(a,.16));
+  el.style.setProperty('--chipText', a);
+}
+function card(n, cls=''){
+  const i = INFO[n], el = document.createElement('div'); el.className = 'cc ' + cls; theme(el, n);
+  const no = String(NAMES.indexOf(n)+1).padStart(2,'0');
+  el.innerHTML = `<div class="art"><span class="no">No.${no}</span><span class="chip">${i.focus}</span></div>
+    <div class="body"><div class="name">${n}</div><div class="tag">${i.tag}</div><div class="bubble">${i.hi}</div></div>`;
+  el.querySelector('.art').insertBefore(sprite(n, 120), el.querySelector('.art .no'));
+  return el;
+}
+
+const deck = document.getElementById('deck');
+NAMES.forEach(n => deck.appendChild(card(n)));
+
+// Phone A: carousel
+const A = document.getElementById('phoneA');
+A.innerHTML = '<div class="sbar"></div><div class="top"><span class="eyebrow">Meet your coach</span><span class="ghost">Close</span></div>';
+const car = document.createElement('div'); car.className='car';
+car.appendChild(card('Luna')); car.appendChild(card('Gloop','side'));
+A.appendChild(car);
+const strip = document.createElement('div'); strip.className='strip';
+NAMES.slice(9).concat(NAMES.slice(0,3)).forEach(n => { const t=document.createElement('div'); t.className='th'+(n==='Luna'?' on':''); t.appendChild(sprite(n, 34, true)); strip.appendChild(t); });
+A.appendChild(strip);
+A.insertAdjacentHTML('beforeend','<div class="btn">Choose Luna</div>');
+
+// Phone B: grid + sheet
+const B = document.getElementById('phoneB');
+B.innerHTML = '<div class="sbar"></div><div class="top"><span class="eyebrow">Meet your coach</span><span class="ghost">Close</span></div>';
+const gw = document.createElement('div'); gw.className='gridwrap';
+const tiles = document.createElement('div'); tiles.className='tiles';
+NAMES.forEach(n => { const t=document.createElement('div'); t.className='tile'+(n==='Axo'?' on':''); t.appendChild(sprite(n, 56, n!=='Axo')); t.insertAdjacentHTML('beforeend',`<span>${n}</span>`); tiles.appendChild(t); });
+gw.appendChild(tiles);
+const sh = document.createElement('div'); sh.className='sheet'; theme(sh,'Axo');
+sh.innerHTML = `<div class="grab"></div><div class="row"><div class="mini"></div><div><span class="chip">${INFO.Axo.focus}</span><div class="name">Axo</div><div class="tag">${INFO.Axo.tag}</div></div></div><div class="bubble">${INFO.Axo.hi}</div><div class="btn">Choose Axo</div>`;
+sh.querySelector('.mini').appendChild(sprite('Axo', 72));
+gw.appendChild(sh);
+B.appendChild(gw);
+
+const t0 = performance.now();
+(function tick(now){
+  const t = now - t0;
+  for (const s of live){
+    s.c.style.transform = Math.floor(((t + s.phase) % 1600) / 800) ? `translateY(${-s.px/N}px)` : 'none';
+    const blink = ((t + s.blinkAt) % 4200) < 140;
+    if (blink !== s.blinking){ s.blinking = blink; paint(s.c, s.name, blink, s.px); }
+  }
+  requestAnimationFrame(tick);
+})(t0);
+</script>
+</body></html>

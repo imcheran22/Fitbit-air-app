@@ -1,0 +1,48 @@
+{
+  "id": "synthetic.goose.v5.historical_k18_packet",
+  "path": "synthetic/goose_v5_historical_k18_packet.hex",
+  "kind": "synthetic",
+  "source": "Hand-derived Goose v5 historical data frame using APK so0.b stable header offsets.",
+  "captured_at": "2026-05-27T00:20:00Z",
+  "device_model": "WHOOP 5.0 Goose",
+  "device_firmware": "synthetic",
+  "app_version": "not_applicable",
+  "schema": "goose.frame.hex.v1",
+  "consent": "synthetic-no-user-data",
+  "sensitivity": "public-test-fixture",
+  "notes": "HISTORICAL_DATA K18 frame. Since Phase 67, packet_k=18 routes to parse_v18_body (V18History) instead of NormalHistory. This 65-byte synthetic payload is too short for V18 (requires 78 bytes), producing V18History with v18_payload_too_short warning.",
+  "expected": {
+    "device_type": "GOOSE",
+    "packet_type": 47,
+    "packet_type_name": "HISTORICAL_DATA",
+    "sequence": 18,
+    "command_or_event": 1,
+    "header_crc_valid": true,
+    "payload_crc_valid": true,
+    "payload_hex": "2f120104030201443322116655aa4dbbccddeeff",
+    "parsed_payload": {
+      "kind": "data_packet",
+      "packet_k": 18,
+      "domain": "normal_history_with_hr_marker",
+      "status_or_stream": 1,
+      "counter_or_page": 16909060,
+      "timestamp_seconds": 287454020,
+      "timestamp_subseconds": 21862,
+      "hr_marker_offset": 14,
+      "hr_present_marker": 77,
+      "body_offset": 13,
+      "body_hex": "aa4dbbccddeeff",
+      "body_summary": {
+        "kind": "v18_history",
+        "hr": null,
+        "rr_intervals_ms": [],
+        "gravity_x": null,
+        "gravity_y": null,
+        "gravity_z": null,
+        "skin_temp_raw": null,
+        "step_motion_counter": null,
+        "warnings": ["v18_payload_too_short"]
+      }
+    }
+  }
+}

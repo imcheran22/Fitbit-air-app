@@ -1,0 +1,165 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`FactorBar matches its snapshot 1`] = `
+<View
+  accessibilityLabel="HRV: −4.5 pts"
+  accessible={true}
+  className="gap-1.5"
+  testID="factor-bar-HRV"
+>
+  <View
+    className="flex-row items-center justify-between"
+  >
+    <View
+      className="flex-row items-center gap-2"
+    >
+      <Text
+        className="text-foreground text-body font-medium"
+        style={
+          [
+            {
+              "fontFamily": "Geist_500Medium",
+            },
+            undefined,
+          ]
+        }
+      >
+        HRV
+      </Text>
+    </View>
+    <Text
+      className="text-foreground text-body font-semibold tabular-nums"
+      style={
+        [
+          {
+            "fontFamily": "Geist_600SemiBold",
+            "fontVariant": [
+              "tabular-nums",
+            ],
+          },
+          undefined,
+        ]
+      }
+    >
+      −4.5 pts
+    </Text>
+  </View>
+  <View
+    className="h-2 flex-row overflow-hidden rounded-full bg-muted"
+  >
+    <View
+      style={
+        {
+          "flex": 1,
+          "flexDirection": "row",
+          "justifyContent": "flex-end",
+        }
+      }
+    >
+      <View
+        className="h-full bg-score-poor"
+        style={
+          {
+            "width": "50%",
+          }
+        }
+        testID="factor-bar-neg-HRV"
+      />
+    </View>
+    <View
+      className="h-full w-px bg-border"
+    />
+    <View
+      style={
+        {
+          "flex": 1,
+          "flexDirection": "row",
+          "justifyContent": "flex-start",
+        }
+      }
+    />
+  </View>
+</View>
+`;
+
+exports[`FactorBar matches its snapshot: sleep duration below goal 1`] = `
+<View
+  accessibilityLabel="Sleep duration: −6.4 pts"
+  accessible={true}
+  className="gap-1.5"
+  testID="factor-bar-SLEEP_DURATION"
+>
+  <View
+    className="flex-row items-center justify-between"
+  >
+    <View
+      className="flex-row items-center gap-2"
+    >
+      <Text
+        className="text-foreground text-body font-medium"
+        style={
+          [
+            {
+              "fontFamily": "Geist_500Medium",
+            },
+            undefined,
+          ]
+        }
+      >
+        Sleep duration
+      </Text>
+    </View>
+    <Text
+      className="text-foreground text-body font-semibold tabular-nums"
+      style={
+        [
+          {
+            "fontFamily": "Geist_600SemiBold",
+            "fontVariant": [
+              "tabular-nums",
+            ],
+          },
+          undefined,
+        ]
+      }
+    >
+      −6.4 pts
+    </Text>
+  </View>
+  <View
+    className="h-2 flex-row overflow-hidden rounded-full bg-muted"
+  >
+    <View
+      style={
+        {
+          "flex": 1,
+          "flexDirection": "row",
+          "justifyContent": "flex-end",
+        }
+      }
+    >
+      <View
+        className="h-full bg-score-poor"
+        style={
+          {
+            "width": "71.11111111111111%",
+          }
+        }
+        testID="factor-bar-neg-SLEEP_DURATION"
+      />
+    </View>
+    <View
+      className="h-full w-px bg-border"
+    />
+    <View
+      style={
+        {
+          "flex": 1,
+          "flexDirection": "row",
+          "justifyContent": "flex-start",
+        }
+      }
+    />
+  </View>
+</View>
+`;

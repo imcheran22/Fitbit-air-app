@@ -1,0 +1,11 @@
+# Actions only. npm packages are not bumped here: Expo pins native packages to the SDK, so they move with
+# `npx expo install --fix` on an SDK upgrade, never one at a time.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

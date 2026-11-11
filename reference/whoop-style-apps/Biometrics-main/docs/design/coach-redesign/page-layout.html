@@ -1,0 +1,101 @@
+<h2>The whole Coach page: which structure?</h2>
+<p class="subtitle">What you see when you open the Coach tab on a normal morning (Nimbus, low recovery day). All three use the approved answer style; they differ in what greets you and how the page is organised.</p>
+
+<style>
+  .phone { background:#0c0c0d; color:#f5f5f4; border-radius:30px; padding:14px 14px 10px; font-family:-apple-system, system-ui, sans-serif; font-size:13px; line-height:1.42; height:640px; display:flex; flex-direction:column; overflow:hidden; }
+  .status { font-size:11px; color:#a8a29e; display:flex; justify-content:space-between; margin-bottom:8px; }
+  .hdr { display:flex; align-items:center; gap:8px; }
+  .hdr .t { font-family: Georgia, serif; font-size:22px; }
+  .icon { margin-left:auto; display:flex; gap:6px; }
+  .ib { width:28px; height:28px; border-radius:50%; background:#1b1e24; display:flex; align-items:center; justify-content:center; font-size:12px; color:#d6d3d1; }
+  .av { border-radius:50%; background:#7dd3fc; display:inline-block; flex-shrink:0; }
+  .muted { color:#a8a29e; font-size:11.5px; }
+  .card { background:#14161b; border:1px solid #23262d; border-radius:16px; padding:11px; }
+  .chip { border:1px solid #2a2d34; border-radius:999px; padding:5px 10px; font-size:11px; color:#d6d3d1; white-space:nowrap; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .grow { flex:1; overflow:hidden; }
+  .composer { background:#1b1e24; border-radius:22px; padding:10px 12px; color:#78716c; font-size:12.5px; display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+  .send { width:24px; height:24px; border-radius:50%; background:#2dd4bf; }
+  .tabbar { height:34px; margin-top:8px; border-radius:18px; background:#15171c; display:flex; justify-content:space-around; align-items:center; color:#57534e; font-size:10px; }
+  .stat { background:#1b1e24; border-radius:12px; padding:7px 8px; flex:1; }
+  .stat b { display:block; font-size:15px; }
+  .low { color:#fb7185; }
+  .ok { color:#2dd4bf; }
+  .bubble { background:#1b1e24; border-radius:4px 16px 16px 16px; padding:10px 12px; }
+  .thread { padding:9px 0; border-top:1px solid #1f2228; }
+</style>
+
+<div class="cards">
+
+<div class="card-wrap" data-choice="a" onclick="toggleSelect(this)">
+  <div class="card-image"><div class="phone">
+    <div class="status"><span>9:41</span><span>●●●</span></div>
+    <div class="hdr"><span class="av" style="width:30px;height:30px"></span><span class="t">Coach</span><span class="icon"><span class="ib">☰</span><span class="ib">✎</span></span></div>
+    <div class="grow" style="margin-top:12px">
+      <div class="muted" style="margin-bottom:6px">Nimbus · this morning</div>
+      <div>Morning. Bit of a grey start: recovery's low, mostly because your HRV dipped after a short night. Nothing alarming. I'd keep today easy and get to bed a little earlier.</div>
+      <div class="card" style="margin-top:8px">
+        <div style="font-weight:650;margin-bottom:6px">Today's forecast</div>
+        <div style="display:flex;gap:6px">
+          <div class="stat"><b class="low">26</b><span class="muted">recovery</span></div>
+          <div class="stat"><b>6h 48m</b><span class="muted">sleep</span></div>
+          <div class="stat"><b class="low">41ms</b><span class="muted">HRV · low</span></div>
+        </div>
+      </div>
+      <div class="chips" style="margin-top:10px"><span class="chip">Why is my HRV low?</span><span class="chip">Should I train today?</span><span class="chip">How's my week?</span></div>
+      <div class="muted" style="margin-top:16px;text-align:center">Your conversation continues below</div>
+    </div>
+    <div class="composer"><span>Ask Nimbus anything…</span><span class="send"></span></div>
+    <div class="tabbar"><span>Home</span><span>Activity</span><span>●</span><span>Metrics</span><span>Profile</span></div>
+  </div></div>
+  <div class="card-body"><h3>A · Coach speaks first</h3><p>Opens with a daily check-in from the character (a normal message with a card), then suggested questions, then your conversation. ☰ = past conversations, ✎ = new chat. Feels like a friend who messaged you. Recommended.</p></div>
+</div>
+
+<div class="card-wrap" data-choice="b" onclick="toggleSelect(this)">
+  <div class="card-image"><div class="phone">
+    <div class="status"><span>9:41</span><span>●●●</span></div>
+    <div class="hdr"><span class="t">Coach</span><span class="icon"><span class="ib">☰</span><span class="ib">✎</span></span></div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <div class="stat"><b class="low">26</b><span class="muted">recovery</span></div>
+      <div class="stat"><b>6h 48m</b><span class="muted">sleep</span></div>
+      <div class="stat"><b class="low">41ms</b><span class="muted">HRV</span></div>
+      <div class="stat"><b class="ok">72</b><span class="muted">rest HR</span></div>
+    </div>
+    <div class="grow" style="margin-top:14px;display:flex;flex-direction:column;align-items:center;text-align:center">
+      <span class="av" style="width:64px;height:64px;margin-top:20px"></span>
+      <div style="font-family:Georgia,serif;font-size:19px;margin-top:10px">What would you like to know?</div>
+      <div class="muted" style="margin-top:4px">Ask about your data, or anything health and fitness.</div>
+      <div style="width:100%;margin-top:16px;display:flex;flex-direction:column;gap:6px;text-align:left">
+        <div class="card">Why is my recovery low today?</div>
+        <div class="card">Should I train today?</div>
+        <div class="card">What's been helping my sleep?</div>
+      </div>
+    </div>
+    <div class="composer"><span>Ask about your data…</span><span class="send"></span></div>
+    <div class="tabbar"><span>Home</span><span>Activity</span><span>●</span><span>Metrics</span><span>Profile</span></div>
+  </div></div>
+  <div class="card-body"><h3>B · Stats bar + blank chat</h3><p>A strip of today's numbers pinned under the header, then a classic "ask me anything" start with suggested questions. Closest to today's page, tidied up. The coach never speaks first.</p></div>
+</div>
+
+<div class="card-wrap" data-choice="c" onclick="toggleSelect(this)">
+  <div class="card-image"><div class="phone">
+    <div class="status"><span>9:41</span><span>●●●</span></div>
+    <div class="hdr"><span class="icon" style="margin-left:auto"><span class="ib">☰</span><span class="ib">✎</span></span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;margin-top:2px">
+      <span class="av" style="width:110px;height:110px"></span>
+      <div class="bubble" style="margin-top:12px;max-width:92%">Grey start today. Recovery's <b class="low">26</b>, mostly a short night. Want to know what to do about it?</div>
+    </div>
+    <div class="grow" style="margin-top:14px">
+      <div class="muted" style="margin-bottom:6px">Recent conversations</div>
+      <div class="thread">Which habits affect my scores? <span class="muted">· yesterday</span></div>
+      <div class="thread">How did I sleep last night? <span class="muted">· Mon</span></div>
+      <div class="thread">What is HRV? <span class="muted">· last week</span></div>
+      <div class="chips" style="margin-top:10px"><span class="chip">What should I do today?</span><span class="chip">Should I train?</span></div>
+    </div>
+    <div class="composer"><span>Talk to Nimbus…</span><span class="send"></span></div>
+    <div class="tabbar"><span>Home</span><span>Activity</span><span>●</span><span>Metrics</span><span>Profile</span></div>
+  </div></div>
+  <div class="card-body"><h3>C · Character front and centre</h3><p>A big animated character with a speech bubble greets you; below it, your recent conversations. Tapping one or asking something opens a full chat and the character shrinks into the header. Most personality, one extra step into chats.</p></div>
+</div>
+
+</div>

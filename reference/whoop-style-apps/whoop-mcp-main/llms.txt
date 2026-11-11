@@ -1,0 +1,22 @@
+# WHOOP MCP
+Unofficial local-first WHOOP MCP server for AI recovery, strain, sleep and HRV agents.
+Repository: https://github.com/davidmosiah/whoop-mcp
+Homepage: https://wellness.delx.ai/connectors/whoop
+NPM: https://www.npmjs.com/package/whoop-mcp-unofficial
+Prior work: Shashank Mishra's MIT-licensed whoop-ai-mcp, https://github.com/shashankswe2020-ux/whoop-mcp
+Primary command: npm exec --yes --package=whoop-mcp-unofficial -- whoop-mcp-server doctor
+Demo capture command: npm exec --yes --package=whoop-mcp-unofficial -- whoop-mcp-server demo-capture --assert-sanitized
+MCP command: whoop-mcp-server
+
+- MCP registry name: io.github.davidmosiah/whoop-mcp
+- Start agents with whoop_connection_status and whoop_data_inventory before any data tool.
+- Read-only default tools: whoop_agent_manifest, whoop_capabilities, whoop_privacy_audit, whoop_connection_status, whoop_data_inventory, whoop_daily_summary, whoop_weekly_summary, whoop_cache_status.
+- OAuth env: WHOOP_CLIENT_ID, WHOOP_CLIENT_SECRET, WHOOP_REDIRECT_URI.
+- Optional env: WHOOP_TOKEN_PATH (token storage path), WHOOP_PRIVACY_MODE (summary|structured|raw, default structured), WHOOP_CACHE (true|sqlite to enable), WHOOP_CACHE_PATH.
+- Prefer JSON responses for automation and markdown responses for human summaries.
+- Use demo-capture for public WHOOP recovery demos; it writes a privacy-sanitized transcript and blocks secrets, local paths, raw payloads, exact recovery numbers and exact sleep details.
+- Tokens stay local under ~/.whoop-mcp/tokens.json (or equivalent) and should never be printed.
+- Not medical advice. Use as trend context only — outputs are operational context, not medical, legal or financial advice.
+
+Skill (same gates, no MCP client required): skill/SKILL.md
+npx -y whoop-mcp-unofficial call <tool> --json '{...}'

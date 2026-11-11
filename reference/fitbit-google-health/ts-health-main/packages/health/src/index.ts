@@ -1,0 +1,201 @@
+// Core exports
+export * from './config'
+export * from './types'
+export * from './read-errors'
+
+// Health platform drivers (Oura, WHOOP, Apple Health, Fitbit, Withings, Renpho)
+export * from './drivers'
+
+// Diabetes: CGM glucose, pump and pen insulin, carbs, time in range
+export * from './glucose'
+
+// Health analysis tools (sleep, readiness, recovery, trends)
+export * from './analysis'
+
+// Re-export ts-watches: smartwatch device drivers, FIT parsing, training metrics, and more
+export {
+  // FIT file parsing
+  FitParser,
+  FitDecoder,
+  FitParseError,
+  fitTimestampToDate,
+  semicirclesToDegrees,
+  degreesToSemicircles,
+
+  // Device drivers
+  createGarminDriver,
+  GarminDriver,
+  createPolarDriver,
+  PolarDriver,
+  createSuuntoDriver,
+  SuuntoDriver,
+  createCorosDriver,
+  CorosDriver,
+  createWahooDriver,
+  WahooDriver,
+  createAppleDriver,
+  AppleDriver,
+
+  // Data export
+  activityToGpx,
+  writeGpx,
+  activityToTcx,
+  writeTcx,
+  activityToCsv,
+  activitySummaryToCsv,
+  lapsToCsv,
+  heartRateToCsv,
+  sleepToCsv,
+  stressToCsv,
+  writeCsv,
+  activityToGeoJson,
+  recordsToGeoJsonPoints,
+  activitiesToGeoJson,
+  writeGeoJson,
+
+  // Cloud integrations
+  createGarminConnectClient,
+  GarminConnectClient,
+  createStravaClient,
+  StravaClient,
+  activityToStravaUpload,
+
+  // Training analysis
+  TrainingLoadCalculator,
+  createTrainingLoadCalculator,
+  ZoneCalculator,
+  createZoneCalculator,
+  RacePredictor,
+  createRacePredictor,
+  estimateMaxHrByAge,
+  estimateLthrFromMaxHr,
+  calculateHrReserve,
+  calculateTargetHr,
+  RACE_DISTANCES,
+
+  // Workout tools
+  WorkoutBuilder,
+  createWorkout,
+  workoutTemplates,
+  formatWorkoutDuration,
+  formatWorkoutTarget,
+
+  // Real-time data
+  createAntPlusScanner,
+  MockAntPlusScanner,
+  calculateWheelSpeed,
+  calculateCadence,
+  ANT_PLUS_PROFILES,
+  createBleScanner,
+  MockBleScanner,
+  parseHeartRateMeasurement,
+  parseCscMeasurement,
+  parsePowerMeasurement,
+  BLE_SERVICES,
+  BLE_CHARACTERISTICS,
+} from 'ts-watches'
+
+// Re-export ts-watches types (avoiding conflicts with ts-health Workout type)
+export type {
+  Activity,
+  ActivityLap,
+  ActivityRecord,
+  MonitoringData,
+  WatchDevice,
+  GarminDevice,
+  DownloadResult,
+  DownloadOptions,
+  WatchDriver,
+  SleepData,
+  StressData,
+  HRVData,
+  SpO2Data,
+  DailyHeartRate,
+  BodyBattery,
+  DailySteps,
+  GeoPosition,
+  SportType,
+  SubSportType,
+  FitMessage,
+  FitParseResult,
+  GpxOptions,
+  TcxOptions,
+  CsvOptions,
+  GeoJsonFeature,
+  GeoJsonFeatureCollection,
+  GeoJsonOptions,
+  GarminConnectConfig,
+  GarminActivitySummary,
+  DailySummary,
+  StravaConfig,
+  StravaTokens,
+  StravaAthlete,
+  StravaActivitySummary,
+  StravaUploadResponse,
+  TrainingLoadMetrics,
+  DailyTrainingLoad,
+  TrainingLoadConfig,
+  Zone,
+  ZoneConfig,
+  ZoneDistribution,
+  ZoneAnalysis,
+  RacePrediction,
+  PredictorInput,
+  FitnessEstimate,
+  AntPlusDevice,
+  AntPlusDeviceType,
+  AntPlusScanner,
+  BleDevice,
+  BleDeviceType,
+  BleScanner,
+  PolarDevice,
+  SuuntoDevice,
+  CorosDevice,
+  WahooDevice,
+  AppleDevice,
+} from 'ts-watches'
+
+// Re-export ts-watches Workout type with alias to avoid conflict with ts-health Workout
+export type { Workout as WatchWorkout } from 'ts-watches'
+
+// Re-export commonly used health types for convenience
+export type {
+  HealthConfig,
+  HealthOptions,
+  HealthDriver,
+  HealthMetric,
+  HealthPlatformType,
+  AuthConfig,
+  AuthResult,
+  DateRangeOptions,
+  PersonalInfo,
+  SleepSession,
+  DailySleepSummary,
+  SleepContributors,
+  SleepStage,
+  DailyActivity,
+  ActivityContributors,
+  Workout,
+  DailyReadiness,
+  ReadinessContributors,
+  HeartRateSample,
+  DailyHeartRateSummary,
+  HRVSample,
+  DailyHRVSummary,
+  DailySpO2,
+  DailyStress,
+  BodyTemperature,
+  VO2MaxReading,
+  BodyComposition,
+  WeightMeasurement,
+  WithingsConfig,
+  RenphoConfig,
+  DeviceInfo,
+  SleepQualityScore,
+  TrainingReadiness,
+  RecoveryScore,
+  HealthTrend,
+  SleepDebtAnalysis,
+} from './types'
+
+export * from './hydration'

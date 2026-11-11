@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pip moods</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 560px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">MOODS</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5">Only the face layer changes: eye cells, mouth cells, cheeks, plus an optional floating fx glyph that is never outlined. Body, palette and cosmetics stay put.</p>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{moods}}" as="m" hint-placeholder-count="6">
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px">
+        <div style="line-height: 0; border-radius: 6px; overflow: hidden"><dc-import name="Sprite" colorway="mint" mood="{{m.id}}" scale="6" bg="tint" hint-size="144px,144px"></dc-import></div>
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <span style="font-family: Silkscreen, monospace; font-size: 14px; color: #E7E9EE">{{m.label}}</span>
+          <dc-import name="Sprite" colorway="mint" mood="{{m.id}}" scale="1" bg="none" hint-size="24px,24px"></dc-import>
+        </div>
+        <span style="font-size: 12px; line-height: 1.45; color: #A3A9B5">{{m.note}}</span>
+      </div>
+    </sc-for>
+  </div>
+  <p style="margin: 0; font-size: 13px; color: #A3A9B5">Maps onto the coach moods: idle → idle, thinking → thinking, answering → happy, resting → sleepy. Proud and sad are new, for streaks and missed goals.</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":560}}'>
+var MOODS = [
+  ["idle", "2×2 eyes with a shine, 2 px mouth, cheeks"],
+  ["happy", "Arched eyes, 4 px smile"],
+  ["sleepy", "Shut eyes, low mouth, drifting Z in light"],
+  ["thinking", "Eyes up and right, side mouth, thought dots"],
+  ["proud", "Shade lids, smirk, accent sparkle"],
+  ["sad", "Low eyes, worried brows in outline, frown, tear"]
+];
+class Component extends DCLogic {
+  renderVals() {
+    return { moods: MOODS.map(function (m) { return { id: m[0], label: m[0].toUpperCase(), note: m[1] }; }) };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+[versions]
+android-gradle-plugin = "8.13.2"
+androidx-activity = "1.13.0"
+androidx-compose = "1.10.6"
+androidx-compose-material = "1.7.8"
+androidx-lifecycle = "2.10.0"
+androidx-wear-compose = "1.6.1"
+core-splashscreen = "1.0.1"
+dagger = "2.56.2"
+health-services = "1.0.0"
+horologist = "0.7.15"
+kotlin = "2.1.21"
+org-jetbrains-kotlin = "2.1.21"
+ui-test-junit4 = "1.8.3"
+robolectric = "4.14.1"
+roborazzi = "1.45.1"
+ksp = "2.1.21-2.0.1"
+hilt = "2.56.2"
+ktlint = "0.50.0"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+androidx-compose-navigation = "androidx.navigation:navigation-compose:2.8.4"
+androidx-compose-runtime = "androidx.compose.runtime:runtime:1.7.5"
+androidx-compose-ui-tooling = { module = "androidx.wear.compose:compose-ui-tooling", version.ref = "androidx-wear-compose" }
+androidx-concurrent = "androidx.concurrent:concurrent-futures-ktx:1.2.0"
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "core-splashscreen" }
+androidx-health-services = { module = "androidx.health:health-services-client", version.ref = "health-services" }
+androidx-lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref = "androidx-lifecycle"}
+androidx-lifecycle-extensions  = "androidx.lifecycle:lifecycle-extensions:2.2.0"
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle"}
+androidx-lifecycle-runtime-compose = "androidx.lifecycle:lifecycle-runtime-compose:2.8.7"
+androidx-lifecycle-service = {module = "androidx.lifecycle:lifecycle-service", version.ref = "androidx-lifecycle"}
+androidx-lifecycle-viewmodel = {module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle"}
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "androidx-compose-material" }
+androidx-wear = "androidx.wear:wear:1.4.0"
+androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "ui-test-junit4" }
+androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "ui-test-junit4" }
+compose-compiler = "androidx.compose.compiler:compiler:1.5.15"
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-compose" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "androidx-compose" }
+compose-wear-navigation = "androidx.wear.compose:compose-navigation:1.4.0"
+dagger-hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagger"}
+dagger-hilt-android-compiler = {module = "com.google.dagger:hilt-android-compiler", version.ref = "dagger"}
+desugar-jdk-libs = "com.android.tools:desugar_jdk_libs:2.1.5"
+guava = "com.google.guava:guava:33.3.1-android"
+hilt-navigation-compose = "androidx.hilt:hilt-navigation-compose:1.2.0"
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+horologist-compose-layout = { module = "com.google.android.horologist:horologist-compose-layout", version.ref = "horologist" }
+horologist-health-composables = { module = "com.google.android.horologist:horologist-health-composables", version.ref = "horologist" }
+horologist-health-service = { module = "com.google.android.horologist:horologist-health-service", version.ref = "horologist" }
+horologist-roboscreenshots = { module = "com.google.android.horologist:horologist-roboscreenshots", version.ref = "horologist" }
+jacoco-ant = "org.jacoco:org.jacoco.ant:0.8.12"
+junit = "junit:junit:4.13.2"
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
+roborazzi-rule = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
+test-espresso-core = "androidx.test.espresso:espresso-core:3.6.1"
+test-ext-junit = "androidx.test.ext:junit:1.2.1"
+wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version.ref = "androidx-wear-compose" }
+wear-compose-material = { module = "androidx.wear.compose:compose-material3", version.ref = "androidx-wear-compose" }
+wear-ongoing-activity = "androidx.wear:wear-ongoing:1.1.0"
+
+[plugins]
+com-android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
+dagger-hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger"}
+org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "org-jetbrains-kotlin" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
+compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+com-diffplug-spotless = "com.diffplug.spotless:7.0.3"
+

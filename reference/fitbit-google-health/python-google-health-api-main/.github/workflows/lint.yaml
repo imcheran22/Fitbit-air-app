@@ -1,0 +1,55 @@
+---
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+      - renovate/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: codespell-project/actions-codespell@e3258cca84ce02b0bb36a3d41f2c18f719a0cc1a # v2.4.3
+        with:
+          skip: "discovery,.git"
+          check_hidden: false
+      - name: Validate Renovate configuration
+        run: |
+          npx --package=renovate@38 -- renovate-config-validator .github/renovate.json5
+      - name: Run yamllint
+        uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c # v3
+        with:
+          file_or_dir: "./"
+          config_file: "./.yaml-lint.yaml"
+          strict: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements_dev.txt"
+          activate-environment: true
+      - name: Install dependencies
+        run: |
+          uv pip install -r requirements_dev.txt
+
+      - name: Run Ruff Check
+        run: |
+          ruff check --output-format=github .
+
+      - name: Run Ruff Format
+        run: |
+          ruff format --check .
+
+      - name: Static typing with ty
+        run: |
+          ty check . --ignore import-not-found --ignore unresolved-attribute

@@ -1,0 +1,434 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`ScoreRing matches its snapshot: plain 1`] = `
+<View
+  accessibilityLabel="Score 72 out of 100"
+  accessible={true}
+  testID="score-ring"
+>
+  <View
+    testID="score-ring-plain"
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "height": 84,
+          "justifyContent": "center",
+          "width": 84,
+        }
+      }
+    >
+      <RNSVGSvgView
+        bbHeight={84}
+        bbWidth={84}
+        focusable={false}
+        height={84}
+        style={
+          [
+            {
+              "backgroundColor": "transparent",
+              "borderWidth": 0,
+            },
+            {
+              "position": "absolute",
+              "transform": [
+                {
+                  "rotate": "-90deg",
+                },
+              ],
+            },
+            {
+              "flex": 0,
+              "height": 84,
+              "width": 84,
+            },
+          ]
+        }
+        transform={
+          [
+            {
+              "rotate": "-90deg",
+            },
+          ]
+        }
+        width={84}
+      >
+        <RNSVGGroup
+          fill={
+            {
+              "payload": 4278190080,
+              "type": 0,
+            }
+          }
+        >
+          <RNSVGCircle
+            cx={42}
+            cy={42}
+            fill={null}
+            propList={
+              [
+                "fill",
+                "stroke",
+                "strokeWidth",
+              ]
+            }
+            r={38}
+            stroke={
+              {
+                "payload": 645955712,
+                "type": 0,
+              }
+            }
+            strokeWidth={8}
+          />
+          <RNSVGCircle
+            cx={42}
+            cy={42}
+            fill={null}
+            propList={
+              [
+                "fill",
+                "stroke",
+                "strokeWidth",
+                "strokeDasharray",
+                "strokeDashoffset",
+                "strokeLinecap",
+              ]
+            }
+            r={38}
+            stroke={
+              {
+                "payload": 4284850957,
+                "type": 0,
+              }
+            }
+            strokeDasharray={
+              [
+                "238.76104167282426",
+                "238.76104167282426",
+              ]
+            }
+            strokeDashoffset={66.8530916683908}
+            strokeLinecap={1}
+            strokeWidth={8}
+          />
+        </RNSVGGroup>
+      </RNSVGSvgView>
+      <Text
+        className="text-foreground text-heading tabular-nums"
+        style={
+          [
+            {
+              "fontFamily": "Geist_600SemiBold",
+              "fontVariant": [
+                "tabular-nums",
+              ],
+            },
+            undefined,
+          ]
+        }
+      >
+        72
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`ScoreRing matches its snapshot: segmented, cold start 1`] = `
+<View
+  accessibilityLabel="Score not available yet"
+  accessible={true}
+  testID="score-ring"
+>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "height": 84,
+        "justifyContent": "center",
+        "width": 84,
+      }
+    }
+    testID="score-ring-segmented"
+  >
+    <RNSVGSvgView
+      bbHeight={84}
+      bbWidth={84}
+      focusable={false}
+      height={84}
+      style={
+        [
+          {
+            "backgroundColor": "transparent",
+            "borderWidth": 0,
+          },
+          {
+            "position": "absolute",
+            "transform": [
+              {
+                "rotate": "-90deg",
+              },
+            ],
+          },
+          {
+            "flex": 0,
+            "height": 84,
+            "width": 84,
+          },
+        ]
+      }
+      transform={
+        [
+          {
+            "rotate": "-90deg",
+          },
+        ]
+      }
+      width={84}
+    >
+      <RNSVGGroup
+        fill={
+          {
+            "payload": 4278190080,
+            "type": 0,
+          }
+        }
+      >
+        <RNSVGCircle
+          cx={42}
+          cy={42}
+          fill={null}
+          propList={
+            [
+              "fill",
+              "stroke",
+              "strokeWidth",
+            ]
+          }
+          r={38}
+          stroke={
+            {
+              "payload": 645955712,
+              "type": 0,
+            }
+          }
+          strokeWidth={8}
+        />
+      </RNSVGGroup>
+    </RNSVGSvgView>
+    <Text
+      className="text-heading text-muted-foreground"
+      style={
+        [
+          {
+            "fontFamily": "Geist_600SemiBold",
+          },
+          undefined,
+        ]
+      }
+    >
+      —
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`ScoreRing matches its snapshot: segmented, mixed factors 1`] = `
+<View
+  accessibilityLabel="Score 72 out of 100"
+  accessible={true}
+  testID="score-ring"
+>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "height": 84,
+        "justifyContent": "center",
+        "width": 84,
+      }
+    }
+    testID="score-ring-segmented"
+  >
+    <RNSVGSvgView
+      bbHeight={84}
+      bbWidth={84}
+      focusable={false}
+      height={84}
+      style={
+        [
+          {
+            "backgroundColor": "transparent",
+            "borderWidth": 0,
+          },
+          {
+            "position": "absolute",
+            "transform": [
+              {
+                "rotate": "-90deg",
+              },
+            ],
+          },
+          {
+            "flex": 0,
+            "height": 84,
+            "width": 84,
+          },
+        ]
+      }
+      transform={
+        [
+          {
+            "rotate": "-90deg",
+          },
+        ]
+      }
+      width={84}
+    >
+      <RNSVGGroup
+        fill={
+          {
+            "payload": 4278190080,
+            "type": 0,
+          }
+        }
+      >
+        <RNSVGCircle
+          cx={42}
+          cy={42}
+          fill={null}
+          propList={
+            [
+              "fill",
+              "stroke",
+              "strokeWidth",
+            ]
+          }
+          r={38}
+          stroke={
+            {
+              "payload": 645955712,
+              "type": 0,
+            }
+          }
+          strokeWidth={8}
+        />
+        <RNSVGCircle
+          cx={42}
+          cy={42}
+          fill={null}
+          propList={
+            [
+              "fill",
+              "stroke",
+              "strokeWidth",
+              "strokeDasharray",
+              "strokeDashoffset",
+              "strokeLinecap",
+            ]
+          }
+          r={38}
+          stroke={
+            {
+              "payload": 4279673674,
+              "type": 0,
+            }
+          }
+          strokeDasharray={
+            [
+              "96.23311428824769",
+              "238.76104167282426",
+            ]
+          }
+          strokeDashoffset={null}
+          strokeLinecap={0}
+          strokeWidth={8}
+          testID="score-ring-segment-HRV"
+        />
+        <RNSVGCircle
+          cx={42}
+          cy={42}
+          fill={null}
+          propList={
+            [
+              "fill",
+              "stroke",
+              "strokeWidth",
+              "strokeDasharray",
+              "strokeDashoffset",
+              "strokeLinecap",
+            ]
+          }
+          r={38}
+          stroke={
+            {
+              "payload": 4292617766,
+              "type": 0,
+            }
+          }
+          strokeDasharray={
+            [
+              "47.116557144123846",
+              "238.76104167282426",
+            ]
+          }
+          strokeDashoffset={-98.23311428824769}
+          strokeLinecap={0}
+          strokeWidth={8}
+          testID="score-ring-segment-RHR"
+        />
+        <RNSVGCircle
+          cx={42}
+          cy={42}
+          fill={null}
+          propList={
+            [
+              "fill",
+              "stroke",
+              "strokeWidth",
+              "strokeDasharray",
+              "strokeDashoffset",
+              "strokeLinecap",
+            ]
+          }
+          r={38}
+          stroke={
+            {
+              "payload": 4292617766,
+              "type": 0,
+            }
+          }
+          strokeDasharray={
+            [
+              "22.558278572061923",
+              "238.76104167282426",
+            ]
+          }
+          strokeDashoffset={-147.34967143237154}
+          strokeLinecap={0}
+          strokeWidth={8}
+          testID="score-ring-segment-SLEEP_DEBT"
+        />
+      </RNSVGGroup>
+    </RNSVGSvgView>
+    <Text
+      className="text-foreground text-heading tabular-nums"
+      style={
+        [
+          {
+            "fontFamily": "Geist_600SemiBold",
+            "fontVariant": [
+              "tabular-nums",
+            ],
+          },
+          undefined,
+        ]
+      }
+    >
+      72
+    </Text>
+  </View>
+</View>
+`;

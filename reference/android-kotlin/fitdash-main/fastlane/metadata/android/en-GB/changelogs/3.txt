@@ -1,0 +1,4 @@
+Tap any card for detail, and calmer charts.
+- Every card and tile opens a detail view: what it means, 7 or 30 days, low, average and high, and your normal range
+- Charts use one calm colour instead of red, amber and green
+- Share day images are cleared from the cache automatically

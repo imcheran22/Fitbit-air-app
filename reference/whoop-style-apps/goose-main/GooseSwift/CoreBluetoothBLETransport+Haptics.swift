@@ -1,0 +1,27 @@
+import CoreBluetooth
+import Foundation
+import OSLog
+
+
+extension CoreBluetoothBLETransport {
+  func buzz(loops: Int) {
+    guard let activePeripheral, let commandCharacteristic else {
+      record(source: "ble.haptic", title: "buzz.blocked", body: "no active peripheral or characteristic")
+      return
+    }
+    guard let writeType = writeType(for: commandCharacteristic) else {
+      record(source: "ble.haptic", title: "buzz.blocked", body: "characteristic not writable")
+      return
+    }
+    let clamped = UInt8(max(1, min(255, loops)))
+    let sequence = nextHapticCommandSequence
+    nextHapticCommandSequence = nextHapticCommandSequence == UInt8.max ? 0 : nextHapticCommandSequence + 1
+    let frame = whoopGenerationFromCapabilities().buildCommandFrame(
+      sequence: sequence,
+      command: 0x13,
+      data: [clamped]
+    )
+    activePeripheral.writeValue(frame, for: commandCharacteristic, type: writeType)
+    record(source: "ble.haptic", title: "buzz.sent", body: "loops=\(clamped) seq=\(sequence) \(writeTypeName(writeType))")
+  }
+}

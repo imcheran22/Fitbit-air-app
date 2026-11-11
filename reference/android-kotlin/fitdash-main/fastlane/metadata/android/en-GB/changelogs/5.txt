@@ -1,0 +1,18 @@
+Workouts from Health Connect with distance, calories, pace and heart rate.
+Heart rate through the day on Today, with min, max and average.
+Read older data: up to 6 months of history and a 6-month trends view.
+Sleep efficiency, awakenings and time to fall asleep.
+Blood pressure shows both numbers.
+Larger labels and bigger tap targets throughout.
+Today's Movement delta compares with yesterday at the same hour.
+Pastel, Techno and Sunrise themes removed; Midnight Teal and Graphite stay.
+New settings: 24-hour time, lb, °F, reduce motion, haptics, and which cards to show.
+Press feedback, animated numbers and a redesigned sleep header and stage chart.
+Report a problem or request a feature from Settings, straight to GitHub.
+Opens instantly: the last snapshot is kept on the phone and refreshed in the background.
+"Data up to" line with a one-tap sync of your watch app.
+Today reworked: one action card, four glance tiles, workouts folded into one row.
+Tap or press-and-hold any chart to read the values.
+Numbers typeface: Inter, Space Grotesk or Instrument Serif.
+Sleep score rebuilt from duration, efficiency, restoration and restfulness.
+Smooth trend curves with a goal line; tap any point for its value.

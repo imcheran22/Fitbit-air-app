@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Recovery widget in the launcher's picker on Android 12 and later (widgets spec 6.4), a Small with the mockups'
+  sample: 78, Recovered. RemoteViews' own views only, so the number is plain text where the widget draws dots. Android
+  15 and later show the generated preview from the real layout instead (WidgetUpdater.publishPreviews).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_bg_recovery"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:ignore="HardcodedText">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_recovery_name"
+        android:textSize="17sp"
+        android:textColor="#FFFFFFFF"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="1"
+        android:includeFontPadding="true" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="78"
+        android:textSize="40sp"
+        android:textColor="#FFFFFFFF"
+        android:fontFamily="sans-serif-light"
+        android:maxLines="1"
+        android:includeFontPadding="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Recovered"
+        android:textSize="15sp"
+        android:textColor="#B8FFFFFF"
+        android:maxLines="1"
+        android:includeFontPadding="true" />
+</LinearLayout>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Activity · before</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166)}
+.card{padding:16px;border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);display:flex;flex-direction:column;gap:6px;box-sizing:border-box;min-width:0}
+.st{font-size:13px;color:rgb(155,157,166)}
+.num{font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div style="width: 390px; height: 1300px; box-sizing: border-box; overflow: hidden; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 54px 20px 40px; display: flex; flex-direction: column; gap: 16px">
+  <div style="display: flex; flex-direction: column; gap: 4px">
+    <div style="display: flex; align-items: center; gap: 10px"><span style="font-family: Silkscreen, monospace; font-size: 26px">STEPS</span><span style="width: 8px; height: 8px; border-radius: 4px; background: #4ADE80"></span><span style="width: 8px; height: 8px; border-radius: 4px; background: rgb(58,62,72)"></span></div>
+    <span class="st">Daily steps against your 10,000 goal</span>
+  </div>
+  <div style="display: flex; padding: 3px; border-radius: 999px; background: rgb(28,31,38)">
+    <span style="flex: 1; text-align: center; padding: 7px 0; border-radius: 999px; background: rgb(58,62,72); font-size: 13px; font-weight: 600">Month</span>
+    <span style="flex: 1; text-align: center; padding: 7px 0; font-size: 13px; color: rgb(155,157,166)">Year</span>
+    <span style="flex: 1; text-align: center; padding: 7px 0; font-size: 13px; color: rgb(155,157,166)">YTD</span>
+  </div>
+  <div class="card" style="gap: 12px">
+    <div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 20px; color: rgb(155,157,166)">‹</span><span style="font-size: 15px; font-weight: 600">October 2026</span><span style="font-size: 20px; color: rgb(58,62,72)">›</span></div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; text-align: center; font-size: 11px; color: rgb(155,157,166)"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+      <sc-for list="{{cells}}" as="c" hint-placeholder-count="35"><div style="height: 38px; border-radius: 10px; background: {{c.bg}}; border: {{c.border}}; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 12px; color: {{c.fg}}">{{c.n}}</div></sc-for>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 11px; color: rgb(155,157,166)">Less<sc-for list="{{legend}}" as="g" hint-placeholder-count="5"><span style="width: 12px; height: 12px; border-radius: 3px; background: {{g}}"></span></sc-for>More</div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; padding: 0 4px">
+    <div><div class="st" style="font-size: 12px">Total steps</div><div class="num" style="font-size: 17px; font-weight: 600">93,413</div></div>
+    <div><div class="st" style="font-size: 12px">Daily average</div><div class="num" style="font-size: 17px; font-weight: 600">9,341</div></div>
+    <div><div class="st" style="font-size: 12px">Active days</div><div class="num" style="font-size: 17px; font-weight: 600">10</div></div>
+    <div><div class="st" style="font-size: 12px">Goal streak</div><div class="num" style="font-size: 17px; font-weight: 600">2 days</div></div>
+    <div style="grid-column: span 2"><div class="st" style="font-size: 12px">Best day</div><div class="num" style="font-size: 17px; font-weight: 600">14,102 · Oct 4</div></div>
+  </div>
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px"><span class="label">Against your usual · 30d</span><span style="display: flex; gap: 16px; font-size: 13px; font-weight: 500; text-decoration: underline">Patterns <span>All trends</span></span></div>
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+    <sc-for list="{{tiles}}" as="t" hint-placeholder-count="4"><div class="card"><div style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{t.c}}"></span><span class="st" style="font-size: 12px">{{t.name}}</span></div><span class="num" style="font-size: 22px; font-weight: 600">{{t.v}}</span><svg aria-hidden="true" width="140" height="28" viewBox="0 0 140 28"><polyline points="{{t.pts}}" fill="none" stroke="{{t.c}}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline></svg><span class="st" style="font-size: 12px">{{t.d}}</span></div></sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1300}}'>
+var STEPS = { 1: 9812, 2: 6204, 3: 12450, 4: 14102, 5: 7880, 6: 4215, 7: 8930, 8: 10388, 9: 11020, 10: 8412 };
+var LV = ["rgb(28,31,38)", "#14532D", "#166534", "#22C55E", "#4ADE80"];
+function lvl(v) { return v >= 10000 ? 4 : v >= 7500 ? 3 : v >= 5000 ? 2 : 1; }
+function series(base, amp, seed) { var out = []; for (var i = 0; i < 30; i++) out.push(base + amp * Math.sin((i + seed) * 0.7) + amp * 0.5 * Math.sin((i + seed) * 1.9)); return out; }
+function pts(vals) { var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals); return vals.map(function (v, i) { return (i * 140 / 29).toFixed(1) + "," + (24 - (v - mn) / (mx - mn || 1) * 20).toFixed(1); }).join(" "); }
+class Component extends DCLogic {
+  renderVals() {
+    var cells = [], i;
+    for (i = 0; i < 3; i++) cells.push({ n: "", bg: "transparent", border: "0", fg: "transparent" });
+    for (i = 1; i <= 31; i++) { var v = STEPS[i]; cells.push(v ? { n: i, bg: LV[lvl(v)], border: i === 10 ? "2px solid rgb(245,245,244)" : "0", fg: lvl(v) >= 3 ? "rgb(10,11,14)" : "rgb(245,245,244)" } : { n: i, bg: "transparent", border: "1px solid rgb(36,39,47)", fg: "rgb(90,94,104)" }); }
+    cells.push({ n: "", bg: "transparent", border: "0", fg: "transparent" });
+    return {
+      cells: cells,
+      legend: LV,
+      tiles: [
+        { name: "Resting HR", v: "54 bpm", c: "#F87171", d: "2 below your usual", pts: pts(series(56, 2, 1)) },
+        { name: "Sleep", v: "7h 12m", c: "#A78BFA", d: "+14 min vs your usual", pts: pts(series(7, .6, 3)) },
+        { name: "HRV", v: "48 ms", c: "#60A5FA", d: "Steady", pts: pts(series(47, 4, 5)) },
+        { name: "Recovery", v: "68", c: "#4ADE80", d: "+4 vs your usual", pts: pts(series(64, 10, 2)) }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

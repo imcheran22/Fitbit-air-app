@@ -1,0 +1,5 @@
+New Fitness section on Trends: fitness age, VO2 max estimate, sleep debt, training load and resting calories, each from a published formula. Tap any card to see the formula, the inputs used and the source.
+Gender setting (optional) for the formulas that need it.
+No data screen now opens your watch app, and offers phone-only tracking apps if you have no wearable.
+Wording no longer assumes a Fitbit.
+Fixed the theme menu being unreadable on Soft in dark mode.

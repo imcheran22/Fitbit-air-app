@@ -1,0 +1,32 @@
+diff --git a/dist/runtime/native/api.js b/dist/runtime/native/api.js
+index 5ea02d81fd0954009978e04b12542e58a954af7e..186a07149ccd369b38a98721d12f06cb3e5aa286 100644
+--- a/dist/runtime/native/api.js
++++ b/dist/runtime/native/api.js
+@@ -34,6 +34,8 @@ const cssInterop = (baseComponent, mapping) => {
+     }
+     const name = baseComponent.displayName ?? baseComponent.name ?? "unknown";
+     component.displayName = `CssInterop.${name}`;
++    // pulse: the class props this wrapper reads (wrap-jsx renders the bare component when an element has none of them).
++    component.cssInteropSources = configs.map((config) => config.source);
+     exports.interopComponents.set(baseComponent, component);
+     return component;
+ };
+diff --git a/dist/runtime/wrap-jsx.js b/dist/runtime/wrap-jsx.js
+index ef8c26e328ce09400474d67851a2e730f4cb287a..a681a8ef6e9a01e1a83d7ee85ce059a4ec995f6f 100644
+--- a/dist/runtime/wrap-jsx.js
++++ b/dist/runtime/wrap-jsx.js
+@@ -15,7 +15,13 @@ function wrapJSX(jsx) {
+             delete props.cssInterop;
+         }
+         else {
+-            type = api_1.interopComponents.get(type) ?? type;
++            // pulse: an element with none of the wrapper's class props (`className` for a View) renders the bare
++            // component, skipping the per-element interop hooks. Keyed on the prop being present, not on its value, so
++            // `className={maybe}` keeps one component type across renders.
++            const interop = api_1.interopComponents.get(type);
++            if (interop && (!interop.cssInteropSources || (props && interop.cssInteropSources.some((source) => source in props)))) {
++                type = interop;
++            }
+         }
+         return jsx.call(jsx, type, props, ...rest);
+     };

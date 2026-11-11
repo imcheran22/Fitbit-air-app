@@ -1,0 +1,262 @@
+# fitbit-mcp
+
+<!-- mcp-name: io.github.partymola/fitbit-mcp -->
+
+[![CI](https://github.com/partymola/fitbit-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/partymola/fitbit-mcp/actions/workflows/ci.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/fitbit-mcp)](https://pypi.org/project/fitbit-mcp/)
+[![Glama MCP Server](https://glama.ai/mcp/servers/partymola/fitbit-mcp/badges/score.svg)](https://glama.ai/mcp/servers/partymola/fitbit-mcp)
+
+> **Retired. Use [google-health-mcp](https://github.com/partymola/google-health-mcp) instead.**
+>
+> The Fitbit Web API shuts down on [**30 September 2026**](https://support.google.com/googlehealth/thread/439040688). Fitbit has also stopped accepting new app registrations, so this package can no longer be set up from scratch: [step 2](#2-register-a-fitbit-app) below needs a registered personal app and there is no longer a way to create one. An existing install keeps working until the shutdown date.
+>
+> `google-health-mcp` covers the same measurements through the Google Health API, and adds ECG and irregular-rhythm notifications. It reads history from Google rather than from this package's cache, so there is nothing to migrate: install it and run one backfill.
+>
+> Not everything carries over. Fitbit's activity goals and its server-side lifetime totals have no equivalent there, and among the fields Google does not serve are heart rate zones, the active-minutes breakdown, VO2 max as a range rather than a single number, sleep efficiency, SpO2 high and low, and BMI. After 30 September this package can no longer fetch them either, so copy your `fitbit.db` before then if you want to keep them.
+
+MCP server for the Fitbit Web API with OAuth PKCE, local SQLite cache, and trend analysis.
+
+Designed for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and other [MCP](https://modelcontextprotocol.io/) clients. Syncs your Fitbit data to a local database for fast, offline queries - no API calls needed after the initial sync.
+
+## Features
+
+- **OAuth 2.0 PKCE** - Secure auth flow, no client secret needed
+- **Local SQLite cache** - Sync once, query instantly
+- **Incremental sync** - Only fetches new data since last sync
+- **MCP tools** - Sync, query (cached data types plus live-only devices/lifetime/goals), and trend analysis
+- **Live mode** - Bypass cache and query the API directly
+- **CLI** - Auth setup, sync, and JSON import from the command line
+- **Rate limit handling** - Activity and food log syncs sleep and retry on 429; other data types report `rate_limited` and resume on the next sync
+
+## Data types
+
+| Tool | Data |
+|------|------|
+| `fitbit_get_heart_rate` | Resting HR, HR zones |
+| `fitbit_get_activity` | Steps, calories, active minutes, distance |
+| `fitbit_get_exercises` | Exercise sessions (name, duration, HR, calories) |
+| `fitbit_get_sleep` | Duration, efficiency, sleep stages |
+| `fitbit_get_weight` | Weight, BMI, body fat % |
+| `fitbit_get_spo2` | Blood oxygen saturation (avg/min/max) |
+| `fitbit_get_hrv` | Heart rate variability (RMSSD) |
+| `fitbit_get_azm` | Active Zone Minutes with per-zone breakdown |
+| `fitbit_get_breathing_rate` | Nightly breaths per minute |
+| `fitbit_get_skin_temperature` | Nightly skin temperature variation (degrees C from baseline) |
+| `fitbit_get_core_temperature` | Manually-logged core (body) temperature readings (degrees C) |
+| `fitbit_get_cardio_fitness` | VO2 Max / Cardio Fitness Score |
+| `fitbit_get_food_log` | Daily food calories + water intake |
+| `fitbit_get_devices` | Paired devices, battery level, last sync (live) |
+| `fitbit_get_lifetime_stats` | All-time totals and personal best records (live) |
+| `fitbit_get_goals` | User-set daily/weekly activity goals (live) |
+| `fitbit_trends` | Aggregated averages (weekly/monthly/quarterly) |
+
+## Requirements
+
+- Python 3.13+ (tested on 3.13 and 3.14 in CI)
+- A [Fitbit developer account](https://dev.fitbit.com/apps) with a registered personal app
+
+## Setup
+
+### 1. Install
+
+```bash
+pip install fitbit-mcp
+```
+
+Or run it without installing:
+
+```bash
+uvx fitbit-mcp
+```
+
+For development from a clone:
+
+```bash
+pip install -e ".[dev]"
+```
+
+### 2. Register a Fitbit app
+
+1. Go to [dev.fitbit.com/apps](https://dev.fitbit.com/apps) and create a new app
+2. Set **OAuth 2.0 Application Type** to **Personal**
+3. Set **Redirect URL** to `http://localhost:8080`
+4. Note your **Client ID** (you won't need the client secret - PKCE doesn't use one)
+
+### 3. Authenticate
+
+```bash
+fitbit-mcp auth
+```
+
+This opens your browser for Fitbit login, exchanges the auth code via PKCE, and saves tokens locally.
+
+Tokens are stored in `~/.config/fitbit-mcp/fitbit_tokens.json` with 0600 permissions. Access tokens expire in 8 hours and are refreshed automatically. Refresh tokens expire after 90 days of inactivity.
+
+### 4. Register with Claude Code
+
+```bash
+claude mcp add -s user fitbit -- fitbit-mcp
+```
+
+### 5. First sync (optional)
+
+Query tools auto-sync on first use, so you can skip this step. To pre-populate
+the cache or sync a longer history, run:
+
+```bash
+fitbit-mcp sync --days 30
+```
+
+## CLI usage
+
+```
+fitbit-mcp              Start the MCP server (stdio transport)
+fitbit-mcp -V, --version  Print the installed package version
+fitbit-mcp auth         Interactive OAuth setup
+fitbit-mcp doctor       Check the setup and report what needs fixing
+fitbit-mcp sync         Sync data to local cache
+  --days N              Days of history for first sync (default: 30)
+  --types TYPE,...      Data types to sync (default: all)
+  --since YYYY-MM-DD    Backfill from this date, overriding the incremental
+                        resume-from-last-sync cursor and --days
+  --until YYYY-MM-DD    Inclusive end date for a --since backfill; together
+                        they re-fetch exactly that window (e.g. to repair a
+                        gap in the middle of the cache)
+fitbit-mcp import       Import existing JSON data files
+  --data-dir PATH       Directory containing JSON files
+```
+
+## MCP tool reference
+
+Query tools auto-sync on the first query of each day per data type. Use `live=True`
+to bypass the cache entirely and fetch directly from the API.
+
+All query tools accept these common parameters:
+
+- `start_date` - Start date as `YYYY-MM-DD`, `YYYY-MM`, or `30d` (relative). Default: last 30 days.
+- `end_date` - End date as `YYYY-MM-DD`. Default: today.
+- `live` - If true, fetch from Fitbit API instead of cache (bypasses auto-sync).
+
+`fitbit_get_exercises` also accepts:
+
+- `exercise_type` - Filter by activity name (case-insensitive substring match), e.g. `"cycling"`, `"walk"`, `"run"`. Default: all types.
+
+### fitbit_sync
+
+Syncs data from the Fitbit API to the local SQLite cache. Query tools call this automatically on first use of the day, so explicit calls are only needed for longer history or forced refresh.
+
+- `data_types` - What to sync: `all`, `heart_rate`, `activity`, `exercises`, `sleep`, `weight`, `spo2`, `hrv`, `azm`, `breathing_rate`, `skin_temperature`, `core_temperature`, `cardio_fitness`, `food_log`. Comma-separated. Default: `all`.
+- `days` - Days of history for first sync (default: 30). Subsequent syncs are incremental.
+- `since` - Optional `YYYY-MM-DD`. Backfill from this date regardless of what is already cached, overriding incremental resume and `days`.
+- `until` - Optional `YYYY-MM-DD` inclusive end date; requires `since`. Together they re-fetch and upsert exactly the `since`..`until` window - use to repair a gap in the middle of the cache without re-pulling everything up to today.
+
+### fitbit_trends
+
+Aggregated trend analysis from cached data.
+
+- `data_type` - What to analyse: `heart_rate`, `activity`, `exercises`, `sleep`, `weight`, `spo2`, `hrv`, `azm`, `breathing_rate`, `skin_temperature`, `core_temperature`, `cardio_fitness`, `food_log`. Default: `activity`.
+- `period` - Aggregation: `weekly`, `monthly`, `quarterly`. Default: `monthly`.
+- `start_date` - Start date. Default: last 12 months (365 days).
+- `end_date` - End date. Default: today.
+- `compare` - Compare two periods: `last_30d vs previous_30d`, `2026-03 vs 2026-02`, `2026-Q1 vs 2025-Q4`. When set, `period`/`start_date`/`end_date` are ignored.
+
+## OAuth scopes
+
+The following Fitbit API scopes are requested during setup:
+
+| Scope | Data accessed |
+|-------|--------------|
+| `activity` | Steps, calories, active minutes, distance, AZM, lifetime stats, goals |
+| `heartrate` | Resting HR, HR zones, HRV |
+| `sleep` | Sleep duration and stages |
+| `weight` | Weight, BMI, body fat % |
+| `oxygen_saturation` | SpO2 (blood oxygen) |
+| `profile` | User profile (user ID, display name) |
+| `respiratory_rate` | Nightly breathing rate |
+| `temperature` | Skin temperature variation and manually-logged core temperature |
+| `cardio_fitness` | VO2 Max / Cardio Fitness Score |
+| `nutrition` | Daily food calorie and water log |
+| `location` | GPS data on logged exercises |
+| `settings` | Paired devices (battery, last sync) |
+
+These are the scopes needed for all tools. If you only need a subset, edit `FITBIT_SCOPES` in `config.py` before setup. After upgrading from a smaller scope set, re-run `fitbit-mcp auth` to re-authorise.
+
+## Configuration
+
+Paths are overridable via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FITBIT_MCP_CONFIG_DIR` | `~/.config/fitbit-mcp/` | Directory for OAuth credentials |
+| `FITBIT_MCP_DB_PATH` | `~/.local/share/fitbit-mcp/fitbit.db` | SQLite database path |
+| `FITBIT_MCP_OFFLINE` | unset | If truthy (`1`, `true`, `yes`, `on`), run as a cache-only reader: no credentials required, no live API calls. See below. |
+
+### Offline / cache-only mode
+
+By default the server auto-syncs on demand, so query tools fetch fresh data
+without a cron job. Set `FITBIT_MCP_OFFLINE=1` to run as a pure cache reader
+instead:
+
+- No Fitbit credentials are required - the server never touches the token file.
+- No live API calls are made. Auto-sync is disabled, and `live=True`, the
+  live-only tools (`fitbit_get_devices`, `fitbit_get_lifetime_stats`,
+  `fitbit_get_goals`), and `fitbit_sync` return a clear "offline mode" message
+  instead of calling the API.
+- Query tools serve whatever is in the local SQLite cache. Responses are tagged
+  with `"offline_mode": true`.
+
+Typical uses:
+
+- **Multi-device setups** - one host runs `fitbit-mcp sync` (via cron/systemd)
+  against a shared database; other hosts set `FITBIT_MCP_OFFLINE=1` and point
+  `FITBIT_MCP_DB_PATH` at the same cache, and only read. This keeps the Fitbit
+  OAuth token (single-use, rotating) owned by exactly one host, avoiding refresh
+  collisions.
+- **CI and privacy** - run queries with no network access and no credentials.
+
+Keeping the cache fresh is then the syncing host's job. Unset
+`FITBIT_MCP_OFFLINE` to return to on-demand auto-sync.
+
+## Rate limits
+
+The Fitbit API allows 150 requests per hour. Activity and food log syncs sleep and retry automatically on a 429; the date-range data types instead mark that sync as `rate_limited` and pick up again on the next run. Be aware:
+
+- Activity and food log syncs use 1 API call per day (no date-range endpoint available)
+- A 30-day initial sync of either uses ~30 of your 150/hour quota
+- Heart rate, sleep, weight, SpO2, HRV, AZM, breathing rate, skin temperature, core temperature, and cardio fitness use date-range endpoints and are much more efficient
+
+Use `live=False` (the default) to query from cache and avoid API calls entirely.
+
+## Data safety
+
+This project includes a pre-commit hook (`scripts/check-no-data.sh`) that prevents accidentally committing:
+
+- Database files (`*.db`, `*.db-journal`, `*.db-wal`)
+- Config/credentials (`config/*.json`)
+- Large files (>100KB)
+
+Install it after cloning:
+
+```bash
+ln -sf ../../scripts/check-no-data.sh .git/hooks/pre-commit
+```
+
+## Importing existing data
+
+If you have existing Fitbit data as JSON files (e.g. from a previous export or script), you can bulk-import them:
+
+```bash
+fitbit-mcp import --data-dir /path/to/json/files/
+```
+
+Expected file names: `heart_rate.json`, `activity.json`, `exercises.json`, `sleep.json`, `weight.json`, `spo2.json`, `hrv.json`. See `src/fitbit_mcp/importer.py` for the expected JSON format. Import currently covers these seven types only; the newer types (AZM, breathing rate, skin/core temperature, cardio fitness, food log) are populated via `sync`, not import.
+
+## Contributing
+
+See [CONTRIBUTING.md](https://github.com/partymola/fitbit-mcp/blob/main/CONTRIBUTING.md) for development setup, the test workflow, and the pre-commit hook. Changes are tracked in [CHANGELOG.md](https://github.com/partymola/fitbit-mcp/blob/main/CHANGELOG.md).
+
+## License
+
+[GPL-3.0-or-later](https://github.com/partymola/fitbit-mcp/blob/main/LICENSE)

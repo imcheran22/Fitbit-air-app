@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pip sprite</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="display: block; line-height: 0">
+<svg width="{{px}}" height="{{px}}" shape-rendering="crispEdges" role="img" aria-label="{{label}}">
+<sc-if value="{{hasBg}}" hint-placeholder-val="{{ false }}"><rect x="0" y="0" width="{{px}}" height="{{px}}" fill="{{bgFill}}"></rect></sc-if>
+<sc-for list="{{bgLayers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for>
+<sc-for list="{{layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for>
+<sc-if value="{{grid}}" hint-placeholder-val="{{ false }}"><path d="{{gridD}}" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="1"></path></sc-if>
+<sc-for list="{{marks}}" as="m" hint-placeholder-count="0"><rect x="{{m.x}}" y="{{m.y}}" width="{{m.w}}" height="{{m.w}}" fill="none" stroke="{{m.color}}" stroke-width="2"></rect></sc-for>
+</svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"base":{"editor":"enum","options":["pip","tuft","blip"],"default":"pip","section":"Character"},"colorway":{"editor":"enum","options":["mint","sky","lilac","rose","lemon","peach","lime","snow","coral","slate","night","cocoa"],"default":"mint","section":"Character"},"mood":{"editor":"enum","options":["idle","happy","sleepy","thinking","proud","sad"],"default":"idle","section":"Character"},"cosmetics":{"editor":"text","default":"","section":"Character"},"bg":{"editor":"enum","options":["tint","none","night","meadow"],"default":"tint","section":"Character"},"frame":{"editor":"enum","options":["still","bob","blink","pulse"],"default":"still","section":"Character"},"scale":{"editor":"int","min":1,"max":20,"default":12,"section":"View"},"grid":{"editor":"boolean","default":false,"section":"View"},"anchors":{"editor":"boolean","default":false,"section":"View"},"silhouette":{"editor":"boolean","default":false,"section":"View"},"only":{"editor":null},"body":{"editor":null},"accent":{"editor":null},"$preview":{"width":288,"height":288}}'>
+var N = 24;
+var BASES = {
+  pip: { antenna: true, half: [
+    "............", "............", "............",
+    "...........a", "..........aa", "..........aa", "...........a",
+    "...........k", "...........k",
+    "........bbbb", "......bbbbbb", ".....bbbbbbb", "....bbbbbbbb", "....bbbbbbbb",
+    "...bbbbbbbbb", "...bbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb",
+    "...bbbbbbbbb", "...bbbbbbbbb", "....bbbbbbbb", ".....ff.....",
+    "............", "....zzzzzzzz"] },
+  tuft: { antenna: false, half: [
+    "............", "............", "............", "............", "............", "............",
+    "...a........", "...bb.......", "...bbb......", "...bbbbbbbbb",
+    "..bbbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb",
+    "..bbbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb",
+    "...bbbbbbbbb", ".....ff.....", "............", "...zzzzzzzzz"] },
+  blip: { antenna: false, half: [
+    "............", "............", "............", "............",
+    "............", "............", "............", "............",
+    "....bbbb....", "...bbbbbb...", "..bbbbbbbb..", "..bbbbbbbbbb", "..bbbbbbbbbb",
+    "..bbbbbbbbbb", "..bbbbbbbbbb", "..bbbbbbbbbb", "...bbbbbbbbb", "....bbbbbbbb",
+    ".....bbbbbbb", "......bbbbbb", "........bbbb", "..........bb",
+    "............", "......zzzzzz"] }
+};
+
+var COLORWAYS = [
+  { id: "mint", body: "#8EE3C8", accent: "#FB7185" },
+  { id: "sky", body: "#93C5FD", accent: "#FDE047" },
+  { id: "lilac", body: "#C4B5FD", accent: "#4ADE80" },
+  { id: "rose", body: "#F9A8D4", accent: "#A78BFA" },
+  { id: "lemon", body: "#FDE68A", accent: "#FB923C" },
+  { id: "peach", body: "#FDBA74", accent: "#38BDF8" },
+  { id: "lime", body: "#BEF264", accent: "#F472B6" },
+  { id: "snow", body: "#E2E8F0", accent: "#F87171" },
+  { id: "coral", body: "#FB7185", accent: "#FDE047" },
+  { id: "slate", body: "#64748B", accent: "#5EEAD4" },
+  { id: "night", body: "#4338CA", accent: "#FDE68A" },
+  { id: "cocoa", body: "#9A5B3B", accent: "#FDBA74" }
+];
+
+function hx2(n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? "0" + s : s; }
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function mix(a, b, k) { var x = rgb(a), y = rgb(b); return "#" + hx2(x[0] * (1 - k) + y[0] * k) + hx2(x[1] * (1 - k) + y[1] * k) + hx2(x[2] * (1 - k) + y[2] * k); }
+function darken(a, k) { var x = rgb(a); return "#" + hx2(x[0] * k) + hx2(x[1] * k) + hx2(x[2] * k); }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function ramp(body, accent) {
+  var shade = darken(body, 0.78);
+  var dark = lum(body) < 0.18;
+  var eye = dark ? mix(body, "#FFFFFF", 0.88) : darken(body, 0.2);
+  return {
+    body: body, light: mix(body, "#FFFFFF", 0.45), shade: shade, outline: darken(shade, 0.55),
+    accent: accent, accentDark: darken(accent, 0.7), accentLight: mix(accent, "#FFFFFF", 0.55),
+    eye: eye, shine: dark ? body : "#FFFFFF", mouth: eye, cheek: mix(body, "#F472B6", 0.5),
+    tear: "#7DD3FC", ink: eye
+  };
+}
+
+function eyes2(y, dx, shine) {
+  var c = [];
+  [7 + dx, 15 + dx].forEach(function (x) {
+    c.push([x, y, "eye"], [x + 1, y, "eye"], [x, y + 1, "eye"], [x + 1, y + 1, "eye"]);
+    if (shine) c.push([x + 1, y, "shine"]);
+  });
+  return c;
+}
+var CHEEKS = [[5, 15, "cheek"], [6, 15, "cheek"], [17, 15, "cheek"], [18, 15, "cheek"]];
+var SHUT = [[7, 14, "eye"], [8, 14, "eye"], [15, 14, "eye"], [16, 14, "eye"]];
+function glyph(x0, y0, rows, slot) {
+  var c = [];
+  rows.forEach(function (r, j) { for (var i = 0; i < r.length; i++) if (r[i] === "x") c.push([x0 + i, y0 + j, slot, "fx"]); });
+  return c;
+}
+var FACES = {
+  idle: eyes2(13, 0, true).concat([[11, 15, "mouth"], [12, 15, "mouth"]], CHEEKS),
+  blink: SHUT.concat([[11, 15, "mouth"], [12, 15, "mouth"]], CHEEKS),
+  happy: [[6, 14, "eye"], [7, 13, "eye"], [8, 13, "eye"], [9, 14, "eye"], [14, 14, "eye"], [15, 13, "eye"], [16, 13, "eye"], [17, 14, "eye"],
+    [10, 15, "mouth"], [11, 16, "mouth"], [12, 16, "mouth"], [13, 15, "mouth"]].concat(CHEEKS),
+  sleepy: SHUT.concat([[11, 16, "mouth"], [12, 16, "mouth"]], CHEEKS, glyph(18, 2, ["xxx", "..x", ".x.", "x..", "xxx"], "light")),
+  thinking: eyes2(12, 1, false).concat([[12, 15, "mouth"], [13, 15, "mouth"]], CHEEKS,
+    glyph(20, 6, ["xx", "xx"], "light"), glyph(19, 10, ["x"], "light")),
+  proud: [[7, 13, "shade"], [8, 13, "shade"], [15, 13, "shade"], [16, 13, "shade"]].concat(SHUT,
+    [[10, 15, "mouth"], [11, 15, "mouth"], [12, 15, "mouth"], [13, 14, "mouth"]], CHEEKS,
+    glyph(19, 7, [".x.", "xxx", ".x."], "accent")),
+  sad: eyes2(14, 0, false).concat([[7, 12, "outline"], [8, 11, "outline"], [16, 12, "outline"], [15, 11, "outline"],
+    [10, 17, "mouth"], [11, 16, "mouth"], [12, 16, "mouth"], [13, 17, "mouth"], [7, 16, "tear"], [7, 17, "tear"]])
+};
+
+var COSMETICS = {
+  "hat.beanie": { slot: "head", hideAntenna: true, at: [5, 5], rows: [
+    "......pp......", "....kkkkkk....", "..kkkkkkkkkk..", ".kkkkkkkkkkkk.", "kkkkkkkkkkkkkk", "rrrrrrrrrrrrrr", "rrrrrrrrrrrrrr"],
+    pal: { k: "@accent", r: "@accentDark", p: "#F8FAFC" } },
+  "hat.cap": { slot: "head", hideAntenna: true, at: [6, 7], rows: [
+    "...kkkkkk.......", ".kkkkwkkkk......", "kkkkkkkkkkkk....", "kkkkkkkkkkkbbbbb"],
+    pal: { k: "#60A5FA", w: "#F8FAFC", b: "#2563EB" } },
+  "hat.crown": { slot: "head", hideAntenna: true, at: [7, 4], rows: [
+    "g...gg...g", "gg..gg..gg", "gggggggggg", "ggjgbbgjgg", "dddddddddd"],
+    pal: { g: "#FACC15", d: "#CA8A04", j: "#EF4444", b: "#60A5FA" } },
+  "hat.party": { slot: "head", hideAntenna: true, at: [9, 2], rows: [
+    "..pp..", "..kk..", "..ss..", ".kkkk.", ".kkkk.", "ssssss", "kkkkkk"],
+    pal: { k: "#A78BFA", s: "#FDE047", p: "#F472B6" } },
+  "head.sprout": { slot: "head", hideAntenna: true, at: [7, 3], rows: [
+    "......LLl.", "....ssLlll", "LLl.ss....", ".lllss....", "....ss....", "....ss...."],
+    pal: { L: "#86EFAC", l: "#22C55E", s: "#15803D" } },
+  "head.headphones": { slot: "head", hideAntenna: false, at: [2, 8], rows: [
+    "......kkkkkkkk......", "....kk........kk....", "...k............k...", "..k..............k..",
+    ".ccc............ccc.", "cccd............dccc", "cccd............dccc", ".ccc............ccc."],
+    pal: { k: "#334155", c: "@accent", d: "@accentDark" } },
+  "head.sweatband": { slot: "head", hideAntenna: false, at: [5, 10], rows: [
+    ".wwwwwwwwwwwwtt..", "ssssssssssssss.tt"],
+    pal: { w: "#F8FAFC", s: "@accent", t: "#F8FAFC" } },
+  "head.halo": { slot: "head", hideAntenna: true, at: [7, 4], rows: [
+    "..yyyyyy..", "yy......yy", "..yyyyyy.."],
+    pal: { y: "#FDE68A" } },
+  "glasses.round": { slot: "face", at: [4, 12], rows: [
+    "...gg......gg...", "ggg..gggggg..ggg", "..g..g....g..g..", "...gg......gg..."],
+    pal: { g: "@accentDark" } },
+  "glasses.shades": { slot: "face", at: [5, 13], rows: [
+    "kklkkkkkkklkkk", ".kkkk....kkkk."],
+    pal: { k: "#0B0B10", l: "#64748B" } },
+  "neck.scarf": { slot: "neck", at: [3, 17], rows: [
+    "sssdsssdsssdsssdss", "dddddddddddddddddd", "............ss....", "............ds....", "............dd...."],
+    pal: { s: "@accent", d: "@accentDark" } },
+  "neck.medal": { slot: "neck", at: [9, 16], rows: [
+    "r....r", ".r..r.", "..gg..", ".gwgg.", "..gg.."],
+    pal: { r: "@accent", g: "#FACC15", w: "#FEF9C3" } },
+  "neck.bowtie": { slot: "neck", at: [9, 16], rows: [
+    "kk..kk", "kkddkk", "kk..kk"],
+    pal: { k: "#EF4444", d: "#991B1B" } },
+  "held.dumbbell": { slot: "hand", at: [21, 13], rows: [
+    "ppp", "ppp", ".b.", ".b.", ".b.", ".b.", "ppp", "ppp"],
+    pal: { p: "#64748B", b: "#CBD5E1" } },
+  "held.bottle": { slot: "hand", at: [0, 12], rows: [
+    "cc", "ww", "ww", "bb", "bb", "bb", "bb"],
+    pal: { c: "@accent", w: "#E0F2FE", b: "#38BDF8" } },
+  "back.cape": { slot: "back", back: true, at: [0, 11], rows: [
+    "....cccccccccccccccc....", "...cccccccccccccccccc...", "...cccccccccccccccccc...",
+    "..cccccccccccccccccccc..", "..cccccccccccccccccccc..", ".cccccccccccccccccccccc.",
+    ".cccccccccccccccccccccc.", "cccccccccccccccccccccccc", "cccccccccccccccccccccccc", "dddddddddddddddddddddddd"],
+    pal: { c: "@accent", d: "@accentDark" } }
+};
+var SLOT_ORDER = ["head", "face", "neck", "hand"];
+
+var BGS = {
+  night: { fill: "#12132A", cells: [[2, 2, "#FDE68A"], [20, 1, "#C7D2FE"], [5, 6, "#C7D2FE"], [22, 9, "#FDE68A"], [1, 12, "#C7D2FE"], [17, 4, "#C7D2FE"]] },
+  meadow: { fill: "#0F2018", rows: { 21: "#166534", 22: "#166534", 23: "#14532D" }, cells: [[1, 20, "#22C55E"], [3, 20, "#22C55E"], [20, 20, "#22C55E"], [22, 20, "#22C55E"], [2, 19, "#4ADE80"], [21, 19, "#4ADE80"]] },
+  tint: { fill: "@tint" }
+};
+
+var ANCHORS = [
+  { x: 12, y: 9, color: "#FDE047" },
+  { x: 12, y: 14, color: "#38BDF8" },
+  { x: 12, y: 17, color: "#F472B6" },
+  { x: 2.5, y: 16.5, color: "#4ADE80" },
+  { x: 21.5, y: 16.5, color: "#4ADE80" }
+];
+
+function listOf(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  return String(v).split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+}
+function truthy(v) { return v === true || v === "true" || v === 1 || v === "1"; }
+
+function compose(p) {
+  var baseId = BASES[p.base] ? p.base : "pip";
+  var base = BASES[baseId];
+  var cw = COLORWAYS.filter(function (c) { return c.id === p.colorway; })[0] || COLORWAYS[0];
+  var pal = ramp(p.body || cw.body, p.accent || cw.accent);
+  var frame = p.frame || "still";
+  var mood = FACES[p.mood] ? p.mood : "idle";
+  if (frame === "blink") mood = "blink";
+  var seen = {};
+  var cos = listOf(p.cosmetics).filter(function (id) {
+    var d = COSMETICS[id];
+    if (!d || seen[d.slot]) return false;
+    seen[d.slot] = true; return true;
+  });
+  var only = p.only && COSMETICS[p.only] ? p.only : null;
+  if (only) cos = [only];
+  var hide = base.antenna && cos.some(function (id) { return COSMETICS[id].hideAntenna; });
+  var cells = [];
+  for (var i = 0; i < N * N; i++) cells.push(null);
+  function put(x, y, c, k) { if (x < 0 || y < 0 || x >= N || y >= N || !c) return; cells[y * N + x] = { c: c, k: k }; }
+  function res(v) { return v.charAt(0) === "@" ? pal[v.slice(1)] : v; }
+  function L(x, y) { if (x < 0 || y < 0 || x >= N || y >= N) return "."; var r = base.half[y]; return x < 12 ? r[x] : r[23 - x]; }
+  function isBody(x, y) { var l = L(x, y); return l === "b" || l === "f"; }
+  function drawCos(id) {
+    var d = COSMETICS[id];
+    d.rows.forEach(function (r, j) { for (var i = 0; i < r.length; i++) { var ch = r[i]; if (ch !== ".") put(d.at[0] + i, d.at[1] + j, res(d.pal[ch]), "cos"); } });
+  }
+  if (only) {
+    for (var y0 = 0; y0 < N; y0++) for (var x0 = 0; x0 < N; x0++) {
+      var l0 = L(x0, y0);
+      if (isBody(x0, y0) || (base.antenna && !hide && (l0 === "a" || l0 === "k"))) put(x0, y0, "rgba(255,255,255,0.08)", "ghost");
+    }
+    drawCos(only);
+  } else {
+    cos.forEach(function (id) { if (COSMETICS[id].back) drawCos(id); });
+    for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+      var l = L(x, y);
+      if (l === "b") {
+        var c = !isBody(x, y - 1) ? pal.light : (!isBody(x, y + 1) || !isBody(x, y + 2)) ? pal.shade : pal.body;
+        put(x, y, c, "body");
+      } else if (l === "f") put(x, y, pal.shade, "body");
+      else if (l === "a") { if (!hide) put(x, y, frame === "pulse" ? pal.accentLight : pal.accent, "body"); }
+      else if (l === "k") { if (!hide) put(x, y, pal.outline, "stalk"); }
+      else if (l === "z") { if (!cells[y * N + x]) put(x, y, "rgba(0,0,0,0.45)", "shadow"); }
+    }
+    FACES[mood].forEach(function (f) { put(f[0], f[1], pal[f[2]], f[3] || "face"); });
+    SLOT_ORDER.forEach(function (slot) { cos.forEach(function (id) { var d = COSMETICS[id]; if (!d.back && d.slot === slot) drawCos(id); }); });
+  }
+  if (frame === "bob") {
+    var moved = cells.map(function (c) { return c && c.k === "shadow" ? c : null; });
+    for (var j = 1; j < N; j++) for (var i2 = 0; i2 < N; i2++) { var c2 = cells[j * N + i2]; if (c2 && c2.k !== "shadow") moved[(j - 1) * N + i2] = c2; }
+    cells = moved;
+  }
+  var solid = function (x, y) { if (x < 0 || y < 0 || x >= N || y >= N) return false; var c = cells[y * N + x]; return !!c && (c.k === "body" || c.k === "cos" || c.k === "face"); };
+  var outs = [];
+  for (var yy = 0; yy < N; yy++) for (var xx = 0; xx < N; xx++) {
+    var cc = cells[yy * N + xx];
+    if (cc && cc.k !== "shadow" && cc.k !== "ghost") continue;
+    if (solid(xx - 1, yy) || solid(xx + 1, yy) || solid(xx, yy - 1) || solid(xx, yy + 1)) outs.push(yy * N + xx);
+  }
+  outs.forEach(function (k) { cells[k] = { c: pal.outline, k: "outline" }; });
+  if (truthy(p.silhouette)) cells = cells.map(function (c) { return c && c.k !== "shadow" && c.k !== "ghost" && c.k !== "fx" ? { c: "#E7E9EE", k: c.k } : c; });
+  return { cells: cells, pal: pal, baseId: baseId };
+}
+
+function toLayers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] && cells[y * N + x + n].c === c.c) n++;
+      if (!by[c.c]) { by[c.c] = ""; order.push(c.c); }
+      by[c.c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+
+function bgLayers(bgId, pal, s) {
+  var bg = BGS[bgId];
+  if (!bg) return { fill: null, layers: [] };
+  var fill = bg.fill === "@tint" ? mix("#14161B", pal.accent, 0.16) : bg.fill;
+  var cells = [];
+  for (var i = 0; i < N * N; i++) cells.push(null);
+  if (bg.rows) Object.keys(bg.rows).forEach(function (r) { for (var x = 0; x < N; x++) cells[Number(r) * N + x] = { c: bg.rows[r] }; });
+  (bg.cells || []).forEach(function (c) { cells[c[1] * N + c[0]] = { c: c[2] }; });
+  return { fill: fill, layers: toLayers(cells, s) };
+}
+
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props;
+    var s = parseInt(p.scale != null ? p.scale : 12, 10);
+    if (!(s >= 1)) s = 12;
+    var r = compose(p);
+    var px = N * s;
+    var bg = bgLayers(p.bg != null ? p.bg : "tint", r.pal, s);
+    var grid = truthy(p.grid);
+    var gd = "";
+    if (grid) for (var i = 1; i < N; i++) gd += "M" + (i * s + 0.5) + " 0V" + px + "M0 " + (i * s + 0.5) + "H" + px;
+    var marks = truthy(p.anchors) ? ANCHORS.map(function (a) {
+      var w = Math.max(6, Math.round(s * 1.1));
+      return { x: Math.round(a.x * s - w / 2), y: Math.round(a.y * s - w / 2), w: w, color: a.color };
+    }) : [];
+    var label = r.baseId + ", " + (p.colorway || "mint") + ", " + (p.mood || "idle") + (p.cosmetics ? ", wearing " + p.cosmetics : "");
+    return {
+      px: px, hasBg: !!bg.fill, bgFill: bg.fill || "none", bgLayers: bg.layers,
+      layers: toLayers(r.cells, s), grid: grid, gridD: gd, marks: marks, label: label
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -33,7 +33,7 @@ Rules:
 1. `docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md` — mission, invariants, module manifest, milestones, done gate
 2. `README.md`, `docs/ARCHITECTURE.md`, `docs/FORMULAS.md` — what exists (Phases 1-2)
 3. `docs/design/DESIGN_SYSTEM.md` — UI/UX source of truth (translated from Pulse Mobile 0.5.0)
-4. `docs/REFERENCES.md` — the third-party codebases in `../reference/` and how (not) to use them
+4. `docs/REFERENCES.md` — the third-party codebases in `reference/` and how (not) to use them
 5. `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/EVIDENCE.md`, `docs/OPEN_POINTS.md` — once they exist,
    these are the cold-resume state
 
@@ -42,7 +42,7 @@ Rules:
 fitbit air/
 ├── Fitbit-air-app/        ← this git repo (the only place code is written)
 │   └── design-reference/pulse-mobile-0.5.0/  ← the Pulse UI/UX reference, committed (read-only, not built)
-├── reference/             ← other third-party repos, local only, NOT in git (absent in cloud sessions)
+├── reference/             ← friends' reference repos, committed, read-only, not built
 │   ├── design/            ← pulse-mobile APK and pulse-mobile-main snapshot
 │   ├── android-kotlin/    ← health-samples (official Health Connect samples), fitdash, unstrap, ...
 │   ├── fitbit-google-health/ ← Google Health API / Fitbit API clients and tools
@@ -67,7 +67,7 @@ any rule in them (commit identities, package managers, "Health Connect only", te
 
 ## Build environment (this Windows machine)
 - Cloud sessions: no Windows paths; use the container's JDK 17/21 and Android SDK, and run
-  `./gradlew :core:domain:test :core:analytics:test testDebugUnitTest :app:assembleDebug`. `../reference/` is not available there.
+  `./gradlew :core:domain:test :core:analytics:test testDebugUnitTest :app:assembleDebug`. `reference/` is not available there.
 - JDK: `C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot` (matches CI's JDK 21). Android Studio's
   bundled JBR (`C:\Program Files\Android\Android Studio\jbr`) also works. `java` is **not** on PATH.
 - Android SDK: `C:\Users\kutti\AppData\Local\Android\Sdk` (platforms 34-36, build-tools 36.1.0, emulator and

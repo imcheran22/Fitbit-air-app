@@ -1,0 +1,6 @@
+v1.5.3 — More free exports and reliable Health Connect
+
+• Increases free manual exports from 3 to 10.
+• Fixes Health Connect setup and permissions on Android 13 and newer.
+• Improves permission, scheduling, and export error handling.
+• Adds clearer guidance across all supported languages.

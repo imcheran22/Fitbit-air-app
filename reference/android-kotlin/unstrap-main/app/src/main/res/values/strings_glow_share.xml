@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sharing a workout (ui/glow/ShareCards.kt, ShareScreen.kt): the story cards drawn into a 9 by 16 picture, and the Share
+  screen around them. A card's text is drawn into the picture, so it has one line of room unless a comment says otherwise.
+  unstrap is the app's name, written in lowercase even at the start of a sentence and stands on every card. Keep it as it is.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Two parts of one chip joined, as "Weekly goal, 3 of 4". -->
+    <string name="glow_share_join"><xliff:g id="first" example="141 avg bpm">%1$s</xliff:g>, <xliff:g id="second" example="320 kcal">%2$s</xliff:g></string>
+
+    <!-- A card's figure label: the active time. One word, a third of the card's width. -->
+    <string name="glow_share_stat_time">Time</string>
+    <!-- A run card's figure label: minutes a kilometre. One word, a third of the card's width. -->
+    <string name="glow_share_stat_pace">Pace</string>
+    <!-- A card's figure label: average heart rate. A third of the card's width. -->
+    <string name="glow_share_stat_avg_bpm">Avg bpm</string>
+    <!-- A card's figure label: kcal burned above resting. A third of the card's width. -->
+    <string name="glow_share_stat_active_kcal">Active kcal</string>
+    <!-- A card's figure label: the highest heart rate. A third of the card's width. -->
+    <string name="glow_share_stat_peak_bpm">Peak bpm</string>
+    <!-- A strength card's figure label: the sets done. One word, a third of the card's width. -->
+    <string name="glow_share_stat_sets">Sets</string>
+    <!-- An intervals card's figure label: the time spent in the work phases. One word, a third of the card's width. -->
+    <string name="glow_share_stat_work">Work</string>
+    <!-- A mind and body card's figure label: the heart rate as the session began. Half the card's width. -->
+    <string name="glow_share_stat_bpm_start">Bpm at start</string>
+    <!-- A mind and body card's figure label: the heart rate as the session ended. Half the card's width. -->
+    <string name="glow_share_stat_bpm_end">Bpm at end</string>
+    <!-- A game card's figure label: the training load. One word, a third of the card's width. -->
+    <string name="glow_share_stat_load">Load</string>
+    <!-- Unit after a pace figure: a kilometre. Very short. -->
+    <string name="glow_share_unit_per_km">/km</string>
+
+    <!-- Unit beside the kilograms a strength card says were lifted. Very short. -->
+    <string name="glow_share_unit_kg">kg</string>
+    <!-- A number of sets, on an exercise's row. -->
+    <plurals name="glow_share_sets">
+        <item quantity="one"><xliff:g id="count" example="1">%d</xliff:g> set</item>
+        <item quantity="other"><xliff:g id="count" example="4">%d</xliff:g> sets</item>
+    </plurals>
+    <!-- An exercise's row when every set had the same reps: sets times reps, as "5 × 10". -->
+    <string name="glow_share_row_reps"><xliff:g id="sets" example="5">%1$d</xliff:g> × <xliff:g id="reps" example="10">%2$d</xliff:g></string>
+    <!-- An exercise's row with its heaviest weight. The first part is "5 × 10" or "4 sets", the weight "65". -->
+    <string name="glow_share_row_top"><xliff:g id="sets" example="5 × 10">%1$s</xliff:g>, top <xliff:g id="kg" example="65">%2$s</xliff:g> kg</string>
+
+    <!-- Unit beside the reps done on an intervals card, without the plan. Short. -->
+    <string name="glow_share_unit_reps">reps</string>
+    <!-- Unit beside the rounds done on an intervals card, without the plan. Short. -->
+    <string name="glow_share_unit_rounds">rounds</string>
+    <!-- Unit beside the reps done on an intervals card: how many were planned, as "6 of 8 reps". -->
+    <plurals name="glow_share_unit_of_reps">
+        <item quantity="one">of <xliff:g id="planned" example="8">%1$d</xliff:g> rep</item>
+        <item quantity="other">of <xliff:g id="planned" example="8">%1$d</xliff:g> reps</item>
+    </plurals>
+    <!-- Unit beside the rounds done on an intervals card: how many were planned, as "6 of 8 rounds". -->
+    <plurals name="glow_share_unit_of_rounds">
+        <item quantity="one">of <xliff:g id="planned" example="8">%1$d</xliff:g> round</item>
+        <item quantity="other">of <xliff:g id="planned" example="8">%1$d</xliff:g> rounds</item>
+    </plurals>
+    <!-- The week card's title over the count of workouts. -->
+    <string name="glow_share_my_week">My week</string>
+
+    <!-- The Save button once the picture is in the gallery. Half the width. -->
+    <string name="glow_share_saved">Saved</string>
+    <!-- The Save button when the picture couldn't be saved. Half the width. -->
+    <string name="glow_share_not_saved">Not saved</string>
+    <!-- Spoken name of the small X on the card that takes the photo off, for screen readers. -->
+    <string name="glow_share_remove_photo">Remove the photo</string>
+    <!-- The pill under the card when it has a photo. -->
+    <string name="glow_share_change_photo">Change photo</string>
+    <!-- The pill under the card when it has no photo. -->
+    <string name="glow_share_add_photo">Add a photo</string>
+    <!-- Label before the choice of how a run's route shows on the card. One word, narrow. -->
+    <string name="glow_share_route">Route</string>
+    <!-- A choice for the route: not on the card. One short word. -->
+    <string name="glow_share_route_off">Off</string>
+    <!-- A choice for the route: a line on the card. One short word. -->
+    <string name="glow_share_route_line">Line</string>
+    <!-- A switch that cuts the route's first and last 200 m, so home doesn't show. -->
+    <string name="glow_share_hide_ends">Hide start and end</string>
+</resources>

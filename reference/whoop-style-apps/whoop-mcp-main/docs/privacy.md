@@ -1,0 +1,51 @@
+# Privacy Model
+
+This project handles sensitive personal health data. The default posture is to expose structured fields, not raw WHOOP payloads.
+
+## Privacy modes
+
+Set globally:
+
+```bash
+export WHOOP_PRIVACY_MODE="structured"
+```
+
+Or per supported tool call with `privacy_mode`.
+
+Modes:
+
+- `summary`: minimum fields needed for basic interpretation.
+- `structured`: normalized fields useful for agents and analytics. This is the default.
+- `raw`: full WHOOP API payload for a supported endpoint. Use only when you explicitly need upstream details.
+
+`raw` does not mean raw device telemetry. Continuous/high-frequency heart-rate samples and other raw sensor streams are not available through the official WHOOP API, so this MCP does not expose them. WHOOP devices can broadcast heart rate over BLE, but this project currently stays inside the official OAuth API boundary and does not implement Bluetooth collection.
+
+## Token storage
+
+Setup config is stored locally at:
+
+```text
+~/.whoop-mcp/config.json
+```
+
+It contains the WHOOP OAuth client values used by the local MCP server and is written with `0600` permissions.
+
+OAuth tokens are stored locally at `WHOOP_TOKEN_PATH`, defaulting to:
+
+```text
+~/.whoop-mcp/tokens.json
+```
+
+The token file is written with `0600` permissions. Do not place token files in public repos, shared folders or logs.
+
+## SQLite cache
+
+If enabled with `WHOOP_CACHE=sqlite`, API responses are cached locally in SQLite. This improves resilience and reduces repeated reads, but it also stores health data locally. Keep the cache path private.
+
+## Revoke access
+
+Use `whoop_revoke_access` to revoke the WHOOP OAuth grant and delete the local token file.
+
+## Audit and redaction
+
+Use `whoop_privacy_audit` to inspect the local privacy posture without exposing secret values. Tool responses use structured MCP output and redact common secret-bearing keys such as OAuth access tokens, refresh tokens, client secrets and authorization headers.

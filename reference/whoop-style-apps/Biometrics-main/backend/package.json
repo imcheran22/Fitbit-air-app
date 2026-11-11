@@ -1,0 +1,46 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "directories": {
+    "test": "tests"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "eval:coach": "ts-node --project tsconfig.evals.json evals/coach/run.ts",
+    "eval:coach:local": "ts-node --project tsconfig.evals.json evals/coach/localModel.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.130.0",
+    "@better-auth/expo": "1.7.5",
+    "@prisma/client": "^6.19.3",
+    "better-auth": "1.7.5",
+    "bullmq": "^6.3.6",
+    "express": "^5.2.1",
+    "google-auth-library": "^10.9.1",
+    "ioredis": "^6.0.0",
+    "jose": "6.2.12",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.20.3",
+    "@types/node-fetch": "^2.6.13",
+    "@types/supertest": "^7.2.1",
+    "jest": "^30.5.1",
+    "nock": "^14.0.17",
+    "prisma": "^6.19.3",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

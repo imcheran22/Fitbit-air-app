@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Start widget's live timer while a workout records (widgets spec 3.5): a Chronometer ticks on its own, so the
+  widget needs no updates for it. Its size is set in sp from the widget, so it scales with the system font. Light
+  system sans in white, tabular figures so the digits don't shift as they tick, one line.
+-->
+<Chronometer xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_chronometer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:fontFamily="sans-serif-light"
+    android:fontFeatureSettings="tnum"
+    android:includeFontPadding="false"
+    android:maxLines="1"
+    android:singleLine="true"
+    android:textColor="#FFFFFFFF"
+    android:textSize="48sp" />

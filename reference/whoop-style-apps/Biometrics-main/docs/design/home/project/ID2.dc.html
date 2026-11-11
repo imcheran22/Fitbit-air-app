@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile ID-2 · Passport page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@500&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244);text-decoration:none}
+.ol{border-color:rgb(44,47,55);background:rgba(44,47,55,.3)}
+.cap{font-family:'Silkscreen',monospace;font-size:13px;letter-spacing:1px;color:rgb(155,157,166)}
+.phone{position:relative;width:390px;height:844px;flex:none;border-radius:28px;border:1px solid rgb(30,33,40);box-sizing:border-box;overflow:hidden;background:rgb(10,11,14);padding:54px 16px 32px;display:flex;flex-direction:column;gap:14px}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166)}
+.list{border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:8px 16px;box-sizing:border-box;border-top:1px solid rgb(30,33,40);text-decoration:none;color:rgb(245,245,244)}
+.row:first-child{border-top:0}
+.t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.st{font-size:13px;color:rgb(155,157,166)}
+.chev{color:rgb(90,94,104);font-size:16px}
+.pp{width:358px;border-radius:14px;background:rgb(22,24,30);border:1px solid rgb(40,43,52);box-sizing:border-box;overflow:hidden;flex:none}
+.f{display:flex;flex-direction:column;gap:0}
+.f span:first-child{font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;color:rgb(140,144,154)}
+.f span:last-child{font-size:14px;font-weight:600}
+.stamp{width:58px;height:58px;box-sizing:border-box;border:2px dashed currentColor;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:none}
+.stamp i{font-style:normal;font-family:'Silkscreen',monospace;font-size:8px;letter-spacing:.5px}
+.mrz{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:1.5px;color:rgb(160,164,174);line-height:16px;white-space:pre}
+</style>
+</helmet>
+<div style="width: 860px; height: 920px; box-sizing: border-box; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 18px 20px 0; display: flex; gap: 40px">
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">CORAL · DEFAULT</span>
+  <div class="phone">
+    <div style="display: flex; align-items: center; justify-content: space-between"><h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 24px; letter-spacing: 1px">PROFILE</h1><a href="#" class="b ol" aria-label="Watch your weekly recap" style="height: 36px; padding: 0 10px; font-size: 12px; color: rgb(199,210,254)"><span style="width: 6px; height: 6px; background: rgb(199,210,254)"></span>New recap</a></div>
+    <div class="pp">
+      <div style="height: 28px; background: {{a.hex}}; display: flex; align-items: center; justify-content: space-between; padding: 0 12px"><span class="label" style="color: rgb(10,11,14)">Biometrics · passport</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: rgb(10,11,14)">NO. KIP-7Q4M</span></div>
+      <div style="padding: 14px; display: flex; gap: 14px">
+        <a href="Picker.dc.html" aria-label="Change KIP colour" style="position: relative; width: 108px; height: 128px; flex: none; overflow: hidden; border: 2px solid {{a.hex}}; box-sizing: border-box">
+          <svg aria-hidden="true" width="104" height="124" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{a.bg}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg aria-hidden="true" width="80" height="80" shape-rendering="crispEdges" style="position: absolute; left: 12px; top: 35px"><sc-for list="{{a.kip}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+        </a>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0">
+          <div class="f"><span>NAME</span><span>Tushar</span></div>
+          <div class="f"><span>HANDLE</span><span>@tushar</span></div>
+          <div class="f"><span>HOME</span><span>Europe/London</span></div>
+          <div class="f"><span>JOINED</span><span>14 MAR 2026</span></div>
+        </div>
+      </div>
+      <div style="padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; align-items: center; justify-content: space-between"><span class="label" style="font-size: 9px">Stamps · badges earned</span><a href="#" class="b ol" style="height: 32px; padding: 0 12px; font-size: 13px">Edit</a></div>
+        <div style="display: flex; gap: 8px; align-items: flex-start">
+          <sc-for list="{{stamps}}" as="s" hint-placeholder-count="5"><a href="#" class="stamp" aria-label="{{s.name}}" style="color: {{s.c}}; margin-top: {{s.mt}}; text-decoration: none"><svg aria-hidden="true" width="30" height="27" shape-rendering="crispEdges"><sc-for list="{{s.px}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg><i>{{s.short}}</i></a></sc-for>
+        </div>
+        <div class="mrz" style="margin-top: 6px; border-top: 1px dashed rgb(44,47,55); padding-top: 8px">P&lt;KIP&lt;&lt;TUSHAR&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+KIP7Q4M&lt;&lt;260314&lt;&lt;EUROPE&lt;LONDON&lt;&lt;</div>
+      </div>
+    </div>
+    <div class="list">
+      <a href="#" class="row"><span class="t"><span style="font-size: 15px">Health data</span><span class="st">Google Health · synced 12 min ago</span></span><span class="chev">›</span></a>
+      <a href="#" class="row"><span class="t"><span style="font-size: 15px">Buddies &amp; chats</span><span class="st">Sharing 3 of 5</span></span><span class="chev">›</span></a>
+      <a href="#" class="row"><span class="t"><span style="font-size: 15px">Notifications · coach · account</span><span class="st">and the rest of S1’s groups</span></span><span class="chev">›</span></a>
+    </div>
+  </div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">SAME PAGE · LILAC</span>
+    <div class="pp">
+      <div style="height: 28px; background: {{b.hex}}; display: flex; align-items: center; justify-content: space-between; padding: 0 12px"><span class="label" style="color: rgb(10,11,14)">Biometrics · passport</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: rgb(10,11,14)">NO. KIP-7Q4M</span></div>
+      <div style="padding: 14px; display: flex; gap: 14px">
+        <a href="Picker.dc.html" aria-label="Change KIP colour" style="position: relative; width: 108px; height: 128px; flex: none; overflow: hidden; border: 2px solid {{b.hex}}; box-sizing: border-box">
+          <svg aria-hidden="true" width="104" height="124" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{b.bg}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg aria-hidden="true" width="80" height="80" shape-rendering="crispEdges" style="position: absolute; left: 12px; top: 35px"><sc-for list="{{b.kip}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+        </a>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0">
+          <div class="f"><span>NAME</span><span>Tushar</span></div>
+          <div class="f"><span>HANDLE</span><span>@tushar</span></div>
+          <div class="f"><span>HOME</span><span>Europe/London</span></div>
+          <div class="f"><span>JOINED</span><span>14 MAR 2026</span></div>
+        </div>
+      </div>
+      <div style="padding: 0 14px 14px; display: flex; justify-content: flex-end"><a href="#" class="b ol" style="height: 32px; padding: 0 12px; font-size: 13px">Edit</a></div>
+    </div>
+    <div class="st" style="max-width: 358px; line-height: 19px">Tap the photo to change KIP’s colour; the header band and frame follow it. Badge stamps open the badge. The bottom lines are decoration built from the member code, join date and home.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":920}}'>
+var KN = 16, KE = "................";
+var KBASE = [KE, KE, KE, KE, KE, KE, "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", ".....b....s.....", ".....b....s.....", "...zzzzzzzzzz..."];
+function rgbOf(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function hx(v) { var s = Math.max(0, Math.min(255, Math.round(v))).toString(16); return s.length < 2 ? "0" + s : s; }
+function dark(h, k) { var x = rgbOf(h); return "#" + hx(x[0] * k) + hx(x[1] * k) + hx(x[2] * k); }
+function lum(h) { var c = rgbOf(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function pxLayers(rects, u) { var by = {}, order = []; rects.forEach(function (r) { var f = r[4]; if (!by[f]) { by[f] = ""; order.push(f); } by[f] += "M" + r[0] * u + " " + r[1] * u + "h" + r[2] * u + "v" + r[3] * u + "h-" + r[2] * u + "z"; }); return order.map(function (f) { return { fill: f, d: by[f] }; }); }
+function kip(body, s) {
+  var p = { b: body, s: dark(body, 0.78), e: lum(body) > 0.2 ? "#14161B" : "#F5F5F4", z: "rgba(0,0,0,0.35)" }, r = [], x, y;
+  for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) { var c = KBASE[y][x]; if (c !== ".") r.push([x, y, 1, 1, p[c]]); }
+  r.push([6, 8, 1, 1, p.e], [9, 8, 1, 1, p.e]);
+  return pxLayers(r, s);
+}
+function backdrop() {
+  var W = 52, H = 62, gy = 55, r = [], pal = ["#2A5694", "#3264A3", "#3D72B0", "#4E83BD"], bh = Math.floor(gy / 4), i, x;
+  for (i = 0; i < 4; i++) { r.push([0, i * bh, W, i === 3 ? gy - 3 * bh : bh, pal[i]]); if (i > 0) for (x = i % 2; x < W; x += 2) r.push([x, i * bh, 1, 1, pal[i - 1]]); }
+  r.push([39, 4, 6, 6, "#FBBF24"], [41, 8, 7, 3, "#E5E7EB"]);
+  r.push([0, gy, W, 1, "#5CA857"], [0, gy + 1, W, 2, "#4B9248"], [0, gy + 3, W, H - gy - 3, "#3D7C3C"]);
+  return pxLayers(r, 2);
+}
+function badge(col) { return pxLayers([[3, 0, 4, 1, col], [1, 1, 8, 1, col], [0, 2, 10, 5, col], [1, 7, 8, 1, col], [3, 8, 4, 1, dark(col, 0.7)], [3, 3, 4, 2, "#F8FAFC"]], 3); }
+class Component extends DCLogic {
+  renderVals() {
+    var S = [["Sleep goal streak II", "SLEEP", "#C4B5FD", "0px"], ["Steady bedtime I", "BEDTIME", "#A5B4FC", "6px"], ["Step goal streak II", "STEPS", "#4ADE80", "2px"], ["Daily check-in III", "CHECK-IN", "#FBBF24", "8px"], ["Best recovery week I", "RECOVERY", "#7DD3FC", "3px"]];
+    return {
+      a: { hex: "#FB7185", kip: kip("#FB7185", 5), bg: backdrop() },
+      b: { hex: "#C4B5FD", kip: kip("#C4B5FD", 5), bg: backdrop() },
+      stamps: S.map(function (s) { return { name: s[0], short: s[1], c: s[2], mt: s[3], px: badge(s[2]) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

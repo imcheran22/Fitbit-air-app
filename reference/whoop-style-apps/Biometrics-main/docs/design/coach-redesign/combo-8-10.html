@@ -1,0 +1,119 @@
+<h2>Headline sentence + "today vs usual" bars</h2>
+<p class="subtitle">Three ways to combine 8 and 10. Each is shown on a low day (left) and a good day (right). White tick = your 30-day usual. Underlined words and every bar are tappable and ask the coach about that stat.</p>
+
+<style>
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .scr { background:#0c0c0d; color:#f5f5f4; border-radius:22px; padding:14px; font-family:-apple-system, system-ui, sans-serif; font-size:13px; line-height:1.4; }
+  .hdr { display:flex; align-items:center; margin-bottom:10px; }
+  .hdr .t { font-family:Georgia, serif; font-size:19px; }
+  .hdr .i { margin-left:auto; display:flex; gap:6px; }
+  .ib { width:22px; height:22px; border-radius:50%; background:#1b1e24; }
+  .muted { color:#a8a29e; font-size:11px; }
+  .low { color:#fb7185; } .ok { color:#2dd4bf; } .mid { color:#fbbf24; }
+  .u { border-bottom:2px dotted currentColor; }
+  .head { font-family:Georgia, serif; font-size:18px; line-height:1.35; }
+  .av { border-radius:50%; display:inline-block; flex-shrink:0; }
+  .bars { display:flex; flex-direction:column; gap:7px; font-size:12px; margin-top:12px; }
+  .br { display:flex; align-items:center; gap:8px; }
+  .lab { width:58px; color:#a8a29e; }
+  .track { flex:1; height:8px; background:#23262d; border-radius:4px; position:relative; }
+  .fill { height:100%; border-radius:4px; }
+  .tick { position:absolute; top:-3px; width:2px; height:14px; background:#f5f5f4; border-radius:1px; }
+  .val { width:42px; text-align:right; font-weight:700; }
+  .phrase { font-size:11px; color:#a8a29e; margin:-2px 0 2px 66px; }
+  .strip { display:flex; gap:4px; margin-top:12px; }
+  .seg { flex:1; }
+  .seg .track { height:6px; }
+  .seg .muted { font-size:10px; margin-top:4px; display:block; }
+  .opt-title { margin:18px 0 8px; font-weight:650; color:#fff; }
+</style>
+
+<div class="options">
+
+<div class="option" data-choice="a" onclick="toggleSelect(this)"><div class="letter">A</div><div class="content" style="width:100%">
+<h3>Sentence on top, bars underneath</h3>
+<p>The character sums up your day in a sentence, then the four bars show exactly where each number sits against your normal.</p>
+<div class="pair">
+  <div class="scr">
+    <div class="hdr"><span class="t">Coach</span><span class="i"><span class="ib"></span><span class="ib"></span></span></div>
+    <div style="display:flex;gap:8px"><span class="av" style="width:26px;height:26px;background:#94a3b8;margin-top:3px"></span><div class="head">A slow one today. Recovery's <span class="low u">26</span>, mostly because sleep ran <span class="u">short</span> and HRV <span class="mid u">dipped</span>.</div></div>
+    <div class="bars">
+      <div class="br"><span class="lab">Recovery</span><div class="track"><div class="fill" style="width:26%;background:#fb7185"></div><div class="tick" style="left:60%"></div></div><span class="val low">26</span></div>
+      <div class="br"><span class="lab">Sleep</span><div class="track"><div class="fill" style="width:80%;background:#a78bfa"></div><div class="tick" style="left:86%"></div></div><span class="val">6.8h</span></div>
+      <div class="br"><span class="lab">HRV</span><div class="track"><div class="fill" style="width:45%;background:#fbbf24"></div><div class="tick" style="left:60%"></div></div><span class="val mid">41</span></div>
+      <div class="br"><span class="lab">Rest HR</span><div class="track"><div class="fill" style="width:62%;background:#2dd4bf"></div><div class="tick" style="left:62%"></div></div><span class="val ok">58</span></div>
+    </div>
+  </div>
+  <div class="scr">
+    <div class="hdr"><span class="t">Coach</span><span class="i"><span class="ib"></span><span class="ib"></span></span></div>
+    <div style="display:flex;gap:8px"><span class="av" style="width:26px;height:26px;background:#7dd3fc;margin-top:3px"></span><div class="head">Clear skies. Recovery's <span class="ok u">82</span>, a <span class="u">full night</span> and HRV <span class="ok u">above</span> your usual. Good day to push.</div></div>
+    <div class="bars">
+      <div class="br"><span class="lab">Recovery</span><div class="track"><div class="fill" style="width:82%;background:#2dd4bf"></div><div class="tick" style="left:60%"></div></div><span class="val ok">82</span></div>
+      <div class="br"><span class="lab">Sleep</span><div class="track"><div class="fill" style="width:92%;background:#a78bfa"></div><div class="tick" style="left:86%"></div></div><span class="val">7.9h</span></div>
+      <div class="br"><span class="lab">HRV</span><div class="track"><div class="fill" style="width:72%;background:#2dd4bf"></div><div class="tick" style="left:60%"></div></div><span class="val ok">63</span></div>
+      <div class="br"><span class="lab">Rest HR</span><div class="track"><div class="fill" style="width:58%;background:#2dd4bf"></div><div class="tick" style="left:62%"></div></div><span class="val ok">55</span></div>
+    </div>
+  </div>
+</div></div></div>
+
+<div class="option" data-choice="b" onclick="toggleSelect(this)"><div class="letter">B</div><div class="content" style="width:100%">
+<h3>The sentence is split across the bars</h3>
+<p>No separate paragraph: each bar gets its own short phrase in the character's voice, so reading down the bars reads like a sentence.</p>
+<div class="pair">
+  <div class="scr">
+    <div class="hdr"><span class="t">Coach</span><span class="i"><span class="ib"></span><span class="ib"></span></span></div>
+    <div class="head" style="font-size:17px">A slow one today.</div>
+    <div class="bars">
+      <div class="br"><span class="lab">Recovery</span><div class="track"><div class="fill" style="width:26%;background:#fb7185"></div><div class="tick" style="left:60%"></div></div><span class="val low">26</span></div>
+      <div class="phrase">well under your usual; take it easy</div>
+      <div class="br"><span class="lab">Sleep</span><div class="track"><div class="fill" style="width:80%;background:#a78bfa"></div><div class="tick" style="left:86%"></div></div><span class="val">6.8h</span></div>
+      <div class="phrase">25 minutes short</div>
+      <div class="br"><span class="lab">HRV</span><div class="track"><div class="fill" style="width:45%;background:#fbbf24"></div><div class="tick" style="left:60%"></div></div><span class="val mid">41</span></div>
+      <div class="phrase">dipped, likely the short night</div>
+      <div class="br"><span class="lab">Rest HR</span><div class="track"><div class="fill" style="width:62%;background:#2dd4bf"></div><div class="tick" style="left:62%"></div></div><span class="val ok">58</span></div>
+      <div class="phrase">right where it should be</div>
+    </div>
+  </div>
+  <div class="scr">
+    <div class="hdr"><span class="t">Coach</span><span class="i"><span class="ib"></span><span class="ib"></span></span></div>
+    <div class="head" style="font-size:17px">Clear skies today.</div>
+    <div class="bars">
+      <div class="br"><span class="lab">Recovery</span><div class="track"><div class="fill" style="width:82%;background:#2dd4bf"></div><div class="tick" style="left:60%"></div></div><span class="val ok">82</span></div>
+      <div class="phrase">well above usual; good day to push</div>
+      <div class="br"><span class="lab">Sleep</span><div class="track"><div class="fill" style="width:92%;background:#a78bfa"></div><div class="tick" style="left:86%"></div></div><span class="val">7.9h</span></div>
+      <div class="phrase">a full night</div>
+      <div class="br"><span class="lab">HRV</span><div class="track"><div class="fill" style="width:72%;background:#2dd4bf"></div><div class="tick" style="left:60%"></div></div><span class="val ok">63</span></div>
+      <div class="phrase">nicely up</div>
+      <div class="br"><span class="lab">Rest HR</span><div class="track"><div class="fill" style="width:58%;background:#2dd4bf"></div><div class="tick" style="left:62%"></div></div><span class="val ok">55</span></div>
+      <div class="phrase">a touch lower than usual</div>
+    </div>
+  </div>
+</div></div></div>
+
+<div class="option" data-choice="c" onclick="toggleSelect(this)"><div class="letter">C</div><div class="content" style="width:100%">
+<h3>Big sentence, slim bar strip</h3>
+<p>The sentence leads; below it a compact row of four mini bars (label + tick only). Takes the least space, so the chat starts higher up. Tap the strip to expand to full bars.</p>
+<div class="pair">
+  <div class="scr">
+    <div class="hdr"><span class="t">Coach</span><span class="i"><span class="ib"></span><span class="ib"></span></span></div>
+    <div style="display:flex;gap:8px"><span class="av" style="width:26px;height:26px;background:#94a3b8;margin-top:3px"></span><div class="head">A slow one today. Recovery's <span class="low u">26</span>, mostly because sleep ran <span class="u">short</span> and HRV <span class="mid u">dipped</span>.</div></div>
+    <div class="strip">
+      <div class="seg"><div class="track"><div class="fill" style="width:26%;background:#fb7185"></div><div class="tick" style="left:60%;height:12px"></div></div><span class="muted">Recovery <b class="low">26</b></span></div>
+      <div class="seg"><div class="track"><div class="fill" style="width:80%;background:#a78bfa"></div><div class="tick" style="left:86%;height:12px"></div></div><span class="muted">Sleep <b style="color:#fff">6.8h</b></span></div>
+      <div class="seg"><div class="track"><div class="fill" style="width:45%;background:#fbbf24"></div><div class="tick" style="left:60%;height:12px"></div></div><span class="muted">HRV <b class="mid">41</b></span></div>
+      <div class="seg"><div class="track"><div class="fill" style="width:62%;background:#2dd4bf"></div><div class="tick" style="left:62%;height:12px"></div></div><span class="muted">RHR <b class="ok">58</b></span></div>
+    </div>
+  </div>
+  <div class="scr">
+    <div class="hdr"><span class="t">Coach</span><span class="i"><span class="ib"></span><span class="ib"></span></span></div>
+    <div style="display:flex;gap:8px"><span class="av" style="width:26px;height:26px;background:#7dd3fc;margin-top:3px"></span><div class="head">Clear skies. Recovery's <span class="ok u">82</span>, a <span class="u">full night</span> and HRV <span class="ok u">above</span> your usual. Good day to push.</div></div>
+    <div class="strip">
+      <div class="seg"><div class="track"><div class="fill" style="width:82%;background:#2dd4bf"></div><div class="tick" style="left:60%;height:12px"></div></div><span class="muted">Recovery <b class="ok">82</b></span></div>
+      <div class="seg"><div class="track"><div class="fill" style="width:92%;background:#a78bfa"></div><div class="tick" style="left:86%;height:12px"></div></div><span class="muted">Sleep <b style="color:#fff">7.9h</b></span></div>
+      <div class="seg"><div class="track"><div class="fill" style="width:72%;background:#2dd4bf"></div><div class="tick" style="left:60%;height:12px"></div></div><span class="muted">HRV <b class="ok">63</b></span></div>
+      <div class="seg"><div class="track"><div class="fill" style="width:58%;background:#2dd4bf"></div><div class="tick" style="left:62%;height:12px"></div></div><span class="muted">RHR <b class="ok">55</b></span></div>
+    </div>
+  </div>
+</div></div></div>
+
+</div>

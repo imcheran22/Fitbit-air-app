@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Campfire, full screen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2DD4BF}a:hover{color:#5EEAD4}
+.px{font-family:'Silkscreen',monospace}
+.bubble{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button,input,textarea{font-family:'Geist',system-ui,sans-serif}
+@keyframes flick{0%,100%{transform:scaleY(1) translateY(0)}30%{transform:scaleY(1.08) translateY(-2px)}60%{transform:scaleY(.94) translateY(1px)}}
+@keyframes flick2{0%,100%{transform:scale(1)}50%{transform:scale(1.12) translateY(-3px)}}
+@keyframes glow{0%,100%{opacity:.22}50%{opacity:.32}}
+@keyframes spark{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-120px);opacity:0}}
+@keyframes twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+@keyframes zz{0%{transform:translate(0,0);opacity:0}30%{opacity:1}100%{transform:translate(8px,-14px);opacity:0}}
+.flame{transform-origin:50% 100%;animation:flick 1.4s ease-in-out infinite}
+.flame2{transform-origin:50% 100%;animation:flick2 .9s ease-in-out infinite}
+.glow{animation:glow 2.6s ease-in-out infinite}
+.spark{animation:spark 2.8s linear infinite}
+.tw{animation:twinkle 3.4s ease-in-out infinite}
+.sleep{animation:breathe 3.2s ease-in-out infinite}
+.zz{animation:zz 2.4s ease-out infinite}
+textarea::placeholder{color:#6B6E78}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: {{sky1}}; font-family: 'Geist', system-ui, sans-serif; color: #F5F5F4">
+
+  <div style="position: absolute; inset: 0; transform: translateY({{shift}}px); transition: transform 420ms cubic-bezier(.2,.8,.2,1)">
+    <sc-if value="{{pixel}}" hint-placeholder-val="{{ false }}">
+      <dc-import name="PixelScene" night="{{night}}" note-shared="{{noteLive}}" hint-size="390px,844px"></dc-import>
+    </sc-if>
+    <sc-if value="{{smooth}}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; left: 0; right: 0; top: 190px; height: 130px; background: {{sky2}}"></div>
+    <div style="position: absolute; left: 0; right: 0; top: 300px; height: 80px; background: {{sky3}}"></div>
+
+    <sc-if value="{{night}}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{stars}}" as="s" hint-placeholder-count="30">
+        <div class="{{s.cls}}" style="position: absolute; left: {{s.x}}px; top: {{s.y}}px; width: {{s.size}}px; height: {{s.size}}px; border-radius: 1px; background: #E0E7FF; opacity: {{s.o}}; animation-delay: {{s.delay}}s"></div>
+      </sc-for>
+      <div style="position: absolute; top: 112px; right: 34px; width: 64px; height: 64px; border-radius: 50%; background: #C7D2FE; opacity: .08"></div>
+      <div style="position: absolute; top: 126px; right: 48px; width: 36px; height: 36px; border-radius: 50%; background: #F1F5F9; overflow: hidden" role="img" aria-label="The moon is up">
+        <div style="position: absolute; left: 11px; top: -6px; width: 34px; height: 34px; border-radius: 50%; background: #0B0E26"></div>
+      </div>
+      <svg style="position: absolute; left: 0; top: 0" width="390" height="300" viewBox="0 0 390 300" role="img" aria-label="Cassiopeia and the Big Dipper overhead">
+        <g stroke="#A5B4FC" stroke-opacity=".35" stroke-width="1" fill="none">
+          <polyline points="196,48 222,74 246,56 270,82 298,60"></polyline>
+          <polyline points="196,206 226,198 252,210 276,214 300,228 334,222 340,252 304,258 300,228"></polyline>
+        </g>
+        <g fill="#EEF2FF">
+          <circle class="tw" cx="196" cy="48" r="2"></circle>
+          <circle cx="222" cy="74" r="2.4"></circle>
+          <circle class="tw" cx="246" cy="56" r="2.2" style="animation-delay: 1.1s"></circle>
+          <circle cx="270" cy="82" r="2"></circle>
+          <circle class="tw" cx="298" cy="60" r="2.4" style="animation-delay: 2s"></circle>
+          <circle cx="196" cy="206" r="2"></circle>
+          <circle class="tw" cx="226" cy="198" r="2.2" style="animation-delay: .6s"></circle>
+          <circle cx="252" cy="210" r="2.2"></circle>
+          <circle cx="276" cy="214" r="2"></circle>
+          <circle class="tw" cx="300" cy="228" r="2.4" style="animation-delay: 1.6s"></circle>
+          <circle cx="334" cy="222" r="2.2"></circle>
+          <circle cx="340" cy="252" r="2.2"></circle>
+          <circle class="tw" cx="304" cy="258" r="2" style="animation-delay: 2.4s"></circle>
+        </g>
+        <text x="236" y="100" font-family="Silkscreen, monospace" font-size="8" fill="#A5B4FC" fill-opacity=".5" letter-spacing=".8">CASSIOPEIA</text>
+        <text x="200" y="244" font-family="Silkscreen, monospace" font-size="8" fill="#A5B4FC" fill-opacity=".5" letter-spacing=".8">BIG DIPPER</text>
+      </svg>
+    </sc-if>
+    <sc-if value="{{day}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; top: 110px; right: 44px; width: 72px; height: 72px; border-radius: 50%; background: #FDE68A; opacity: .35"></div>
+      <div style="position: absolute; top: 124px; right: 58px; width: 44px; height: 44px; border-radius: 50%; background: #FDE68A"></div>
+      <div style="position: absolute; top: 170px; left: 34px; width: 96px; height: 20px; border-radius: 10px; background: #EFF6FF; opacity: .9"></div>
+      <div style="position: absolute; top: 158px; left: 60px; width: 48px; height: 22px; border-radius: 11px; background: #EFF6FF; opacity: .9"></div>
+      <div style="position: absolute; top: 224px; left: 236px; width: 70px; height: 14px; border-radius: 7px; background: #EFF6FF; opacity: .8"></div>
+    </sc-if>
+
+    <svg style="position: absolute; left: 0; top: 268px" width="390" height="120" viewBox="0 0 390 120" aria-hidden="true">
+      <path d="M0 120 L0 70 L48 30 L92 66 L140 18 L196 72 L238 40 L286 78 L332 34 L390 74 L390 120 Z" fill="{{mountain}}"></path>
+    </svg>
+    <svg style="position: absolute; left: 0; top: 318px" width="390" height="90" viewBox="0 0 390 90" aria-hidden="true">
+      <path d="M0 90 L0 46 L10 46 L18 14 L26 46 L34 46 L42 22 L50 46 L60 40 L68 6 L76 40 L84 46 L96 30 L104 46 L118 52 L250 56 L282 50 L290 26 L298 50 L306 44 L316 10 L326 44 L336 50 L346 20 L356 50 L366 42 L376 16 L386 42 L390 42 L390 90 Z" fill="{{trees}}"></path>
+    </svg>
+
+    <div style="position: absolute; left: 0; right: 0; top: 372px; bottom: -140px; background: {{ground}}"></div>
+    <sc-if value="{{night}}" hint-placeholder-val="{{ true }}">
+      <div class="glow" style="position: absolute; left: 25px; top: 440px; width: 340px; height: 210px; border-radius: 50%; background: #F97316; opacity: .22"></div>
+      <div style="position: absolute; left: 95px; top: 486px; width: 200px; height: 110px; border-radius: 50%; background: #FB923C; opacity: .14"></div>
+    </sc-if>
+
+    <svg style="position: absolute; left: 14px; top: 356px" width="78" height="56" viewBox="0 0 78 56" role="img" aria-label="A tent">
+      <path d="M2 54 L39 4 L76 54 Z" fill="{{tent}}"></path>
+      <path d="M30 54 L39 26 L48 54 Z" fill="{{tentDoor}}"></path>
+    </svg>
+
+    <sc-for list="{{coaches}}" as="c" hint-placeholder-count="8">
+      <button aria-label="{{c.label}}" style="position: absolute; left: {{c.left}}px; top: {{c.top}}px; width: 84px; height: 128px; padding: 0; border: 0; background: transparent; color: inherit; transform: scale({{c.scale}}); transform-origin: 50% 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; cursor: pointer">
+        <sc-if value="{{c.hasNote}}" hint-placeholder-val="{{ false }}">
+          <div class="bubble" style="max-width: 104px; padding: 6px 10px; border-radius: 14px 14px 14px 4px; background: rgba(250,250,249,.94); font-size: 11px; font-weight: 500; line-height: 14px; color: #14161B">{{c.note}}</div>
+        </sc-if>
+        <sc-if value="{{c.addNote}}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 5px 10px; border-radius: 14px; background: rgba(45,212,191,.16); border: 1px solid rgba(45,212,191,.65); font-size: 11px; font-weight: 600; line-height: 14px; color: #5EEAD4">+ Add a note</div>
+        </sc-if>
+        <div class="{{c.anim}}" style="position: relative; width: 44px; height: 56px">
+          <div style="position: absolute; left: 4px; top: 0; width: 36px; height: 32px; background: {{c.color}}; border-radius: 6px"></div>
+          <div style="position: absolute; left: 4px; top: 0; width: 36px; height: 32px; background: #F97316; opacity: {{c.warm}}; border-radius: 6px"></div>
+          <div style="position: absolute; left: 12px; top: 13px; width: 5px; height: {{c.eye}}px; background: #0A0B0E"></div>
+          <div style="position: absolute; left: 27px; top: 13px; width: 5px; height: {{c.eye}}px; background: #0A0B0E"></div>
+          <div style="position: absolute; left: 0; top: 34px; width: 44px; height: 22px; background: {{c.color}}; filter: brightness(.78); border-radius: 6px 6px 3px 3px"></div>
+          <sc-if value="{{c.asleep}}" hint-placeholder-val="{{ false }}">
+            <div class="px zz" style="position: absolute; right: -14px; top: -8px; font-size: 11px; color: #C7D2FE">z</div>
+            <div class="px zz" style="position: absolute; right: -22px; top: -16px; font-size: 9px; color: #C7D2FE; animation-delay: 1.2s">z</div>
+          </sc-if>
+        </div>
+        <div style="width: 56px; height: 8px; border-radius: 4px; background: #5B341A"></div>
+        <div class="px" style="font-size: 10px; letter-spacing: .5px; color: {{nameColor}}">{{c.name}}</div>
+      </button>
+    </sc-for>
+
+    <div style="position: absolute; left: 150px; top: 452px; width: 90px; height: 100px">
+      <sc-if value="{{night}}" hint-placeholder-val="{{ true }}">
+        <sc-for list="{{sparks}}" as="p" hint-placeholder-count="6">
+          <div class="spark" style="position: absolute; left: {{p.x}}px; top: 30px; width: 3px; height: 3px; background: #FDBA74; animation-delay: {{p.d}}s"></div>
+        </sc-for>
+        <svg width="90" height="100" viewBox="0 0 90 100" role="img" aria-label="The fire is lit">
+          <g class="flame"><path d="M45 6 C53 26 68 34 65 56 C63 72 55 80 45 80 C35 80 26 72 25 56 C23 40 38 30 45 6 Z" fill="#F97316"></path></g>
+          <g class="flame2"><path d="M45 34 C49 45 56 50 55 61 C54 70 50 74 45 74 C40 74 36 70 35 61 C34 52 41 46 45 34 Z" fill="#FBBF24"></path></g>
+          <path d="M45 56 C47 62 50 64 49 69 C48 72 47 74 45 74 C43 74 42 72 41 69 C40 64 43 62 45 56 Z" fill="#FEF3C7"></path>
+          <rect x="14" y="78" width="62" height="9" rx="4.5" fill="#7C2D12" transform="rotate(-8 45 82)"></rect>
+          <rect x="14" y="78" width="62" height="9" rx="4.5" fill="#92400E" transform="rotate(8 45 82)"></rect>
+        </svg>
+      </sc-if>
+      <sc-if value="{{day}}" hint-placeholder-val="{{ false }}">
+        <svg width="90" height="100" viewBox="0 0 90 100" role="img" aria-label="The fire is out for the day">
+          <circle cx="45" cy="74" r="4" fill="#A8A29E"></circle>
+          <circle cx="36" cy="77" r="3" fill="#A8A29E"></circle>
+          <rect x="14" y="78" width="62" height="9" rx="4.5" fill="#78350F" transform="rotate(-8 45 82)"></rect>
+          <rect x="14" y="78" width="62" height="9" rx="4.5" fill="#92400E" transform="rotate(8 45 82)"></rect>
+        </svg>
+      </sc-if>
+    </div>
+    </sc-if>
+  </div>
+
+  <div style="position: absolute; inset: 0; background: #000; opacity: {{dim}}; pointer-events: none; transition: opacity 420ms ease"></div>
+
+  <div style="position: absolute; top: 58px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center">
+    <a href="#" aria-label="Back to Social" style="display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 14px 0 10px; border-radius: 20px; background: rgba(20,22,27,.55); border: 1px solid rgba(255,255,255,.12); color: #F5F5F4; text-decoration: none; font-size: 14px; font-weight: 500; backdrop-filter: blur(18px)">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"></path></svg>
+      Social
+    </a>
+    <div style="height: 40px; padding: 0 14px; border-radius: 20px; background: rgba(20,22,27,.55); border: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; backdrop-filter: blur(18px)" aria-label="2 more at the camp">
+      <span style="width: 8px; height: 8px; border-radius: 4px; background: #2DD4BF"></span>+2 here
+    </div>
+  </div>
+  <div style="position: absolute; top: 112px; left: 20px; display: flex; flex-direction: column; gap: 2px; opacity: {{headOpacity}}; transition: opacity 300ms ease">
+    <div class="px" style="font-size: 12px; letter-spacing: 1px; color: {{kickerColor}}">{{kicker}}</div>
+    <div style="font-size: 22px; font-weight: 700; letter-spacing: -.3px">{{headline}}</div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: {{panelTop}}px; height: 844px; border-radius: 38px 38px 0 0; background: rgba(18,20,26,.84); border-top: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(30px) saturate(150%); box-shadow: 0 -12px 40px rgba(0,0,0,.35); transition: top 440ms cubic-bezier(.2,.9,.25,1); overflow: hidden">
+    <button onClick="{{cycle}}" aria-label="Camp details, {{stopLabel}}. Shows more" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer">
+      <span style="display: block; width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3)"></span>
+    </button>
+
+    <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true"><path d="M8 1 C10 6 14 8 13.5 12 C13 15.5 11 17 8 17 C5 17 3 15.5 2.5 12 C2 8.5 6 6.5 8 1 Z" fill="{{fireIcon}}"></path></svg>
+          <div class="px" style="font-size: 14px; letter-spacing: 1px">TONIGHT'S FIRE</div>
+        </div>
+        <div style="font-size: 13px; color: #FDBA74; font-weight: 600">{{fireCount}}</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px" role="progressbar" aria-label="Fire strength" aria-valuemin="0" aria-valuemax="5" aria-valuenow="{{segmentsOn}}">
+        <sc-for list="{{segments}}" as="g" hint-placeholder-count="5">
+          <div style="height: 10px; border-radius: 5px; background: {{g.color}}"></div>
+        </sc-for>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 13px; color: #9B9DA6">
+        <span>{{fireLine}}</span>
+        <span>{{nightsLine}}</span>
+      </div>
+
+      <div style="margin-top: 14px; padding: 16px; border-radius: 24px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <div style="font-size: 15px; font-weight: 600">Your camp note</div>
+          <sc-if value="{{noteLive}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; background: rgba(45,212,191,.14); color: #5EEAD4; font-size: 12px; font-weight: 600"><span style="width: 6px; height: 6px; border-radius: 3px; background: #2DD4BF"></span>Live until 6:00 AM</div>
+          </sc-if>
+          <sc-if value="{{noteDraft}}" hint-placeholder-val="{{ true }}">
+            <div style="font-size: 12px; color: #9B9DA6">Seen by your 9 buddies</div>
+          </sc-if>
+        </div>
+
+        <div style="display: flex; align-items: flex-end; gap: 10px; padding: 12px; border-radius: 18px; background: {{previewBg}}">
+          <div style="position: relative; width: 30px; height: 38px; flex: none">
+            <div style="position: absolute; left: 3px; top: 0; width: 24px; height: 22px; background: #34D399; border-radius: 5px"></div>
+            <div style="position: absolute; left: 9px; top: 9px; width: 3px; height: 4px; background: #0A0B0E"></div>
+            <div style="position: absolute; left: 18px; top: 9px; width: 3px; height: 4px; background: #0A0B0E"></div>
+            <div style="position: absolute; left: 0; top: 23px; width: 30px; height: 15px; background: #2BA97E; border-radius: 5px 5px 2px 2px"></div>
+          </div>
+          <div style="padding: 7px 12px; border-radius: 14px 14px 14px 4px; background: rgba(250,250,249,.94); color: #14161B; font-size: 13px; font-weight: 500">{{noteText}}</div>
+          <div style="margin-left: auto; font-size: 11px; color: #9B9DA6">Preview</div>
+        </div>
+
+        <sc-if value="{{noteDraft}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="position: relative">
+              <label for="note" style="position: absolute; left: -9999px">Your camp note</label>
+              <textarea id="note" rows="2" placeholder="Say something to the camp…" style="box-sizing: border-box; width: 100%; height: 76px; resize: none; padding: 12px 52px 12px 14px; border-radius: 16px; border: 1.5px solid #2DD4BF; background: rgba(10,11,14,.7); color: #F5F5F4; font-size: 16px; line-height: 22px; outline: none">off to bed early</textarea>
+              <svg style="position: absolute; right: 12px; bottom: 12px" width="28" height="28" viewBox="0 0 28 28" role="img" aria-label="17 of 40 characters">
+                <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3"></circle>
+                <circle cx="14" cy="14" r="11" fill="none" stroke="#2DD4BF" stroke-width="3" stroke-linecap="round" stroke-dasharray="29.7 69.1" transform="rotate(-90 14 14)"></circle>
+                <text x="14" y="17.5" text-anchor="middle" font-size="9" font-weight="600" fill="#9B9DA6" font-family="Geist, sans-serif">23</text>
+              </svg>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{chips}}" as="k" hint-placeholder-count="4">
+                <button style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #E7E5E4; font-size: 13px">{{k.t}}</button>
+              </sc-for>
+            </div>
+            <button style="height: 54px; border: 0; border-radius: 18px; background: #2DD4BF; color: #04211D; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 6px 20px rgba(45,212,191,.28)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path></svg>
+              Share with the camp
+            </button>
+          </div>
+        </sc-if>
+        <sc-if value="{{noteLive}}" hint-placeholder-val="{{ false }}">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <button style="height: 48px; border-radius: 16px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: #F5F5F4; font-size: 15px; font-weight: 600">Edit note</button>
+            <button style="height: 48px; border-radius: 16px; border: 1px solid rgba(248,113,113,.35); background: rgba(248,113,113,.08); color: #FCA5A5; font-size: 15px; font-weight: 600">Clear</button>
+          </div>
+        </sc-if>
+        <div style="font-size: 12px; color: #9B9DA6">Shows above your coach until 6 AM or your morning check-in.</div>
+      </div>
+
+      <sc-if value="{{night}}" hint-placeholder-val="{{ true }}">
+        <button style="margin-top: 4px; height: 56px; border-radius: 18px; border: 1px solid rgba(165,180,252,.35); background: rgba(99,102,241,.24); color: #E0E7FF; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+          Say goodnight
+        </button>
+      </sc-if>
+      <sc-if value="{{day}}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 4px; height: 56px; border-radius: 18px; border: 1px dashed rgba(255,255,255,.18); color: #9B9DA6; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg>
+          You can say goodnight from 8:00 PM
+        </div>
+      </sc-if>
+
+      <div style="height: 1px; background: rgba(255,255,255,.08); margin: 12px 0 2px"></div>
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: .8px; color: #9B9DA6">WHO'S HERE · 10</div>
+      <sc-for list="{{who}}" as="w" hint-placeholder-count="5">
+        <div style="display: flex; gap: 12px; align-items: flex-start; padding: 6px 0">
+          <div style="width: 36px; height: 36px; border-radius: 11px; background: {{w.color}}; flex: none"></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <div style="font-size: 15px; font-weight: 600">{{w.name}}</div>
+            <div style="font-size: 13px; color: #9B9DA6; line-height: 18px">{{w.status}}</div>
+          </div>
+        </div>
+      </sc-for>
+      <button style="margin-top: 6px; height: 48px; border-radius: 16px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: #F5F5F4; font-size: 15px; font-weight: 600">Message camp</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"stop":{"editor":"enum","options":["peek","half","full"],"default":"peek"},"night":{"editor":"boolean","default":true},"noteShared":{"editor":"boolean","default":false},"pixel":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const order = ['peek', 'half', 'full'];
+    const stop = (this.state && this.state.stop) || this.props.stop || 'peek';
+    const night = this.props.night !== false;
+    const shared = this.props.noteShared === true;
+    const tops = { peek: 704, half: 330, full: 92 };
+    const dims = { peek: 0, half: 0.22, full: 0.4 };
+    const shifts = { peek: 0, half: -150, full: -200 };
+    const labels = { peek: 'peek', half: 'half open', full: 'fully open' };
+    const palette = ['#2DD4BF', '#A78BFA', '#FB7185', '#FBBF24', '#60A5FA', '#34D399', '#F472B6', '#FB923C'];
+    const seats = [
+      [106, 342, 0.84], [200, 342, 0.84],
+      [12, 388, 0.9], [294, 388, 0.9],
+      [10, 520, 1], [96, 566, 1], [210, 566, 1], [296, 520, 1]
+    ];
+    const people = [
+      { name: 'BEA', asleep: true, note: 'bed soon, night all' },
+      { name: 'SAM', asleep: false, note: 'run at 6, who is in?' },
+      { name: 'ANA', asleep: true, note: '' },
+      { name: 'KAI', asleep: false, note: '' },
+      { name: 'BEN', asleep: true, note: 'early flight' },
+      { name: 'YOU', asleep: false, note: '', mine: true },
+      { name: 'MIA', asleep: false, note: '' },
+      { name: 'LEO', asleep: false, note: 'gn camp' }
+    ];
+    const coaches = people.map((p, i) => {
+      const asleep = night && p.asleep;
+      const mineNote = p.mine && shared ? 'off to bed early' : p.note;
+      return {
+        name: p.name,
+        color: palette[i],
+        left: seats[i][0],
+        top: seats[i][1],
+        scale: seats[i][2],
+        warm: night ? (i >= 4 ? 0.16 : 0.08) : 0,
+        asleep: asleep,
+        anim: asleep ? 'sleep' : '',
+        eye: asleep ? 2 : 6,
+        note: mineNote,
+        hasNote: mineNote.length > 0,
+        addNote: !!p.mine && !shared,
+        label: p.mine ? 'You. Write your camp note' : p.name + ', ' + (asleep ? 'asleep' : 'awake')
+      };
+    });
+    const segmentsOn = night ? 3 : 0;
+    const segments = [0, 1, 2, 3, 4].map((i) => ({ color: i < segmentsOn ? '#F97316' : '#2E323B' }));
+    const who = [
+      { name: 'Bea', color: palette[0], status: night ? 'Asleep since 10:15 PM, on time · bed soon, night all' : 'Awake · bed soon, night all' },
+      { name: 'Sam', color: palette[1], status: 'Awake · run at 6, who is in?' },
+      { name: 'Ana', color: palette[2], status: night ? 'Asleep since 9:40 PM, on time' : 'Awake' },
+      { name: 'Ben', color: palette[4], status: night ? 'Asleep since 10:02 PM · early flight' : 'Awake · early flight' },
+      { name: 'Leo', color: palette[7], status: 'Awake · gn camp' }
+    ];
+    const stars = [];
+    for (let i = 0; i < 34; i++) {
+      stars.push({ x: (i * 97 + 31) % 376 + 6, y: (i * 53 + 17) % 230 + 40, size: i % 6 === 0 ? 3 : 2, o: i % 3 === 0 ? 0.9 : 0.5, cls: i % 4 === 0 ? 'tw' : '', delay: (i % 7) * 0.45 });
+    }
+    const sparks = [30, 42, 52, 38, 58, 46].map((x, i) => ({ x: x, d: i * 0.45 }));
+    const pixel = this.props.pixel === true;
+    return {
+      pixel: pixel,
+      smooth: !pixel,
+      night: night,
+      day: !night,
+      sky1: night ? '#0B0E26' : '#7DB9E8',
+      sky2: night ? '#10143A' : '#93C8EE',
+      sky3: night ? '#171C4A' : '#AED6F3',
+      mountain: night ? '#1C2150' : '#7FA3C4',
+      trees: night ? '#0E1130' : '#3F6B3A',
+      ground: night ? '#151936' : '#5B7F3A',
+      tent: night ? '#3B2F6B' : '#E07A3F',
+      tentDoor: night ? '#F59E0B' : '#7C2D12',
+      nameColor: night ? '#E0E7FF' : '#FFFFFF',
+      kicker: night ? 'TUESDAY NIGHT' : 'TUESDAY',
+      kickerColor: night ? '#A5B4FC' : '#1E3A5F',
+      headline: night ? '4 asleep · 6 by the fire' : '6 checked in today',
+      headOpacity: stop === 'peek' ? 1 : 0,
+      stars: stars,
+      sparks: sparks,
+      coaches: coaches,
+      panelTop: tops[stop],
+      dim: dims[stop],
+      shift: shifts[stop],
+      stopLabel: labels[stop],
+      segments: segments,
+      segmentsOn: segmentsOn,
+      fireIcon: night ? '#F97316' : '#6B6E78',
+      fireCount: night ? '3/5' : 'Out',
+      fireLine: night ? '2 more on time lights it fully' : 'It lights up tonight',
+      nightsLine: 'Lit 2 nights',
+      noteLive: shared,
+      noteDraft: !shared,
+      noteText: shared ? 'off to bed early' : 'off to bed early',
+      previewBg: 'rgba(15,18,48,.9)',
+      chips: [{ t: 'gn camp' }, { t: 'early start tmrw' }, { t: 'long day, bed soon' }, { t: 'who is still up?' }],
+      who: who,
+      cycle: () => this.setState({ stop: order[(order.indexOf(stop) + 1) % order.length] })
+    };
+  }
+}
+</script>
+</body>
+</html>

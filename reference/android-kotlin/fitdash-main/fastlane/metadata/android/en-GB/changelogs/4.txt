@@ -1,0 +1,4 @@
+Log water and set your height.
+- Add 250 or 500 ml of water from the Today page, with undo for the entry you just added
+- Save your height in Settings and see your BMI in Trends
+- fitdash now writes only the water and height you enter yourself

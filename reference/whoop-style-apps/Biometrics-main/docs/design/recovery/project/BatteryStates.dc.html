@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Battery widget · states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:rgb(155,157,166);font-weight:600}
+.px{font-family:'Silkscreen',monospace}
+.w{display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:20px;background:rgb(20,22,27)}
+.frame{width:156px;height:45px;box-sizing:border-box;padding:3px;clip-path:polygon(6px 0,calc(100% - 6px) 0,calc(100% - 6px) 3px,calc(100% - 3px) 3px,calc(100% - 3px) 6px,100% 6px,100% calc(100% - 6px),calc(100% - 3px) calc(100% - 6px),calc(100% - 3px) calc(100% - 3px),calc(100% - 6px) calc(100% - 3px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 3px),3px calc(100% - 3px),3px calc(100% - 6px),0 calc(100% - 6px),0 6px,3px 6px,3px 3px,6px 3px)}
+.well{height:100%;box-sizing:border-box;padding:6px;background:rgb(16,20,32);display:flex;gap:3px;clip-path:polygon(3px 0,calc(100% - 3px) 0,calc(100% - 3px) 3px,100% 3px,100% calc(100% - 3px),calc(100% - 3px) calc(100% - 3px),calc(100% - 3px) 100%,3px 100%,3px calc(100% - 3px),0 calc(100% - 3px),0 3px,3px 3px)}
+.pc{flex:1}
+.nub{width:6px;height:18px;clip-path:polygon(0 0,3px 0,3px 3px,6px 3px,6px calc(100% - 3px),3px calc(100% - 3px),3px 100%,0 100%)}
+</style>
+</helmet>
+<div style="width: 390px; height: 1100px; box-sizing: border-box; overflow: hidden; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 40px 16px; display: flex; flex-direction: column; gap: 12px">
+  <div class="eyebrow" style="margin: 0 4px">Compact widget · by band</div>
+
+  <sc-for list="{{states}}" as="s" hint-placeholder-count="4">
+    <div class="w">
+      <div style="display: flex; align-items: center">
+        <div class="frame" style="background: {{s.base}}">
+          <div class="well">
+            <sc-for list="{{s.cells}}" as="c" hint-placeholder-count="10"><div class="pc" style="background: {{c}}"></div></sc-for>
+          </div>
+        </div>
+        <div class="nub" style="background: {{s.base}}"></div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+        <span class="px" style="font-size: 24px; line-height: 26px; color: {{s.hi}}">{{s.score}}%</span>
+        <span style="font-size: 13px; font-weight: 600; color: {{s.base}}">{{s.label}}</span>
+      </div>
+    </div>
+  </sc-for>
+
+  <div class="w" style="background: transparent; outline: 2px dashed rgb(60,63,72); outline-offset: -2px">
+    <div style="display: flex; align-items: center">
+      <div class="frame" style="background: rgb(129,140,248)">
+        <div class="well">
+          <sc-for list="{{learning}}" as="c" hint-placeholder-count="10"><div class="pc" style="background: {{c}}"></div></sc-for>
+        </div>
+      </div>
+      <div class="nub" style="background: rgb(129,140,248)"></div>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+      <span class="px" style="font-size: 15px; color: rgb(199,210,254)">CHARGING UP</span>
+      <span style="font-size: 12px; color: rgb(155,157,166)">Day 9 of 14 learning your usual</span>
+    </div>
+  </div>
+
+  <div class="eyebrow" style="margin: 18px 4px 0">Cell style options · Good 68</div>
+  <div class="w">
+    <div style="display: flex; align-items: center">
+      <div class="frame" style="background: rgb(163,230,53)">
+        <div class="well">
+          <sc-for list="{{slim}}" as="c" hint-placeholder-count="10"><div class="pc" style="background: {{c}}"></div></sc-for>
+        </div>
+      </div>
+      <div class="nub" style="background: rgb(163,230,53)"></div>
+    </div>
+    <div style="font-size: 13px; color: rgb(155,157,166)">1 · Ten slim cells</div>
+  </div>
+  <div class="w">
+    <div style="display: flex; align-items: center">
+      <div class="frame" style="background: rgb(163,230,53)">
+        <div class="well">
+          <div style="width: 68%; background: linear-gradient(180deg, rgb(217,249,157) 0 36%, rgb(163,230,53) 36% 100%)"></div>
+        </div>
+      </div>
+      <div class="nub" style="background: rgb(163,230,53)"></div>
+    </div>
+    <div style="font-size: 13px; color: rgb(155,157,166)">2 · Solid fill</div>
+  </div>
+  <div class="w">
+    <div style="display: flex; align-items: center">
+      <div class="frame" style="background: rgb(163,230,53)">
+        <div class="well" style="gap: 6px">
+          <sc-for list="{{chunky}}" as="c" hint-placeholder-count="5"><div class="pc" style="background: {{c}}"></div></sc-for>
+        </div>
+      </div>
+      <div class="nub" style="background: rgb(163,230,53)"></div>
+    </div>
+    <div style="font-size: 13px; color: rgb(155,157,166)">3 · Five chunky blocks</div>
+  </div>
+
+  <div class="eyebrow" style="margin: 18px 4px 0">Excellent · charged bolt</div>
+  <div class="w">
+    <div style="position: relative; display: flex; align-items: center">
+      <div class="frame" style="background: rgb(74,222,128)">
+        <div class="well">
+          <sc-for list="{{full}}" as="c" hint-placeholder-count="10"><div class="pc" style="background: {{c}}"></div></sc-for>
+        </div>
+      </div>
+      <div class="nub" style="background: rgb(74,222,128)"></div>
+      <svg width="30" height="36" viewBox="0 0 10 12" shape-rendering="crispEdges" style="position: absolute; left: 63px; top: 4px">
+        <rect x="5" y="0" width="3" height="1" fill="#10141F"></rect><rect x="4" y="1" width="3" height="1" fill="#10141F"></rect><rect x="3" y="2" width="3" height="1" fill="#10141F"></rect><rect x="2" y="3" width="6" height="1" fill="#10141F"></rect><rect x="2" y="4" width="6" height="1" fill="#10141F"></rect><rect x="4" y="5" width="3" height="1" fill="#10141F"></rect><rect x="3" y="6" width="3" height="1" fill="#10141F"></rect><rect x="2" y="7" width="3" height="1" fill="#10141F"></rect>
+        <rect x="5" y="1" width="2" height="1" fill="#FEF08A"></rect><rect x="4" y="2" width="2" height="1" fill="#FEF08A"></rect><rect x="3" y="3" width="4" height="1" fill="#FDE047"></rect><rect x="3" y="4" width="4" height="1" fill="#FACC15"></rect><rect x="4" y="5" width="2" height="1" fill="#FACC15"></rect><rect x="3" y="6" width="2" height="1" fill="#EAB308"></rect>
+      </svg>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+      <span class="px" style="font-size: 24px; line-height: 26px; color: rgb(187,247,208)">92%</span>
+      <span style="font-size: 13px; font-weight: 600; color: rgb(74,222,128)">Fully charged</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const P = {
+      ex: { base: 'rgb(74,222,128)', hi: 'rgb(187,247,208)' },
+      good: { base: 'rgb(163,230,53)', hi: 'rgb(217,249,157)' },
+      fair: { base: 'rgb(251,191,36)', hi: 'rgb(254,240,138)' },
+      low: { base: 'rgb(248,113,113)', hi: 'rgb(254,202,202)' },
+      learn: { base: 'rgb(129,140,248)', hi: 'rgb(199,210,254)' }
+    };
+    const cell = (p) => 'linear-gradient(180deg,' + p.hi + ' 0 36%,' + p.base + ' 36% 100%)';
+    const cells = (score, p, n) => {
+      const lit = Math.round(score / (100 / n));
+      const out = [];
+      for (let i = 0; i < n; i++) out.push(i < lit ? cell(p) : 'transparent');
+      return out;
+    };
+    const st = (score, p, label) => ({ score, label, base: p.base, hi: p.hi, cells: cells(score, p, 10) });
+    return {
+      states: [
+        st(86, P.ex, 'Excellent · fully charged'),
+        st(68, P.good, 'Good charge'),
+        st(47, P.fair, 'Fair · go easy'),
+        st(18, P.low, 'Low · rest day')
+      ],
+      learning: cells(64, P.learn, 10),
+      slim: cells(68, P.good, 10),
+      chunky: cells(68, P.good, 5),
+      full: cells(92, P.ex, 10)
+    };
+  }
+}
+</script>
+</body>
+</html>

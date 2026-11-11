@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "whoop": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "whoop-mcp-unofficial@0.7.0"
+      ],
+      "cwd": "${PLUGIN_DATA}"
+    }
+  }
+}

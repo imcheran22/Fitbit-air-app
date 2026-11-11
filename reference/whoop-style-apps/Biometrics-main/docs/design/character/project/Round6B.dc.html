@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Customization proof</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1000px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">ROUND 6B · STUBS, CUSTOMIZED</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5">One plain base made interesting only through layers: 10 colours, 16 cosmetics and 8 outfits.</p>
+    <div style="font-family: 'Geist Mono', monospace; font-size: 12px; line-height: 1.6; color: #C9CDD5; background: #14161B; border: 1px solid #23262E; border-radius: 8px; padding: 10px 14px">layers: back (behind body) → body x 4–11, y 6–12, legs y 13–14 → eyes (6, 8) + (9, 8) → head y ≤ 5 on the flat top, band at y 6 → face row y 8 → neck y 10–11 → held: hand L x 3 / R x 12, y 10–11 (the item brings its own hand nub)</div>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 10px">
+    <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">10 COLOURWAYS</h2>
+    <div style="display: flex; gap: 12px">
+      <sc-for list="{{ways}}" as="w" hint-placeholder-count="10">
+        <div style="display: flex; flex-direction: column; gap: 6px; align-items: center">
+          <div style="line-height: 0; border-radius: 8px; padding: 6px; background: {{w.ground}}"><svg width="{{w.s.px}}" height="{{w.s.px}}" shape-rendering="crispEdges" role="img" aria-label="Stubs {{w.label}}"><sc-for list="{{w.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{w.label}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 10px">
+    <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">16 COSMETICS · ONE LAYER EACH</h2>
+    <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{items}}" as="w" hint-placeholder-count="16">
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="line-height: 0; border-radius: 8px; padding: 6px; background: #14161B; border: 1px solid #23262E; align-self: flex-start"><svg width="{{w.s.px}}" height="{{w.s.px}}" shape-rendering="crispEdges" role="img" aria-label="Stubs wearing {{w.id}}"><sc-for list="{{w.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #E7E9EE">{{w.id}}</span>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{w.slot}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 10px">
+    <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">8 OUTFITS · SAME BASE</h2>
+    <div style="display: flex; gap: 16px">
+      <sc-for list="{{outfits}}" as="o" hint-placeholder-count="8">
+        <div style="display: flex; flex-direction: column; gap: 6px; width: 128px">
+          <div style="line-height: 0; border-radius: 8px; padding: 8px; background: {{o.ground}}; align-self: flex-start"><svg width="{{o.s.px}}" height="{{o.s.px}}" shape-rendering="crispEdges" role="img" aria-label="Stubs outfit {{o.label}}"><sc-for list="{{o.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <span style="font-family: Silkscreen, monospace; font-size: 12px; color: #E7E9EE">{{o.label}}</span>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 10px; line-height: 1.4; color: #A3A9B5">{{o.list}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+var N = 16;
+var E = "................";
+var BASE = [E, E, E, E, E, E,
+  "....bbbbbbbb....", "....bbbbbbbb....", "....bbebbebb....", "....bbbbbbbb....",
+  "....bbbbbbbb....", "....bbbbbbbb....", "....bbbbbbbb....", ".....b....b.....", ".....b....b.....", E];
+var WAYS = [
+  ["snow", "#F1F5F9"], ["ink", "#2A2F3A"], ["cobalt", "#3B82F6"], ["mint", "#6EE7B7"], ["lemon", "#FDE047"],
+  ["coral", "#FB7185"], ["lilac", "#C4B5FD"], ["sky", "#7DD3FC"], ["lime", "#A3E635"], ["slate", "#64748B"]
+];
+var COS = {
+  "hat.beanie": { slot: "head", front: { at: [4, 2], rows: ["...ww...", ".rrrrrr.", "rrrrrrrr", "dddddddd"] }, pal: { w: "#F8FAFC", r: "#EF4444", d: "#B91C1C" } },
+  "hat.cap": { slot: "head", front: { at: [4, 4], rows: [".bbbbbb....", "bbbbbbbbkkk"] }, pal: { b: "#2563EB", k: "#1E3A8A" } },
+  "hat.crown": { slot: "head", front: { at: [4, 3], rows: ["y..yy..y", "yyyyyyyy", "yryyyyry"] }, pal: { y: "#FACC15", r: "#EF4444" } },
+  "hat.party": { slot: "head", front: { at: [6, 1], rows: ["..p.", ".ss.", ".ss.", "ssss", "ssss"] }, pal: { p: "#F472B6", s: "#A78BFA" } },
+  "head.band": { slot: "head", front: { at: [4, 6], rows: ["sssssssss.", ".........s"] }, pal: { s: "#F43F5E" } },
+  "face.shades": { slot: "face", front: { at: [4, 8], rows: ["kgkkkgkk", ".kk..kk."] }, pal: { k: "#0B0B10", g: "#64748B" } },
+  "face.round": { slot: "face", front: { at: [5, 7], rows: ["ffffff", "f.ff.f", "ffffff"] }, pal: { f: "#F59E0B" } },
+  "neck.scarf": { slot: "neck", front: { at: [3, 10], rows: ["ssssssssss", "........d.", "........d."] }, pal: { s: "#DC2626", d: "#991B1B" } },
+  "neck.bandana": { slot: "neck", front: { at: [5, 10], rows: ["bbbbbb", ".bwbb.", "..bb.."] }, pal: { b: "#2563EB", w: "#F8FAFC" } },
+  "held.bottle": { slot: "held", front: { at: [1, 8], rows: ["cc.", "ww.", "wwB", "bbB", "bb."] }, pal: { c: "#F43F5E", w: "#E0F2FE", b: "#38BDF8" } },
+  "held.dumbbell": { slot: "held", front: { at: [12, 8], rows: [".ppp", ".ppp", "BBg.", "BBg.", ".ppp", ".ppp"] }, pal: { p: "#64748B", g: "#CBD5E1" } },
+  "held.coffee": { slot: "held", front: { at: [12, 7], rows: ["..s.", ".s..", "..s.", "Bccc", "Blll", ".ccc"] }, pal: { s: "#CBD5E1", c: "#F8FAFC", l: "#92400E" } },
+  "back.pack": { slot: "back", back: { at: [3, 5], rows: ["...pppp...", "pppppppppp", "pppppppppp", "pppppppppp", "pppppppppp", "pppppppppp", "pppppppppp"] }, front: { at: [5, 9], rows: ["s....s", "s....s", "s....s"] }, pal: { p: "#22C55E", s: "#15803D" } },
+  "back.cape": { slot: "back", back: { at: [2, 7], rows: ["cccccccccccc", "cccccccccccc", "cccccccccccc", "cccccccccccc", "cccccccccccc", "cccccccccccc", "dddddddddddd"] }, pal: { c: "#7C3AED", d: "#5B21B6" } },
+  "eyes.sleepy": { slot: "eyes", eyes: [[5, 9], [6, 9], [9, 9], [10, 9]] },
+  "eyes.wide": { slot: "eyes", eyes: [[6, 7], [6, 8], [9, 7], [9, 8]] }
+};
+var ORDER = ["hat.beanie", "hat.cap", "hat.crown", "hat.party", "head.band", "face.shades", "face.round", "neck.scarf", "neck.bandana", "held.bottle", "held.dumbbell", "held.coffee", "back.pack", "back.cape", "eyes.sleepy", "eyes.wide"];
+var FRONT_SLOTS = ["head", "face", "neck", "held", "back"];
+var OUTFITS = [
+  { label: "GYM", body: "#FB7185", cos: ["head.band", "held.dumbbell", "eyes.wide"] },
+  { label: "WINTER", body: "#7DD3FC", cos: ["hat.beanie", "neck.scarf"] },
+  { label: "ROYAL", body: "#C4B5FD", cos: ["hat.crown", "back.cape"] },
+  { label: "COMMUTE", body: "#64748B", cos: ["hat.cap", "back.pack", "held.coffee"] },
+  { label: "COOL", body: "#FDE047", cos: ["face.shades", "neck.bandana"] },
+  { label: "NIGHT OWL", body: "#2A2F3A", cos: ["hat.beanie", "held.coffee", "eyes.sleepy"] },
+  { label: "HYDRATE", body: "#6EE7B7", cos: ["hat.cap", "face.round", "held.bottle"] },
+  { label: "PARTY", body: "#3B82F6", cos: ["hat.party", "neck.bandana", "eyes.wide"] }
+];
+
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function groundFor(body) { return lum(body) < 0.12 ? "#EDEBE6" : "#14161B"; }
+
+function compose(body, ids) {
+  var ink = lum(body) > 0.2 ? "#14161B" : "#F5F5F4";
+  var cells = [];
+  for (var i = 0; i < N * N; i++) cells.push(null);
+  function put(x, y, c) { if (x >= 0 && y >= 0 && x < N && y < N && c) cells[y * N + x] = c; }
+  function draw(item, part) {
+    var p = item[part];
+    if (!p) return;
+    p.rows.forEach(function (r, j) {
+      for (var k = 0; k < r.length; k++) {
+        var L = r[k];
+        if (L === ".") continue;
+        var v = L === "B" ? body : item.pal[L];
+        if (v === "@ink") v = ink;
+        put(p.at[0] + k, p.at[1] + j, v);
+      }
+    });
+  }
+  var list = ids.map(function (id) { return COS[id]; }).filter(Boolean);
+  list.forEach(function (it) { draw(it, "back"); });
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) if (BASE[y][x] !== ".") put(x, y, body);
+  var styled = list.filter(function (it) { return it.eyes; })[0];
+  var eyes = styled ? styled.eyes : [[6, 8], [9, 8]];
+  eyes.forEach(function (e) { put(e[0], e[1], ink); });
+  FRONT_SLOTS.forEach(function (slot) { list.forEach(function (it) { if (it.slot === slot) draw(it, "front"); }); });
+  return cells;
+}
+
+function layers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] === c) n++;
+      if (!by[c]) { by[c] = ""; order.push(c); }
+      by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+function sprite(body, ids, s) { return { px: N * s, layers: layers(compose(body, ids), s) }; }
+
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      ways: WAYS.map(function (w) { return { label: w[0], ground: groundFor(w[1]), s: sprite(w[1], [], 4) }; }),
+      items: ORDER.map(function (id) { return { id: id, slot: COS[id].slot, s: sprite("#6EE7B7", [id], 6) }; }),
+      outfits: OUTFITS.map(function (o) { return { label: o.label, list: o.cos.join(", "), ground: groundFor(o.body), s: sprite(o.body, o.cos, 7) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

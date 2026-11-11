@@ -1,0 +1,153 @@
+package org.openstrap.app.data
+
+import org.openstrap.app.R
+import org.openstrap.app.i18n.Strings
+
+/**
+ * What a workout aims for, chosen on the ready screen: a zone or a range of zones (0..4, inclusive), a time, active
+ * kcal or a distance. Stored on the workout as [code] ("z:1-2", "t:2700", "k:300", "d:5000").
+ */
+sealed interface WorkoutTarget {
+    val code: String
+
+    data class Zones(val low: Int, val high: Int) : WorkoutTarget {
+        override val code get() = "z:$low-$high"
+        val label: String get() = if (low == high) {
+            Strings.app.format(R.string.core_coach_zone, low + 1)
+        } else {
+            Strings.app.format(R.string.core_coach_zones, low + 1, high + 1)
+        }
+    }
+
+    data class Time(val seconds: Long) : WorkoutTarget {
+        override val code get() = "t:$seconds"
+        val label: String get() = Strings.app.format(R.string.core_coach_minutes, seconds / 60)
+    }
+
+    /** Active kcal ([org.openstrap.app.data.WorkoutRecorder.Kcal.active]), so only offered with a profile to work it out. */
+    data class Kcal(val kcal: Int) : WorkoutTarget {
+        override val code get() = "k:$kcal"
+        val label: String get() = Strings.app.format(R.string.core_coach_kcal, kcal)
+    }
+
+    /** Metres: from GPS, or the strap's steps without it, as the workout counts its distance. */
+    data class Distance(val meters: Int) : WorkoutTarget {
+        override val code get() = "d:$meters"
+        /** "5 km", "21.1 km", "800 m". */
+        val label: String get() = when {
+            meters < 1000 -> Strings.app.format(R.string.core_coach_meters, meters)
+            meters % 1000 == 0 -> Strings.app.format(R.string.core_coach_km, (meters / 1000).toString())
+            else -> Strings.app.format(R.string.core_coach_km, String.format(java.util.Locale.ROOT, "%.1f", meters / 1000f))
+        }
+    }
+
+    companion object {
+        fun parse(code: String?): WorkoutTarget? {
+            code ?: return null
+            val v = code.substringAfter(':')
+            return when (code.substringBefore(':')) {
+                "z" -> v.split('-').mapNotNull { it.toIntOrNull() }.takeIf { it.size == 2 }?.let { (a, b) -> Zones(a, b) }
+                "t" -> v.toLongOrNull()?.let(::Time)
+                "k" -> v.toIntOrNull()?.takeIf { it > 0 }?.let(::Kcal)
+                "d" -> v.toIntOrNull()?.takeIf { it > 0 }?.let(::Distance)
+                else -> null
+            }
+        }
+
+        /** The choices the ready screen offers, after "None". */
+        val presets: List<WorkoutTarget> = listOf(
+            Zones(1, 1), Zones(1, 2), Zones(2, 2), Zones(3, 3), Time(30 * 60), Time(45 * 60), Time(60 * 60), Kcal(300), Kcal(500), Kcal(800),
+        )
+
+        /** [presets] as offered: kcal ones only when kcal can be worked out ([kcal], a profile with age, weight and height). */
+        fun offered(kcal: Boolean): List<WorkoutTarget> = if (kcal) presets else presets.filter { it !is Kcal }
+    }
+}
+
+/** A cue the strap's motor plays; each has its own pattern so it can be told apart without looking. */
+enum class Cue(val pattern: List<Int>) {
+    /** Above the target zone: three quick pulses, "ease off". */
+    AboveTarget(listOf(120, 120, 120, 120, 120)),
+    /** Below it: one long pulse, "push". */
+    BelowTarget(listOf(700)),
+    /** Back in the target: one short pulse. */
+    BackInTarget(listOf(200)),
+    /** Halfway through a time or distance goal: one long ([WorkoutBuzz.LONG]). */
+    Halfway(WorkoutBuzz.LONG),
+    /** A time, distance or kcal goal reached: three short ([WorkoutBuzz.GOAL]). */
+    GoalReached(WorkoutBuzz.GOAL),
+    /** Strength: rest is over, start the next set. Two short, as work starting is everywhere ([WorkoutBuzz.WORK_STARTS]). */
+    RestOver(WorkoutBuzz.WORK_STARTS),
+}
+
+/**
+ * Turns a workout's live zones and time into cues, debounced so arm-worn optical heart rate's spikes don't buzz:
+ * leaving or re-entering the target must last [HOLD_S] seconds, and zone cues are at least [MIN_GAP_S] apart
+ * (Zepp's alerts use 15 s and 40 s). Pure and stateful: feed it every reading in order, and the live kcal to [kcal].
+ * [reachedAt] is when a kcal target was already reached (a workout picked up again), so it never buzzes twice.
+ */
+class Coach(private val target: WorkoutTarget?, reachedAt: Long? = null) {
+    /** The side of the target last settled on: above 1, in 0, below −1; null before the first. */
+    private var settled: Int? = null
+    private var pendingSide = 0
+    private var pendingSince = 0L
+    private var lastZoneCue = Long.MIN_VALUE / 2
+    private var halfwayDone = false
+    private var goalDone = reachedAt != null
+
+    /** When the kcal target was reached, epoch seconds; null until then. */
+    var reachedAt: Long? = reachedAt
+        private set
+
+    /** A reading at [t] in live zone [zone] ([WorkoutRecorder.liveZone]), [activeSeconds] into the workout. */
+    fun feed(t: Long, zone: Int?, activeSeconds: Long): Cue? = when (target) {
+        is WorkoutTarget.Time -> when {
+            !goalDone && activeSeconds >= target.seconds -> { goalDone = true; halfwayDone = true; Cue.GoalReached }
+            !halfwayDone && activeSeconds * 2 >= target.seconds -> { halfwayDone = true; Cue.Halfway }
+            else -> null
+        }
+        is WorkoutTarget.Zones -> zone?.let { zoneCue(t, it, target) }
+        is WorkoutTarget.Kcal, is WorkoutTarget.Distance, null -> null
+    }
+
+    /**
+     * The live active kcal at [t] ([WorkoutRecorder.liveKcal], which never goes down): the goal cue the first time it
+     * reaches a kcal target, once only. Fed nothing while paused, the figure holds there anyway.
+     */
+    fun kcal(t: Long, activeKcal: Float): Cue? {
+        if (target !is WorkoutTarget.Kcal || goalDone || activeKcal < target.kcal) return null
+        goalDone = true
+        reachedAt = t
+        return Cue.GoalReached
+    }
+
+    /**
+     * The distance so far, [meters] at [t]: the halfway cue, then the goal cue the first time it reaches a distance
+     * target, each once. Distance only grows, so a pause holds it where it is.
+     */
+    fun distance(t: Long, meters: Float): Cue? {
+        if (target !is WorkoutTarget.Distance || goalDone) return null
+        return when {
+            meters >= target.meters -> { goalDone = true; halfwayDone = true; reachedAt = t; Cue.GoalReached }
+            !halfwayDone && meters * 2 >= target.meters -> { halfwayDone = true; Cue.Halfway }
+            else -> null
+        }
+    }
+
+    private fun zoneCue(t: Long, zone: Int, target: WorkoutTarget.Zones): Cue? {
+        val side = when { zone > target.high -> 1; zone < target.low -> -1; else -> 0 }
+        if (side != pendingSide) { pendingSide = side; pendingSince = t; return null }
+        if (t - pendingSince < HOLD_S) return null
+        // The first settled side only says where the workout begins: warming up below the target isn't a drift.
+        val was = settled ?: run { settled = side; return null }
+        if (side == was || t - lastZoneCue < MIN_GAP_S) return null
+        settled = side
+        lastZoneCue = t
+        return when (side) { 0 -> Cue.BackInTarget; 1 -> Cue.AboveTarget; else -> Cue.BelowTarget }
+    }
+
+    companion object {
+        const val HOLD_S = 15L
+        const val MIN_GAP_S = 40L
+    }
+}

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home · before</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244)}
+.px{font-family:'Silkscreen',monospace}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166)}
+.num{font-variant-numeric:tabular-nums}
+.card{padding:16px;border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);display:flex;flex-direction:column;gap:12px;box-sizing:border-box}
+.coach{background:rgba(165,180,252,.10);border-color:rgba(165,180,252,.25)}
+.day{width:32px;height:32px;box-sizing:border-box;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-variant-numeric:tabular-nums}
+.on{background:rgb(245,245,244);color:rgb(10,11,14)}
+.off{border:1px solid rgb(44,47,55);background:rgba(44,47,55,.3);color:rgb(155,157,166)}
+</style>
+</helmet>
+<div style="width: 390px; height: 1960px; box-sizing: border-box; overflow: hidden; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 54px 20px 40px; display: flex; flex-direction: column; gap: 20px">
+
+  <div style="display: flex; align-items: flex-end; gap: 12px">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+      <div class="label">Friday, Oct 10</div>
+      <div style="font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -.8px">Good morning</div>
+      <div style="font-size: 13px; color: rgb(155,157,166)">Synced 12 min ago</div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 4px">
+      <button class="b" aria-label="Switch theme" style="width: 40px; height: 40px; color: rgb(155,157,166)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path></svg></button>
+      <button class="b" aria-label="Profile" style="width: 40px; height: 40px; border-radius: 20px; border: 2px solid #C7D2FE; padding: 2px"><span class="px" style="width: 100%; height: 100%; border-radius: 16px; background: #141633; color: #C7D2FE; display: flex; align-items: center; justify-content: center; font-size: 12px">T</span></button>
+    </div>
+  </div>
+
+  <a href="#" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 8px">
+    <div style="position: relative; width: 196px; height: 196px">
+      <svg width="196" height="196" viewBox="0 0 196 196" aria-hidden="true"><circle cx="98" cy="98" r="86" fill="none" stroke="rgba(74,222,128,.14)" stroke-width="14"></circle><circle cx="98" cy="98" r="86" fill="none" stroke="rgb(74,222,128)" stroke-width="14" stroke-linecap="round" stroke-dasharray="367 541" transform="rotate(-90 98 98)"></circle></svg>
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+        <div class="num" style="font-size: 64px; line-height: 64px; font-weight: 600; letter-spacing: -2.5px">68</div>
+        <div class="label" style="margin-top: 6px">Recovery</div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 16px">
+      <div style="font-size: 20px; line-height: 25px; font-weight: 600; text-align: center">Ready for a normal day</div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgb(155,157,166)"><span style="padding: 2px 8px; border-radius: 6px; background: rgba(74,222,128,.14); color: rgb(74,222,128); font-weight: 600">Good</span><span>Open Recovery</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></div>
+    </div>
+  </a>
+
+  <div style="display: flex; gap: 12px">
+    <a href="#" class="card" style="flex: 1; text-decoration: none; color: inherit">
+      <div class="label">Sleep Score</div>
+      <div style="display: flex; align-items: baseline; gap: 8px"><span class="num" style="font-size: 34px; line-height: 38px; font-weight: 600; letter-spacing: -1px">78</span><span style="font-size: 13px; color: rgb(74,222,128); font-weight: 600">Good</span></div>
+      <div style="font-size: 13px; color: rgb(155,157,166)">7h 12m asleep</div>
+    </a>
+    <a href="#" class="card coach" style="flex: 1; text-decoration: none; color: inherit; justify-content: space-between">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgb(165,180,252)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <div style="display: flex; flex-direction: column; gap: 2px"><div style="font-size: 15px; font-weight: 600">Ask Coach</div><div style="font-size: 13px; color: rgb(155,157,166)">About today</div></div>
+    </a>
+  </div>
+
+  <a href="#" class="card" style="flex-direction: row; align-items: center; gap: 16px; text-decoration: none; color: inherit">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+      <div class="label">Tomorrow</div>
+      <div class="num" style="font-size: 15px; font-weight: 600">Likely 68–76</div>
+      <div style="font-size: 13px; color: rgb(155,157,166)">Asleep by 23:00 keeps you near the top.</div>
+    </div>
+    <div style="font-size: 13px; font-weight: 600; color: rgb(196,181,253)">Plan tomorrow →</div>
+  </a>
+
+  <a href="#" class="card" aria-label="Buddies, see all" style="text-decoration: none; color: inherit">
+    <div style="display: flex; justify-content: space-between; align-items: center"><div class="label">Buddies</div><div style="font-size: 13px; color: rgb(155,157,166)">See all</div></div>
+    <div style="display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; align-items: center"><span class="px" style="width: 44px; height: 44px; border-radius: 22px; background: #2A1420; color: #F9A8D4; display: flex; align-items: center; justify-content: center; font-size: 14px">A</span><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 6px; margin-top: -8px; border: 1px solid rgb(10,11,14); background: rgb(74,222,128)"></span></div>
+      <div style="display: flex; flex-direction: column; align-items: center"><span class="px" style="width: 44px; height: 44px; border-radius: 22px; background: #0F2018; color: #4ADE80; display: flex; align-items: center; justify-content: center; font-size: 14px">J</span><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 6px; margin-top: -8px; border: 1px solid rgb(10,11,14); background: rgb(251,191,36)"></span></div>
+      <div style="display: flex; flex-direction: column; align-items: center"><span class="px" style="width: 44px; height: 44px; border-radius: 22px; background: #141633; color: #C7D2FE; display: flex; align-items: center; justify-content: center; font-size: 14px">R</span><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 6px; margin-top: -8px; border: 1px solid rgb(10,11,14); background: rgb(74,222,128)"></span></div>
+      <div style="display: flex; flex-direction: column; align-items: center"><span class="px" style="width: 44px; height: 44px; border-radius: 22px; background: #26160E; color: #FB923C; display: flex; align-items: center; justify-content: center; font-size: 14px">M</span><span style="width: 12px; height: 12px; box-sizing: border-box; border-radius: 6px; margin-top: -8px; border: 1px solid rgb(10,11,14); background: rgb(248,113,113)"></span></div>
+    </div>
+  </a>
+
+  <div class="card" style="gap: 14px">
+    <div style="font-size: 15px; font-weight: 600">Anything to log today?</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px">
+      <button class="b" style="height: 32px; padding: 0 12px; font-size: 13px; background: rgb(245,245,244); color: rgb(10,11,14)">Caffeine</button>
+      <button class="b" style="height: 32px; padding: 0 12px; font-size: 13px; border-color: rgb(44,47,55); background: rgba(44,47,55,.3)">Alcohol</button>
+      <button class="b" style="height: 32px; padding: 0 12px; font-size: 13px; border-color: rgb(44,47,55); background: rgba(44,47,55,.3)">Late meal</button>
+    </div>
+    <div style="font-size: 13px; color: rgb(155,157,166)">Missed a day? Tap it to check in.</div>
+    <div style="display: flex; justify-content: space-between">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-size: 11px; color: rgb(155,157,166)">S</span><span class="day on">4</span></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-size: 11px; color: rgb(155,157,166)">S</span><span class="day off">5</span></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-size: 11px; color: rgb(155,157,166)">M</span><span class="day on">6</span></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-size: 11px; color: rgb(155,157,166)">T</span><span class="day on">7</span></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-size: 11px; color: rgb(155,157,166)">W</span><span class="day off">8</span></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-size: 11px; color: rgb(155,157,166)">T</span><span class="day on">9</span></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-size: 11px; color: rgb(155,157,166)">F</span><span class="day off">10</span></div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between">
+      <div class="label">Recaps</div>
+      <a href="#" style="font-size: 13px; font-weight: 500; color: rgb(245,245,244); text-decoration: underline; text-underline-offset: 3px">See all</a>
+    </div>
+    <div style="display: flex; gap: 14px; margin-right: -20px; overflow: hidden">
+      <button class="b" aria-label="This week recap" style="flex-direction: column; gap: 6px; width: 72px; flex: none; padding: 0"><span style="width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; border: 3px solid #C7D2FE; padding: 3px; display: flex"><span class="px" style="flex: 1; border-radius: 32px; background: #141633; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #C7D2FE">WK 41</span></span><span style="font-size: 12px; font-weight: 600">This week</span></button>
+      <button class="b" aria-label="Sep 29 recap" style="flex-direction: column; gap: 6px; width: 72px; flex: none; padding: 0"><span style="width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; border: 2px solid #3F3F46; padding: 3px; display: flex"><span class="px" style="flex: 1; border-radius: 32px; background: #141633; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #C7D2FE">WK 40</span></span><span style="font-size: 12px; font-weight: 400; color: rgb(155,157,166)">Sep 29</span></button>
+      <button class="b" aria-label="September recap" style="flex-direction: column; gap: 6px; width: 72px; flex: none; padding: 0"><span style="width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; border: 2px solid #3F3F46; padding: 3px; display: flex"><span class="px" style="flex: 1; border-radius: 32px; background: #12132A; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #FEF08A">SEP</span></span><span style="font-size: 12px; font-weight: 400; color: rgb(155,157,166)">September</span></button>
+      <button class="b" aria-label="Sep 22 recap" style="flex-direction: column; gap: 6px; width: 72px; flex: none; padding: 0"><span style="width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; border: 2px solid #3F3F46; padding: 3px; display: flex"><span class="px" style="flex: 1; border-radius: 32px; background: #2A1420; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #F9A8D4">WK 39</span></span><span style="font-size: 12px; font-weight: 400; color: rgb(155,157,166)">Sep 22</span></button>
+      <button class="b" aria-label="Sep 15 recap" style="flex-direction: column; gap: 6px; width: 72px; flex: none; padding: 0"><span style="width: 64px; height: 64px; box-sizing: border-box; border-radius: 32px; border: 2px solid #3F3F46; padding: 3px; display: flex"><span class="px" style="flex: 1; border-radius: 32px; background: #141633; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #C7D2FE">WK 38</span></span><span style="font-size: 12px; font-weight: 400; color: rgb(155,157,166)">Sep 15</span></button>
+    </div>
+  </div>
+
+  <a href="#" class="card coach" style="gap: 10px; text-decoration: none; color: inherit">
+    <div style="display: flex; align-items: center; gap: 8px"><div class="label" style="flex: 1; color: rgb(165,180,252)">Your weekly recap</div><div style="font-size: 13px; color: rgb(155,157,166)">Mon, Oct 6</div></div>
+    <div style="font-size: 18px; line-height: 24px; font-weight: 600">Bedtimes drifted later midweek, and Monday’s short night pulled recovery down. The weekend made it back.</div>
+    <div style="font-size: 13px; font-weight: 600; color: rgb(165,180,252)">Tap to read it all →</div>
+  </a>
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <div class="label">Your metrics</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px">
+      <div class="card" style="flex: 1 1 40%; gap: 8px">
+        <div style="font-size: 13px; font-weight: 500; color: #F87171">Resting heart rate</div>
+        <div style="display: flex; align-items: baseline; gap: 4px"><span class="num" style="font-size: 30px; line-height: 34px; font-weight: 600; letter-spacing: -1px">54</span><span style="font-size: 13px; color: rgb(155,157,166)">bpm</span></div>
+        <div style="height: 6px; border-radius: 3px; background: #F8717129; margin: 4px 0"><div style="height: 6px; width: 62%; border-radius: 3px; background: #F87171"></div></div>
+        <div style="font-size: 13px; color: rgb(155,157,166)">2 below your average</div>
+      </div>
+      <div class="card" style="flex: 1 1 40%; gap: 8px">
+        <div style="font-size: 13px; font-weight: 500; color: #60A5FA">HRV</div>
+        <div style="display: flex; align-items: baseline; gap: 4px"><span class="num" style="font-size: 30px; line-height: 34px; font-weight: 600; letter-spacing: -1px">48</span><span style="font-size: 13px; color: rgb(155,157,166)">ms</span></div>
+        <div style="height: 6px; border-radius: 3px; background: #60A5FA29; margin: 4px 0"><div style="height: 6px; width: 70%; border-radius: 3px; background: #60A5FA"></div></div>
+        <div style="font-size: 13px; color: rgb(155,157,166)">Steady vs your average</div>
+      </div>
+      <div class="card" style="flex: 1 1 40%; gap: 8px">
+        <div style="font-size: 13px; font-weight: 500; color: #4ADE80">Steps</div>
+        <div style="display: flex; align-items: baseline; gap: 4px"><span class="num" style="font-size: 30px; line-height: 34px; font-weight: 600; letter-spacing: -1px">8,412</span></div>
+        <div style="height: 6px; border-radius: 3px; background: #4ADE8029; margin: 4px 0"><div style="height: 6px; width: 84%; border-radius: 3px; background: #4ADE80"></div></div>
+        <div style="font-size: 13px; color: rgb(155,157,166)">Up vs your average</div>
+      </div>
+      <div class="card" style="flex: 1 1 40%; gap: 8px">
+        <div style="font-size: 13px; font-weight: 500; color: #FBBF24">Active minutes</div>
+        <div style="display: flex; align-items: baseline; gap: 4px"><span class="num" style="font-size: 30px; line-height: 34px; font-weight: 600; letter-spacing: -1px">36</span><span style="font-size: 13px; color: rgb(155,157,166)">min</span></div>
+        <div style="height: 6px; border-radius: 3px; background: #FBBF2429; margin: 4px 0"><div style="height: 6px; width: 52%; border-radius: 3px; background: #FBBF24"></div></div>
+        <div style="font-size: 13px; color: rgb(155,157,166)">Steady vs your average</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1960}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

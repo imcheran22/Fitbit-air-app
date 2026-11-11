@@ -1,0 +1,70 @@
+name: Server CI
+
+# Builds and tests the Goose server ingest service. The conftest.py fixture
+# manages a throwaway TimescaleDB container via docker run — no services: block
+# needed because Docker daemon is available on ubuntu-latest runners.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "server/**"
+      - ".github/workflows/server-ci.yml"
+  pull_request: {}
+  workflow_dispatch:
+
+permissions: {}
+
+defaults:
+  run:
+    working-directory: server/ingest
+
+jobs:
+  pytest:
+    name: Server pytest suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('server/ingest/requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install local packages
+        run: pip install -e ../packages/whoop-protocol
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Verify Docker is available
+        run: docker info
+
+      - name: Run pytest
+        run: pytest tests/ -v --tb=short
+
+  server-gate:
+    name: server / gate
+    needs: [pytest]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        working-directory: /tmp
+        run: |
+          pytest="${{ needs.pytest.result }}"
+          if [[ "$pytest" == "failure" || "$pytest" == "cancelled" ]]; then
+            echo "pytest failed: $pytest" && exit 1
+          fi
+          echo "server CI passed (pytest=$pytest)"

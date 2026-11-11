@@ -1,0 +1,208 @@
+package com.hcwebhook.app
+
+import android.content.Context
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.IOException
+import java.net.ProtocolException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLException
+import kotlin.math.pow
+
+internal class HttpResponseException(
+    val statusCode: Int,
+    message: String
+) : IOException(message)
+
+class WebhookManager(
+    private val webhookConfigs: List<WebhookConfig>,
+    private val context: Context? = null,
+    private val dataType: String? = null,
+    private val recordCount: Int? = null,
+    private val syncType: String? = null,
+    private val payload: String? = null
+) {
+
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .build()
+
+    private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+
+    suspend fun postData(jsonPayload: String): Result<Unit> {
+        val enabledConfigs = webhookConfigs.filter { it.isEnabled }
+        if (enabledConfigs.isEmpty()) {
+            return Result.failure(IllegalStateException("No enabled webhook URLs configured"))
+        }
+
+        var atLeastOneSuccess = false
+        var retryableFailure: IOException? = null
+        var lastFailure: Throwable? = null
+
+        // Post to ALL enabled webhooks in parallel
+        val results = coroutineScope {
+            enabledConfigs.map { config -> async { postToUrl(config, jsonPayload) } }.awaitAll()
+        }
+        for (result in results) {
+            if (result.isSuccess) {
+                atLeastOneSuccess = true
+            } else {
+                val ex = result.exceptionOrNull()
+                lastFailure = ex
+                if (ex is IOException && isRetryableException(ex)) {
+                    retryableFailure = ex
+                }
+            }
+        }
+
+        // Return success if at least one webhook succeeded
+        if (atLeastOneSuccess) {
+            return Result.success(Unit)
+        }
+
+        // Prefer a retryable exception so that SyncWorker can schedule a retry
+        // even if the last webhook failed with a non-retryable error
+        return Result.failure(retryableFailure ?: lastFailure ?: IOException("All webhook posts failed"))
+    }
+
+    private suspend fun postToUrl(config: WebhookConfig, jsonPayload: String): Result<Unit> {
+        val timestamp = System.currentTimeMillis()
+        var statusCode: Int? = null
+        var errorMessage: String? = null
+
+        return try {
+            val requestBody = jsonPayload.toRequestBody(jsonMediaType)
+            val requestBuilder = Request.Builder()
+                .url(config.url)
+                .post(requestBody)
+
+            config.headers.forEach { (key, value) ->
+                requestBuilder.addHeader(key, value)
+            }
+
+            val request = requestBuilder.build()
+
+            var lastException: Exception? = null
+            for (attempt in 1..MAX_RETRIES) {
+                var shouldRetry: Boolean
+                try {
+                    client.newCall(request).execute().use { response ->
+                        statusCode = response.code
+                        if (response.isSuccessful) {
+                            logWebhookCall(config.url, timestamp, statusCode, true, null, System.currentTimeMillis() - timestamp)
+                            return Result.success(Unit)
+                        } else {
+                            val location = response.header("Location")
+                            val detail = buildString {
+                                append(response.message)
+                                if (response.code in 300..399 && !location.isNullOrBlank()) {
+                                    append(" Location=").append(location)
+                                }
+                            }
+                            val httpException = HttpResponseException(
+                                response.code,
+                                "HTTP ${response.code}: $detail"
+                            )
+                            lastException = httpException
+                            errorMessage = httpException.message
+                            shouldRetry = isRetryableException(httpException)
+                        }
+                    }
+
+                    if (!shouldRetry) {
+                        break
+                    }
+                } catch (e: IOException) {
+                    lastException = e
+                    errorMessage = e.message
+                    shouldRetry = isRetryableException(e)
+
+                    if (!shouldRetry) {
+                        break
+                    }
+                }
+
+                if (attempt < MAX_RETRIES) {
+                    val delayMs = INITIAL_RETRY_DELAY_MS * (2.0.pow(attempt - 1).toLong())
+                    kotlinx.coroutines.delay(delayMs)
+                }
+            }
+
+            logWebhookCall(config.url, timestamp, statusCode, false, errorMessage, System.currentTimeMillis() - timestamp)
+            Result.failure(lastException ?: IOException("Max retries exceeded"))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logWebhookCall(config.url, timestamp, null, false, e.message, System.currentTimeMillis() - timestamp)
+            Result.failure(e)
+        }
+    }
+
+    private fun String.redactSensitiveUrl(): String {
+        var safe = this
+        // Redact common auth query params
+        safe = safe.replace(Regex("([?&](token|key|apikey|auth|api_key|secret)=)[^&]+", RegexOption.IGNORE_CASE), "$1********")
+        // Redact Discord webhook tokens
+        safe = safe.replace(Regex("(discord\\.com/api/webhooks/\\d+/)[^/?&]+"), "$1********")
+        // Redact Telegram bot tokens (just in case they leak into url somehow)
+        safe = safe.replace(Regex("(api\\.telegram\\.org/bot)[^/]+"), "$1********")
+        return safe
+    }
+
+    private fun logWebhookCall(
+        url: String,
+        timestamp: Long,
+        statusCode: Int?,
+        success: Boolean,
+        errorMessage: String?,
+        responseTimeMs: Long
+    ) {
+        context?.let {
+            val preferencesManager = PreferencesManager(it)
+            val log = WebhookLog(
+                id = UUID.randomUUID().toString(),
+                timestamp = timestamp,
+                url = url.redactSensitiveUrl(),
+                statusCode = statusCode,
+                success = success,
+                errorMessage = errorMessage?.redactSensitiveUrl(),
+                dataType = dataType,
+                recordCount = recordCount,
+                responseTimeMs = responseTimeMs,
+                syncType = syncType,
+                payload = payload?.take(MAX_PAYLOAD_CHARS),
+                deliveryFormat = WebhookLog.FORMAT_JSON
+            )
+            preferencesManager.addWebhookLog(log)
+        }
+    }
+
+    companion object {
+        private const val TIMEOUT_SECONDS = 60L
+        private const val MAX_RETRIES = 3
+        private const val INITIAL_RETRY_DELAY_MS = 1000L
+        private const val MAX_PAYLOAD_CHARS = 8000
+
+        internal fun isRetryableException(exception: IOException): Boolean {
+            return when (exception) {
+                is HttpResponseException -> exception.statusCode >= 500
+                is SocketTimeoutException -> true
+                is UnknownHostException -> true
+                is SSLException -> false
+                is ProtocolException -> false
+                else -> true
+            }
+        }
+    }
+}

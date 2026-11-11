@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile ID-1 · Member card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@500&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244);text-decoration:none}
+.ol{border-color:rgb(44,47,55);background:rgba(44,47,55,.3)}
+.dz{color:#F87171;border-color:rgba(248,113,113,.4)}
+.cap{font-family:'Silkscreen',monospace;font-size:13px;letter-spacing:1px;color:rgb(155,157,166)}
+.phone{position:relative;width:390px;height:844px;flex:none;border-radius:28px;border:1px solid rgb(30,33,40);box-sizing:border-box;overflow:hidden;background:rgb(10,11,14);padding:54px 16px 32px;display:flex;flex-direction:column;gap:16px}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166)}
+.list{border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 16px;box-sizing:border-box;border-top:1px solid rgb(30,33,40);text-decoration:none;color:rgb(245,245,244)}
+.row:first-child{border-top:0}
+.t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tt{font-size:15px}
+.st{font-size:13px;color:rgb(155,157,166)}
+.chev{color:rgb(90,94,104);font-size:16px}
+.idc{position:relative;width:358px;border-radius:16px;background:rgb(20,22,27);border:1px solid rgb(36,39,47);box-sizing:border-box;overflow:hidden;flex:none}
+.stat{display:flex;flex-direction:column;gap:1px;padding:6px 8px;border-radius:8px;background:rgb(28,31,38);min-width:0}
+.stat b{font-size:15px;font-variant-numeric:tabular-nums}
+.stat span{font-family:'Silkscreen',monospace;font-size:9px;letter-spacing:1px;color:rgb(155,157,166)}
+</style>
+</helmet>
+<div style="width: 860px; height: 920px; box-sizing: border-box; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 18px 20px 0; display: flex; gap: 40px">
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">CORAL · DEFAULT</span>
+  <div class="phone">
+    <div style="display: flex; align-items: center; justify-content: space-between"><h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 24px; letter-spacing: 1px">PROFILE</h1><a href="#" class="b ol" aria-label="Watch your weekly recap" style="height: 36px; padding: 0 10px; font-size: 12px; color: rgb(199,210,254)"><span style="width: 6px; height: 6px; background: rgb(199,210,254)"></span>New recap</a></div>
+
+    <div class="idc">
+      <svg aria-hidden="true" width="358" height="8" shape-rendering="crispEdges" style="display: block"><sc-for list="{{a.edge}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+      <div style="padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: center"><span class="label" style="color: {{a.hex}}">Biometrics · member</span><span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: rgb(200,201,207)">ID KIP-7Q4M</span></div>
+        <div style="display: flex; gap: 14px">
+          <a href="Picker.dc.html" aria-label="Change KIP colour" style="position: relative; width: 96px; height: 96px; flex: none; overflow: hidden; border: 2px solid {{a.hex}}; box-sizing: border-box; border-radius: 4px">
+            <svg aria-hidden="true" width="92" height="92" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{a.bg}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+            <svg aria-hidden="true" width="64" height="64" shape-rendering="crispEdges" style="position: absolute; left: 14px; top: 22px"><sc-for list="{{a.kip}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          </a>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0">
+            <span style="font-size: 21px; font-weight: 600; letter-spacing: -.4px">Tushar</span>
+            <span class="st">@tushar</span>
+            <span class="label" style="font-size: 9px; margin-top: 4px">Member since</span>
+            <span style="font-size: 13px">Mar 14, 2026</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+          <div class="stat"><b>12</b><span>DAY STREAK</span></div>
+          <div class="stat"><b>9</b><span>BADGES</span></div>
+          <div class="stat"><b>4</b><span>BUDDIES</span></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <svg role="img" aria-label="Member code KIP-7Q4M" width="240" height="28" shape-rendering="crispEdges"><sc-for list="{{bars}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <a href="#" class="b ol" style="margin-left: auto; height: 36px; padding: 0 14px; font-size: 13px">Edit</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="list">
+      <a href="#" class="row"><span class="t"><span class="tt">Health data</span><span class="st">Google Health · synced 12 min ago</span></span><span class="chev">›</span></a>
+      <a href="#" class="row"><span class="t"><span class="tt">Buddies &amp; chats</span><span class="st">Sharing 3 of 5 · receipts on</span></span><span class="chev">›</span></a>
+      <a href="#" class="row"><span class="t"><span class="tt">Notifications</span><span class="st">4 of 6 on</span></span><span class="chev">›</span></a>
+      <a href="#" class="row"><span class="t"><span class="tt">Coach</span><span class="st">Sage · Coach Memory</span></span><span class="chev">›</span></a>
+      <a href="#" class="row"><span class="t"><span class="tt">Time zone · sign-in</span><span class="st">Europe/London · Apple, Google</span></span><span class="chev">›</span></a>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button class="b dz" style="height: 44px; font-size: 14px">Sign out</button><button class="b dz" style="height: 44px; font-size: 14px">Delete account…</button></div>
+  </div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">SAME CARD · MINT</span>
+    <div class="idc">
+      <svg aria-hidden="true" width="358" height="8" shape-rendering="crispEdges" style="display: block"><sc-for list="{{b.edge}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+      <div style="padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; justify-content: space-between; align-items: center"><span class="label" style="color: {{b.hex}}">Biometrics · member</span><span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: rgb(200,201,207)">ID KIP-7Q4M</span></div>
+        <div style="display: flex; gap: 14px">
+          <a href="Picker.dc.html" aria-label="Change KIP colour" style="position: relative; width: 96px; height: 96px; flex: none; overflow: hidden; border: 2px solid {{b.hex}}; box-sizing: border-box; border-radius: 4px">
+            <svg aria-hidden="true" width="92" height="92" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{b.bg}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+            <svg aria-hidden="true" width="64" height="64" shape-rendering="crispEdges" style="position: absolute; left: 14px; top: 22px"><sc-for list="{{b.kip}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          </a>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0">
+            <span style="font-size: 21px; font-weight: 600; letter-spacing: -.4px">Tushar</span>
+            <span class="st">@tushar</span>
+            <span class="label" style="font-size: 9px; margin-top: 4px">Member since</span>
+            <span style="font-size: 13px">Mar 14, 2026</span>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+          <div class="stat"><b>12</b><span>DAY STREAK</span></div>
+          <div class="stat"><b>9</b><span>BADGES</span></div>
+          <div class="stat"><b>4</b><span>BUDDIES</span></div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <svg role="img" aria-label="Member code KIP-7Q4M" width="240" height="28" shape-rendering="crispEdges"><sc-for list="{{bars}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <a href="#" class="b ol" style="margin-left: auto; height: 36px; padding: 0 14px; font-size: 13px">Edit</a>
+        </div>
+      </div>
+    </div>
+    <div class="st" style="max-width: 358px; line-height: 19px">Tap the photo to change KIP’s colour; the card edge, frame and label follow it. Edit changes name and handle. The code is a short form of your user id.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":920}}'>
+var KN = 16, KE = "................";
+var KBASE = [KE, KE, KE, KE, KE, KE, "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", ".....b....s.....", ".....b....s.....", "...zzzzzzzzzz..."];
+function rgbOf(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function hx(v) { var s = Math.max(0, Math.min(255, Math.round(v))).toString(16); return s.length < 2 ? "0" + s : s; }
+function dark(h, k) { var x = rgbOf(h); return "#" + hx(x[0] * k) + hx(x[1] * k) + hx(x[2] * k); }
+function lum(h) { var c = rgbOf(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function pxLayers(rects, u) { var by = {}, order = []; rects.forEach(function (r) { var f = r[4]; if (!by[f]) { by[f] = ""; order.push(f); } by[f] += "M" + r[0] * u + " " + r[1] * u + "h" + r[2] * u + "v" + r[3] * u + "h-" + r[2] * u + "z"; }); return order.map(function (f) { return { fill: f, d: by[f] }; }); }
+function kip(body, s, wave) {
+  var p = { b: body, s: dark(body, 0.78), e: lum(body) > 0.2 ? "#14161B" : "#F5F5F4", z: "rgba(0,0,0,0.35)" }, g = [], r = [], x, y;
+  for (y = 0; y < KN; y++) { var row = []; for (x = 0; x < KN; x++) row.push(KBASE[y][x] !== "." ? KBASE[y][x] : null); g.push(row); }
+  g[8][6] = "e"; g[8][9] = "e"; if (wave) { g[9][12] = "s"; g[8][13] = "s"; }
+  for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) if (g[y][x]) r.push([x, y, 1, 1, p[g[y][x]]]);
+  return pxLayers(r, s);
+}
+function backdrop(W, H, gy) {
+  var r = [], pal = ["#2A5694", "#3264A3", "#3D72B0", "#4E83BD"], bh = Math.floor(gy / 4), i, x;
+  for (i = 0; i < 4; i++) { r.push([0, i * bh, W, i === 3 ? gy - 3 * bh : bh, pal[i]]); if (i > 0) for (x = i % 2; x < W; x += 2) r.push([x, i * bh, 1, 1, pal[i - 1]]); }
+  r.push([W - 11, 3, 5, 5, "#FBBF24"], [W - 9, 6, 6, 3, "#E5E7EB"]);
+  r.push([0, gy, W, 1, "#5CA857"], [0, gy + 1, W, 2, "#4B9248"], [0, gy + 3, W, H - gy - 3, "#3D7C3C"]);
+  return pxLayers(r, 2);
+}
+function edge(hex) { var r = [], x; for (x = 0; x < 90; x++) { r.push([x, 0, 1, 1, x % 2 ? hex : dark(hex, 0.6)]); if (x % 3 === 0) r.push([x, 1, 1, 1, dark(hex, 0.45)]); } return pxLayers(r, 4); }
+function barcode() { var r = [], code = "KIP7Q4M", x = 0, i, j; for (i = 0; i < code.length; i++) { var c = code.charCodeAt(i); for (j = 0; j < 6; j++) { var w = ((c >> j) & 1) ? 2 : 1; r.push([x, 0, w, 14, "#C8C9CF"]); x += w + 1 + ((c >> (j + 1)) & 1); } } return pxLayers(r, 2); }
+function card(hex) { return { hex: hex, kip: kip(hex, 4, true), bg: backdrop(46, 46, 41), edge: edge(hex) }; }
+class Component extends DCLogic {
+  renderVals() { return { a: card("#FB7185"), b: card("#6EE7B7"), bars: barcode() }; }
+}
+</script>
+</body>
+</html>

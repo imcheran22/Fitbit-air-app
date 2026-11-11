@@ -1,0 +1,527 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`BaselineProgressRing matches its snapshot 1`] = `
+<View
+  accessibilityLabel="Building your baseline: 9 of 14 days"
+  accessible={true}
+  style={
+    {
+      "alignItems": "center",
+      "height": 84,
+      "justifyContent": "center",
+      "width": 84,
+    }
+  }
+  testID="baseline-progress-ring"
+>
+  <RNSVGSvgView
+    bbHeight={84}
+    bbWidth={84}
+    focusable={false}
+    height={84}
+    style={
+      [
+        {
+          "backgroundColor": "transparent",
+          "borderWidth": 0,
+        },
+        {
+          "position": "absolute",
+          "transform": [
+            {
+              "rotate": "-90deg",
+            },
+          ],
+        },
+        {
+          "flex": 0,
+          "height": 84,
+          "width": 84,
+        },
+      ]
+    }
+    transform={
+      [
+        {
+          "rotate": "-90deg",
+        },
+      ]
+    }
+    width={84}
+  >
+    <RNSVGGroup
+      fill={
+        {
+          "payload": 4278190080,
+          "type": 0,
+        }
+      }
+    >
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={null}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-0"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-17.05436011948745}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-1"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-34.1087202389749}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-2"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-51.163080358462345}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-3"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-68.2174404779498}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-4"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-85.27180059743725}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-5"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-102.32616071692469}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-6"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-119.38052083641213}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-7"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4279080072,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-136.4348809558996}
+        strokeOpacity={1}
+        strokeWidth={8}
+        testID="baseline-tick-filled-8"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4284638318,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-153.48924107538704}
+        strokeOpacity={0.35}
+        strokeWidth={8}
+        testID="baseline-tick-empty-9"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4284638318,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-170.5436011948745}
+        strokeOpacity={0.35}
+        strokeWidth={8}
+        testID="baseline-tick-empty-10"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4284638318,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-187.59796131436192}
+        strokeOpacity={0.35}
+        strokeWidth={8}
+        testID="baseline-tick-empty-11"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4284638318,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-204.65232143384938}
+        strokeOpacity={0.35}
+        strokeWidth={8}
+        testID="baseline-tick-empty-12"
+      />
+      <RNSVGCircle
+        cx={42}
+        cy={42}
+        fill={null}
+        propList={
+          [
+            "fill",
+            "stroke",
+            "strokeWidth",
+            "strokeOpacity",
+            "strokeDasharray",
+            "strokeDashoffset",
+          ]
+        }
+        r={38}
+        stroke={
+          {
+            "payload": 4284638318,
+            "type": 0,
+          }
+        }
+        strokeDasharray={
+          [
+            "14.054360119487448",
+            "224.7066815533368",
+          ]
+        }
+        strokeDashoffset={-221.70668155333684}
+        strokeOpacity={0.35}
+        strokeWidth={8}
+        testID="baseline-tick-empty-13"
+      />
+    </RNSVGGroup>
+  </RNSVGSvgView>
+  <Text
+    className="text-foreground text-caption font-semibold tabular-nums"
+    style={
+      [
+        {
+          "fontFamily": "Geist_600SemiBold",
+          "fontVariant": [
+            "tabular-nums",
+          ],
+        },
+        undefined,
+      ]
+    }
+  >
+    9/14 days
+  </Text>
+</View>
+`;

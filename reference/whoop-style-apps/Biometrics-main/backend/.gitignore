@@ -1,0 +1,16 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+# Google Cloud service-account private keys. .env.example documents
+# GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json, so operators are
+# expected to drop a live cloud-platform-scoped credential in this directory;
+# it must never be committed.
+service-account-key.json
+*-key.json
+*.sa.json
+
+/src/generated/prisma
+
+# Build output (`npm run build`); produced locally and in the Docker build, never committed.
+/dist

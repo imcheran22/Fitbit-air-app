@@ -1,0 +1,10 @@
+.superpowers/
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+.kotlin/
+*.apk
+.claude/

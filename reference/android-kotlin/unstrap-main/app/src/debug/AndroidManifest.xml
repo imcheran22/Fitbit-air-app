@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- The design v2 component gallery: adb shell am start -n org.openstrap.app/.gallery.ComponentGalleryActivity -->
+        <activity
+            android:name=".gallery.ComponentGalleryActivity"
+            android:exported="true" />
+        <!--
+          The home screen widgets at their three sizes, hosted for real. Off while no widget work is going on:
+          while open its widgets count as placed and refresh with the real ones. To turn it back on, uncomment
+          the activity below (CLAUDE.md, "Widget gallery"). Grant binding first
+          (adb shell appwidget grantbind, see WidgetGalleryActivity for the whole command), then
+          adb shell am start -n org.openstrap.app/.widget.debug.WidgetGalleryActivity
+          with the string extras widget (recovery, steps), mood (day, evening, night, auto) and pin (a widget kind).
+
+        <activity
+            android:name=".widget.debug.WidgetGalleryActivity"
+            android:exported="true"
+            android:launchMode="singleTop" />
+        -->
+    </application>
+</manifest>

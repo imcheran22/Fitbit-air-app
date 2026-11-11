@@ -1,0 +1,10 @@
+Tell fitdash your name once and Today greets you.
+Dark mode: system, light or dark. The widget follows.
+New Log tab: log water in one tap and tag your day.
+Chips show what moved recovery, sleep and regularity. Tap to open the metric.
+Trends compares days with and without each tag, once you have ten tagged days.
+Sleep debt and a bedtime target on Sleep.
+A weekly review on Today.
+An optional morning check for unusual overnight vitals.
+A timeline of your day.
+CSV export in Settings.

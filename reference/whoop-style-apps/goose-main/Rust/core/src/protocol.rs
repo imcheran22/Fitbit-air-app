@@ -1,0 +1,1648 @@
+use serde::{Deserialize, Serialize};
+
+use crate::capabilities::DeviceKind;
+use crate::{GooseError, GooseResult};
+
+pub const FRAME_START: u8 = 0xaa;
+pub const COMMAND_GET_HELLO: u8 = 145;
+
+/// BLE packet type byte from the WHOOP wire protocol.
+///
+/// Each variant corresponds to a known packet type byte value. Unrecognised
+/// bytes — including any firmware-added types added after this list was written —
+/// are captured by `Unknown(u8)` so that all match sites remain exhaustive at
+/// compile time without panicking on novel packet types.
+///
+/// `From<u8>` is infallible: every byte maps to exactly one variant.
+/// `From<PacketType> for u8` round-trips for logging and frame construction.
+///
+/// Note: `#[repr(u8)]` is intentionally absent — the `Unknown(u8)` tuple variant
+/// is incompatible with `#[repr(u8)]`; the `From` impls replace it cleanly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PacketType {
+    Command,                        // 35
+    CommandResponse,                // 36
+    PuffinCommand,                  // 37
+    PuffinCommandResponse,          // 38
+    RealtimeData,                   // 40
+    RealtimeRawData,                // 43
+    HistoricalData,                 // 47
+    Event,                          // 48
+    Metadata,                       // 49
+    ConsoleLogs,                    // 50
+    RealtimeImuDataStream,          // 51
+    HistoricalImuDataStream,        // 52
+    RelativePuffinEvents,           // 53
+    PuffinEventsFromStrap,          // 54
+    RelativeBatteryPackConsoleLogs, // 55
+    PuffinMetadata,                 // 56
+    R22RealtimeData,                // 16 (0x10) — WHOOP 5.0 BLE handle 0x0022
+    Unknown(u8),                    // catch-all: firmware-added or unrecognised values
+}
+
+impl From<u8> for PacketType {
+    fn from(byte: u8) -> Self {
+        match byte {
+            35 => PacketType::Command,
+            36 => PacketType::CommandResponse,
+            37 => PacketType::PuffinCommand,
+            38 => PacketType::PuffinCommandResponse,
+            40 => PacketType::RealtimeData,
+            43 => PacketType::RealtimeRawData,
+            47 => PacketType::HistoricalData,
+            48 => PacketType::Event,
+            49 => PacketType::Metadata,
+            50 => PacketType::ConsoleLogs,
+            51 => PacketType::RealtimeImuDataStream,
+            52 => PacketType::HistoricalImuDataStream,
+            53 => PacketType::RelativePuffinEvents,
+            54 => PacketType::PuffinEventsFromStrap,
+            55 => PacketType::RelativeBatteryPackConsoleLogs,
+            56 => PacketType::PuffinMetadata,
+            0x10 => PacketType::R22RealtimeData,
+            other => PacketType::Unknown(other),
+        }
+    }
+}
+
+impl From<PacketType> for u8 {
+    fn from(pt: PacketType) -> u8 {
+        match pt {
+            PacketType::Command => 35,
+            PacketType::CommandResponse => 36,
+            PacketType::PuffinCommand => 37,
+            PacketType::PuffinCommandResponse => 38,
+            PacketType::RealtimeData => 40,
+            PacketType::RealtimeRawData => 43,
+            PacketType::HistoricalData => 47,
+            PacketType::Event => 48,
+            PacketType::Metadata => 49,
+            PacketType::ConsoleLogs => 50,
+            PacketType::RealtimeImuDataStream => 51,
+            PacketType::HistoricalImuDataStream => 52,
+            PacketType::RelativePuffinEvents => 53,
+            PacketType::PuffinEventsFromStrap => 54,
+            PacketType::RelativeBatteryPackConsoleLogs => 55,
+            PacketType::PuffinMetadata => 56,
+            PacketType::R22RealtimeData => 0x10,
+            PacketType::Unknown(b) => b,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DeviceType {
+    Gen4,
+    Maverick,
+    /// Hardware code name with no known generation mapping — likely unshipped.
+    /// Parses as Gen5-family wire format (8-byte header).
+    Puffin,
+    Goose,
+    HrMonitor,
+}
+
+impl DeviceType {
+    pub fn header_len(self) -> usize {
+        match self {
+            DeviceType::Gen4 => 4,
+            // HrMonitor never reaches frame parsing (raw-evidence storage only); grouping
+            // with the 8-byte family is a compile-time formality.
+            DeviceType::Maverick
+            | DeviceType::Puffin
+            | DeviceType::Goose
+            | DeviceType::HrMonitor => 8,
+        }
+    }
+
+    pub fn expected_frame_len(self, buffer: &[u8]) -> Option<usize> {
+        match self {
+            DeviceType::Gen4 => {
+                if buffer.len() < 4 {
+                    None
+                } else {
+                    // Stream reassembly: Gen4 payload length at buffer[1..=2] u16 LE
+                    //   header offset 1 — same byte position as parse_frame Gen4 declared_len
+                    //   total frame = payload_len + 4 (4-byte Gen4 header)
+                    //   empirically verified via hardware captures
+                    Some(u16::from_le_bytes([buffer[1], buffer[2]]) as usize + 4)
+                }
+            }
+            DeviceType::Maverick
+            | DeviceType::Puffin
+            | DeviceType::Goose
+            | DeviceType::HrMonitor => {
+                if buffer.len() < 8 {
+                    None
+                } else {
+                    // Stream reassembly: Gen5-family payload length at buffer[2..=3] u16 LE
+                    //   header offset 2 — same byte position as parse_frame Gen5 declared_len
+                    //   total frame = payload_len + 8 (8-byte Gen5 header)
+                    //   empirically verified via hardware captures
+                    Some(u16::from_le_bytes([buffer[2], buffer[3]]) as usize + 8)
+                }
+            }
+        }
+    }
+
+    pub fn wire_protocol(self) -> WireProtocol {
+        match self {
+            DeviceType::Gen4 => WireProtocol::Gen4,
+            DeviceType::Maverick
+            | DeviceType::Puffin
+            | DeviceType::Goose
+            | DeviceType::HrMonitor => WireProtocol::Gen5,
+        }
+    }
+
+    /// Returns true for all devices that use the 8-byte Gen5-family frame header.
+    pub fn is_gen5_family(self) -> bool {
+        matches!(
+            self,
+            DeviceType::Maverick | DeviceType::Puffin | DeviceType::Goose | DeviceType::HrMonitor
+        )
+    }
+
+    pub fn device_kind(self) -> DeviceKind {
+        match self {
+            DeviceType::Gen4 => DeviceKind::Whoop4,
+            // WHOOP MG (Maverick hardware codename) is a distinct device kind
+            DeviceType::Maverick => DeviceKind::WhoopMg,
+            DeviceType::Puffin | DeviceType::Goose => DeviceKind::Whoop5,
+            DeviceType::HrMonitor => DeviceKind::HrMonitor,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WireProtocol {
+    Gen4,
+    Gen5,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ParsedFrame {
+    pub device_type: DeviceType,
+    pub raw_len: usize,
+    pub header_len: usize,
+    pub declared_len: usize,
+    pub payload_hex: String,
+    pub payload_crc_hex: String,
+    pub header_crc_valid: bool,
+    pub payload_crc_valid: bool,
+    pub packet_type: Option<u8>,
+    pub packet_type_name: Option<String>,
+    pub sequence: Option<u8>,
+    pub command_or_event: Option<u8>,
+    pub parsed_payload: Option<ParsedPayload>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+#[allow(clippy::large_enum_variant)]
+pub enum ParsedPayload {
+    Command {
+        command: Option<u8>,
+        command_name: Option<String>,
+        data_offset: usize,
+        data_hex: String,
+        warnings: Vec<String>,
+    },
+    CommandResponse {
+        response_to_command: Option<u8>,
+        response_to_command_name: Option<String>,
+        origin_sequence: Option<u8>,
+        result_code: Option<u8>,
+        data_offset: usize,
+        data_hex: String,
+        warnings: Vec<String>,
+    },
+    Event {
+        event_id: Option<u16>,
+        event_name: Option<String>,
+        timestamp_seconds: Option<u32>,
+        timestamp_subseconds: Option<u16>,
+        data_offset: usize,
+        data_hex: String,
+        warnings: Vec<String>,
+    },
+    DataPacket {
+        packet_k: Option<u8>,
+        domain: Option<String>,
+        status_or_stream: Option<u8>,
+        counter_or_page: Option<u32>,
+        timestamp_seconds: Option<u32>,
+        timestamp_subseconds: Option<u16>,
+        hr_marker_offset: Option<usize>,
+        hr_present_marker: Option<u8>,
+        body_offset: usize,
+        body_hex: String,
+        body_summary: Option<DataPacketBodySummary>,
+        warnings: Vec<String>,
+    },
+    Raw {
+        data_offset: usize,
+        data_hex: String,
+        warnings: Vec<String>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum DataPacketBodySummary {
+    NormalHistory {
+        hr_present: Option<bool>,
+        marker_offset: Option<usize>,
+        marker_value: Option<u8>,
+    },
+    R17OpticalOrLabradorFiltered {
+        flags: Option<u16>,
+        flag_bit_9: Option<bool>,
+        flag_bit_11: Option<bool>,
+        channels_or_gain: Vec<u8>,
+        sample_count: Option<u16>,
+        samples: Option<I16SeriesSummary>,
+        warnings: Vec<String>,
+    },
+    RawMotionK10 {
+        heart_rate: Option<u8>,
+        axes: Vec<I16SeriesSummary>,
+        warnings: Vec<String>,
+    },
+    RawMotionK21 {
+        field_x: Option<u16>,
+        group_1_count: Option<u16>,
+        group_2_count: Option<u16>,
+        axes: Vec<I16SeriesSummary>,
+        warnings: Vec<String>,
+    },
+    V24History {
+        hr: Option<u8>,
+        rr_intervals_ms: Vec<u16>,
+        ppg_green: Option<u16>,
+        ppg_red_ir: Option<u16>,
+        gravity_x: Option<f32>,
+        gravity_y: Option<f32>,
+        gravity_z: Option<f32>,
+        skin_contact: Option<u8>,
+        spo2_red: Option<u16>,
+        spo2_ir: Option<u16>,
+        skin_temp_raw: Option<u16>,
+        ambient: Option<u16>,
+        led1: Option<u16>,
+        led2: Option<u16>,
+        resp_raw: Option<u16>,
+        sig_quality: Option<u16>,
+        /// Second gravity triplet (bytes 49–60 in the V24 body). Present only
+        /// when data.len() >= 60.
+        gravity2_x: Option<f32>,
+        gravity2_y: Option<f32>,
+        gravity2_z: Option<f32>,
+        warnings: Vec<String>,
+    },
+    R22Whoop5Hr {
+        battery_pct: Option<u8>,
+        hr_milli_bpm: Option<u16>,
+        hr_bpm: Option<f32>,
+        extra: Option<[u8; 2]>,
+        warnings: Vec<String>,
+    },
+    V18History {
+        hr: Option<u8>,
+        rr_intervals_ms: Vec<u16>,
+        gravity_x: Option<f32>,
+        gravity_y: Option<f32>,
+        gravity_z: Option<f32>,
+        skin_temp_raw: Option<u16>,
+        step_motion_counter: Option<u16>,
+        warnings: Vec<String>,
+    },
+    /// PPG waveform burst from WHOOP 5.0 type-47 v26 packets.
+    /// 24 LE-i16 samples at 24 Hz (one second of optical data per packet).
+    V26PpgWaveform {
+        ppg_channel: u8,   // optical channel id 1–26
+        unix_ts: u32,      // seconds since epoch (timestamp of first sample)
+        samples: Vec<i16>, // 24 samples at 24 Hz
+        warnings: Vec<String>,
+    },
+    /// Multi-channel optical waveform from packet_k=20 (v20) payloads.
+    /// v20: 5 blocks × 428B each (2140B total); each active block yields 2 OpticalChannel
+    /// entries with 50 i32 LE samples each (presence byte 0x19 = active).
+    /// packet_k=21 is NOT routed here — it remains RawMotionK21 for motion metric continuity.
+    V20V21OpticalMultiChannel {
+        version: u8,
+        channels: Vec<OpticalChannel>,
+        warnings: Vec<String>,
+    },
+    /// Catch-all for packet_k values with no dedicated parse arm.
+    /// Serialises as { "kind": "unknown", "packet_k": N }.
+    Unknown { packet_k: u8 },
+}
+
+/// One optical photodiode channel decoded from a v20 or v21 payload.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OpticalChannel {
+    /// Zero-based channel index within the packet (block_num*2 or block_num*2+1 for v20).
+    pub index: u8,
+    /// 50 i32 LE samples per sub-channel (v20 only).
+    pub samples_i32: Option<Vec<i32>>,
+    /// 100 i16 LE samples per channel (v21 only).
+    pub samples_i16: Option<Vec<i16>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct I16SeriesSummary {
+    pub name: String,
+    pub offset: usize,
+    pub expected_count: usize,
+    pub parsed_count: usize,
+    pub min: Option<i16>,
+    pub max: Option<i16>,
+    pub sum: i64,
+    pub preview: Vec<i16>,
+    pub full_samples: Option<Vec<i16>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DeframeResult {
+    pub frames: Vec<Vec<u8>>,
+    pub buffered_len: usize,
+    pub dropped_prefix_len: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct FrameAccumulator {
+    device_type: DeviceType,
+    buffer: Vec<u8>,
+}
+
+impl FrameAccumulator {
+    pub fn new(device_type: DeviceType) -> Self {
+        Self {
+            device_type,
+            buffer: Vec::new(),
+        }
+    }
+
+    pub fn feed(&mut self, chunk: &[u8]) -> DeframeResult {
+        self.buffer.extend_from_slice(chunk);
+        let mut frames = Vec::new();
+        let mut dropped = self.drop_until_frame_start();
+
+        loop {
+            let Some(expected_len) = self.device_type.expected_frame_len(&self.buffer) else {
+                break;
+            };
+            if self.buffer.len() < expected_len {
+                break;
+            }
+            frames.push(self.buffer[..expected_len].to_vec());
+            self.buffer.drain(..expected_len);
+            dropped += self.drop_until_frame_start();
+        }
+
+        DeframeResult {
+            frames,
+            buffered_len: self.buffer.len(),
+            dropped_prefix_len: dropped,
+        }
+    }
+
+    fn drop_until_frame_start(&mut self) -> usize {
+        match self.buffer.iter().position(|byte| *byte == FRAME_START) {
+            Some(0) => 0,
+            Some(start) => {
+                self.buffer.drain(..start);
+                start
+            }
+            None => {
+                let dropped = self.buffer.len();
+                self.buffer.clear();
+                dropped
+            }
+        }
+    }
+}
+
+pub fn parse_frame_hex(device_type: DeviceType, hex_value: &str) -> GooseResult<ParsedFrame> {
+    let raw = decode_hex_with_whitespace(hex_value)?;
+    parse_frame(device_type, &raw)
+}
+
+pub fn parse_frame(device_type: DeviceType, frame: &[u8]) -> GooseResult<ParsedFrame> {
+    if frame.first().copied() != Some(FRAME_START) {
+        return Err(GooseError::message("frame does not start with 0xaa"));
+    }
+
+    let header_len = device_type.header_len();
+    if frame.len() < header_len {
+        return Err(GooseError::message(format!(
+            "frame shorter than {header_len}-byte header"
+        )));
+    }
+
+    let declared_len = match device_type {
+        // Gen4 frame header layout (4 bytes total):
+        //   byte 0: frame_start (0xaa)
+        //   bytes 1–2: payload length u16 LE (excludes the 4-byte header itself)
+        //   byte 3: CRC8 of bytes 1–2
+        //   empirically verified via hardware captures
+        DeviceType::Gen4 => u16::from_le_bytes([frame[1], frame[2]]) as usize,
+        // Gen5-family frame header layout (8 bytes total):
+        //   byte 0: frame_start (0xaa)
+        //   byte 1: flags / version byte (Gen5 addition — absent in Gen4)
+        //   bytes 2–3: payload length u16 LE (same role as Gen4 bytes 1–2, shifted by 1)
+        //   bytes 4–5: reserved / padding (observed all-zero in hardware captures)
+        //   bytes 6–7: CRC16 Modbus of bytes 0–5 (expanded header coverage vs. Gen4 CRC8)
+        //   empirically verified via hardware captures
+        DeviceType::Maverick | DeviceType::Puffin | DeviceType::Goose | DeviceType::HrMonitor => {
+            u16::from_le_bytes([frame[2], frame[3]]) as usize
+        }
+    };
+    if declared_len < 4 {
+        return Err(GooseError::message(
+            "declared length must include at least the 4-byte payload CRC",
+        ));
+    }
+
+    let header_crc_valid = match device_type {
+        DeviceType::Gen4 => crc8(&frame[1..3]) == frame[3],
+        DeviceType::Maverick | DeviceType::Puffin | DeviceType::Goose | DeviceType::HrMonitor => {
+            // Gen5 frame trailer: bytes 6–7 = CRC16 Modbus of the first 6 header bytes
+            //   CRC covers bytes 0–5 (frame_start through reserved); empirically verified 2026-06-14
+            let actual = u16::from_le_bytes([frame[6], frame[7]]);
+            crc16_modbus(&frame[..6]) == actual
+        }
+    };
+
+    let expected_len = header_len + declared_len;
+    if frame.len() > expected_len {
+        return Err(GooseError::message(format!(
+            "frame length {} does not match declared length {expected_len}",
+            frame.len()
+        )));
+    }
+    let frame_truncated = frame.len() < expected_len;
+    let partial_packet_type = frame.get(header_len).copied();
+    if frame_truncated
+        && (!header_crc_valid
+            || !partial_packet_type
+                .is_some_and(|pt| is_partial_data_packet_type_allowed(PacketType::from(pt))))
+    {
+        return Err(GooseError::message(format!(
+            "frame length {} does not match declared length {expected_len}",
+            frame.len()
+        )));
+    }
+
+    let (payload, payload_crc, expected_payload_crc) = if frame_truncated {
+        (&frame[header_len..], &[][..], None)
+    } else {
+        let payload_end = frame.len() - 4;
+        let payload = &frame[header_len..payload_end];
+        let payload_crc = &frame[payload_end..];
+        (
+            payload,
+            payload_crc,
+            Some(crc32fast::hash(payload).to_le_bytes()),
+        )
+    };
+    let payload_crc_valid = expected_payload_crc.is_some_and(|expected| payload_crc == expected);
+
+    let mut warnings = Vec::new();
+    if frame_truncated {
+        warnings.push("frame_truncated".to_string());
+        warnings.push("payload_crc_unavailable_due_to_truncated_frame".to_string());
+    }
+    if !header_crc_valid {
+        warnings.push("header_crc_mismatch".to_string());
+    }
+    if !payload_crc_valid && !frame_truncated {
+        warnings.push("payload_crc_mismatch".to_string());
+    }
+
+    let packet_type = payload.first().copied();
+    let parsed_payload = parse_payload(payload);
+    let payload_warnings = parsed_payload
+        .as_ref()
+        .map(parsed_payload_warnings)
+        .unwrap_or_default();
+    warnings.extend(payload_warnings.iter().cloned());
+
+    Ok(ParsedFrame {
+        device_type,
+        raw_len: frame.len(),
+        header_len,
+        declared_len,
+        payload_hex: hex::encode(payload),
+        payload_crc_hex: hex::encode(payload_crc),
+        header_crc_valid,
+        payload_crc_valid,
+        packet_type,
+        packet_type_name: packet_type
+            .map(PacketType::from)
+            .and_then(packet_type_name)
+            .map(str::to_string),
+        sequence: payload.get(1).copied(),
+        command_or_event: payload.get(2).copied(),
+        parsed_payload,
+        warnings,
+    })
+}
+
+pub fn build_v5_command_frame(sequence: u8, command: u8, data: &[u8]) -> Vec<u8> {
+    let mut payload = vec![u8::from(PacketType::Command), sequence, command];
+    payload.extend_from_slice(data);
+    build_v5_payload_frame(&payload)
+}
+
+pub fn build_v5_payload_frame(payload: &[u8]) -> Vec<u8> {
+    let mut payload = payload.to_vec();
+    let padding = padding_len(payload.len());
+    payload.resize(payload.len() + padding, 0);
+
+    let payload_crc = crc32fast::hash(&payload).to_le_bytes();
+    let declared_len = payload.len() + payload_crc.len();
+    let mut frame = Vec::with_capacity(8 + declared_len);
+    frame.extend_from_slice(&[FRAME_START, 0x01]);
+    frame.extend_from_slice(&(declared_len as u16).to_le_bytes());
+    frame.extend_from_slice(&[0x00, 0x01]);
+    frame.extend_from_slice(&crc16_modbus(&frame).to_le_bytes());
+    frame.extend_from_slice(&payload);
+    frame.extend_from_slice(&payload_crc);
+    frame
+}
+
+pub fn packet_type_name(packet_type: PacketType) -> Option<&'static str> {
+    Some(match packet_type {
+        PacketType::Command => "COMMAND",
+        PacketType::CommandResponse => "COMMAND_RESPONSE",
+        PacketType::PuffinCommand => "PUFFIN_COMMAND",
+        PacketType::PuffinCommandResponse => "PUFFIN_COMMAND_RESPONSE",
+        PacketType::RealtimeData => "REALTIME_DATA",
+        PacketType::RealtimeRawData => "REALTIME_RAW_DATA",
+        PacketType::HistoricalData => "HISTORICAL_DATA",
+        PacketType::Event => "EVENT",
+        PacketType::Metadata => "METADATA",
+        PacketType::ConsoleLogs => "CONSOLE_LOGS",
+        PacketType::RealtimeImuDataStream => "REALTIME_IMU_DATA_STREAM",
+        PacketType::HistoricalImuDataStream => "HISTORICAL_IMU_DATA_STREAM",
+        PacketType::RelativePuffinEvents => "RELATIVE_PUFFIN_EVENTS",
+        PacketType::PuffinEventsFromStrap => "PUFFIN_EVENTS_FROM_STRAP",
+        PacketType::RelativeBatteryPackConsoleLogs => "RELATIVE_BATTERY_PACK_CONSOLE_LOGS",
+        PacketType::PuffinMetadata => "PUFFIN_METADATA",
+        PacketType::R22RealtimeData => "R22_REALTIME_DATA",
+        PacketType::Unknown(_) => return None,
+    })
+}
+
+pub fn packet_type_debug_name(packet_type: u8) -> String {
+    packet_type_name(PacketType::from(packet_type))
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("unknown_0x{:02x}", packet_type))
+}
+
+pub fn decode_hex_with_whitespace(hex_value: &str) -> GooseResult<Vec<u8>> {
+    if !hex_value.bytes().any(|byte| byte.is_ascii_whitespace()) {
+        return Ok(hex::decode(hex_value)?);
+    }
+    let stripped: String = hex_value
+        .chars()
+        .filter(|char| !char.is_ascii_whitespace())
+        .collect();
+    Ok(hex::decode(stripped)?)
+}
+
+fn parse_payload(payload: &[u8]) -> Option<ParsedPayload> {
+    let packet_type = PacketType::from(*payload.first()?);
+    match packet_type {
+        PacketType::Command | PacketType::PuffinCommand => Some(parse_command_payload(payload)),
+        PacketType::CommandResponse | PacketType::PuffinCommandResponse => {
+            Some(parse_command_response_payload(payload))
+        }
+        PacketType::Event
+        | PacketType::RelativePuffinEvents
+        | PacketType::PuffinEventsFromStrap => Some(parse_event_payload(payload)),
+        PacketType::RealtimeData
+        | PacketType::RealtimeRawData
+        | PacketType::HistoricalData
+        | PacketType::RealtimeImuDataStream
+        | PacketType::HistoricalImuDataStream => Some(parse_data_packet_payload(payload)),
+        PacketType::R22RealtimeData => Some(parse_r22_payload(payload)),
+        _ => Some(ParsedPayload::Raw {
+            data_offset: 1.min(payload.len()),
+            data_hex: hex::encode(&payload[1.min(payload.len())..]),
+            warnings: Vec::new(),
+        }),
+    }
+}
+
+fn is_partial_data_packet_type_allowed(packet_type: PacketType) -> bool {
+    matches!(
+        packet_type,
+        PacketType::RealtimeData
+            | PacketType::RealtimeRawData
+            | PacketType::HistoricalData
+            | PacketType::RealtimeImuDataStream
+            | PacketType::HistoricalImuDataStream
+            | PacketType::R22RealtimeData
+    )
+}
+
+fn parse_command_payload(payload: &[u8]) -> ParsedPayload {
+    let mut warnings = Vec::new();
+    if payload.len() < 3 {
+        warnings.push("command_payload_too_short".to_string());
+    }
+    let command = payload.get(2).copied();
+    ParsedPayload::Command {
+        command,
+        command_name: command.and_then(command_name).map(str::to_string),
+        data_offset: 3.min(payload.len()),
+        data_hex: hex::encode(&payload[3.min(payload.len())..]),
+        warnings,
+    }
+}
+
+fn parse_command_response_payload(payload: &[u8]) -> ParsedPayload {
+    let mut warnings = Vec::new();
+    if payload.len() < 5 {
+        warnings.push("command_response_payload_too_short".to_string());
+    }
+    let response_to_command = payload.get(2).copied();
+    ParsedPayload::CommandResponse {
+        response_to_command,
+        response_to_command_name: response_to_command
+            .and_then(command_name)
+            .map(str::to_string),
+        origin_sequence: payload.get(3).copied(),
+        result_code: payload.get(4).copied(),
+        data_offset: 5.min(payload.len()),
+        data_hex: hex::encode(&payload[5.min(payload.len())..]),
+        warnings,
+    }
+}
+
+fn parse_event_payload(payload: &[u8]) -> ParsedPayload {
+    let mut warnings = Vec::new();
+    if payload.len() < 12 {
+        warnings.push("event_payload_header_too_short".to_string());
+    }
+    let event_id = read_u16_le(payload, 2);
+    ParsedPayload::Event {
+        event_id,
+        event_name: event_id.and_then(strap_event_name).map(str::to_string),
+        timestamp_seconds: read_u32_le(payload, 4),
+        timestamp_subseconds: read_u16_le(payload, 8),
+        data_offset: 12.min(payload.len()),
+        data_hex: hex::encode(&payload[12.min(payload.len())..]),
+        warnings,
+    }
+}
+
+fn parse_data_packet_payload(payload: &[u8]) -> ParsedPayload {
+    let mut warnings = Vec::new();
+    if payload.len() < 13 {
+        warnings.push("data_packet_header_too_short".to_string());
+    }
+    let packet_k = payload.get(1).copied();
+    let hr_marker_offset = packet_k.and_then(history_hr_marker_offset);
+    let hr_present_marker = hr_marker_offset.and_then(|offset| payload.get(offset).copied());
+    if hr_marker_offset.is_some() && hr_present_marker.is_none() {
+        warnings.push("history_hr_marker_missing".to_string());
+    }
+    let (body_summary, body_warnings) =
+        parse_data_packet_body_summary(payload, packet_k, hr_marker_offset, hr_present_marker);
+    warnings.extend(body_warnings);
+
+    // PERF-05: omit body_hex for high-volume K10/K21 raw-motion frames;
+    // the structured body_summary already carries all useful motion data,
+    // and the large hex dump roughly doubles the stored JSON for these types.
+    // body_hex remains populated for all other packet_k values.
+    // NOTE: pk=24 (V24History, Gen4 recovery data) is NOT a high-volume motion
+    // packet and must NOT be suppressed — its body_hex is consumed by Gen4 metric
+    // extraction. Only K10/K21 raw-motion frames qualify for PERF-05 suppression.
+    let body_hex = if matches!(packet_k, Some(10) | Some(21)) {
+        String::new()
+    } else {
+        hex::encode(&payload[13.min(payload.len())..])
+    };
+    ParsedPayload::DataPacket {
+        packet_k,
+        domain: packet_k.and_then(data_packet_domain).map(str::to_string),
+        status_or_stream: payload.get(2).copied(),
+        counter_or_page: read_u32_le(payload, 3),
+        timestamp_seconds: read_u32_le(payload, 7),
+        timestamp_subseconds: read_u16_le(payload, 11),
+        hr_marker_offset,
+        hr_present_marker,
+        body_offset: 13.min(payload.len()),
+        body_hex,
+        body_summary,
+        warnings,
+    }
+}
+
+fn parse_data_packet_body_summary(
+    payload: &[u8],
+    packet_k: Option<u8>,
+    hr_marker_offset: Option<usize>,
+    hr_present_marker: Option<u8>,
+) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    let Some(packet_k) = packet_k else {
+        return (None, Vec::new());
+    };
+
+    match packet_k {
+        7 | 9 | 12 => (
+            Some(DataPacketBodySummary::NormalHistory {
+                hr_present: hr_present_marker.map(|marker| marker != 0),
+                marker_offset: hr_marker_offset,
+                marker_value: hr_present_marker,
+            }),
+            Vec::new(),
+        ),
+        18 => parse_v18_body(payload),
+        17 => parse_r17_body_summary(payload),
+        10 => parse_k10_raw_motion_summary(payload),
+        20 => parse_v20v21_optical_body(20, payload),
+        21 => parse_k21_raw_motion_summary(payload),
+        24 => parse_v24_body_summary(payload),
+        26 => parse_v26_ppg_body(payload),
+        _ => (
+            Some(DataPacketBodySummary::Unknown { packet_k }),
+            vec![format!("unhandled_packet_k_{packet_k}")],
+        ),
+    }
+}
+
+fn parse_r17_body_summary(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    let flags = read_u16_le(payload, 13);
+    let sample_count = read_u16_le(payload, 24);
+    let channels_or_gain = (15..=20)
+        .filter_map(|offset| payload.get(offset).copied())
+        .collect::<Vec<_>>();
+    let (samples, mut warnings) = summarize_i16_series(
+        payload,
+        26,
+        sample_count.unwrap_or(0) as usize,
+        "r17_samples",
+    );
+    if payload.len() < 26 {
+        warnings.push("r17_header_too_short".to_string());
+    }
+
+    (
+        Some(DataPacketBodySummary::R17OpticalOrLabradorFiltered {
+            flags,
+            flag_bit_9: flags.map(|value| value & (1 << 9) != 0),
+            flag_bit_11: flags.map(|value| value & (1 << 11) != 0),
+            channels_or_gain,
+            sample_count,
+            samples,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    )
+}
+
+fn parse_r22_payload(payload: &[u8]) -> ParsedPayload {
+    let mut warnings = Vec::new();
+    if payload.len() < 4 {
+        warnings.push("r22_payload_too_short".to_string());
+        return ParsedPayload::DataPacket {
+            packet_k: None,
+            domain: Some("r22_whoop5_hr".to_string()),
+            status_or_stream: None,
+            counter_or_page: None,
+            timestamp_seconds: None,
+            timestamp_subseconds: None,
+            hr_marker_offset: None,
+            hr_present_marker: None,
+            body_offset: payload.len(),
+            body_hex: hex::encode(payload),
+            body_summary: Some(DataPacketBodySummary::R22Whoop5Hr {
+                battery_pct: None,
+                hr_milli_bpm: None,
+                hr_bpm: None,
+                extra: None,
+                warnings: warnings.clone(),
+            }),
+            warnings,
+        };
+    }
+    // offset 1: u8, battery_pct direct (0–100); no scaling required
+    //   R22 is WHOOP 5.0 realtime BLE handle (characteristic 0x0022 on WHOOP 5.0 GAP profile)
+    //   empirically verified via hardware captures
+    let battery_pct = payload[1];
+    // offsets 2–3: u16 LE, hr_milli_bpm; hr_bpm = raw / 10.0 (millibeats per minute)
+    //   minimum payload guard: len ≥ 4 checked above — guard comment explains the unconditional index
+    //   empirically verified via hardware captures
+    let hr_milli_bpm = u16::from_le_bytes([payload[2], payload[3]]);
+    let hr_bpm = hr_milli_bpm as f32 / 10.0;
+    // offsets 4–5: [u8; 2], purpose unknown — empirical; conditional on len ≥ 6
+    //   content may carry sub-second HR data or motion artifact flag (unconfirmed)
+    let extra = if payload.len() >= 6 {
+        Some([payload[4], payload[5]])
+    } else {
+        None
+    };
+    ParsedPayload::DataPacket {
+        packet_k: None,
+        domain: Some("r22_whoop5_hr".to_string()),
+        status_or_stream: None,
+        counter_or_page: None,
+        timestamp_seconds: None,
+        timestamp_subseconds: None,
+        hr_marker_offset: None,
+        hr_present_marker: None,
+        body_offset: 1.min(payload.len()),
+        body_hex: hex::encode(&payload[1.min(payload.len())..]),
+        body_summary: Some(DataPacketBodySummary::R22Whoop5Hr {
+            battery_pct: Some(battery_pct),
+            hr_milli_bpm: Some(hr_milli_bpm),
+            hr_bpm: Some(hr_bpm),
+            extra,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    }
+}
+
+fn parse_k10_raw_motion_summary(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    let mut axes = Vec::new();
+    let mut warnings = Vec::new();
+    // K10 payload accelerometer/gyroscope layout (byte offsets into payload, each axis = 100 × i16 LE samples):
+    //   accelerometer_x: offset 85,   200 bytes (100 samples × 2 bytes)
+    //   accelerometer_y: offset 285,  200 bytes
+    //   accelerometer_z: offset 485,  200 bytes
+    //   gyroscope_x:     offset 688,  200 bytes (gap at 685–687 = 3 padding bytes observed)
+    //   gyroscope_y:     offset 888,  200 bytes
+    //   gyroscope_z:     offset 1088, 200 bytes
+    //   sampling rate: 25 Hz assumed; 100 samples ≈ 4 seconds per K10 packet
+    //   empirically verified via hardware captures
+    for (name, offset) in [
+        ("accelerometer_x", 85),
+        ("accelerometer_y", 285),
+        ("accelerometer_z", 485),
+        ("gyroscope_x", 688),
+        ("gyroscope_y", 888),
+        ("gyroscope_z", 1088),
+    ] {
+        let (summary, axis_warnings) = summarize_i16_series(payload, offset, 100, name);
+        warnings.extend(axis_warnings);
+        if let Some(summary) = summary {
+            axes.push(summary);
+        }
+    }
+
+    (
+        Some(DataPacketBodySummary::RawMotionK10 {
+            heart_rate: payload.get(17).copied(),
+            axes,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    )
+}
+
+fn parse_k21_raw_motion_summary(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    let group_1_count = read_u16_le(payload, 16);
+    let group_2_count = read_u16_le(payload, 622);
+    let mut axes = Vec::new();
+    let mut warnings = Vec::new();
+
+    for (name, offset, count) in [
+        ("group_1_axis_0", 20, group_1_count),
+        ("group_1_axis_1", 220, group_1_count),
+        ("group_1_axis_2", 420, group_1_count),
+        ("group_2_axis_0", 632, group_2_count),
+        ("group_2_axis_1", 832, group_2_count),
+        ("group_2_axis_2", 1032, group_2_count),
+    ] {
+        let (summary, axis_warnings) =
+            summarize_i16_series(payload, offset, count.unwrap_or(0) as usize, name);
+        warnings.extend(axis_warnings);
+        if let Some(summary) = summary {
+            axes.push(summary);
+        }
+    }
+
+    (
+        Some(DataPacketBodySummary::RawMotionK21 {
+            field_x: read_u16_le(payload, 14),
+            group_1_count,
+            group_2_count,
+            axes,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    )
+}
+
+fn read_f32_le(data: &[u8], offset: usize) -> Option<f32> {
+    let bytes = data.get(offset..offset + 4)?;
+    Some(f32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
+}
+
+/// V24 history payload body layout (offsets relative to `data`, i.e. body start = payload[3]):
+///   offset 14:    u8,   hr (beats per minute, unsigned)
+///   offset 15:    u8,   rr_count (number of RR intervals following, max 4)
+///   offsets 16–23: u16 LE × 4, rr_intervals_ms (zero-padded if rr_count < 4)
+///   offset 26:    u16 LE, ppg_green (raw PPG channel 1 — green LED)
+///   offset 28:    u16 LE, ppg_red_ir (raw PPG channel 2 — red/IR shared)
+///   offsets 33–44: f32 LE × 3, gravity_x / gravity_y / gravity_z (m/s², 9.8 = 1 g)
+///   offset 48:    u8,   skin_contact (0 = off-wrist, 1 = on-wrist)
+///   offsets 49–60: f32 LE × 3, gravity2_x / gravity2_y / gravity2_z (second triplet, conditional on len ≥ 60)
+///   offset 61:    u16 LE, spo2_red (raw red LED photodiode ADC count)
+///   offset 63:    u16 LE, spo2_ir (raw infrared LED photodiode ADC count)
+///   offset 65:    u16 LE, skin_temp_raw; degC = (raw − 930) / 30 + 33 (NTC linearisation)
+///   offset 67:    u16 LE, ambient (ambient light rejection channel, raw ADC)
+///   offset 69:    u16 LE, led1 (LED driver current reading, raw)
+///   offset 71:    u16 LE, led2 (LED driver current reading, raw)
+///   offset 73:    u16 LE, resp_raw (respiration signal; zero-crossing algorithm applied at metrics layer)
+///   offset 75:    u16 LE, sig_quality (signal quality score, higher = better)
+/// Guard: len ≥ 77 required (offset 75 + 2 bytes); short payloads return empty variant with warning.
+/// empirically verified via hardware captures
+fn parse_v24_body_summary(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    let data = payload.get(3..).unwrap_or(&[]);
+    let mut warnings = Vec::new();
+
+    if data.len() < 77 {
+        warnings.push("v24_payload_too_short".to_string());
+        return (
+            Some(DataPacketBodySummary::V24History {
+                hr: None,
+                rr_intervals_ms: Vec::new(),
+                ppg_green: None,
+                ppg_red_ir: None,
+                gravity_x: None,
+                gravity_y: None,
+                gravity_z: None,
+                skin_contact: None,
+                spo2_red: None,
+                spo2_ir: None,
+                skin_temp_raw: None,
+                ambient: None,
+                led1: None,
+                led2: None,
+                resp_raw: None,
+                sig_quality: None,
+                gravity2_x: None,
+                gravity2_y: None,
+                gravity2_z: None,
+                warnings: warnings.clone(),
+            }),
+            warnings,
+        );
+    }
+
+    // offset 14: u8, hr (beats per minute, unsigned); no scaling required
+    //   body-relative (data = payload[3..]); empirically verified via hardware captures
+    let hr = data.get(14).copied();
+    // offset 15: u8, rr_count (number of RR intervals that follow, 0–4); zero means no RR data
+    //   empirically verified via hardware captures
+    let rr_count = data.get(15).copied().unwrap_or(0) as usize;
+    let rr_count = rr_count.min(4);
+    // offsets 16–23: u16 LE × 4, rr_intervals_ms (zero-padded when rr_count < 4)
+    //   each interval = time between successive R-peaks in ms; zero values are filtered out
+    //   empirically verified via hardware captures
+    let rr_intervals_ms = (0..rr_count)
+        .filter_map(|i| {
+            let o = 16 + 2 * i;
+            read_u16_le(data, o)
+        })
+        .filter(|&v| v != 0)
+        .collect::<Vec<u16>>();
+
+    // offset 26: u16 LE, ppg_green (raw green LED photodiode ADC count)
+    //   used for HR and SpO2 ratio-of-ratios; empirically verified via hardware captures
+    let ppg_green = read_u16_le(data, 26);
+    // offset 28: u16 LE, ppg_red_ir (raw red/IR shared LED photodiode ADC count)
+    //   paired with ppg_green for SpO2 ratio-of-ratios; empirically verified via hardware captures
+    let ppg_red_ir = read_u16_le(data, 28);
+    // offsets 33/37/41: f32 LE × 3, gravity_x / gravity_y / gravity_z (m/s²; 9.8 = 1 g)
+    //   WHOOP 4 accelerometer first triplet; 4-byte alignment matches f32 stride
+    //   empirically verified via hardware captures
+    let gravity_x = read_f32_le(data, 33);
+    let gravity_y = read_f32_le(data, 37);
+    let gravity_z = read_f32_le(data, 41);
+    // offset 48: u8, skin_contact (0 = off-wrist, 1 = on-wrist; optical contact detection)
+    //   empirically verified via hardware captures
+    let skin_contact = data.get(48).copied();
+    // offsets 49/53/57: f32 LE × 3, gravity2_x / gravity2_y / gravity2_z (m/s²)
+    //   second gravity triplet; conditional on len ≥ 60; purpose empirically unconfirmed
+    //   may represent a second accelerometer axis set or a different sampling window
+    let gravity2_x = if data.len() >= 60 {
+        read_f32_le(data, 49)
+    } else {
+        None
+    };
+    let gravity2_y = if data.len() >= 60 {
+        read_f32_le(data, 53)
+    } else {
+        None
+    };
+    let gravity2_z = if data.len() >= 60 {
+        read_f32_le(data, 57)
+    } else {
+        None
+    };
+    // offset 61: u16 LE, spo2_red (raw red LED photodiode ADC count for SpO2 ratio-of-ratios)
+    //   empirically verified via hardware captures
+    let spo2_red = read_u16_le(data, 61);
+    // offset 63: u16 LE, spo2_ir (raw infrared LED photodiode ADC count for SpO2 ratio-of-ratios)
+    //   empirically verified via hardware captures
+    let spo2_ir = read_u16_le(data, 63);
+    // offset 65: u16 LE, skin_temp_raw; degC ≈ (raw − 930) / 30 + 33 (NTC linearisation)
+    //   empirical coefficients from hardware captures; valid range ~25–40 °C
+    let skin_temp_raw = read_u16_le(data, 65);
+    // offset 67: u16 LE, ambient (ambient light rejection channel, raw ADC)
+    //   used for motion artefact rejection; empirically verified via hardware captures
+    let ambient = read_u16_le(data, 67);
+    // offset 69: u16 LE, led1 (LED driver current sense, raw; diagnostic only)
+    //   empirically verified via hardware captures
+    let led1 = read_u16_le(data, 69);
+    // offset 71: u16 LE, led2 (LED driver current sense, raw; diagnostic only)
+    //   empirically verified via hardware captures
+    let led2 = read_u16_le(data, 71);
+    // offset 73: u16 LE, resp_raw (respiration signal; zero-crossing algorithm applied at metrics layer)
+    //   empirically verified via hardware captures
+    let resp_raw = read_u16_le(data, 73);
+    // offset 75: u16 LE, sig_quality (signal quality score; higher = better optical contact)
+    //   gate for HR algorithm confidence; empirically verified via hardware captures
+    let sig_quality = read_u16_le(data, 75);
+
+    (
+        Some(DataPacketBodySummary::V24History {
+            hr,
+            rr_intervals_ms,
+            ppg_green,
+            ppg_red_ir,
+            gravity_x,
+            gravity_y,
+            gravity_z,
+            skin_contact,
+            spo2_red,
+            spo2_ir,
+            skin_temp_raw,
+            ambient,
+            led1,
+            led2,
+            resp_raw,
+            sig_quality,
+            gravity2_x,
+            gravity2_y,
+            gravity2_z,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    )
+}
+
+/// Exposed for integration tests only. Do not call from production code.
+pub fn parse_v24_body_for_test(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    parse_v24_body_summary(payload)
+}
+
+fn parse_v18_body(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    // Skip the 3-byte data-packet header (packet_type + packet_k + status).
+    // All field offsets below are relative to `data` (i.e. body-relative).
+    let data = payload.get(3..).unwrap_or(&[]);
+    let mut warnings = Vec::new();
+
+    // Minimum length guard: skin_temp_raw at body offset 62 reads data[62..64] — 64 bytes needed.
+    if data.len() < 64 {
+        warnings.push("v18_payload_too_short".to_string());
+        return (
+            Some(DataPacketBodySummary::V18History {
+                hr: None,
+                rr_intervals_ms: Vec::new(),
+                gravity_x: None,
+                gravity_y: None,
+                gravity_z: None,
+                skin_temp_raw: None,
+                step_motion_counter: None,
+                warnings: warnings.clone(),
+            }),
+            warnings,
+        );
+    }
+
+    // HR byte at body-relative data[27], cross-validated against Garmin overnight ground truth
+    // on real device captures: overnight mean 68 bpm (Garmin 67), p5 56 (Garmin RHR 59), daytime
+    // 103, with a correct circadian curve. The previous offset (data[22]) read a non-HR byte
+    // (overnight mean ~12, p95 128) sitting in a low/zero region.
+    let hr = data.get(27).copied();
+
+    let rr_count = data.get(23).copied().unwrap_or(0) as usize;
+    let rr_count = rr_count.min(4);
+    let rr_intervals_ms = (0..rr_count)
+        .filter_map(|i| read_u16_le(data, 24 + 2 * i))
+        .filter(|&v| v != 0)
+        .collect::<Vec<u16>>();
+
+    // offsets 45/49/53 (body-relative): f32 LE × 3, gravity_x / gravity_y / gravity_z
+    //   units: m/s²; 9.8 = 1 g; same axis order as V24 first gravity triplet
+    //   empirically verified via hardware captures
+    let gravity_x = read_f32_le(data, 45);
+    let gravity_y = read_f32_le(data, 49);
+    let gravity_z = read_f32_le(data, 53);
+
+    let step_motion_counter = read_u16_le(data, 57);
+
+    // offset 62 (body-relative): u16 LE, skin_temp_raw (= payload[65])
+    //   body starts at payload[3] (3-byte data-packet header skipped above)
+    //   raw is linearised to degC at the persistence site (skin_temp_celsius_from_raw);
+    //   plausibility gate applied there. Values outside range indicate off-wrist or sensor error.
+    //   Cross-validated against Garmin overnight skin temperature on three nights: absolute
+    //   33.5 / 33.9 / 34.1 °C (physiological wrist temp), ultra-smooth (~0.01 °C/step), with
+    //   nocturnal cooling rank-ordered against Garmin (Δ -0.9 > -0.7 > -0.6). The previous
+    //   offset (data[73]) read the all-zero dead region (data[70..83]).
+    let skin_temp_raw = read_u16_le(data, 62);
+
+    (
+        Some(DataPacketBodySummary::V18History {
+            hr,
+            rr_intervals_ms,
+            gravity_x,
+            gravity_y,
+            gravity_z,
+            skin_temp_raw,
+            step_motion_counter,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    )
+}
+
+/// Exposed for integration tests only. Do not call from production code.
+pub fn parse_v26_ppg_body_for_test(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    parse_v26_ppg_body(payload)
+}
+
+fn parse_v26_ppg_body(payload: &[u8]) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    // Skip the 3-byte data-packet header (packet_type + packet_k + status).
+    // All field offsets below are relative to `data` (i.e. body-relative).
+    // Full frame layout: payload[0..3] = header; data = payload[3..].
+    let data = payload.get(3..).unwrap_or(&[]);
+    let mut warnings = Vec::new();
+
+    // Minimum length guard: the last waveform sample ends at body offset 71
+    // (data[24..72] = 24 × LE-i16), so we need at least 72 bytes in `data`.
+    // data[24..72] = payload[27..75] — guard on 75 to cover the full sample window.
+    if data.len() < 75 {
+        warnings.push("v26_payload_too_short".to_string());
+        return (
+            Some(DataPacketBodySummary::Unknown { packet_k: 26 }),
+            warnings,
+        );
+    }
+
+    // offset 9 (payload[12]): ppg_channel u8 — identifies the photodiode channel (1–26);
+    // hardware-verified on WHOOP 5.0 type-47 v26; values outside 1–26 indicate a firmware
+    // variant or parse misalignment and must not propagate as valid optical channel data.
+    let ppg_channel = data[9];
+    if !(1..=26).contains(&ppg_channel) {
+        warnings.push(format!("ppg_channel_out_of_range_{ppg_channel}"));
+        return (
+            Some(DataPacketBodySummary::Unknown { packet_k: 26 }),
+            warnings,
+        );
+    }
+
+    // offsets 12–15 (payload[15–18]): unix_ts u32 LE — epoch timestamp of the first sample;
+    // hardware-verified on WHOOP 5.0; matches the per-second BLE notification cadence.
+    let unix_ts = read_u32_le(data, 12).unwrap_or(0);
+
+    // offsets 24–71 (payload[27–74]): 24× LE-i16 PPG waveform samples — 24 Hz burst;
+    // hardware-verified on WHOOP 5.0; represents a 1-second optical waveform window.
+    // Extra bytes beyond offset 71 (e.g. CRC at payload[84–87]) are intentionally ignored.
+    let samples: Vec<i16> = (0..24)
+        .filter_map(|i| read_i16_le(data, 24 + 2 * i))
+        .collect();
+
+    (
+        Some(DataPacketBodySummary::V26PpgWaveform {
+            ppg_channel,
+            unix_ts,
+            samples,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    )
+}
+
+/// Exposed for integration tests only. Do not call from production code.
+pub fn parse_v20v21_optical_body_for_test(
+    packet_k: u8,
+    payload: &[u8],
+) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    parse_v20v21_optical_body(packet_k, payload)
+}
+
+/// v20 layout (2140B total):
+///   5 blocks × 428B each; block starts at offsets: 0x1a(26), 0x1c0(448), 0x366(870), 0x50c(1292), 0x6b2(1714)
+///   (relative to body start, i.e. payload[3..])
+///   Block layout: 1B presence byte (0x19 = active, anything else = inactive/skip)
+///                 then 2 sub-channels × 50 i32 LE samples (400B of i32 data per block)
+///   Each active block → 2 OpticalChannel entries:
+///     index = block_num*2  → samples_i32 = payload[block_start+1 .. block_start+201] as i32s (50 samples)
+///     index = block_num*2+1 → samples_i32 = payload[block_start+201 .. block_start+401] as i32s (50 samples)
+///   Presence byte offset within payload (absolute): [29, 451, 873, 1295, 1717]
+///   Source: CONTEXT.md v20 layout — presence bytes at @0x1a/0x1c0/0x366/0x50c/0x6b2 relative to body
+///
+/// packet_k=21 is NOT routed here (k=21 remains RawMotionK21 for motion metric continuity).
+/// This function accepts packet_k for version tagging and future v21 routing.
+fn parse_v20v21_optical_body(
+    packet_k: u8,
+    payload: &[u8],
+) -> (Option<DataPacketBodySummary>, Vec<String>) {
+    // Skip the 3-byte data-packet header (packet_type + packet_k + status).
+    let data = payload.get(3..).unwrap_or(&[]);
+    let mut warnings = Vec::new();
+    let mut channels: Vec<OpticalChannel> = Vec::new();
+
+    if data.is_empty() {
+        warnings.push("v20_empty_payload".to_string());
+        return (None, warnings);
+    }
+
+    if packet_k == 20 {
+        // v20: 5 blocks × 428B; presence byte at body offsets 26, 448, 870, 1292, 1714.
+        // Each active block has 2 sub-channels of 50 i32 LE samples (200B each, 400B total).
+        // offset 0 (body-relative): first block presence byte — @0x1a in CONTEXT.md description
+        //   (CONTEXT.md body offsets are relative to body start after the 3-byte header)
+        const BLOCK_PRESENCE_OFFSETS: [usize; 5] = [26, 448, 870, 1292, 1714];
+        const BLOCK_SIZE: usize = 428;
+        const SAMPLES_PER_SUBCHANNEL: usize = 50;
+        const BYTES_PER_I32: usize = 4;
+        const SUBCHANNEL_BYTES: usize = SAMPLES_PER_SUBCHANNEL * BYTES_PER_I32; // 200B
+
+        for (block_num, &presence_offset) in BLOCK_PRESENCE_OFFSETS.iter().enumerate() {
+            let Some(&presence) = data.get(presence_offset) else {
+                warnings.push(format!(
+                    "v20_block_{block_num}_presence_missing_at_offset_{presence_offset}"
+                ));
+                continue;
+            };
+
+            if presence != 0x19 {
+                // Block not active — skip silently.
+                continue;
+            }
+
+            // Sub-channel 0: bytes [presence_offset+1 .. presence_offset+1+200]
+            let sub0_start = presence_offset + 1;
+            let sub0_end = sub0_start + SUBCHANNEL_BYTES;
+            // Sub-channel 1: bytes [sub0_end .. sub0_end+200]
+            let sub1_start = sub0_end;
+            let sub1_end = sub1_start + SUBCHANNEL_BYTES;
+
+            // Verify the block fits within the data slice.
+            if data.len() < sub1_end {
+                warnings.push(format!(
+                    "v20_block_{block_num}_truncated_need_{sub1_end}_have_{}",
+                    data.len()
+                ));
+                // Add what samples we can from sub-channel 0 if enough data.
+                if data.len() >= sub0_end {
+                    let samples_i32: Vec<i32> = (0..SAMPLES_PER_SUBCHANNEL)
+                        .filter_map(|i| read_i32_le(data, sub0_start + i * BYTES_PER_I32))
+                        .collect();
+                    channels.push(OpticalChannel {
+                        index: (block_num * 2) as u8,
+                        samples_i32: Some(samples_i32),
+                        samples_i16: None,
+                    });
+                }
+                continue;
+            }
+
+            // Sub-channel 0
+            let samples0: Vec<i32> = (0..SAMPLES_PER_SUBCHANNEL)
+                .filter_map(|i| read_i32_le(data, sub0_start + i * BYTES_PER_I32))
+                .collect();
+            channels.push(OpticalChannel {
+                index: (block_num * 2) as u8,
+                samples_i32: Some(samples0),
+                samples_i16: None,
+            });
+
+            // Sub-channel 1
+            let samples1: Vec<i32> = (0..SAMPLES_PER_SUBCHANNEL)
+                .filter_map(|i| read_i32_le(data, sub1_start + i * BYTES_PER_I32))
+                .collect();
+            channels.push(OpticalChannel {
+                index: (block_num * 2 + 1) as u8,
+                samples_i32: Some(samples1),
+                samples_i16: None,
+            });
+
+            let _ = BLOCK_SIZE; // suppress unused-const warning
+        }
+    }
+    // packet_k == 21 is intentionally not handled here — k=21 routes to parse_k21_raw_motion_summary.
+    // If future hardware confirms k=21 is optical, add an else-if branch here.
+
+    (
+        Some(DataPacketBodySummary::V20V21OpticalMultiChannel {
+            version: packet_k,
+            channels,
+            warnings: warnings.clone(),
+        }),
+        warnings,
+    )
+}
+
+/// Read a little-endian i32 from `data` at `offset`, returning None if out of bounds.
+fn read_i32_le(data: &[u8], offset: usize) -> Option<i32> {
+    let bytes = data.get(offset..offset + 4)?;
+    Some(i32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
+}
+
+fn summarize_i16_series(
+    payload: &[u8],
+    offset: usize,
+    expected_count: usize,
+    name: &str,
+) -> (Option<I16SeriesSummary>, Vec<String>) {
+    if expected_count == 0 {
+        return (
+            Some(I16SeriesSummary {
+                name: name.to_string(),
+                offset,
+                expected_count,
+                parsed_count: 0,
+                min: None,
+                max: None,
+                sum: 0,
+                preview: Vec::new(),
+                full_samples: Some(Vec::new()),
+            }),
+            Vec::new(),
+        );
+    }
+
+    let available_bytes = payload.len().saturating_sub(offset);
+    let parsed_count = expected_count.min(available_bytes / 2);
+    let mut warnings = Vec::new();
+    if parsed_count < expected_count {
+        warnings.push(format!("{name}_truncated"));
+    }
+
+    let mut min = None;
+    let mut max = None;
+    let mut sum = 0i64;
+    let mut preview = Vec::new();
+    let mut full = Vec::new();
+    for index in 0..parsed_count {
+        let sample_offset = offset + index * 2;
+        let value = read_i16_le(payload, sample_offset).expect("parsed_count guards bounds");
+        min = Some(min.map_or(value, |current: i16| current.min(value)));
+        max = Some(max.map_or(value, |current: i16| current.max(value)));
+        sum += i64::from(value);
+        if preview.len() < 8 {
+            preview.push(value);
+        }
+        full.push(value);
+    }
+
+    (
+        Some(I16SeriesSummary {
+            name: name.to_string(),
+            offset,
+            expected_count,
+            parsed_count,
+            min,
+            max,
+            sum,
+            preview,
+            full_samples: Some(full),
+        }),
+        warnings,
+    )
+}
+
+fn parsed_payload_warnings(payload: &ParsedPayload) -> &[String] {
+    match payload {
+        ParsedPayload::Command { warnings, .. }
+        | ParsedPayload::CommandResponse { warnings, .. }
+        | ParsedPayload::Event { warnings, .. }
+        | ParsedPayload::DataPacket { warnings, .. }
+        | ParsedPayload::Raw { warnings, .. } => warnings,
+    }
+}
+
+fn command_name(command: u8) -> Option<&'static str> {
+    Some(match command {
+        COMMAND_GET_HELLO => "GET_HELLO",
+        _ => return None,
+    })
+}
+
+fn strap_event_name(event_id: u16) -> Option<&'static str> {
+    Some(match event_id {
+        0 => "UNDEFINED",
+        1 => "ERROR",
+        2 => "CONSOLE_OUTPUT",
+        3 => "BATTERY_LEVEL",
+        4 => "SYSTEM_CONTROL",
+        7 => "CHARGING_ON",
+        8 => "CHARGING_OFF",
+        9 => "WRIST_ON",
+        10 => "WRIST_OFF",
+        11 => "BLE_CONNECTION_UP",
+        12 => "BLE_CONNECTION_DOWN",
+        13 => "RTC_LOST",
+        14 => "DOUBLE_TAP",
+        15 => "BOOT",
+        16 => "SET_RTC",
+        17 => "TEMPERATURE_LEVEL",
+        18 => "PAIRING_MODE",
+        28 => "FLASH_INIT_COMPLETE",
+        29 => "STRAP_CONDITION_REPORT",
+        33 => "BLE_REALTIME_HR_ON",
+        34 => "BLE_REALTIME_HR_OFF",
+        56 => "STRAP_DRIVEN_ALARM_SET",
+        57 => "STRAP_DRIVEN_ALARM_EXECUTED",
+        58 => "APP_DRIVEN_ALARM_EXECUTED",
+        59 => "STRAP_DRIVEN_ALARM_DISABLED",
+        60 => "HAPTICS_FIRED",
+        63 => "EXTENDED_BATTERY_INFORMATION",
+        96 => "HIGH_FREQ_SYNC_PROMPT",
+        97 => "HIGH_FREQ_SYNC_ENABLED",
+        98 => "HIGH_FREQ_SYNC_DISABLED",
+        100 => "HAPTICS_TERMINATED",
+        109 => "BATTERY_PACK_INFO",
+        123 => "GENERIC_FIRMWARE_EVENT",
+        _ => return None,
+    })
+}
+
+fn data_packet_domain(packet_k: u8) -> Option<&'static str> {
+    Some(match packet_k {
+        7 => "legacy_raw_or_research_counted",
+        9 | 12 | 18 => "normal_history_with_hr_marker",
+        24 => "v24_biometric_stream",
+        10 | 21 => "raw_motion_stream_result",
+        11 => "raw_stream_counted",
+        16 => "raw_ecg_labrador",
+        17 => "r17_optical_or_labrador_filtered",
+        19 | 22 => "research_packet",
+        20 => "v20v21_optical_multi_channel",
+        25 => "pulse_information_packet",
+        26 => "v26_ppg_waveform",
+        _ => return None,
+    })
+}
+
+fn history_hr_marker_offset(packet_k: u8) -> Option<usize> {
+    match packet_k {
+        7 => Some(27),
+        9 | 12 | 24 => Some(17),
+        18 => Some(14),
+        _ => None,
+    }
+}
+
+pub(crate) fn read_u16_le(bytes: &[u8], offset: usize) -> Option<u16> {
+    Some(u16::from_le_bytes([
+        *bytes.get(offset)?,
+        *bytes.get(offset + 1)?,
+    ]))
+}
+
+fn read_u32_le(bytes: &[u8], offset: usize) -> Option<u32> {
+    Some(u32::from_le_bytes([
+        *bytes.get(offset)?,
+        *bytes.get(offset + 1)?,
+        *bytes.get(offset + 2)?,
+        *bytes.get(offset + 3)?,
+    ]))
+}
+
+fn read_i16_le(bytes: &[u8], offset: usize) -> Option<i16> {
+    Some(i16::from_le_bytes([
+        *bytes.get(offset)?,
+        *bytes.get(offset + 1)?,
+    ]))
+}
+
+#[cfg(test)]
+mod wire_protocol_tests {
+    use super::*;
+    use crate::capabilities::DeviceKind;
+
+    #[test]
+    fn wire_protocol_gen4() {
+        assert_eq!(DeviceType::Gen4.wire_protocol(), WireProtocol::Gen4);
+    }
+
+    #[test]
+    fn wire_protocol_goose_is_gen5() {
+        assert_eq!(DeviceType::Goose.wire_protocol(), WireProtocol::Gen5);
+    }
+
+    #[test]
+    fn wire_protocol_maverick_is_gen5() {
+        assert_eq!(DeviceType::Maverick.wire_protocol(), WireProtocol::Gen5);
+    }
+
+    #[test]
+    fn wire_protocol_puffin_is_gen5() {
+        assert_eq!(DeviceType::Puffin.wire_protocol(), WireProtocol::Gen5);
+    }
+
+    #[test]
+    fn wire_protocol_hr_monitor_is_gen5() {
+        assert_eq!(DeviceType::HrMonitor.wire_protocol(), WireProtocol::Gen5);
+    }
+
+    #[test]
+    fn is_gen5_family_gen4_false() {
+        assert!(!DeviceType::Gen4.is_gen5_family());
+    }
+
+    #[test]
+    fn is_gen5_family_goose_true() {
+        assert!(DeviceType::Goose.is_gen5_family());
+    }
+
+    #[test]
+    fn is_gen5_family_maverick_true() {
+        assert!(DeviceType::Maverick.is_gen5_family());
+    }
+
+    #[test]
+    fn is_gen5_family_puffin_true() {
+        assert!(DeviceType::Puffin.is_gen5_family());
+    }
+
+    #[test]
+    fn is_gen5_family_hr_monitor_true() {
+        assert!(DeviceType::HrMonitor.is_gen5_family());
+    }
+
+    #[test]
+    fn device_kind_gen4_is_whoop4() {
+        assert_eq!(DeviceType::Gen4.device_kind(), DeviceKind::Whoop4);
+    }
+
+    #[test]
+    fn device_kind_goose_is_whoop5() {
+        assert_eq!(DeviceType::Goose.device_kind(), DeviceKind::Whoop5);
+    }
+
+    #[test]
+    fn device_kind_maverick_is_whoop_mg() {
+        assert_eq!(DeviceType::Maverick.device_kind(), DeviceKind::WhoopMg);
+    }
+
+    #[test]
+    fn device_kind_puffin_is_whoop5() {
+        assert_eq!(DeviceType::Puffin.device_kind(), DeviceKind::Whoop5);
+    }
+
+    #[test]
+    fn device_kind_hr_monitor() {
+        assert_eq!(DeviceType::HrMonitor.device_kind(), DeviceKind::HrMonitor);
+    }
+}
+
+pub fn padding_len(length: usize) -> usize {
+    let remainder = length % 4;
+    if remainder == 0 { 0 } else { 4 - remainder }
+}
+
+pub fn crc16_modbus(data: &[u8]) -> u16 {
+    let mut crc = 0xffffu16;
+    for byte in data {
+        crc ^= u16::from(*byte);
+        for _ in 0..8 {
+            if crc & 1 == 1 {
+                crc = (crc >> 1) ^ 0xa001;
+            } else {
+                crc >>= 1;
+            }
+        }
+    }
+    crc
+}
+
+pub fn crc8(data: &[u8]) -> u8 {
+    let mut crc = 0u8;
+    for byte in data {
+        crc ^= *byte;
+        for _ in 0..8 {
+            if crc & 0x80 != 0 {
+                crc = (crc << 1) ^ 0x07;
+            } else {
+                crc <<= 1;
+            }
+        }
+    }
+    crc
+}

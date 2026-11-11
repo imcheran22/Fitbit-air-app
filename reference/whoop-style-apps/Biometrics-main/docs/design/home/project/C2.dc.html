@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home C2 · Day and night scene</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244);text-decoration:none}
+.ol{border-color:rgb(44,47,55);background:rgba(44,47,55,.3)}
+.df{background:rgb(245,245,244);color:rgb(10,11,14)}
+.px{font-family:'Silkscreen',monospace}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166)}
+.num{font-variant-numeric:tabular-nums}
+.phone{position:relative;width:390px;height:844px;flex:none;overflow:hidden;border-radius:28px;border:1px solid rgb(30,33,40);box-sizing:border-box;background:rgb(10,11,14)}
+.float{position:absolute;left:16px;right:16px;bottom:28px;background:rgba(20,22,27,.94);border:1px solid rgb(36,39,47);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box}
+.stat{flex:1;display:flex;flex-direction:column;gap:2px;text-decoration:none;color:inherit;min-width:0}
+.tag{position:absolute;font-family:'Silkscreen',monospace;font-size:9px;line-height:12px;letter-spacing:1px;color:rgba(245,245,244,.85);text-align:center;text-decoration:none}
+</style>
+</helmet>
+<div style="width: 860px; height: 904px; box-sizing: border-box; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 0 20px; display: flex; gap: 40px">
+
+  <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 18px">
+    <div class="px" style="font-size: 13px; letter-spacing: 1px; color: rgb(155,157,166)">8:12 AM · DAY</div>
+    <div class="phone">
+      <svg aria-hidden="true" width="{{day.w}}" height="{{day.h}}" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{day.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+      <sc-for list="{{dayKips}}" as="k" hint-placeholder-count="0"><svg aria-hidden="true" width="{{k.px}}" height="{{k.px}}" shape-rendering="crispEdges" style="position: absolute; {{k.pos}}"><sc-for list="{{k.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></sc-for>
+      <sc-for list="{{tags}}" as="t" hint-placeholder-count="0"><a href="#" class="tag" aria-label="{{t.aria}}" style="{{t.pos}}">{{t.name}}</a></sc-for>
+      <div style="position: absolute; left: 0; top: 0; right: 0; padding: 54px 20px 0; display: flex; align-items: flex-start; gap: 12px">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+          <div class="label">Fri, Oct 10</div>
+          <div style="font-size: 26px; line-height: 32px; font-weight: 600; letter-spacing: -.7px">Good morning</div>
+        </div>
+        <a href="#" class="b ol" aria-label="Profile" style="width: 44px; height: 44px; padding: 0; background: rgba(10,11,14,.45)"><svg aria-hidden="true" width="{{me.px}}" height="{{me.px}}" shape-rendering="crispEdges"><sc-for list="{{me.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></a>
+      </div>
+      <div class="float">
+        <div style="display: flex; gap: 12px">
+          <a href="#" class="stat"><span class="label" style="font-size: 10px">Recovery</span><span class="num" style="font-size: 26px; line-height: 30px; font-weight: 600">68</span><span style="font-size: 12px; font-weight: 600; color: rgb(74,222,128)">Mostly clear</span></a>
+          <a href="#" class="stat"><span class="label" style="font-size: 10px">Sleep</span><span class="num" style="font-size: 26px; line-height: 30px; font-weight: 600">78</span><span style="font-size: 12px; font-weight: 600; color: rgb(196,181,253)">7h 12m</span></a>
+          <a href="#" class="stat"><span class="label" style="font-size: 10px">Tomorrow</span><span class="num" style="font-size: 20px; line-height: 30px; font-weight: 600">68–76</span><span style="font-size: 12px; color: rgb(155,157,166)">Likely</span></a>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <a href="#" class="b df" style="height: 44px; font-size: 14px">Open today</a>
+          <a href="#" class="b ol" style="height: 44px; font-size: 14px">Ask Coach</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 18px">
+    <div class="px" style="font-size: 13px; letter-spacing: 1px; color: rgb(155,157,166)">10:40 PM · NIGHT</div>
+    <div class="phone">
+      <svg aria-hidden="true" width="{{night.w}}" height="{{night.h}}" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{night.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+      <sc-for list="{{nightKips}}" as="k" hint-placeholder-count="0"><svg aria-hidden="true" width="{{k.px}}" height="{{k.px}}" shape-rendering="crispEdges" style="position: absolute; {{k.pos}}"><sc-for list="{{k.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></sc-for>
+      <sc-for list="{{tags}}" as="t" hint-placeholder-count="0"><a href="#" class="tag" aria-label="{{t.aria}}" style="{{t.pos}}; color: rgba(199,210,254,.6)">{{t.name}}</a></sc-for>
+      <div style="position: absolute; left: 0; top: 0; right: 0; padding: 54px 20px 0; display: flex; align-items: flex-start; gap: 12px">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+          <div class="label">Fri, Oct 10</div>
+          <div style="font-size: 26px; line-height: 32px; font-weight: 600; letter-spacing: -.7px">Good night</div>
+        </div>
+        <a href="#" class="b ol" aria-label="Profile" style="width: 44px; height: 44px; padding: 0; background: rgba(10,11,14,.45)"><svg aria-hidden="true" width="{{meNight.px}}" height="{{meNight.px}}" shape-rendering="crispEdges"><sc-for list="{{meNight.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></a>
+      </div>
+      <div class="float">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span class="label" style="color: rgb(196,181,253)">Wind down</span>
+          <span style="font-size: 17px; line-height: 22px; font-weight: 600">Asleep by 23:00 keeps tomorrow near 76.</span>
+          <span style="font-size: 13px; color: rgb(155,157,166)">Today: recovery 68 · last night 78</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <a href="#" class="b df" style="height: 44px; font-size: 14px">Plan tomorrow</a>
+          <a href="#" class="b ol" style="height: 44px; font-size: 14px">Open today</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":904}}'>
+var KN = 16, KE = "................";
+var KBASE = [KE, KE, KE, KE, KE, KE, "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", ".....b....s.....", ".....b....s.....", "...zzzzzzzzzz..."];
+var KEYES = [[6, 8], [9, 8]];
+var KCOFFEE = { at: [12, 7], rows: ["..s.", ".s..", "..s.", "Sccc", ".lll", ".ccC"], pal: { s: "#CBD5E1", c: "#F8FAFC", C: "#CBD5E1", l: "#92400E", S: "@s" } };
+var KPOSES = { rest: {}, wave: { arms: [[12, 9, "s"], [13, 8, "s"]] }, cheer: { arms: [[3, 9, "b"], [2, 8, "b"], [12, 9, "s"], [13, 8, "s"]], hop: 1 }, coffee: { held: KCOFFEE }, stretch: { arms: [[3, 6, "b"], [3, 5, "b"], [3, 4, "b"], [12, 6, "s"], [12, 5, "s"], [12, 4, "s"]], tall: true, eyes: "shut" } };
+var KMOODS = { idle: {}, curious: { eyes: "up", tilt: 1 }, sleepy: { eyes: "shut", squash: true }, proud: { eyes: "up", tall: true }, determined: { eyes: "shut", brows: true, tilt: -1 }, glance: { eyes: "glance" } };
+var KSTATE = { great: ["cheer", "proud"], okay: ["wave", "idle"], rough: ["rest", "determined"], short: ["coffee", "sleepy"], building: ["rest", "curious"], calm: ["rest", "idle"], night: ["rest", "sleepy"], glance: ["rest", "glance"], stretch: ["stretch", "idle"] };
+function kRgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function kHx(n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? "0" + s : s; }
+function kMix(a, b, k) { var x = kRgb(a), y = kRgb(b); return "#" + kHx(x[0] * (1 - k) + y[0] * k) + kHx(x[1] * (1 - k) + y[1] * k) + kHx(x[2] * (1 - k) + y[2] * k); }
+function kDark(a, k) { var x = kRgb(a); return "#" + kHx(x[0] * k) + kHx(x[1] * k) + kHx(x[2] * k); }
+function kLum(h) { var c = kRgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function kRamp(body) { return { b: body, h: kMix(body, "#FFFFFF", 0.25), s: kDark(body, 0.78), d: kDark(body, 0.6), e: kLum(body) > 0.2 ? "#14161B" : "#F5F5F4", w: "#F8FAFC", z: "rgba(0,0,0,0.35)" }; }
+function kBlank() { var g = []; for (var i = 0; i < KN; i++) { var r = []; for (var j = 0; j < KN; j++) r.push(null); g.push(r); } return g; }
+function kPut(g, x, y, c) { if (x >= 0 && y >= 0 && x < KN && y < KN && c) g[y][x] = c; }
+function kBuild(body, poseName, moodName) {
+  var p = kRamp(body), pose = KPOSES[poseName] || KPOSES.rest, mood = KMOODS[moodName] || KMOODS.idle, g = kBlank(), x, y, c, t;
+  for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) if (KBASE[y][x] !== ".") g[y][x] = KBASE[y][x];
+  var eyeMode = pose.eyes || mood.eyes;
+  KEYES.forEach(function (e, i) {
+    var cs = [[e[0], e[1]]];
+    if (eyeMode === "shut") cs = [[e[0], e[1]], [i === 0 ? e[0] - 1 : e[0] + 1, e[1]]];
+    else if (eyeMode === "up") cs = [[e[0], e[1] - 1]];
+    else if (eyeMode === "wide") cs = [[e[0], e[1]], [e[0], e[1] - 1]];
+    else if (eyeMode === "glance") cs = [[e[0] + 1, e[1]]];
+    cs.forEach(function (q) { kPut(g, q[0], q[1], "e"); });
+  });
+  if (mood.brows) KEYES.forEach(function (e, i) { kPut(g, i === 0 ? e[0] + 1 : e[0] - 1, e[1] - 1, "d"); });
+  var hop = pose.hop || mood.hop || 0;
+  if (pose.tall || mood.tall) { t = kBlank(); for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) { c = g[y][x]; if (!c) continue; if (y <= 12 && c !== "z") { kPut(t, x, y - 1, c); if (y === 12) kPut(t, x, 12, c); } else kPut(t, x, y, c); } g = t; }
+  if (mood.squash) { t = kBlank(); for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) { c = g[y][x]; if (!c || y === 7) continue; kPut(t, x, y < 7 ? y + 1 : y, c); } for (x = 2; x < 14; x++) t[15][x] = "z"; g = t; }
+  if (mood.tilt) { t = kBlank(); for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) { c = g[y][x]; if (c) kPut(t, x + (y < 9 ? mood.tilt : 0), y, c); } g = t; }
+  if (hop) { t = kBlank(); for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) { c = g[y][x]; if (!c || c === "z") continue; kPut(t, x, y - hop, c); } var sw = hop > 1 ? 6 : 8; for (x = 0; x < sw; x++) t[15][8 - sw / 2 + x] = "z"; g = t; }
+  (pose.arms || []).forEach(function (a) { var yy = a[1] - hop; if (yy >= 0 && !g[yy][a[0]]) g[yy][a[0]] = a[2]; });
+  var out = kBlank();
+  for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) { c = g[y][x]; if (c) out[y][x] = p[c]; }
+  if (pose.held) { var it = pose.held; it.rows.forEach(function (r, j) { for (var k = 0; k < r.length; k++) { var L = r[k]; if (L === ".") continue; var col = it.pal[L]; if (col.charAt(0) === "@") col = p[col.slice(1)]; var X = it.at[0] + k, Y = it.at[1] + j; if (X < KN && Y < KN) out[Y][X] = col; } }); }
+  return out;
+}
+function kLayers(cells, s) { var by = {}, order = [], y, x, c, n; for (y = 0; y < KN; y++) { x = 0; while (x < KN) { c = cells[y][x]; if (!c) { x++; continue; } n = 1; while (x + n < KN && cells[y][x + n] === c) n++; if (!by[c]) { by[c] = ""; order.push(c); } by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z"; x += n; } } return order.map(function (f) { return { fill: f, d: by[f] }; }); }
+function kip(body, st, s) { var m = KSTATE[st] || KSTATE.calm; return { px: KN * s, layers: kLayers(kBuild(body, m[0], m[1]), s) }; }
+function sprite(body, st, s, cx, groundPx) { var k = kip(body, st, s); k.pos = "left: " + (cx - k.px / 2) + "px; top: " + (groundPx - 15 * s) + "px"; return k; }
+function tag(name, cx, y, aria) { return { name: name, aria: aria || name, pos: "left: " + (cx - 24) + "px; top: " + y + "px; width: 48px" }; }
+function pxLayers(rects, u) { var by = {}, order = []; rects.forEach(function (r) { var f = r[4]; if (!by[f]) { by[f] = ""; order.push(f); } by[f] += "M" + r[0] * u + " " + r[1] * u + "h" + r[2] * u + "v" + r[3] * u + "h-" + r[2] * u + "z"; }); return order.map(function (f) { return { fill: f, d: by[f] }; }); }
+function shift(list, ox, oy) { return list.map(function (r) { return [r[0] + ox, r[1] + oy, r[2], r[3], r[4]]; }); }
+var ART = {
+  sun: [[3, 0, 6, 1, "#FDE68A"], [1, 1, 10, 1, "#FCD34D"], [0, 2, 12, 7, "#FBBF24"], [1, 9, 10, 1, "#F59E0B"], [3, 10, 6, 1, "#F59E0B"]],
+  rays: [[5, -3, 2, 2, "#FDE68A"], [5, 12, 2, 2, "#FDE68A"], [-4, 5, 2, 2, "#FDE68A"], [14, 5, 2, 2, "#FDE68A"]],
+  cloud: [[3, 0, 8, 1, "#E5E7EB"], [1, 1, 13, 1, "#F3F4F6"], [0, 2, 16, 4, "#E5E7EB"], [1, 6, 14, 1, "#9CA3AF"], [4, 1, 3, 1, "#FFFFFF"]],
+  moon: [[4, 0, 5, 1, "#C4B5FD"], [2, 1, 5, 1, "#C4B5FD"], [1, 2, 4, 2, "#A78BFA"], [0, 4, 4, 6, "#A78BFA"], [1, 10, 4, 2, "#8B5CF6"], [2, 12, 5, 1, "#8B5CF6"], [4, 13, 6, 1, "#7C3AED"], [9, 12, 3, 1, "#7C3AED"], [10, 3, 1, 3, "#FDE68A"], [9, 4, 3, 1, "#FDE68A"]],
+  haze: [[2, 0, 6, 1, "#2B3A56"], [0, 1, 10, 2, "#2B3A56"]],
+  nhaze: [[2, 0, 6, 1, "#161B30"], [0, 1, 10, 2, "#161B30"]]
+};
+var SKIES = { mostly: ["#15233D", "#1A2B49", "#203456", "#273E63"], night: ["#06080E", "#090C16", "#0D111F", "#121729"] };
+function mound(r, cx, base, w, h, col) { for (var k = 0; k < h; k++) { var ww = Math.max(4, Math.round(w * (1 - (k / h) * (k / h)))); r.push([cx - Math.floor(ww / 2), base - k - 1, ww, 1, col]); } }
+function scene(o) {
+  var W = o.W, H = o.H, gy = o.gy, r = [], pal = SKIES[o.sky], n = pal.length, bh = Math.floor(gy / n), i, x;
+  for (i = 0; i < n; i++) { var y0 = i * bh, hh = i === n - 1 ? gy - y0 : bh; r.push([0, y0, W, hh, pal[i]]); if (i > 0) for (x = i % 2; x < W; x += 2) r.push([x, y0, 1, 1, pal[i - 1]]); }
+  if (o.stars) for (i = 0; i < o.stars; i++) r.push([(i * 37 + 11) % W, (i * 23 + 5) % Math.max(8, gy - 16), 1, 1, i % 3 === 0 ? "#E0E7FF" : (i % 3 === 1 ? "#A5B4FC" : "#6366F1")]);
+  (o.art || []).forEach(function (a) { r = r.concat(shift(ART[a[0]], a[1], a[2])); });
+  var hill = o.night ? "#0B1510" : "#173024";
+  mound(r, Math.round(W * 0.2), gy, Math.round(W * 0.42), Math.round(gy * 0.1), hill);
+  mound(r, Math.round(W * 0.8), gy, Math.round(W * 0.5), Math.round(gy * 0.13), hill);
+  var G = o.night ? ["#1E3A2A", "#17301F", "#132819", "#0F2014"] : ["#4A8A5C", "#3A7049", "#2D5A3A", "#234A2E"];
+  r.push([0, gy, W, 1, G[0]], [0, gy + 1, W, 2, G[1]], [0, gy + 3, W, 4, G[2]], [0, gy + 7, W, Math.max(0, H - gy - 7), G[3]]);
+  for (x = 4; x < W; x += 13) r.push([x, gy - 1, 1, 1, G[0]], [x + 2, gy - 1, 1, 1, G[0]], [x + 1, gy - 2, 1, 1, G[0]]);
+  for (x = 9; x < W; x += 19) r.push([x, gy + 4, 2, 1, G[1]]);
+  return { w: W * o.u, h: H * o.u, layers: pxLayers(r, o.u) };
+}
+var CORAL = "#FB7185";
+var BUD = [{ c: "#C4B5FD", st: "great" }, { c: "#6EE7B7", st: "short" }, { c: "#3B82F6", st: "glance" }];
+
+class Component extends DCLogic {
+  renderVals() {
+    var g = 588;
+    return {
+      me: kip(CORAL, "okay", 2),
+      meNight: kip(CORAL, "night", 2),
+      day: scene({ W: 65, H: 141, gy: 98, u: 6, sky: "mostly", art: [["haze", 16, 44], ["haze", 40, 62], ["rays", 42, 18], ["sun", 42, 18], ["cloud", 46, 27]] }),
+      night: scene({ W: 65, H: 141, gy: 98, u: 6, sky: "night", night: true, stars: 46, art: [["nhaze", 30, 60], ["moon", 44, 20]] }),
+      dayKips: [sprite(BUD[0].c, "great", 4, 64, g), sprite(BUD[1].c, "short", 4, 124, g), sprite(CORAL, "okay", 6, 210, g), sprite(BUD[2].c, "glance", 4, 320, g)],
+      nightKips: [sprite(BUD[0].c, "night", 4, 64, g), sprite(BUD[1].c, "night", 4, 124, g), sprite(CORAL, "night", 6, 210, g), sprite(BUD[2].c, "calm", 4, 320, g)],
+      tags: [tag("AVA", 64, g + 10, "Ava"), tag("JUN", 124, g + 10, "Jun"), tag("RAF", 320, g + 10, "Raf")]
+    };
+  }
+}
+</script>
+</body>
+</html>

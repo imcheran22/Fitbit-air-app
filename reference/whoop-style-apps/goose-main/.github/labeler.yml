@@ -1,0 +1,28 @@
+rust-core:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "Rust/**"
+
+ios:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "GooseSwift/**"
+          - "GooseWorkoutLiveActivityExtension/**"
+          - "GooseSwift.xcodeproj/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "Scripts/**"
+
+server:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "server/**"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.md"
+          - "docs/**"

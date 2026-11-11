@@ -1,0 +1,6 @@
+# Dependencias de la función serverless de Vercel (api/index.py).
+# Vercel instala automáticamente este requirements.txt en la raíz.
+fastapi==0.115.6
+requests==2.32.3
+python-dotenv==1.0.1
+pycryptodome==3.21.0

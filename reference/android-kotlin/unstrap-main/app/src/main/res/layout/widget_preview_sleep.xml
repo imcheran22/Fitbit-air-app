@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Sleep widget in the launcher's picker on Android 12 and later (widgets spec 6.4), a Small with the mockups'
+  sample: last night 82, Good, 7 h 40 asleep and its stages. RemoteViews' own views only, so the number is plain text
+  where the widget draws dots. Android 15 and later show the generated preview from the real layout instead
+  (WidgetUpdater.publishPreviews).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_bg_sleep"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:ignore="HardcodedText">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Last night"
+        android:textSize="17sp"
+        android:textColor="#FFFFFFFF"
+        android:fontFamily="sans-serif-medium"
+        android:maxLines="1"
+        android:includeFontPadding="true" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:baselineAligned="true"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="82"
+            android:textSize="40sp"
+            android:textColor="#FFFFFFFF"
+            android:fontFamily="sans-serif-light"
+            android:maxLines="1"
+            android:includeFontPadding="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Good"
+            android:textSize="15sp"
+            android:textColor="#B8FFFFFF"
+            android:maxLines="1"
+            android:includeFontPadding="true"
+            android:layout_marginStart="6dp" />
+    </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="7 h 40 asleep"
+        android:textSize="13sp"
+        android:textColor="#B8FFFFFF"
+        android:maxLines="1"
+        android:includeFontPadding="true" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="92"
+            android:background="#FF4C6FFF" />
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="101"
+            android:background="#FFB37CFF" />
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="267"
+            android:background="#FF8FA8FF" />
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="18"
+            android:background="#FFFFB547" />
+    </LinearLayout>
+</LinearLayout>

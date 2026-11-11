@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pip cosmetics</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1240px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">COSMETICS</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5">16 items, each a few rows of letters placed at a fixed origin on the same 24 × 24 grid. Left: the layer alone over a ghost body. Right: worn. One item per slot; hats can hide the antenna.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{items}}" as="it" hint-placeholder-count="16">
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; gap: 12px">
+          <div style="line-height: 0; border-radius: 6px; overflow: hidden; background: #0F1115"><dc-import name="Sprite" only="{{it.id}}" colorway="mint" scale="4" bg="none" hint-size="96px,96px"></dc-import></div>
+          <div style="line-height: 0; border-radius: 6px; overflow: hidden"><dc-import name="Sprite" cosmetics="{{it.id}}" colorway="mint" scale="4" bg="tint" hint-size="96px,96px"></dc-import></div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #E7E9EE">{{it.id}}</span>
+          <span style="font-family: Silkscreen, monospace; font-size: 10px; color: #A3A9B5; border: 1px solid #2E323C; border-radius: 4px; padding: 3px 5px 2px">{{it.slot}}</span>
+        </div>
+        <span style="font-size: 12px; color: #A3A9B5">{{it.note}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">OUTFITS · COLOURWAY + ITEMS + BACKGROUND</h2>
+    <div style="display: flex; gap: 16px">
+      <sc-for list="{{outfits}}" as="o" hint-placeholder-count="6">
+        <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 13px; display: flex; flex-direction: column; gap: 8px; width: 148px; box-sizing: border-box">
+          <div style="line-height: 0; border-radius: 6px; overflow: hidden"><dc-import name="Sprite" colorway="{{o.cw}}" cosmetics="{{o.cos}}" mood="{{o.mood}}" bg="{{o.bg}}" scale="5" hint-size="120px,120px"></dc-import></div>
+          <span style="font-family: Silkscreen, monospace; font-size: 12px; color: #E7E9EE">{{o.label}}</span>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 10px; line-height: 1.4; color: #A3A9B5">{{o.cos}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1240}}'>
+var ITEMS = [
+  ["hat.beanie", "head", "Accent knit, hides antenna"],
+  ["hat.cap", "head", "Fixed blue, brim right"],
+  ["hat.crown", "head", "Gold, two rubies, one sapphire"],
+  ["hat.party", "head", "Striped cone with pompom"],
+  ["head.sprout", "head", "Replaces the antenna"],
+  ["head.headphones", "head", "Antenna pokes through"],
+  ["head.sweatband", "head", "Accent stripe, tails right"],
+  ["head.halo", "head", "Floats where the bulb was"],
+  ["glasses.round", "face", "Frames in accentDark"],
+  ["glasses.shades", "face", "Solid lenses, one glint"],
+  ["neck.scarf", "neck", "Accent stripes, tail hangs"],
+  ["neck.medal", "neck", "Accent ribbon, gold disc"],
+  ["neck.bowtie", "neck", "Fixed red"],
+  ["held.dumbbell", "hand", "Right hand, x 21–23"],
+  ["held.bottle", "hand", "Left hand, x 0–1"],
+  ["back.cape", "back", "Drawn behind the body"]
+];
+var OUTFITS = [
+  { label: "WINTER", cw: "sky", cos: "hat.beanie, neck.scarf", mood: "happy", bg: "night" },
+  { label: "PR DAY", cw: "coral", cos: "head.sweatband, held.dumbbell", mood: "proud", bg: "tint" },
+  { label: "BIRTHDAY", cw: "lemon", cos: "hat.party, neck.bowtie, held.bottle", mood: "happy", bg: "tint" },
+  { label: "GARDEN", cw: "lime", cos: "head.sprout, glasses.round", mood: "idle", bg: "meadow" },
+  { label: "CHAMPION", cw: "night", cos: "hat.crown, back.cape, neck.medal", mood: "proud", bg: "night" },
+  { label: "FOCUS", cw: "lilac", cos: "head.headphones, glasses.shades", mood: "thinking", bg: "tint" }
+];
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      items: ITEMS.map(function (r) { return { id: r[0], slot: r[1], note: r[2] }; }),
+      outfits: OUTFITS
+    };
+  }
+}
+</script>
+</body>
+</html>

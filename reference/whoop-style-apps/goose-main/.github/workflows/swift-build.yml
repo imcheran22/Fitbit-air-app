@@ -1,0 +1,81 @@
+name: Swift Build
+
+# Compile check for all Swift/Xcode changes on PRs.
+# Builds for iOS Simulator (faster than device, no signing needed).
+# Rust core compiles automatically via the Xcode build phase
+# (Scripts/build_ios_rust.sh) — aarch64-apple-ios-sim target installed here.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "GooseSwift/**"
+      - "GooseWorkoutLiveActivityExtension/**"
+      - "GooseSwift.xcodeproj/**"
+      - ".github/workflows/swift-build.yml"
+  pull_request: {}
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build iOS (simulator)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+
+      - name: Install Rust and iOS simulator target
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-apple-ios-sim
+
+      - name: Cache cargo
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            Rust/core/target
+          key: ${{ runner.os }}-cargo-sim-${{ hashFiles('Rust/core/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-sim-
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project GooseSwift.xcodeproj \
+            -scheme GooseSwift \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            -derivedDataPath build/DerivedData \
+            build
+
+  swift-gate:
+    name: swift / gate
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          build="${{ needs.build.result }}"
+          if [[ "$build" == "failure" || "$build" == "cancelled" ]]; then
+            echo "build failed: $build" && exit 1
+          fi
+          echo "swift CI passed (build=$build)"

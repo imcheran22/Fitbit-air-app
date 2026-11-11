@@ -1,0 +1,305 @@
+# fitbit-analytics
+
+An end-to-end data engineering pipeline for my own Fitbit Air data: ingestion,
+a warehouse, transformations, ML-based predictions, and an interactive
+dashboard — built the way a production pipeline would be, on a dataset of one.
+
+```
+Takeout export ──┐
+                  ├──▶ ingest ──▶ local gold ──▶ warehouse-load ──▶ Postgres (Supabase)
+Google Health API ┘                                                      │
+                                                                          ▼
+                                                        dbt (staging + fct_daily_facts)
+                                                                          │
+                                              scheduled orchestration     ▼
+                                              (GitHub Actions, ⬜)   predictions ──▶ dashboard
+```
+
+Repo: https://github.com/Hanagojiv/fitbit-analytics
+
+---
+
+## Current state (2026-07-27)
+
+**Built and working:** a local ELT pipeline (discover → ingest → transform →
+report) over Google Takeout Fitbit exports, using DuckDB for the
+bronze/silver/gold layers and a self-contained HTML report. It has been run
+end to end against a real export, not just synthetic fixtures: `fitbit
+discover` classifies 293/1,082 real files against 47 `DatasetSpec`s, `fitbit
+ingest` produces 68 silver tables (14K rows), `fitbit transform` builds a
+60-day × 124-column `daily_facts` gold table, and `fitbit report` renders.
+13/15 fixture tests pass (2 pre-existing failures, unrelated to real-data
+work — see CLAUDE.md). See `src/fitbit_analytics/` and the architecture
+notes below — this part of the repo predates the cloud rebuild and still
+works standalone if you just want a local-only pipeline.
+
+The real export uses Fitbit's newer **"Google Health"** format
+(post-Google-acquisition), which turned out to be genuinely richer than the
+old "Fitbit" layout the pipeline was originally built for — a parallel,
+higher-fidelity CSV tree (`Physical Activity_GoogleData/`,
+`Health Fitness Data_GoogleData/`) with ~25 additional per-minute datasets
+(cardio load, HRV, SpO2, temperature, daily readiness, weight, height, and
+more), each tagged with a `data source` device name ("Radiance" — the Fitbit
+Air's internal codename — vs. "Fitbit App"). Both formats are now parsed;
+`parsers/google_health.py` handles the new one generically since its headers
+are self-describing and consistent, unlike the old format's column drift.
+
+**Deliberately deferred, not silently dropped** (each is a commented
+`IGNORE_PATTERNS` entry in `discover.py`):
+
+- `gps_location` — real lat/lon/altitude; needs the privacy decision below
+  before any cloud sync touches it.
+- `UserActivityProbabilities` — ~45MB/day activity-classifier stream; needs
+  the same aggregate-on-read treatment intraday heart rate already gets, just
+  not built for this source yet.
+- A handful of event/array-shaped datasets (`micro_motion`, `live_pace`,
+  `UserSleepStages`, `UserExercises`, swim/workout detail) that need bespoke
+  aggregation rather than the generic parser.
+- ~230 empty `Biometrics/Glucose *.csv` placeholder files (confirmed 0
+  bytes), menstrual health data (not applicable), and account/settings
+  metadata.
+
+**Also built and validated live** (2026-07-27, same session): the Google
+Health API sync client (`sync/`), the Postgres warehouse loader
+(`warehouse.py`), and the dbt project (`dbt/`) — see CLAUDE.md for the full
+list of real bugs found and fixed along the way (OAuth scope config, an SSL
+cert issue, undocumented API response-shape differences, a missing source
+table). `dbt_marts.fct_daily_facts` in Supabase was cross-checked row-for-row
+against the local `daily_facts.parquet` and matched exactly.
+
+**Not yet built:** scheduled orchestration (the sync → warehouse-load → dbt
+chain isn't wired into anything that runs on its own yet — currently all
+manual), ML predictions, and the dashboard. This README describes the target
+shape; treat anything below marked with a stage as aspirational until it has
+code behind it.
+
+---
+
+## Target architecture
+
+| Layer | Choice | Status |
+|---|---|---|
+| Historical backfill | Google Takeout export (this repo's existing parser layer) | ✅ working, both export formats, run against real data |
+| Ongoing sync | Google Health API (`health.googleapis.com`, replaces the decommissioned Fitbit Web API) | ✅ OAuth + client validated live; not yet scheduled |
+| Warehouse | Supabase (managed Postgres) | ✅ `fitbit warehouse-load` pushes silver+gold, live |
+| Transform | dbt-core: 44 staging models + `fct_daily_facts` mart | ✅ built, tested, validated against local output |
+| Orchestration | GitHub Actions scheduled workflows | ⬜ not started |
+| Predictions | scikit-learn / statsmodels, extending `analytics/` | ⬜ not started |
+| Dashboard | Next.js + Tailwind + Recharts/Nivo, deployed on Vercel | ⬜ not started |
+| CI | GitHub Actions: lint, pytest, dbt tests, deploy on merge | ⬜ not started |
+
+This is a deliberate change from the pipeline's original design (see
+"Local-pipeline design notes" below): real Fitbit data will live on Supabase's
+servers, not only on this machine, so a real dashboard can be reached from a
+phone. That tradeoff was made explicitly, not by default.
+
+---
+
+## Privacy
+
+- `data/`, `data_raw/`, `reports/`, `config.local.yaml`, and all Takeout
+  zips/exports are gitignored. Nothing under those paths has ever been
+  committed.
+- Once a cloud warehouse exists, **GPS location will not be synced by
+  default.** Exact coordinates are materially more sensitive than the rest of
+  this dataset (they can reveal home address, workplace, routes). If a
+  location-based feature is ever built (e.g. a route map for a single
+  workout), it will be opt-in and scoped per-activity, not a bulk sync of
+  `gps_location`.
+- The dashboard is a personal tool. Nothing here is designed for, or should be
+  read as, medical advice — see Scope below.
+
+---
+
+## Quick start (local pipeline only)
+
+```bash
+git clone https://github.com/Hanagojiv/fitbit-analytics.git && cd fitbit-analytics
+
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+
+# Unzip your Takeout archive somewhere, then:
+cp config.example.yaml config.local.yaml
+$EDITOR config.local.yaml          # set takeout_root
+
+fitbit all                         # discover -> ingest -> transform -> report
+open reports/fitbit_report.html
+```
+
+Each stage also runs on its own, which is what you want while iterating:
+
+```bash
+fitbit discover     # catalog every file, report what was not recognised
+fitbit ingest       # parse into silver parquet
+fitbit transform    # build gold/daily_facts.parquet
+fitbit report       # render the HTML
+```
+
+---
+
+## Local-pipeline design notes
+
+These decisions predate the cloud rebuild but still hold for the local
+ingestion layer, which remains the backfill path either way.
+
+**Discovery before parsing.** Fitbit's export schema drifts between account
+types, device generations and export dates — confirmed firsthand: the real
+export uses a different layout than either of us expected. Rather than assume
+a layout, the pipeline catalogs what is actually on disk and reports anything
+it does not recognise. Adding support is one `DatasetSpec` in `discover.py`.
+
+**Aggregate intraday on read.** Minute-grain (or sub-second, in the new
+export) heart rate, steps, and activity-probability data are the overwhelming
+majority of an export's bytes and almost none of its insight. They are
+downsampled to daily and hourly grains during ingest and the raw rows are
+never persisted.
+
+**A continuous date spine.** Missing days appear in `daily_facts` as rows of
+nulls rather than vanishing. Without this, every rolling window downstream
+silently changes length and a two-week gap quietly becomes a two-week average.
+
+**Coverage is a first-class metric.** A day with four hours of heart rate data
+is not a low-activity day, it is a day the watch sat on a charger.
+`wear_fraction` is derived from heart-rate sample density so analysis can
+exclude those days rather than average them in.
+
+**Per-dataset failure isolation.** A malformed sleep export should not cost you
+the heart rate pipeline. Each parser is wrapped independently and reports what
+it saw when column matching fails.
+
+---
+
+## Layout
+
+```
+src/fitbit_analytics/
+├── config.py            config + layer paths
+├── discover.py          file classification, the DatasetSpec table
+├── ingest.py             orchestration, bronze/silver
+├── transform.py         DuckDB join into gold/daily_facts
+├── report.py             self-contained interactive HTML
+├── cli.py                argparse entry point
+├── warehouse.py          pushes silver/gold parquet into Postgres (Supabase)
+├── parsers/
+│   ├── common.py         timestamp conventions, the {dateTime,value} shape
+│   ├── intraday.py       minute-grain JSON + downsampling + wear coverage
+│   ├── sleep.py           sleep logs, stages, timing features
+│   ├── csv_features.py   HRV, SpO2, sleep score, stress, readiness (old format)
+│   └── google_health.py  the newer per-source CSV format, generically
+├── analytics/
+│   ├── trends.py          baselines, RHR drift, regularity, robust anomalies
+│   ├── relationships.py   lagged correlations with FDR correction
+│   └── flags.py           rule-based observations
+└── sync/                 Google Health API: OAuth (auth.py) + client (client.py)
+
+dbt/                      warehouse-side transforms — see dbt/README.md
+├── models/staging/       44 thin passthroughs over raw.* (loaded by warehouse.py)
+├── models/marts/         fct_daily_facts.sql — the real transform
+└── macros/daily_facts.sql  dynamic collision-safe join, mirrors transform.py
+```
+
+Predictions and dashboard code will land in new top-level directories as
+they're built; this section will be updated as that happens rather than left
+stale.
+
+Datasets recognised, old format (`Global Export Data/`): steps, calories,
+distance, altitude, heart rate, resting heart rate, the four active-minute
+tiers, sleep, exercise, HRV (daily and detail), respiratory rate, SpO2 (daily
+and minute), skin and device temperature, sleep score, stress score, daily
+readiness, Active Zone Minutes, VO2 max, and heart-rate-zone minutes.
+
+Datasets recognised, new format (`Physical Activity_GoogleData/` /
+`Health Fitness Data_GoogleData/`): heart rate, steps, calories, active
+energy, distance, body temperature, SpO2, speed, cardio load, activity level,
+active zone minutes, calories-in-zone, time-in-zone, HRV (daily and
+per-night), daily SpO2, daily readiness, daily respiratory rate, daily
+resting heart rate, sleep-temperature derivations, height, weight, cardio
+workload ratio, sleep scores, and personal records. New-format columns carry
+a `_gh` suffix in `daily_facts` to keep them distinguishable from the
+old-format equivalent until the two are reconciled (see CLAUDE.md).
+
+---
+
+## The analytics
+
+**Baselines and drift.** Trailing rolling windows only, never centred, so every
+value uses information available on that day. Resting heart rate is tracked as
+a 7-day mean against a 60-day baseline, expressed in standard deviations of
+your own variability.
+
+**Anomalies.** Modified z-score against a trailing median and MAD, so a handful
+of genuine outliers cannot inflate the baseline enough to hide themselves. Very
+stable metrics fall back to a mean-absolute-deviation scale, because a zero MAD
+would otherwise make spikes in your steadiest signals undetectable.
+
+**Relationships.** A fixed list of pre-registered pairs in
+`relationships.HYPOTHESES`, each with an explicit lag, tested once with a
+Benjamini-Hochberg correction. Testing a dozen hypotheses against one person's
+noisy data will otherwise hand you a "significant" result by construction.
+
+**Sleep regularity.** Rolling standard deviation of the sleep midpoint. Bedtime
+is mapped to a signed decimal hour so 23:30 and 00:30 read as half an hour
+apart rather than twenty-three.
+
+**Predictions (planned).** Forecast next-day resting heart rate and sleep
+score from trailing features; surface as a range, not a point estimate.
+Anomaly and relationship logic above feed directly into the suggestions
+layer on the dashboard.
+
+---
+
+## Testing
+
+```bash
+pytest -q
+```
+
+`tests/make_fixtures.py` generates a synthetic Takeout tree with known
+structure planted in it: a fortnight of elevated resting heart rate, an
+eleven-day wear gap, a sleep-to-RHR coupling, and a weekend phase shift. The
+tests assert the analytics *recover* those signals, and that uncorrelated pairs
+stay insignificant — a suite that only checked for absence of exceptions would
+pass on a pipeline that computed nothing.
+
+You can also run the whole thing against fixtures without touching real data:
+
+```bash
+python tests/make_fixtures.py
+# set takeout_root: "./fixtures/Takeout" in config.local.yaml
+fitbit all
+```
+
+---
+
+## Extending it
+
+*New dataset:* add a `DatasetSpec` to `DATASET_SPECS` in `discover.py`, write a
+parser, register it in `ingest.py`, and add it to `DAILY_TABLES` in
+`transform.py` if it is daily-grain.
+
+*New CSV export whose columns do not match:* `fitbit ingest` prints the real
+column names it saw. Add them to `VALUE_ALIASES` in `parsers/csv_features.py`.
+
+*New hypothesis:* append to `HYPOTHESES` in `analytics/relationships.py`. Add
+it before you look at the result, not after — that is the entire point of the
+list being fixed.
+
+*New rule:* write a `_rule_*` function in `analytics/flags.py` returning a list
+of `Flag`, and add it to the tuple in `evaluate()`.
+
+---
+
+## Scope
+
+This produces descriptive statistics and trend predictions about what a
+consumer wrist device estimated. Such a device is a reasonable trend
+instrument and a poor absolute one: optical heart rate degrades during
+movement, wrist SpO2 is not a medical oximeter, and sleep staging from
+actigraphy plus heart rate agrees only moderately with polysomnography. The
+thresholds in `flags.py` are traceable to public health references where such
+references exist, and to your own baselines where they do not.
+
+Nothing here is a diagnosis or medical advice. If a pattern concerns you or
+persists, bring it to a clinician who can weigh it against your history and an
+actual measurement.

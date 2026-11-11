@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash icon: the launcher icon in one layer, so it reads on the light and the dark splash grounds. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="0" android:endX="108" android:endY="108">
+                <item android:offset="0" android:color="#FFFFD9C4" />
+                <item android:offset="1" android:color="#FFF3A27F" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M54,32 A22,22 0 1,1 54,76 A22,22 0 1,1 54,32" android:strokeColor="#59FFFFFF" android:strokeWidth="12" />
+    <path android:pathData="M54,32 A22,22 0 1,1 32.39,58.12" android:strokeWidth="12" android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient android:type="linear" android:startX="32" android:startY="32" android:endX="76" android:endY="76">
+                <item android:offset="0" android:color="#FF2B3A31" />
+                <item android:offset="1" android:color="#FF1A231E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M32.39,58.12 m-13,0 a13,13 0 1,0 26,0 a13,13 0 1,0 -26,0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="32.39" android:centerY="58.12" android:gradientRadius="13">
+                <item android:offset="0" android:color="#E6FFFFFF" />
+                <item android:offset="1" android:color="#00FFFFFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M32.39,50.12 Q33.99,56.519999999999996 40.39,58.12 Q33.99,59.72 32.39,66.12 Q30.79,59.72 24.39,58.12 Q30.79,56.519999999999996 32.39,50.12Z" android:fillColor="#FFFFFFFF" />
+</vector>

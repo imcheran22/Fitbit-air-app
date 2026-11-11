@@ -1,0 +1,129 @@
+{
+  "name": "Goose",
+  "identifier": "com.goose.app-source",
+  "apps": [
+    {
+      "name": "Goose",
+      "bundleIdentifier": "com.goose.app",
+      "developerName": "Goose",
+      "subtitle": "WHOOP biometric tracker",
+      "localizedDescription": "iOS app that reads biometric data from WHOOP devices via BLE and persists it to a self-hosted FastAPI+TimescaleDB server.",
+      "iconURL": "https://raw.githubusercontent.com/tigercraft4/goose/main/GooseSwift/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png",
+      "versions": [
+        {
+          "version": "15.2",
+          "date": "2026-06-28",
+          "localizedDescription": "- fix(ble): subscribe Gen4 command characteristic for notify — Fixes #189\n- fix(android): downgrade jni 0.22→0.21 — android_jni.rs uses 0.21 API",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v15.2/GooseSwift-v15.2-unsigned.ipa",
+          "size": 12656802
+        },
+        {
+          "version": "15.1",
+          "date": "2026-06-28",
+          "localizedDescription": "- fix(tests): update Swift tests for GooseBLEClient→CoreBluetoothBLETransport rename\n- fix(rust): sort BRIDGE_METHODS — protocol.* before realtime.*\n- fix(rust): cargo fmt --all",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v15.1/GooseSwift-v15.1-unsigned.ipa",
+          "size": 12655879
+        },
+        {
+          "version": "15.0",
+          "date": "2026-06-28",
+          "localizedDescription": "- feat(126-01): implement GooseWakeWindowManager — wake-window alarm via SET_ALARM_TIME wire format\n- feat(125-01): add cap sense on-wrist detection from EVENTS_FROM_STRAP events 10/11\n- plan(125): fix C-001/C-002 — mandate DispatchQueue.main.async + [weak self] in handleCapSenseEventValue",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v15.0/GooseSwift-v15.0-unsigned.ipa",
+          "size": 12524234
+        },
+        {
+          "version": "14.0",
+          "date": "2026-06-22",
+          "localizedDescription": "- feat(ci): rename APK to goose-{tag}-unsigned.apk on release upload\n- feat(protocol): add V26PpgWaveform variant and parse_v26_ppg_body (OPT-02, Task 1)\n- fix(rust): wrap unsafe FFI calls in explicit unsafe{} blocks in android_jni.rs",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v14.0/GooseSwift-v14.0-unsigned.ipa",
+          "size": 12517820
+        },
+        {
+          "version": "12.0",
+          "date": "2026-06-19",
+          "localizedDescription": "- style: cargo fmt bridge and openwhoop_reference files\n- fix: add packet_type_debug_name for unknown packet type visibility\n- seeds: v13.0 hardware bands (Puffin/Monument/Symphony) and Rust arch refactor",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v12.0/GooseSwift-v12.0-unsigned.ipa",
+          "size": 12403541
+        },
+        {
+          "version": "11.0",
+          "date": "2026-06-14",
+          "localizedDescription": "- Resting HR floor: 30 bpm minimum (closes #130)\n- Battery fix: R22 battery level for Gen5; Gen4 0xFF guard (closes #149)\n- HealthKit import persistence to SQLite (closes #150)\n- Debug 3-tab split, Logs & Export rename, Breathe haptics, live strain\n- Schema v21 indexes, lazy init, BLE auth retry\n- Fork + upstream PR integration (units, localisation, BLE recovery, sync donut)",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v11.0/GooseSwift-v11.0-unsigned.ipa",
+          "size": 12400928
+        },
+        {
+          "version": "10.0",
+          "date": "2026-06-14",
+          "localizedDescription": "- WHOOP 5.0 R22 realtime + v18 historical protocol\n- BLE manager refactor + data validator\n- Haptic buzz primitive + BreatheView\n- Coach VOW nudges, Interval Timer, Metric Explorer, notifications\n- Stress/ANS, Trends, Manual Workout screens\n- Smart alarm UI + wake-window RE-gated stub\n- Schema v20 (4 new SQLite tables)",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v10.0/GooseSwift-v10.0-unsigned.ipa",
+          "size": 12398907
+        },
+        {
+          "version": "9.0",
+          "date": "2026-06-11",
+          "localizedDescription": "- chore: archive v9.0 milestone — BLE Reliability & Protocol Parity (5/6 phases shipped)\n- feat(about): add License section with GPL v3, copyright, source link; rename Model → Device\n- docs(v9.0): milestone audit — passed (5/6 phases, Phase 66 hardware-gated)",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v9.0/GooseSwift-v9.0-unsigned.ipa",
+          "size": 11909146
+        },
+        {
+          "version": "8.0",
+          "date": "2026-06-11",
+          "localizedDescription": "- chore: remove REQUIREMENTS.md for v8.0 milestone\n- chore: archive v8.0 milestone files\n- docs(61): add pattern map",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v8.0/GooseSwift-v8.0-unsigned.ipa",
+          "size": 11890723
+        },
+        {
+          "version": "7.0",
+          "date": "2026-06-10",
+          "localizedDescription": "- chore: remove REQUIREMENTS.md for v7.0 milestone (archived to milestones/v7.0-REQUIREMENTS.md)\n- chore: archive v7.0 milestone — Sync Correctness, Async & Sleep Sync\n- docs: remove stale MVP-era recovery-todo.md — items implemented or in backlog",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v7.0/GooseSwift-v7.0-unsigned.ipa",
+          "size": 11966532
+        },
+        {
+          "version": "6.0",
+          "date": "2026-06-10",
+          "localizedDescription": "Release v6.0",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v6.0/GooseSwift-v6.0-unsigned.ipa",
+          "size": 11966532
+        },
+        {
+          "version": "5.0",
+          "date": "2026-06-10",
+          "localizedDescription": "- chore: archive v5.0 milestone — Metrics Accuracy, IMU & Upstream Fixes (128 Rust tests)\n- fix(audit): INT-06/INT-07 — add synced column + STREAM_ALLOWLIST to exercise_sessions and gravity2_samples\n- fix(35): MOTION_THRESHOLD 0.01→0.20 g (cross-project review); MIN_BEATS 2→20 for RMSSD reliability",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v5.0/GooseSwift-v5.0-unsigned.ipa",
+          "size": 11966532
+        },
+        {
+          "version": "4.0",
+          "date": "2026-06-10",
+          "localizedDescription": "Release v4.0",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v4.0/GooseSwift-v4.0-unsigned.ipa",
+          "size": 11966532
+        },
+        {
+          "version": "3.0",
+          "date": "2026-06-10",
+          "localizedDescription": "- chore: archive v3.0 milestone — Wearable UX, CI Hardening & RTC Sync\n- docs(15): mark phase complete\n- docs(15-01): complete Recovery Formula V2 SDNN accuracy plan",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v3.0/GooseSwift-v3.0-unsigned.ipa",
+          "size": 11966532
+        },
+        {
+          "version": "2.0",
+          "date": "2026-06-10",
+          "localizedDescription": "Release v2.0",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v2.0/GooseSwift-v2.0-unsigned.ipa",
+          "size": 11966532
+        },
+        {
+          "version": "1.0",
+          "date": "2026-06-10",
+          "localizedDescription": "Release v1.0",
+          "downloadURL": "https://github.com/tigercraft4/goose/releases/download/v1.0/GooseSwift-v1.0-unsigned.ipa",
+          "size": 11966532
+        }
+      ]
+    }
+  ],
+  "news": []
+}

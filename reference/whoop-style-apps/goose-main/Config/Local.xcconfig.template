@@ -1,0 +1,10 @@
+// Copy this file to Config/Local.xcconfig and fill in your values.
+// Config/Local.xcconfig is gitignored — safe for personal signing settings.
+
+// Your Apple Developer Team ID (find at developer.apple.com — Membership)
+DEVELOPMENT_TEAM = XXXXXXXXXX
+
+// Base bundle ID — both targets derive their IDs from this single variable:
+//   Main app:  $(APP_BUNDLE_ID)
+//   Extension: $(APP_BUNDLE_ID).WorkoutLiveActivityExtension
+APP_BUNDLE_ID = com.yourname.goose

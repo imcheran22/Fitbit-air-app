@@ -1,0 +1,61 @@
+name: Enhancement
+description: Improve something that already exists
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for improving existing behaviour — not for new features. If it doesn't exist yet, use the Feature Request template instead.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What is being improved?
+      description: Identify the specific feature, screen, or behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behaviour
+      description: How does it work today? Include screenshots or logs if helpful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed behaviour
+      description: How should it work after the change?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason / benefit
+      description: Why is this improvement worth making?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area affected
+      options:
+        - BLE / sensor data
+        - Health metrics / HRV
+        - Sleep tracking
+        - Activity / workout detection
+        - UI / navigation
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, packet traces, links — anything that helps.

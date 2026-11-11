@@ -1,0 +1,26 @@
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+*.log
+
+# Python / backend
+backend/.venv/
+__pycache__/
+*.pyc
+backend/.env
+*.env
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+
+# Local agent/editor config
+.claude/
+.vercel

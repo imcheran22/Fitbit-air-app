@@ -1,0 +1,37 @@
+.DS_Store
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+Packages/**/.build/
+.claude/
+*.ipa
+*.dSYM
+*.xcarchive
+Rust/include/*.tmp
+Rust/include/
+Rust/libgoose_core.a
+Rust/libgoose_core.a.tmp
+Rust/libcodex_ios_auth_bridge.a
+Rust/.goose_core.active-target
+Rust/iphoneos/
+Rust/iphonesimulator/
+Vendor/CodexRust/codex-rs/target/
+tmp/
+
+# Local signing overrides (per-developer team/bundle ID — do not commit)
+Config/Local.xcconfig
+
+# Server secrets
+server/.env
+.env
+
+# Python virtual environments and cache
+server/**/.venv*/
+server/**/__pycache__/
+server/**/*.pyc
+server/**/*.pyo
+
+# Local protocol research notes — not for version control
+re-assets/
+android-libs/

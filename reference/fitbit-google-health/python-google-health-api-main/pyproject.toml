@@ -1,0 +1,31 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=77.0"]
+
+[project]
+name = "google_health_api"
+version = "0.10.0"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+description = "An asynchronous, type-safe Python client library for the Google Health API."
+readme = "README.md"
+authors = [{ name = "Allen Porter", email = "allen.porter@gmail.com" }]
+requires-python = ">=3.14"
+classifiers = []
+dependencies = ["aiohttp>=3.7.3", "mashumaro>=3.12"]
+
+[project.optional-dependencies]
+webhook = ["cryptography>=43.0.0"]
+
+
+[project.urls]
+Source = "https://github.com/allenporter/python-google-health-api"
+
+[project.scripts]
+google-health-cli = "google_health_api.cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["google_health_api*"]
+
+[tool.setuptools.package-data]
+google_health_api = ["py.typed"]

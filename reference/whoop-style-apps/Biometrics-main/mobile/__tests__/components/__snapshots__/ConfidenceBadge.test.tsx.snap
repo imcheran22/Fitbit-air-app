@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`ConfidenceBadge matches its snapshot for HIGH 1`] = `
+<View
+  accessibilityLabel="High confidence"
+  className="self-start rounded-full px-2.5 py-1 bg-accent/10"
+  testID="confidence-badge"
+>
+  <Text
+    className="text-caption font-medium text-accent"
+    style={
+      [
+        {
+          "fontFamily": "Geist_500Medium",
+        },
+        undefined,
+      ]
+    }
+  >
+    High confidence
+  </Text>
+</View>
+`;
+
+exports[`ConfidenceBadge matches its snapshot for LOW 1`] = `
+<View
+  accessibilityLabel="Low confidence"
+  className="self-start rounded-full px-2.5 py-1 bg-destructive/10"
+  testID="confidence-badge"
+>
+  <Text
+    className="text-caption font-medium text-destructive"
+    style={
+      [
+        {
+          "fontFamily": "Geist_500Medium",
+        },
+        undefined,
+      ]
+    }
+  >
+    Low confidence
+  </Text>
+</View>
+`;
+
+exports[`ConfidenceBadge matches its snapshot for MEDIUM 1`] = `
+<View
+  accessibilityLabel="Medium confidence"
+  className="self-start rounded-full px-2.5 py-1 bg-muted"
+  testID="confidence-badge"
+>
+  <Text
+    className="text-caption font-medium text-muted-foreground"
+    style={
+      [
+        {
+          "fontFamily": "Geist_500Medium",
+        },
+        undefined,
+      ]
+    }
+  >
+    Medium confidence
+  </Text>
+</View>
+`;

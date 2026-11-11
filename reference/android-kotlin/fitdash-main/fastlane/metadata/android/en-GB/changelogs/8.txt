@@ -1,0 +1,4 @@
+One-line morning readout at the top of Today and on the widget: last night, one vital against your own range, and a suggestion.
+Calibration now says how many nights are left and what already works.
+Every comparison sheet says it compares with your own last 30 days, not other people; the Total sleep sheet shows the National Sleep Foundation range for your age.
+The loading screen appears as soon as Health Connect permissions are granted, so the first open no longer looks stuck.

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fitdash — calm Health Connect dashboard</title>
+<meta name="description" content="fitdash is a free, open-source Android app that turns Health Connect data from your Fitbit, Pixel Watch or Galaxy Watch into a calm, private dashboard. No account, no cloud, no internet permission.">
+<meta name="theme-color" content="#081413">
+<meta property="og:type" content="website">
+<meta property="og:title" content="fitdash — calm Health Connect dashboard">
+<meta property="og:description" content="A calm, private dashboard for your Health Connect data. Recovery, sleep, activity and trends in three themes. Open source, no account, no cloud.">
+<meta property="og:url" content="https://mayurrawte.is-a.dev/fitdash/">
+<meta property="og:image" content="https://mayurrawte.is-a.dev/fitdash/screens/today-teal.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25' r='75%25'%3E%3Cstop offset='0' stop-color='%237AF5D0'/%3E%3Cstop offset='.55' stop-color='%231FB89A'/%3E%3Cstop offset='1' stop-color='%230B5E57'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='13' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --fg:#E9EEED; --muted:#8FA3A0; --accent:#2DD4BF; --card:rgba(255,255,255,.045); --line:rgba(255,255,255,.08); }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; color:var(--fg); font-family:"Inter",system-ui,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;
+         background:#050909 radial-gradient(120% 60% at 50% 0%, #0E2522, #081413 45%, #050909) no-repeat; background-attachment:scroll; }
+  a { color:inherit; }
+  .mono { font-family:"JetBrains Mono",monospace; letter-spacing:.08em; text-transform:uppercase; }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 16px; }
+  section { padding:72px 0 0; }
+  .label { font-size:11px; color:var(--accent); margin:0 0 12px; }
+  h2 { font-weight:400; font-size:clamp(26px,4vw,36px); line-height:1.2; letter-spacing:-.02em; margin:0 0 14px; }
+  .lead { color:var(--muted); max-width:560px; margin:0 0 32px; }
+
+  .hero { display:grid; grid-template-columns:1fr; gap:36px; align-items:center; padding:36px 0 0; text-align:center; }
+  .logo { width:min(300px,70vw); height:auto; display:block; margin:0 auto 4px; mix-blend-mode:lighten;
+          -webkit-mask-image:radial-gradient(closest-side,#000 80%,transparent); mask-image:radial-gradient(closest-side,#000 80%,transparent); }
+  h1 { font-weight:300; font-size:clamp(32px,6vw,52px); line-height:1.1; letter-spacing:-.03em; margin:0 0 16px; }
+  .hero p { color:var(--muted); margin:0 auto 28px; max-width:480px; }
+  .btns { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .btn { display:inline-block; padding:13px 22px; border-radius:14px; border:1px solid rgba(255,255,255,.14); text-decoration:none; font-size:12px; transition:background .2s,border-color .2s; }
+  .btn:hover { background:rgba(255,255,255,.06); }
+  .btn.pri { background:var(--accent); border-color:var(--accent); color:#04201C; font-weight:500; }
+  .btn.pri:hover { background:#5BE7C4; border-color:#5BE7C4; }
+  .heroimg { display:flex; justify-content:center; }
+  .heroimg img { width:min(300px,78vw); height:auto; filter:drop-shadow(0 30px 60px rgba(45,212,191,.18)); }
+
+  .shots { display:flex; gap:20px; overflow-x:auto; padding:8px 16px 24px; margin:0 -16px; scroll-snap-type:x proximity; scrollbar-width:thin; scrollbar-color:#1d3a36 transparent; }
+  .shots figure { flex:none; margin:0; width:230px; scroll-snap-align:center; }
+  .shots img { width:100%; height:auto; display:block; filter:drop-shadow(0 18px 36px rgba(0,0,0,.5)); }
+  .shots figcaption { text-align:center; font-size:10.5px; color:var(--muted); margin-top:12px; }
+
+  .grid { display:grid; grid-template-columns:1fr; gap:12px; }
+  .fc { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px; }
+  .fc .ic { width:38px; height:38px; border-radius:11px; background:rgba(45,212,191,.12); display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+  .fc svg { width:19px; height:19px; stroke:var(--accent); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .fc h3 { font-size:15px; font-weight:500; margin:0 0 6px; }
+  .fc p { font-size:13.5px; color:var(--muted); margin:0; }
+  .dots { display:flex; gap:7px; margin-top:14px; }
+  .dots i { width:16px; height:16px; border-radius:50%; display:block; box-shadow:inset -2px -3px 5px rgba(0,0,0,.3), inset 2px 2px 4px rgba(255,255,255,.25); }
+
+  .priv { background:var(--card); border:1px solid var(--line); border-radius:22px; padding:28px 20px; }
+  .priv ul { list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+  .priv li { display:flex; gap:12px; align-items:baseline; font-size:15px; }
+  .priv li b { font-weight:500; }
+  .priv li span { color:var(--muted); }
+  .priv li:before { content:""; flex:none; width:7px; height:7px; border-radius:50%; background:var(--accent); transform:translateY(-1px); }
+
+  .tg { display:grid; grid-template-columns:1fr; gap:12px; margin:28px 0 0; }
+  .vfy { margin-top:12px; background:rgba(0,0,0,.25); border:1px solid var(--line); border-radius:18px; padding:20px; }
+  .vfy h3 { font-size:15px; font-weight:500; margin:0 0 6px; }
+  .vfy p { font-size:13.5px; color:var(--muted); margin:0 0 14px; }
+  .vfy pre { margin:0 0 12px; font-size:12.5px; }
+  .fp { display:block; word-break:break-all; font-family:"JetBrains Mono",monospace; font-size:12.5px; line-height:1.7; color:#BFEFE6; padding:14px 16px; border-radius:14px; background:rgba(0,0,0,.35); border:1px solid var(--line); }
+  .links { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+  pre { margin:0 0 16px; padding:18px 18px; border-radius:16px; background:rgba(0,0,0,.35); border:1px solid var(--line); overflow-x:auto; font-family:"JetBrains Mono",monospace; font-size:13px; line-height:1.7; color:#BFEFE6; }
+  .note { color:var(--muted); font-size:14px; margin:0 0 6px; }
+
+  footer { margin-top:88px; border-top:1px solid var(--line); padding:28px 0 44px; font-size:10.5px; color:var(--muted); display:flex; flex-wrap:wrap; gap:8px 18px; justify-content:center; text-align:center; }
+  footer a { text-decoration:none; } footer a:hover { color:var(--fg); }
+
+  @media (min-width:700px) {
+    .grid { grid-template-columns:repeat(2,1fr); }
+    .tg { grid-template-columns:repeat(2,1fr); }
+    .shots { justify-content:center; }
+  }
+  @media (min-width:900px) {
+    section { padding-top:104px; }
+    .hero { grid-template-columns:1.1fr .9fr; gap:48px; text-align:left; padding-top:56px; }
+    .logo { margin:0 0 4px -34px; width:320px; }
+    .hero p { margin-left:0; }
+    .btns { justify-content:flex-start; }
+    .grid { grid-template-columns:repeat(4,1fr); }
+    .tg { grid-template-columns:repeat(3,1fr); }
+    .priv { padding:40px; }
+    .shots figure { width:min(200px,18vw); }
+    .shots { overflow:visible; justify-content:center; gap:24px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <img class="logo" src="logo.png" alt="fitdash" width="1026" height="478">
+      <h1>A calm, private dashboard for your Health Connect data</h1>
+      <p>Works with whatever your Fitbit, Pixel Watch or Galaxy Watch writes to Health Connect, and shows only what you have.</p>
+      <div class="btns">
+        <a class="btn pri mono" href="https://play.google.com/store/apps/details?id=app.fitdash">Get it on Google Play</a>
+        <a class="btn mono" href="https://github.com/mayurrawte/fitdash/releases/latest/download/fitdash.apk">Download APK</a>
+        <a class="btn mono" href="https://github.com/mayurrawte/fitdash">View on GitHub</a>
+        <a class="btn mono" href="https://buymeacoffee.com/thepsygeek">Buy me a coffee</a>
+      </div>
+    </div>
+    <div class="heroimg"><img src="screens/today-teal.png" alt="fitdash Today page in Midnight Teal, showing a recovery score of 79" width="600" height="1260"></div>
+  </header>
+
+  <section>
+    <p class="label mono">Screens</p>
+    <div class="shots">
+      <figure><img src="screens/today-teal.png" alt="Today page in Midnight Teal" loading="lazy" width="600" height="1260"><figcaption class="mono">Today</figcaption></figure>
+      <figure><img src="screens/sleep.png" alt="Sleep page with score gauge and last night's tiles" loading="lazy" width="600" height="1260"><figcaption class="mono">Sleep</figcaption></figure>
+    </div>
+    <p class="note" style="text-align:center">Screens show sample data.</p>
+  </section>
+
+  <section>
+    <p class="label mono">Features</p>
+    <h2>Everything on four swipeable pages</h2>
+    <p class="lead">Recovery, sleep, activity and trends, with the numbers that matter and none of the noise.</p>
+    <div class="grid">
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8 10c1-2 3-3 5-2.5M12 3v2M12 19v2"/></svg></div><h3>Recovery ring</h3><p>One ring with your recovery score, plus sleep, recovery and movement with change since yesterday, and a weekly review.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></div><h3>Sleep</h3><p>A score gauge, stages over the night, and your deep, light and REM against typical ranges.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></div><h3>Activity</h3><p>Steps against your goal, workouts with heart-rate zones, heart rate through the day and naps, in plain cards.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M8 14l3-3 3 2 5-6"/></svg></div><h3>Trends</h3><p>Week and month views, so you can see where you are heading.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z"/></svg></div><h3>Three themes</h3><p>Soft (light, with a dark mode that follows your system), Midnight Teal and Graphite.</p>
+        <div class="dots" aria-hidden="true"><i style="background:radial-gradient(circle at 30% 30%,#FFFFFF,#C9B8FF 55%,#A8E6D3)"></i><i style="background:radial-gradient(circle at 30% 30%,#7AF5D0,#1FB89A 55%,#0B5E57)"></i><i style="background:radial-gradient(circle at 30% 30%,#FFFFFF,#9A9A9A 55%,#3A3A3A)"></i></div></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12h8M12 8v8"/></svg></div><h3>Home-screen widget</h3><p>Your scores at a glance, with an opt-in background refresh.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></div><h3>Day picker</h3><p>Step back through any day from a week strip or a full calendar.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg></div><h3>Ask AI</h3><p>Share a summary of your day to any assistant you already use. Nothing leaves unless you send it.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></div><h3>Share your day</h3><p>Turn today into a clean image in your current theme and send it anywhere.</p></div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <p class="label mono">Privacy</p>
+    <h2>Private by design. Verifiable by anyone.</h2>
+    <p class="lead">Your health data is read from Health Connect and processed on your phone. It only leaves when you choose to share it from the share sheet.</p>
+    <div class="grid tg">
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></div><h3>No internet permission</h3><p>The release APK requests no INTERNET permission, so fitdash itself cannot connect to the internet. Data only leaves your phone when you choose to share it.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="6" rx="1.5"/><rect x="3.5" y="14" width="17" height="6" rx="1.5"/><path d="M6 7h.01M6 17h.01M4 3l16 18"/></svg></div><h3>No servers or API</h3><p>There is no backend. Data is read and processed on your phone.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5M4 4l16 16"/></svg></div><h3>No account or tracking</h3><p>No sign-up, analytics, crash reporting, ads or trackers.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></div><h3>Writes only what you enter</h3><p>fitdash writes only the water, height, protein and caffeine you enter yourself (protein and caffeine on the GitHub build only). It never changes or deletes any other data. Undo deletes only the water entry you just added.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><h3>Open source, GPL-3.0</h3><p>Read every line. Any fork must stay open source too.</p></div>
+      <div class="fc"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="8" r="2.2"/><path d="M6 8.2v7.6M18 10.2c0 4-6 3-11 6.5"/></svg></div><h3>Built in the open</h3><p>Release APKs are built and signed by GitHub Actions from the public source.</p></div>
+    </div>
+    <div class="vfy">
+      <h3>Verify it yourself</h3>
+      <p>Check the APK you downloaded. The permissions list should show only Health Connect READ permissions, plus WRITE_HYDRATION, WRITE_HEIGHT and WRITE_NUTRITION, and no INTERNET.</p>
+<pre>aapt dump permissions fitdash.apk
+apksigner verify --print-certs fitdash.apk</pre>
+      <p>Signing certificate SHA-256:</p>
+      <code class="fp">15:9A:A2:14:AC:84:59:08:E6:D4:30:90:2D:50:D4:FA:85:AA:9C:E1:92:21:E7:9C:E7:3A:83:CA:B5:9E:55:72</code>
+      <p style="margin:14px 0 0">Or build it yourself with <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#BFEFE6">./gradlew :app:assembleGithubRelease</span>.</p>
+    </div>
+    <div class="links">
+      <a class="btn pri mono" href="privacy.html">Privacy policy</a>
+      <a class="btn mono" href="https://github.com/mayurrawte/fitdash/blob/main/app/src/main/AndroidManifest.xml">Read the manifest</a>
+    </div>
+  </section>
+
+  <section>
+    <p class="label mono">Install</p>
+    <h2>Get fitdash</h2>
+    <p class="lead">Android 8 or newer, with Health Connect. Install it from Google Play, or download the APK, open the file and allow installing from your browser. Every release is built by GitHub Actions from this repo.</p>
+    <div class="btns"><a class="btn pri mono" href="https://play.google.com/store/apps/details?id=app.fitdash">Get it on Google Play</a><a class="btn mono" href="https://github.com/mayurrawte/fitdash/releases/latest/download/fitdash.apk">Download APK</a><a class="btn mono" href="https://github.com/mayurrawte/fitdash/releases">All releases</a></div>
+    <p class="lead" style="margin-top:28px">Or build from source (JDK 17 and the Android SDK):</p>
+    <pre>git clone https://github.com/mayurrawte/fitdash &amp;&amp; cd fitdash &amp;&amp; ./gradlew :app:installGithubDebug</pre>
+  </section>
+
+  <footer class="mono">
+    <span>GPL-3.0</span><span>&middot;</span>
+    <a href="privacy.html">Privacy</a><span>&middot;</span>
+    <a href="https://buymeacoffee.com/thepsygeek">Buy me a coffee</a><span>&middot;</span>
+    <a href="https://github.com/mayurrawte/fitdash">GitHub</a>
+  </footer>
+</div>
+</body>
+</html>

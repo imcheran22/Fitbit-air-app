@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+coverage/
+.whoop-mcp/
+
+# MCP Registry local auth tokens
+.mcpregistry_*_token
+
+# Vercel CLI local artifacts
+.vercel/

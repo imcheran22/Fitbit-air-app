@@ -1,0 +1,9 @@
+.worktrees/
+# Brainstorm mockup server output (kept docs live in docs/design/)
+.superpowers/
+.claude-flow/
+mobile/.env
+
+# Local claude-flow / ruflo tooling state
+.swarm/
+ruvector.db

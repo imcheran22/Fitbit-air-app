@@ -1,0 +1,351 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Theme tokens, one for one with pulse's src/app/globals.css (same names, same values).
+ *
+ * - :root is the light theme, .dark:root the dark one. NativeWind 4 reads both: tailwind.config.js has
+ *   darkMode: "class", and the app flips the class with colorScheme.set() (see src/ui/theme.ts).
+ *   (The web app's dark theme is its default and light overrides it; on a phone the system setting decides.)
+ * - A solid colour is stored as its "R G B" channels so tailwind.config.js can write rgb(var(--x) / <alpha-value>),
+ *   which keeps class names like bg-foreground/10 working. A colour that already carries alpha (border, glass,
+ *   chart-grid ...) is stored as a whole rgb(r g b / a) and used as is.
+ * - Skia charts cannot read CSS variables, so src/ui/palette.ts holds the same values as hex strings, and
+ *   src/ui/palette.test.ts fails if this file and that one ever disagree.
+ * - color-mix() tokens of the web (chart-highlight, chart-faint, strain-band-1..4) are written out as plain values.
+ */
+:root {
+  --background-top: 246 248 249;
+  --background-mid: 239 242 244;
+  --background: 233 237 240;
+  --foreground: 16 21 24;
+  --foreground-secondary: 73 83 90;
+  --card: 255 255 255;
+  --card-top: 255 255 255;
+  --card-hover: 245 247 248;
+  --card-foreground: 16 21 24;
+  --popover: 255 255 255;
+  --popover-top: 255 255 255;
+  --popover-foreground: 16 21 24;
+  --primary: 16 21 24;
+  --primary-foreground: 255 255 255;
+  --secondary: 228 232 235;
+  --secondary-foreground: 16 21 24;
+  --muted: 238 241 243;
+  --muted-foreground: 90 100 107;
+  --accent: 221 226 230;
+  --accent-foreground: 16 21 24;
+  --inset: 238 241 243;
+  --field: 237 240 242;
+  --destructive: 255 0 38;
+  --border: rgb(16 21 24 / 0.1);
+  --input: rgb(16 21 24 / 0.16);
+  --ring: 16 21 24;
+  --recovery-green: 18 200 5;
+  --recovery-yellow: 229 195 0;
+  --recovery-red: 242 0 36;
+  --recovery-red-text: 215 0 31;
+  --strain: 0 147 231;
+  --strain-text: 0 119 191;
+  --strain-deep: 13 72 190;
+  --sleep: 102 144 173;
+  --sleep-deep: 57 89 123;
+  --optimal: 0 179 119;
+  --warning: 217 121 0;
+  --recovery-blue: 63 146 211;
+  --stress-low: 63 146 211;
+  --stress-medium: 0 179 119;
+  --stress-high: 217 121 0;
+  --optimal-text: 0 122 82;
+  --warning-text: 168 90 0;
+  --stress-low-text: 42 111 168;
+  --stress-medium-text: 0 122 82;
+  --stress-high-text: 168 90 0;
+  --coach-text: 61 91 217;
+  --coach: 79 111 224;
+  --insight-from: 230 226 251;
+  --insight-to: 220 238 247;
+  --banner-from: 233 232 247;
+  --banner-to: 227 236 243;
+  --outlook-from: 243 235 223;
+  --outlook-to: 226 235 242;
+  --outlook-accent: 138 106 50;
+  --glow-sand: 234 223 205;
+  --answer-yes: 63 146 211;
+  --on-color: 16 21 24;
+  --on-strain: 255 255 255;
+  --key-from: 16 21 24;
+  --key-to: 42 48 52;
+  --key-foreground: 255 255 255;
+  --dial-track: 226 230 233;
+  --dial-target: 179 187 193;
+  --chart-grid: rgb(16 21 24 / 0.08);
+  --chart-band: rgb(16 21 24 / 0.04);
+  --chart-cursor: rgb(16 21 24 / 0.35);
+  --chart-1: 0 147 231;
+  --chart-2: 0 179 119;
+  --chart-3: 102 144 173;
+  --chart-4: 217 121 0;
+  --chart-5: 63 146 211;
+  --stage-awake: 138 147 156;
+  --stage-rem: 130 54 212;
+  --stage-light: 95 90 214;
+  --stage-deep: 201 59 159;
+  --energy-active: 0 147 231;
+  --energy-resting: 201 209 216;
+  --glass-top: rgb(255 255 255 / 0.82);
+  --glass-bottom: rgb(246 248 249 / 0.9);
+  --glass-edge: rgb(255 255 255 / 0.9);
+  --glass-rim: rgb(16 21 24 / 0.06);
+  --glass-lens: rgb(16 21 24 / 0.05);
+  --glass-action-top: rgb(240 241 252 / 0.9);
+  --glass-action-bottom: rgb(230 233 248 / 0.94);
+  --action-rim-from: 119 120 221;
+  --action-rim-to: 76 148 219;
+  --action-face: 238 240 251;
+  --dim: rgb(16 21 24 / 0.45);
+  --dim-strong: rgb(16 21 24 / 0.7);
+  --card-edge: rgb(255 255 255 / 0);
+  --on-media: 255 255 255;
+  --media-ground: 0 0 0;
+  --orb-green: 35 168 101;
+  --orb-teal: 31 158 138;
+  --orb-cyan: 61 156 179;
+  --orb-blue: 62 111 174;
+  --orb-blue-2: 67 115 176;
+  --orb-olive: 90 122 60;
+  --orb-orange: 204 113 37;
+  --orb-amber: 187 116 24;
+  --orb-rust: 184 82 31;
+  --orb-red: 194 54 42;
+  --orb-empty: 154 163 170;
+  --orb-core: 248 250 251;
+  --orb-highlight: 16 21 24;
+  --orb-delta-text: 42 127 166;
+  --orb-text: 16 21 24;
+  --orb-text-muted: 100 110 117;
+  --flame-tip: 255 138 82;
+  --flame-body: 255 101 56;
+  --flame-edge: 238 78 51;
+  --flame-core-top: 255 197 110;
+  --flame-core-bottom: 255 152 98;
+  --chart-highlight: rgb(16 21 24 / 0.07);
+  --chart-faint: rgb(63 146 211 / 0.3);
+  --strain-band-1: 0 147 231;
+  --strain-band-2: 56 171 236;
+  --strain-band-3: 107 192 241;
+  --strain-band-4: 153 212 245;
+  /* The web writes these three as gradients; here each is the one colour its gradient paints: the flat Healthspan
+     ground (linear-gradient of one colour) and the stripe of the hatched track (drawn by src/ui/Hatch.tsx). */
+  --ground-healthspan: 238 241 243;
+  --pattern-hatch: rgb(16 21 24 / 0.08);
+  --selection: rgb(16 21 24 / 0.16);
+  /* Overlay rings: the web's ring-foreground/10 (menus, tooltips) and ring-foreground/8 (popovers, the info dialog). */
+  --overlay-ring: rgb(16 21 24 / 0.1);
+  --popover-ring: rgb(16 21 24 / 0.08);
+  /* A selected driver row's ring. Differs from web: the web's ring-foreground/60 is ink in light; mobile keeps white 60 %. */
+  --selected-ring: rgb(255 255 255 / 0.6);
+  /* Opacity tiers the web writes as alpha modifiers, named once: fill-faint bg-foreground/[0.06], fill-hover
+     bg-foreground/8, fill-pressed bg-foreground/10, skeleton bg-muted/60 (dark: foreground at 6 %, as dark muted is the card's colour), foreground-body text-foreground/85, card-peek
+     bg-card/60, focus-ring ring-foreground/70, input-fill dark:bg-input/30 (none in light), alert-ring ring-recovery-red/60,
+     warning-ring the warning colour at 50 %. */
+  --fill-faint: rgb(16 21 24 / 0.06);
+  --fill-hover: rgb(16 21 24 / 0.08);
+  --fill-pressed: rgb(16 21 24 / 0.1);
+  --skeleton: rgb(238 241 243 / 0.6);
+  --foreground-body: rgb(16 21 24 / 0.85);
+  --card-peek: rgb(255 255 255 / 0.6);
+  --focus-ring: rgb(16 21 24 / 0.7);
+  --input-fill: rgb(16 21 24 / 0);
+  --alert-ring: rgb(242 0 36 / 0.6);
+  --warning-ring: rgb(217 121 0 / 0.5);
+  /* Blood pressure: the systolic and diastolic series and the five AHA/ACC category dots (normal, elevated, stage 1,
+     stage 2, crisis), a severity scale of its own. Same in both themes, as the card drew them before they were tokens. */
+  --bp-systolic: 244 63 94;
+  --bp-diastolic: 59 130 246;
+  --bp-normal: 16 185 129;
+  --bp-elevated: 245 158 11;
+  --bp-stage-1: 249 115 22;
+  --bp-stage-2: 239 68 68;
+  --bp-crisis: 220 38 38;
+  /* The settings switch's thumb: white on either track, in both themes. */
+  --switch-thumb: 255 255 255;
+  /* The white ground a third-party mark needs (Health Connect's guidelines ask for white or very light grey). */
+  --brand-tile: 255 255 255;
+
+  /* Not colours: box shadows in the web's syntax and the orb's scalars. tailwind.config.js skips them; palette.ts holds
+     them (shadows as React Native boxShadow strings) and src/ui/shadow.ts applies the shadows. */
+  --card-shadow: 0 1px 2px rgb(16 21 24 / 0.05), 0 0 0 1px rgb(16 21 24 / 0.05);
+  --overlay-shadow: 0 8px 24px rgb(16 21 24 / 0.14);
+  --thumb-shadow: 0 1px 3px rgb(16 21 24 / 0.3);
+  --glass-shadow: 0 10px 30px rgb(16 21 24 / 0.12), 0 2px 6px rgb(16 21 24 / 0.08);
+  /* A dashboard row held to reorder. Differs from web: the web lifts it with shadow-overlay; mobile keeps black 35 %. */
+  --lifted-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  /* The toast: Sonner's own default shadow, which the web leaves as is. */
+  --toast-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+  --orb-lift: 1;
+  --orb-sparkle: 0;
+  --orb-blend: source-over;
+  /* A disabled control's opacity (the web's disabled:opacity-50); tailwind.config.js makes it opacity-disabled. */
+  --disabled-opacity: 0.5;
+}
+
+.dark:root {
+  --background-top: 29 37 41;
+  --background-mid: 21 27 31;
+  --background: 16 21 24;
+  --foreground: 255 255 255;
+  --foreground-secondary: 186 186 192;
+  --card: 35 38 41;
+  --card-top: 39 42 45;
+  --card-hover: 44 48 51;
+  --card-foreground: 255 255 255;
+  --popover: 37 44 50;
+  --popover-top: 42 55 63;
+  --popover-foreground: 255 255 255;
+  --primary: 255 255 255;
+  --primary-foreground: 16 21 24;
+  --secondary: 59 66 68;
+  --secondary-foreground: 255 255 255;
+  --muted: 34 40 44;
+  --muted-foreground: 169 174 179;
+  --accent: 65 72 75;
+  --accent-foreground: 255 255 255;
+  --inset: 17 22 25;
+  --field: 50 57 62;
+  --destructive: 255 0 38;
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.15);
+  --ring: 255 255 255;
+  --recovery-green: 22 236 6;
+  --recovery-yellow: 255 222 0;
+  --recovery-red: 255 0 38;
+  --recovery-red-text: 255 90 106;
+  --strain: 0 147 231;
+  --strain-text: 31 160 240;
+  --strain-deep: 13 72 190;
+  --sleep: 123 161 187;
+  --sleep-deep: 57 89 123;
+  --optimal: 0 241 159;
+  --warning: 255 167 34;
+  --recovery-blue: 103 174 230;
+  --stress-low: 103 174 230;
+  --stress-medium: 0 241 159;
+  --stress-high: 255 167 34;
+  --optimal-text: 0 241 159;
+  --warning-text: 255 167 34;
+  --stress-low-text: 103 174 230;
+  --stress-medium-text: 0 241 159;
+  --stress-high-text: 255 167 34;
+  --coach-text: 112 149 254;
+  --coach: 112 149 254;
+  --insight-from: 75 65 140;
+  --insight-to: 52 110 140;
+  --banner-from: 46 44 79;
+  --banner-to: 43 63 80;
+  --outlook-from: 106 90 69;
+  --outlook-to: 47 74 94;
+  --outlook-accent: 232 214 180;
+  --glow-sand: 140 122 99;
+  --answer-yes: 103 174 230;
+  --on-color: 16 21 24;
+  --on-strain: 255 255 255;
+  --key-from: 255 255 255;
+  --key-to: 223 226 230;
+  --key-foreground: 16 21 24;
+  --dial-track: 51 56 60;
+  --dial-target: 90 94 97;
+  --chart-grid: rgb(255 255 255 / 0.08);
+  --chart-band: rgb(255 255 255 / 0.05);
+  --chart-cursor: rgb(255 255 255 / 0.4);
+  --chart-1: 0 147 231;
+  --chart-2: 0 241 159;
+  --chart-3: 123 161 187;
+  --chart-4: 255 167 34;
+  --chart-5: 103 174 230;
+  --stage-awake: 223 227 232;
+  --stage-rem: 163 92 240;
+  --stage-light: 169 166 244;
+  --stage-deep: 243 154 228;
+  --energy-active: 0 147 231;
+  --energy-resting: 185 195 204;
+  --glass-top: rgb(34 39 45 / 0.8);
+  --glass-bottom: rgb(22 27 31 / 0.88);
+  --glass-edge: rgb(255 255 255 / 0.1);
+  --glass-rim: rgb(255 255 255 / 0.06);
+  --glass-lens: rgb(255 255 255 / 0.07);
+  --glass-action-top: rgb(35 39 53 / 0.82);
+  --glass-action-bottom: rgb(30 35 51 / 0.9);
+  --action-rim-from: 119 120 221;
+  --action-rim-to: 76 148 219;
+  --action-face: 31 36 54;
+  --dim: rgb(0 0 0 / 0.65);
+  --dim-strong: rgb(0 0 0 / 0.85);
+  --card-edge: rgb(255 255 255 / 0.06);
+  --on-media: 255 255 255;
+  --media-ground: 0 0 0;
+  --orb-green: 76 212 140;
+  --orb-teal: 60 198 174;
+  --orb-cyan: 124 196 212;
+  --orb-blue: 88 136 192;
+  --orb-blue-2: 94 140 192;
+  --orb-olive: 106 132 82;
+  --orb-orange: 212 132 58;
+  --orb-amber: 200 134 46;
+  --orb-rust: 201 98 47;
+  --orb-red: 216 69 58;
+  --orb-empty: 92 98 104;
+  --orb-core: 0 0 0;
+  --orb-highlight: 255 255 255;
+  --orb-delta-text: 126 198 228;
+  --orb-text: 255 255 255;
+  --orb-text-muted: 153 158 163;
+  --flame-tip: 255 138 82;
+  --flame-body: 255 101 56;
+  --flame-edge: 238 78 51;
+  --flame-core-top: 255 197 110;
+  --flame-core-bottom: 255 152 98;
+  --chart-highlight: rgb(255 255 255 / 0.07);
+  --chart-faint: rgb(103 174 230 / 0.3);
+  --strain-band-1: 0 147 231;
+  --strain-band-2: 8 123 189;
+  --strain-band-3: 15 101 151;
+  --strain-band-4: 21 82 117;
+  --ground-healthspan: 16 21 24;
+  --pattern-hatch: rgb(255 255 255 / 0.09);
+  --selection: rgb(255 255 255 / 0.25);
+  --overlay-ring: rgb(255 255 255 / 0.1);
+  --popover-ring: rgb(255 255 255 / 0.08);
+  --selected-ring: rgb(255 255 255 / 0.6);
+  --fill-faint: rgb(255 255 255 / 0.06);
+  --fill-hover: rgb(255 255 255 / 0.08);
+  --fill-pressed: rgb(255 255 255 / 0.1);
+  --skeleton: rgb(255 255 255 / 0.06);
+  --foreground-body: rgb(255 255 255 / 0.85);
+  --card-peek: rgb(35 38 41 / 0.6);
+  --focus-ring: rgb(255 255 255 / 0.7);
+  --input-fill: rgb(255 255 255 / 0.045);
+  --alert-ring: rgb(255 0 38 / 0.6);
+  --warning-ring: rgb(255 167 34 / 0.5);
+  --bp-systolic: 244 63 94;
+  --bp-diastolic: 59 130 246;
+  --bp-normal: 16 185 129;
+  --bp-elevated: 245 158 11;
+  --bp-stage-1: 249 115 22;
+  --bp-stage-2: 239 68 68;
+  --bp-crisis: 220 38 38;
+  --switch-thumb: 255 255 255;
+  --brand-tile: 255 255 255;
+
+  --card-shadow: 0 0 #0000;
+  --overlay-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+  --thumb-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  --glass-shadow: 0 10px 30px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.35);
+  --lifted-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  --toast-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+  --orb-lift: 1.3;
+  --orb-sparkle: 0.12;
+  --orb-blend: lighter;
+  --disabled-opacity: 0.5;
+}

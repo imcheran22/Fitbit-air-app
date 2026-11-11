@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Round 3 directions</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1520px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">ROUND 3 · SIMPLE &amp; ENDEARING</h1>
+      <p style="margin: 0; font-size: 15px; color: #A3A9B5; max-width: 860px">Nine new directions on a 16 × 16 grid: one flat body colour, at most one accent, two dot eyes, no outline and no mouth. Each uses 44–74 cells, under a fifth of Pip. Moods only move the eye dots, and each cosmetic is a few pixels on a flat top or side.</p>
+    </div>
+    <div style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B5; text-align: right; line-height: 1.6">base 96 · 32 · 16 px<br>variants 48 px</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{dirs}}" as="d" hint-placeholder-count="9">
+      <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; gap: 10px; align-items: flex-end">
+          <div style="line-height: 0; background: #1B1E25; border-radius: 8px"><svg width="{{d.big.px}}" height="{{d.big.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 96 px"><sc-for list="{{d.big.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <div style="line-height: 0; background: #1B1E25; border-radius: 6px; padding: 4px"><svg width="{{d.mid.px}}" height="{{d.mid.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 32 px"><sc-for list="{{d.mid.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+          <div style="line-height: 0; background: #1B1E25; border-radius: 4px; padding: 4px"><svg width="{{d.small.px}}" height="{{d.small.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} at 16 px"><sc-for list="{{d.small.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+        </div>
+        <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 18px; color: #E7E9EE">{{d.name}}</h2>
+        <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #C9CDD5; min-height: 38px">{{d.note}}</p>
+        <div style="display: flex; gap: 8px">
+          <sc-for list="{{d.ways}}" as="w" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <div style="line-height: 0; border-radius: 6px; padding: 4px; background: {{w.ground}}"><svg width="{{w.px}}" height="{{w.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} {{w.label}}"><sc-for list="{{w.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+              <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{w.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <sc-for list="{{d.extras}}" as="w" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <div style="line-height: 0; border-radius: 6px; padding: 4px; background: #1B1E25"><svg width="{{w.px}}" height="{{w.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} {{w.label}}"><sc-for list="{{w.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+              <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{w.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 6px; width: 260px">
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">TOP 3 AT 16 PX</h2>
+      <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #A3A9B5">Real icon size, 1 cell = 1 px, on a light and a dark ground.</p>
+    </div>
+    <div style="display: flex; gap: 32px; align-items: center; padding: 18px 28px; background: #F4F2EE; border-radius: 10px">
+      <sc-for list="{{top}}" as="t" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center">
+          <svg width="{{t.light.px}}" height="{{t.light.px}}" shape-rendering="crispEdges" role="img" aria-label="{{t.name}} on light"><sc-for list="{{t.light.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <span style="font-family: Silkscreen, monospace; font-size: 10px; color: #3A3D45">{{t.name}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 32px; align-items: center; padding: 18px 28px; background: #0A0B0E; border: 1px solid #23262E; border-radius: 10px">
+      <sc-for list="{{top}}" as="t" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center">
+          <svg width="{{t.dark.px}}" height="{{t.dark.px}}" shape-rendering="crispEdges" role="img" aria-label="{{t.name}} on dark"><sc-for list="{{t.dark.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <span style="font-family: Silkscreen, monospace; font-size: 10px; color: #A3A9B5">{{t.name}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1520}}'>
+var N = 16;
+var DIRS = [
+  { name: "TOCK", note: "A tall block with a slight lean, as if it is about to ask you something.",
+    body: "#ECE8DF", accent: "#3B82F6", cosLabel: "+ cap", cos: { at: [7, 1], rows: ["aaa..", "aaaaa"] },
+    rows: [
+      "................", "................", "................",
+      "......bbbbbb....", "......bbbbbb....", "......bebbeb....", "......bebbeb....",
+      ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....",
+      "......b..b......", "......b..b......", "................", "................"] },
+  { name: "NIB", note: "A plain square with one off-centre antenna it is clearly proud of.",
+    body: "#60A5FA", accent: "#FDE047", cosLabel: "+ scarf", cos: { at: [5, 9], rows: ["aaaaaaa", ".....a."] },
+    rows: [
+      "................", "................", "................",
+      "........a.......", "........b.......", ".....bbbbbbb....", ".....bbbbbbb....",
+      ".....bebbbeb....", ".....bbbbbbb....", ".....bbbbbbb....", ".....bbbbbbb....",
+      "......b...b.....", "......b...b.....", "................", "................", "................"] },
+  { name: "PEBBLE", note: "A lopsided chunk with no legs that has quietly noticed you.",
+    body: "#A8A29E", accent: "#4ADE80", cosLabel: "+ sprout", cos: { at: [8, 3], rows: [".a", "aa"] },
+    rows: [
+      "................", "................", "................", "................", "................",
+      ".......bbbb.....", ".....bbbbbbb....", "....bbbbbbbbb...", "....bbbbebbeb...",
+      "...bbbbbbbbbbb..", "...bbbbbbbbbbb..", "...bbbbbbbbbbbb.", "....bbbbbbbbbbb.",
+      "................", "................", "................"] },
+  { name: "STACK", note: "Two blocks not quite lined up. The head floats a pixel above the body.",
+    body: "#FCD34D", accent: "#EF4444", cosLabel: "+ collar", cos: { at: [5, 7], rows: ["aaaaa"] },
+    rows: [
+      "................", "................", "................",
+      "....bbbbbb......", "....bebbeb......", "....bbbbbb......", "....bbbbbb......",
+      "................",
+      ".....bbbbbbbb...", ".....bbbbbbbb...", ".....bbbbbbbb...", ".....bbbbbbbb...", ".....bbbbbbbb...",
+      "......b....b....", "......b....b....", "................"] },
+  { name: "ARCH", note: "A little walking doorway. The gap between its legs does all the work.",
+    body: "#34D399", accent: "#1E293B", cosLabel: "+ top hat", cos: { at: [6, 1], rows: [".aa.", ".aa.", "aaaa"] },
+    rows: [
+      "................", "................", "................", "................",
+      ".....bbbbbb.....", "....bbbbbbbb....", "....bbebbebb....", "....bbbbbbbb....",
+      "....bbb..bbb....", "....bbb..bbb....", "....bbb..bbb....", "....bbb..bbb....",
+      "................", "................", "................", "................"] },
+  { name: "STEP", note: "A stepped peak on tiny feet. It plants a flag when you hit a goal.",
+    body: "#F87171", accent: "#F8FAFC", cosLabel: "+ flag", cos: { at: [8, 1], rows: ["aa", "a.", "a."] },
+    rows: [
+      "................", "................", "................", "................",
+      ".......bb.......", "......bbbb......", ".....bbbbbb.....", ".....bebbeb.....",
+      "....bbbbbbbb....", "....bbbbbbbb....", "...bbbbbbbbbb...", "...bbbbbbbbbb...",
+      "....b......b....", "................", "................", "................"] },
+  { name: "PLUG", note: "Two prongs for ears. Always looks ready to charge.",
+    body: "#E5E7EB", accent: "#FACC15", cosLabel: "+ shades", cos: { at: [5, 6], rows: ["kkkkkk"] },
+    rows: [
+      "................", "................",
+      "......a..a......", "......a..a......",
+      ".....bbbbbb.....", ".....bbbbbb.....", ".....bebbeb.....", ".....bbbbbb.....", ".....bbbbbb.....", ".....bbbbbb.....",
+      "......b..b......", "......b..b......", "................", "................", "................", "................"] },
+  { name: "POGO", note: "One leg and close-set eyes. Always balancing, never quite steady.",
+    body: "#A78BFA", accent: "#22D3EE", cosLabel: "+ party hat", cos: { at: [6, 1], rows: [".a.", "aaa"] },
+    rows: [
+      "................", "................", "................",
+      "....bbbbbbb.....", "....bbbbbbb.....", "....bbebebb.....", "....bbbbbbb.....", "....bbbbbbb.....", "....bbbbbbb.....",
+      ".......b........", ".......b........", "......bbb.......", "................", "................", "................", "................"] },
+  { name: "STALK", note: "A long noodle with a leaf on top, glancing off to one side.",
+    body: "#A3E635", accent: "#15803D", cosLabel: "+ scarf", cos: { at: [6, 7], rows: ["aaaaa", "....a"] },
+    rows: [
+      "................",
+      ".........aa.....", "........a.......",
+      "......bbbb......", "......bbbb......", "......bebe......", "......bbbb......", "......bbbb......",
+      "......bbbb......", "......bbbb......", "......bbbb......", "......bbbb......", "......bbbb......",
+      "......b..b......", "................", "................"] }
+];
+var WAYS = [
+  { label: "bone", body: "#ECE8DF", accent: "#3B82F6", ground: "#1B1E25" },
+  { label: "cobalt", body: "#3B82F6", accent: "#FDE047", ground: "#1B1E25" },
+  { label: "sage", body: "#86EFAC", accent: "#0F172A", ground: "#EDEBE6" },
+  { label: "ink", body: "#2A2F3A", accent: "#F8FAFC", ground: "#EDEBE6" }
+];
+var MOODS = [["blink", "blink"], ["look", "look"], ["wide", "wide"]];
+var TOP = ["ARCH", "POGO", "STEP"];
+
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+
+function eyesOf(rows) {
+  var seen = {}, out = [];
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+    if (rows[y][x] !== "e" || seen[x + "," + y]) continue;
+    var stack = [[x, y]], x0 = x, x1 = x, y0 = y, y1 = y;
+    seen[x + "," + y] = 1;
+    while (stack.length) {
+      var p = stack.pop();
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+        var X = p[0] + d[0], Y = p[1] + d[1];
+        if (X >= 0 && Y >= 0 && X < N && Y < N && rows[Y][X] === "e" && !seen[X + "," + Y]) {
+          seen[X + "," + Y] = 1; stack.push([X, Y]);
+          x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+        }
+      });
+    }
+    out.push({ x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 });
+  }
+  out.sort(function (a, b) { return a.x - b.x; });
+  return out;
+}
+
+function grid(dir, o) {
+  var body = o.body || dir.body, accent = o.accent || dir.accent;
+  var ink = lum(body) > 0.2 ? "#14161B" : "#F5F5F4";
+  var pal = { b: body, a: accent, k: "#14161B" };
+  var isBody = function (x, y) { return x >= 0 && y >= 0 && x < N && y < N && (dir.rows[y][x] === "b" || dir.rows[y][x] === "e"); };
+  var cells = [];
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) {
+    var L = dir.rows[y][x];
+    cells.push(L === "." ? null : L === "a" ? accent : body);
+  }
+  var eyes = eyesOf(dir.rows);
+  var mood = o.mood || "idle";
+  var shift = 1;
+  if (mood === "look") eyes.forEach(function (e) { for (var yy = e.y; yy < e.y + e.h; yy++) if (!isBody(e.x + e.w, yy)) shift = -1; });
+  eyes.forEach(function (e, i) {
+    var r = { x: e.x, y: e.y, w: e.w, h: e.h };
+    if (mood === "blink") {
+      r.y = e.y + e.h - 1; r.h = 1;
+      if (e.w === 1) {
+        r.w = 2;
+        var out = i === 0 ? e.x - 1 : e.x + 1;
+        r.x = isBody(out, r.y) ? Math.min(out, e.x) : (i === 0 ? e.x : e.x - 1);
+      }
+    } else if (mood === "look") { r.x = e.x + shift; }
+    else if (mood === "wide") { r.y = e.y - 1; r.h = e.h + 1; }
+    for (var yy = r.y; yy < r.y + r.h; yy++) for (var xx = r.x; xx < r.x + r.w; xx++) if (isBody(xx, yy)) cells[yy * N + xx] = ink;
+  });
+  if (o.cos && dir.cos) dir.cos.rows.forEach(function (r, j) {
+    for (var i = 0; i < r.length; i++) if (r[i] !== ".") {
+      var X = dir.cos.at[0] + i, Y = dir.cos.at[1] + j;
+      if (X < N && Y < N) cells[Y * N + X] = pal[r[i]];
+    }
+  });
+  return cells;
+}
+
+function layers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] === c) n++;
+      if (!by[c]) { by[c] = ""; order.push(c); }
+      by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+
+function sprite(dir, o, s) { return { px: N * s, layers: layers(grid(dir, o), s) }; }
+
+class Component extends DCLogic {
+  renderVals() {
+    var dirs = DIRS.map(function (d) {
+      var ways = WAYS.map(function (w) {
+        var sp = sprite(d, { body: w.body, accent: w.accent }, 3);
+        return { label: w.label, ground: w.ground, px: sp.px, layers: sp.layers };
+      });
+      var extras = MOODS.map(function (m) {
+        var sp = sprite(d, { mood: m[0] }, 3);
+        return { label: m[1], px: sp.px, layers: sp.layers };
+      });
+      var cs = sprite(d, { cos: true }, 3);
+      extras.push({ label: d.cosLabel, px: cs.px, layers: cs.layers });
+      return {
+        name: d.name, note: d.note,
+        big: sprite(d, {}, 6), mid: sprite(d, {}, 2), small: sprite(d, {}, 1),
+        ways: ways, extras: extras
+      };
+    });
+    var top = TOP.map(function (n) {
+      var d = DIRS.filter(function (x) { return x.name === n; })[0];
+      return { name: n, light: sprite(d, {}, 1), dark: sprite(d, {}, 1) };
+    });
+    return { dirs: dirs, top: top };
+  }
+}
+</script>
+</body>
+</html>

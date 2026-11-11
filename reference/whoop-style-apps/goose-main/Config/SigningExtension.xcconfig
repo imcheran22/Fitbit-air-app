@@ -1,0 +1,8 @@
+// Shared signing config for the WorkoutLiveActivityExtension target — committed to git.
+// Override locally via Config/Local.xcconfig (gitignored).
+// APP_BUNDLE_ID must match the main app's Signing.xcconfig value.
+
+APP_BUNDLE_ID = com.goose.app
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID).WorkoutLiveActivityExtension
+
+#include? "Local.xcconfig"

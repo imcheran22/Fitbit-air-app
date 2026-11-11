@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Type today</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Instrument+Serif&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.serif{font-family:'Instrument Serif',serif}
+.px{font-family:'Silkscreen',monospace}
+.mono{font-family:Menlo,monospace}
+.sec{display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:22px;background:rgb(20,22,27)}
+.tag{font-family:Geist,sans-serif;font-size:11px;color:rgb(155,157,166);font-weight:400;letter-spacing:0;text-transform:none}
+.row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1500px; box-sizing: border-box; overflow: hidden; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 48px 16px; display: flex; flex-direction: column; gap: 14px">
+  <div style="font-size: 28px; font-weight: 700; padding: 0 4px">Today</div>
+  <div style="font-size: 14px; line-height: 20px; color: rgb(155,157,166); padding: 0 4px">4 families, about 75 size and weight combinations.</div>
+
+  <div class="sec">
+    <div style="font-size: 13px; font-weight: 600; color: rgb(251,113,133)">5 page-title styles</div>
+    <div class="row"><span class="serif" style="font-size: 38px; line-height: 42px">Activity</span><span class="tag">serif 38</span></div>
+    <div class="row"><span class="serif" style="font-size: 28px; line-height: 32px">Sleep</span><span class="tag">serif 28</span></div>
+    <div class="row"><span style="font-size: 17px; font-weight: 700">Chats</span><span class="tag">Geist 17 bold</span></div>
+    <div class="row"><span class="px" style="font-size: 14px; letter-spacing: 2px">CAMPFIRE</span><span class="tag">pixel 14</span></div>
+    <div class="row"><span style="font-size: 17px; font-weight: 600">Badges</span><span class="tag">native header 17</span></div>
+  </div>
+
+  <div class="sec">
+    <div style="font-size: 13px; font-weight: 600; color: rgb(251,113,133)">5 section-label styles</div>
+    <div class="row"><span style="font-size: 11px; letter-spacing: 1.4px; font-weight: 600; text-transform: uppercase; color: rgb(155,157,166)">What moved it</span><span class="tag">token 11 / 1.4</span></div>
+    <div class="row"><span style="font-size: 12px; letter-spacing: 3px; font-weight: 600; text-transform: uppercase; color: rgb(155,157,166)">Story</span><span class="tag">xs widest</span></div>
+    <div class="row"><span style="font-size: 10px; letter-spacing: 2.5px; font-weight: 600; text-transform: uppercase; color: rgb(155,157,166)">Highlights</span><span class="tag">10 widest</span></div>
+    <div class="row"><span style="font-size: 12px; letter-spacing: .72px; font-weight: 500; text-transform: uppercase; color: rgb(155,157,166)">This week</span><span class="tag">recap 12 / .72</span></div>
+    <div class="row"><span class="px" style="font-size: 11px; letter-spacing: 1px; color: rgb(155,157,166)">WHO'S HERE</span><span class="tag">pixel 11</span></div>
+  </div>
+
+  <div class="sec">
+    <div style="font-size: 13px; font-weight: 600; color: rgb(251,113,133)">9 body sizes</div>
+    <div class="row"><span style="font-size: 16px">Message bubble</span><span class="tag">16</span></div>
+    <div class="row"><span style="font-size: 15px">Chat row preview</span><span class="tag">15</span></div>
+    <div class="row"><span style="font-size: 14px">Most body copy</span><span class="tag">14</span></div>
+    <div class="row"><span style="font-size: 13.5px">Coach thinking line</span><span class="tag">13.5</span></div>
+    <div class="row"><span style="font-size: 13px">Button label</span><span class="tag">13</span></div>
+    <div class="row"><span style="font-size: 12.5px">Chart note</span><span class="tag">12.5</span></div>
+    <div class="row"><span style="font-size: 12px">Caption</span><span class="tag">12</span></div>
+    <div class="row"><span style="font-size: 11.5px">Placeholder</span><span class="tag">11.5</span></div>
+    <div class="row"><span style="font-size: 10.5px">Axis label</span><span class="tag">10.5</span></div>
+  </div>
+
+  <div class="sec">
+    <div style="font-size: 13px; font-weight: 600; color: rgb(251,113,133)">Same role, different voice</div>
+    <div class="row"><span class="serif" style="font-size: 22px">Pengu</span><span class="tag">coach name · serif</span></div>
+    <div class="row"><span class="mono" style="font-size: 15px; font-weight: 600">Pengu</span><span class="tag">coach name · mono</span></div>
+    <div class="row"><span class="px" style="font-size: 12px">PENGU</span><span class="tag">coach name · pixel</span></div>
+    <div class="row"><span style="font-size: 30px; font-weight: 700">68</span><span class="tag">numeral bold</span></div>
+    <div class="row"><span style="font-size: 30px; font-weight: 600">68</span><span class="tag">numeral semibold</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

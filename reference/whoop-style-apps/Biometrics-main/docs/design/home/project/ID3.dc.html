@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile ID-3 · Badge lanyard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@500&amp;family=Silkscreen&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.b{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'Geist',system-ui,sans-serif;font-weight:500;white-space:nowrap;cursor:pointer;gap:6px;border:1px solid transparent;border-radius:8px;background:transparent;color:rgb(245,245,244);text-decoration:none}
+.ol{border-color:rgb(44,47,55);background:rgba(44,47,55,.3)}
+.dz{color:#F87171;border-color:rgba(248,113,113,.4)}
+.cap{font-family:'Silkscreen',monospace;font-size:13px;letter-spacing:1px;color:rgb(155,157,166)}
+.phone{position:relative;width:390px;height:844px;flex:none;border-radius:28px;border:1px solid rgb(30,33,40);box-sizing:border-box;overflow:hidden;background:rgb(10,11,14)}
+.label{font-family:'Silkscreen',monospace;font-size:11px;line-height:14px;letter-spacing:1px;text-transform:uppercase;color:rgb(155,157,166)}
+.list{border-radius:22px;background:rgb(20,22,27);border:1px solid rgb(30,33,40);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:8px 16px;box-sizing:border-box;border-top:1px solid rgb(30,33,40);text-decoration:none;color:rgb(245,245,244)}
+.row:first-child{border-top:0}
+.t{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.st{font-size:13px;color:rgb(155,157,166)}
+.chev{color:rgb(90,94,104);font-size:16px}
+.badge{position:relative;width:236px;border-radius:14px;background:rgb(22,24,30);border:1px solid rgb(44,47,55);box-sizing:border-box;overflow:hidden;flex:none}
+.slot{position:absolute;left:98px;top:7px;width:40px;height:8px;border-radius:2px;background:rgb(10,11,14);border:1px solid rgb(58,62,72);box-sizing:border-box}
+</style>
+</helmet>
+<div style="width: 860px; height: 920px; box-sizing: border-box; background: rgb(10,11,14); color: rgb(245,245,244); font-family: 'Geist', system-ui, sans-serif; padding: 18px 20px 0; display: flex; gap: 40px">
+
+  <div style="display: flex; flex-direction: column; gap: 14px"><span class="cap">FRONT · CORAL · ON PROFILE</span>
+  <div class="phone">
+    <svg aria-hidden="true" width="390" height="140" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{strapA}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+    <div style="position: absolute; left: 20px; right: 20px; top: 54px; display: flex; justify-content: space-between; align-items: center">
+      <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 22px; letter-spacing: 1px">PROFILE</h1>
+      <a href="#" class="b ol" aria-label="Watch your weekly recap" style="height: 36px; padding: 0 10px; font-size: 12px; color: rgb(199,210,254)"><span style="width: 6px; height: 6px; background: rgb(199,210,254)"></span>New recap</a>
+    </div>
+    <div style="position: absolute; left: 77px; top: 132px">
+      <div class="badge" role="button" aria-label="ID badge, tap to flip" tabindex="0">
+        <div style="height: 40px; background: {{a.hex}}; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 10px 5px"><span class="label" style="color: rgb(10,11,14); font-size: 10px">Biometrics</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: rgb(10,11,14)">KIP-7Q4M</span></div>
+        <span class="slot"></span>
+        <a href="Picker.dc.html" aria-label="Change KIP colour" style="position: relative; display: block; margin: 10px 10px 0; width: 214px; height: 132px; overflow: hidden; border: 2px solid {{a.hex}}; box-sizing: border-box">
+          <svg aria-hidden="true" width="210" height="128" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{bg}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <svg aria-hidden="true" width="112" height="112" shape-rendering="crispEdges" style="position: absolute; left: 49px; top: 9px"><sc-for list="{{a.kip}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+        </a>
+        <div style="padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 20px; font-weight: 600; letter-spacing: -.4px">Tushar</span>
+          <span class="st">@tushar · since Mar 2026</span>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px"><span class="label" style="font-size: 9px">Tap to flip ↻</span><a href="#" class="b ol" style="height: 32px; padding: 0 12px; font-size: 13px">Edit</a></div>
+        </div>
+      </div>
+    </div>
+    <div style="position: absolute; left: 16px; right: 16px; top: 452px; display: flex; flex-direction: column; gap: 10px">
+      <div class="list">
+        <a href="#" class="row"><span class="t"><span style="font-size: 15px">Health data</span><span class="st">Google Health · synced 12 min ago</span></span><span class="chev">›</span></a>
+        <a href="#" class="row"><span class="t"><span style="font-size: 15px">Buddies &amp; chats</span><span class="st">Sharing 3 of 5</span></span><span class="chev">›</span></a>
+        <a href="#" class="row"><span class="t"><span style="font-size: 15px">Notifications · coach · account</span><span class="st">and the rest of S1’s groups</span></span><span class="chev">›</span></a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px"><button class="b dz" style="height: 44px; font-size: 14px">Sign out</button><button class="b dz" style="height: 44px; font-size: 14px">Delete account…</button></div>
+    </div>
+  </div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px; width: 390px"><span class="cap">BACK · AFTER A TAP</span>
+    <div style="display: flex; gap: 14px; align-items: flex-start">
+      <div class="badge" role="button" aria-label="ID badge back, tap to flip" tabindex="0">
+        <div style="height: 40px; background: {{a.hex}}; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 10px 5px"><span class="label" style="color: rgb(10,11,14); font-size: 10px">Back</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: rgb(10,11,14)">KIP-7Q4M</span></div>
+        <span class="slot"></span>
+        <div style="padding: 12px; display: flex; flex-direction: column; gap: 12px">
+          <a href="#" style="display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: inherit"><span class="label" style="font-size: 9px">Buddies · 4</span><span style="display: flex; gap: 4px"><sc-for list="{{buds}}" as="k" hint-placeholder-count="4"><svg aria-hidden="true" width="32" height="32" shape-rendering="crispEdges"><sc-for list="{{k}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></sc-for></span></a>
+          <a href="#" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 16 16" shape-rendering="crispEdges" style="background: rgb(28,31,38)"><rect x="4" y="3" width="8" height="2" fill="#E5E7EB"></rect><rect x="3" y="5" width="10" height="7" fill="#FBBF24"></rect><rect x="5" y="7" width="2" height="2" fill="#1F2937"></rect><rect x="9" y="7" width="2" height="2" fill="#1F2937"></rect><rect x="4" y="12" width="8" height="3" fill="#64748B"></rect></svg><span class="t"><span class="label" style="font-size: 9px">Coach</span><span style="font-size: 15px; font-weight: 600">Sage</span></span></a>
+          <a href="#" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit"><span style="width: 48px; height: 48px; border-radius: 24px; border: 3px solid #C7D2FE; padding: 3px; box-sizing: border-box; flex: none; display: flex"><span style="flex: 1; border-radius: 20px; background: #141633; color: #C7D2FE; font-family: Silkscreen, monospace; font-size: 9px; display: flex; align-items: center; justify-content: center">WK 41</span></span><span class="t"><span class="label" style="font-size: 9px">Story ring</span><span style="font-size: 13px">Weekly recap · watch</span></span></a>
+          <span class="label" style="font-size: 9px">Tap to flip back ↻</span>
+        </div>
+      </div>
+      <div class="st" style="line-height: 19px">The back holds what used to sit around the avatar: buddies, your coach, and the story ring for an unwatched recap.</div>
+    </div>
+    <span class="cap" style="margin-top: 8px">FRONT · COBALT</span>
+    <div class="badge">
+      <div style="height: 40px; background: {{b.hex}}; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 10px 5px"><span class="label" style="color: rgb(10,11,14); font-size: 10px">Biometrics</span><span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: rgb(10,11,14)">KIP-7Q4M</span></div>
+      <span class="slot"></span>
+      <a href="Picker.dc.html" aria-label="Change KIP colour" style="position: relative; display: block; margin: 10px 10px 0; width: 214px; height: 132px; overflow: hidden; border: 2px solid {{b.hex}}; box-sizing: border-box">
+        <svg aria-hidden="true" width="210" height="128" shape-rendering="crispEdges" style="position: absolute; left: 0; top: 0"><sc-for list="{{bg}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+        <svg aria-hidden="true" width="112" height="112" shape-rendering="crispEdges" style="position: absolute; left: 49px; top: 9px"><sc-for list="{{b.kip}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+      </a>
+      <div style="padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 20px; font-weight: 600; letter-spacing: -.4px">Tushar</span>
+        <span class="st">@tushar · since Mar 2026</span>
+        <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 8px"><a href="#" class="b ol" style="height: 32px; padding: 0 12px; font-size: 13px">Edit</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":860,"height":920}}'>
+var KN = 16, KE = "................";
+var KBASE = [KE, KE, KE, KE, KE, KE, "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", "....bbbbbbbs....", ".....b....s.....", ".....b....s.....", "...zzzzzzzzzz..."];
+function rgbOf(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function hx(v) { var s = Math.max(0, Math.min(255, Math.round(v))).toString(16); return s.length < 2 ? "0" + s : s; }
+function dark(h, k) { var x = rgbOf(h); return "#" + hx(x[0] * k) + hx(x[1] * k) + hx(x[2] * k); }
+function lum(h) { var c = rgbOf(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function pxLayers(rects, u) { var by = {}, order = []; rects.forEach(function (r) { var f = r[4]; if (!by[f]) { by[f] = ""; order.push(f); } by[f] += "M" + r[0] * u + " " + r[1] * u + "h" + r[2] * u + "v" + r[3] * u + "h-" + r[2] * u + "z"; }); return order.map(function (f) { return { fill: f, d: by[f] }; }); }
+function kip(body, s, wave) {
+  var p = { b: body, s: dark(body, 0.78), e: lum(body) > 0.2 ? "#14161B" : "#F5F5F4", z: "rgba(0,0,0,0.35)" }, r = [], x, y;
+  for (y = 0; y < KN; y++) for (x = 0; x < KN; x++) { var c = KBASE[y][x]; if (c !== ".") r.push([x, y, 1, 1, p[c]]); }
+  r.push([6, 8, 1, 1, p.e], [9, 8, 1, 1, p.e]);
+  if (wave) r.push([12, 9, 1, 1, p.s], [13, 8, 1, 1, p.s]);
+  return pxLayers(r, s);
+}
+function backdrop() {
+  var W = 105, H = 64, gy = 57, r = [], pal = ["#2A5694", "#3264A3", "#3D72B0", "#4E83BD"], bh = Math.floor(gy / 4), i, x;
+  for (i = 0; i < 4; i++) { r.push([0, i * bh, W, i === 3 ? gy - 3 * bh : bh, pal[i]]); if (i > 0) for (x = i % 2; x < W; x += 2) r.push([x, i * bh, 1, 1, pal[i - 1]]); }
+  r.push([88, 5, 7, 7, "#FBBF24"], [88, 5, 7, 1, "#FDE68A"], [91, 10, 9, 3, "#E5E7EB"], [92, 9, 5, 1, "#F3F4F6"]);
+  r.push([0, gy, W, 1, "#5CA857"], [0, gy + 1, W, 2, "#4B9248"], [0, gy + 3, W, H - gy - 3, "#3D7C3C"]);
+  [[12, 60, "#F472B6"], [20, 62, "#FDE047"], [84, 61, "#F8FAFC"]].forEach(function (f) { r.push([f[0], f[1] - 1, 1, 1, f[2]], [f[0] - 1, f[1], 1, 1, f[2]], [f[0] + 1, f[1], 1, 1, f[2]], [f[0], f[1], 1, 1, "#FDE047"]); });
+  return pxLayers(r, 2);
+}
+function straps(hex) {
+  var r = [], y, d = dark(hex, 0.7), l = dark(hex, 0.85);
+  for (y = 0; y < 33; y++) {
+    var off = Math.floor(y / 4);
+    r.push([42 - 8 + off, y, 3, 1, hex], [42 - 8 + off + 3, y, 1, 1, d]);
+    r.push([54 + 8 - off - 3, y, 3, 1, l], [54 + 8 - off, y, 1, 1, d]);
+    if (y % 3 === 0) { r.push([42 - 8 + off + 1, y, 1, 1, "#FFFFFF33"], [54 + 8 - off - 2, y, 1, 1, "#FFFFFF33"]); }
+  }
+  r.push([44, 26, 9, 2, "#9CA3AF"], [43, 28, 11, 3, "#D1D5DB"], [43, 31, 11, 1, "#6B7280"], [47, 32, 3, 1, "#9CA3AF"]);
+  return pxLayers(r, 4);
+}
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      strapA: straps("#FB7185"),
+      bg: backdrop(),
+      a: { hex: "#FB7185", kip: kip("#FB7185", 7, true) },
+      b: { hex: "#3B82F6", kip: kip("#3B82F6", 7, true) },
+      buds: ["#C4B5FD", "#6EE7B7", "#3B82F6", "#FDE047"].map(function (c) { return kip(c, 2, false); })
+    };
+  }
+}
+</script>
+</body>
+</html>

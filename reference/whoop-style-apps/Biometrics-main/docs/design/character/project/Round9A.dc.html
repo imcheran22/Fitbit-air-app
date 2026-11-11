@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>More creatures</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;family=Silkscreen&amp;display=swap">
+<style>
+body{margin:0;background:#0A0B0E}
+a{color:#8EE3C8}a:hover{color:#C1F0E1}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1700px; box-sizing: border-box; padding: 44px 48px; background: #0A0B0E; color: #E7E9EE; font-family: Geist, system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <h1 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 28px; line-height: 1">ROUND 9A · MORE CREATURES</h1>
+    <p style="margin: 0; font-size: 15px; color: #A3A9B5; max-width: 980px">Twelve new takes, none from round 8, all on the GROUNDED block with the round 7 ramp. The panda and duck seeds were skipped because they sit too close to the Bao and Peep coaches. A badger and a pillow-soft cloud stand in.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{dirs}}" as="d" hint-placeholder-count="12">
+      <div style="background: #14161B; border: {{d.border}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; gap: 8px">
+          <div style="display: flex; gap: 6px; align-items: flex-end; background: #0A0B0E; border-radius: 8px; padding: 6px">
+            <svg width="{{d.big.px}}" height="{{d.big.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 96 px dark"><sc-for list="{{d.big.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+            <svg width="{{d.mid.px}}" height="{{d.mid.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 32 px dark"><sc-for list="{{d.mid.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+            <svg width="{{d.small.px}}" height="{{d.small.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 16 px dark"><sc-for list="{{d.small.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: flex-end; background: #F4F2EE; border-radius: 8px; padding: 6px">
+            <svg width="{{d.big.px}}" height="{{d.big.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 96 px light"><sc-for list="{{d.big.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+            <svg width="{{d.mid.px}}" height="{{d.mid.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 32 px light"><sc-for list="{{d.mid.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+            <svg width="{{d.small.px}}" height="{{d.small.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} 16 px light"><sc-for list="{{d.small.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          </div>
+        </div>
+        <div style="display: flex; gap: 4px">
+          <sc-for list="{{d.tiles}}" as="w" hint-placeholder-count="6">
+            <div style="display: flex; flex-direction: column; gap: 3px">
+              <div style="line-height: 0; border-radius: 6px; padding: 4px; background: {{w.ground}}"><svg width="{{w.s.px}}" height="{{w.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{d.name}} {{w.label}}"><sc-for list="{{w.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg></div>
+              <span style="font-family: 'Geist Mono', monospace; font-size: 9px; color: #A3A9B5">{{w.label}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 15px; color: #E7E9EE">{{d.name}}</h2>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 10px; color: #A3A9B5">{{d.sig}}</span>
+          <sc-if value="{{d.pick}}" hint-placeholder-val="{{ false }}"><span style="font-family: Silkscreen, monospace; font-size: 10px; color: #0A0B0E; background: #93C5FD; padding: 3px 6px 2px; border-radius: 4px">TOP 5</span></sc-if>
+        </div>
+        <p style="margin: 0; font-size: 12px; line-height: 1.45; color: #C9CDD5">{{d.note}}</p>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background: #14161B; border: 1px solid #23262E; border-radius: 12px; padding: 18px 22px; display: flex; align-items: center; gap: 28px">
+    <div style="display: flex; flex-direction: column; gap: 6px; width: 250px">
+      <h2 style="margin: 0; font-family: Silkscreen, monospace; font-weight: 400; font-size: 14px">C · OVERALL TOP 5 · 16 PX</h2>
+      <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #A3A9B5">Rounds 8 and 9 together. 1 cell = 1 px, on light and dark grounds.</p>
+    </div>
+    <div style="display: flex; gap: 24px; padding: 16px 22px; background: #F4F2EE; border-radius: 10px">
+      <sc-for list="{{top}}" as="t" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center">
+          <svg width="{{t.s.px}}" height="{{t.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{t.name}} on light"><sc-for list="{{t.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <span style="font-family: Silkscreen, monospace; font-size: 9px; color: #3A3D45">{{t.name}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 24px; padding: 16px 22px; background: #0A0B0E; border: 1px solid #23262E; border-radius: 10px">
+      <sc-for list="{{top}}" as="t" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center">
+          <svg width="{{t.s.px}}" height="{{t.s.px}}" shape-rendering="crispEdges" role="img" aria-label="{{t.name}} on dark"><sc-for list="{{t.s.layers}}" as="l" hint-placeholder-count="0"><path d="{{l.d}}" fill="{{l.fill}}"></path></sc-for></svg>
+          <span style="font-family: Silkscreen, monospace; font-size: 9px; color: #A3A9B5">{{t.name}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1700}}'>
+var N = 16;
+var E = "................";
+var LEGS = [".....b....s.....", ".....b....s.....", "...zzzzzzzzzz..."];
+var B = "....bbbbbbbs....";
+var EYES = "....bbebbebs....";
+function make(top, mid, legs) { legs = legs || LEGS; var r = []; for (var i = 0; i < 16 - top.length - mid.length - legs.length; i++) r.push(E); return r.concat(top, mid, legs); }
+var PASTEL = "#93C5FD", INK = "#1F2430";
+
+var DIRS = [
+  { name: "RACCOON", sig: "mask + ears", body: "#8A8F99", poses: ["hop", "wave"], cos: "hat.cap",
+    note: "A night-shift raider who keeps late hours. The mask band reads instantly, and the eyes glint inside it.",
+    rows: make(["....bb....ss...."], [B, "....hhhhhhhs....", "....dwddwdds....", "....bbbhhbbs....", B, B, B]) },
+  { name: "RED PANDA", sig: "ear tips + face marks", body: "#9A4A32", poses: ["sleep", "cheer"], cos: "neck.scarf",
+    note: "Naps in trees all afternoon. Light ear tips and light marks above the eyes make the face.",
+    rows: make(["....hb....sh...."], [B, "....bhhbbhhs....", EYES, "....bbbbbbbs....", B, B, B]) },
+  { name: "KOALA", sig: "side ears + big nose", pick: true, body: "#9CA3AF", poses: ["sleep", "look"], cos: "hat.crown",
+    note: "Sleeps up to twenty hours a day, the mascot for rest. Wide ears and a big nose make a perfect 16 px read.",
+    rows: make(["..bbb......sss..", "..bhbbbbbbbshs..", "..bbbbbbbbbsss.."], [EYES, "....bbbddbbs....", "....bbbddbbs....", B, B]) },
+  { name: "BADGER", sig: "head stripe", body: "#6B7280", poses: ["dig", "look"], cos: "face.shades",
+    note: "Digs in and gets it done. A single light stripe from crown to nose is the whole character.",
+    rows: make([], ["....bbbhhbbs....", "....bbbhhbbs....", "....bebhhebs....", "....bbbhhbbs....", B, B, B]) },
+  { name: "FOX", sig: "pointed ears + tail tip", body: "#A1887F", poses: ["look", "hop"], cos: "neck.bandana",
+    note: "Quiet and clever, curled up with its tail. Two pointed ears, a light chin and a tail tip.",
+    rows: make(["....b......s....", "....bb....ss...."], [B, B, EYES, B, "....bhhhhhhs....", "....bbbbbbbsss..", "....bbbbbbbssh.."]) },
+  { name: "SEAL", sig: "whiskers + flippers", body: "#64748B", poses: ["sleep", "hop"], cos: "hat.party",
+    note: "A floating, sun-bathing recovery champion. It has no legs, just flippers and whisker dots.",
+    rows: [E, E, E, E, E, E, E, E, B, EYES, "....bbbddbbs....", "....bdbbbbds....", B, "...bbbbbbbbss...", "....bbbbbbbs....", "...zzzzzzzzzz..."] },
+  { name: "MOUSE", sig: "round ears + tail", body: "#C4B5A5", poses: ["look", "cheer"], cos: "face.round",
+    note: "Small, curious and tidy. Big round ears with light insides and a thin tail curl.",
+    rows: [E, E, E, E, "...bbb....sss...", "...bhb....shs...", B, B, EYES, B, B, B, "....bbbbbbbsd...", ".....b....s..d..", ".....b....s..d..", "...zzzzzzzzzz..."] },
+  { name: "BAT", sig: "ear points + wing nubs", body: "#5B5470", poses: ["hang", "look"], cos: "neck.scarf",
+    note: "The night creature that sleeps upside down. Hanging from a branch makes the best sleep pose in the set.",
+    rows: make(["....b......s...."], [B, B, EYES, "...dbbbbbbbsd...", "..ddbbbbbbbsdd..", B, B]) },
+  { name: "SHEEP", sig: "wool top", pick: true, body: "#D6D3D1", poses: ["sleep", "hop"], cos: "head.band",
+    note: "Counting sheep is literally sleep. The light wool cap overhangs the block and still gives a flat-ish top.",
+    rows: make([".....hh..hh.....", "....hhhhhhhh....", "...hhhhhhhhhh..."], [B, EYES, B, B, B, B]) },
+  { name: "DOG", sig: "floppy ears + nose", body: "#C8A27A", poses: ["wag", "cheer"], cos: "neck.bandana",
+    note: "Your walk buddy. Floppy ears hang off the sides, the friendliest silhouette here.",
+    rows: make([], ["...dbbbbbbbsd...", "...dbbbbbbbsd...", "...dbbebbebsd...", "....bbbddbbs....", B, B, B]) },
+  { name: "SNAIL", sig: "shell on top", body: "#B5A88F", poses: ["tucked", "look"], cos: "neck.scarf",
+    note: "Slow, steady and carrying its own bed. The shell sits on top like a built-in hat.",
+    rows: make([".......hhh......", "......hdddh.....", "......hdhdh.....", "......hhdhh....."], [B, B, EYES, B, B, B, B]) },
+  { name: "CLOUD", sig: "puff top", body: "#CBD5E1", poses: ["sleep", "hop"], cos: "hat.beanie",
+    note: "A soft cloud on legs, as pillowy as rest itself. The puff top is a body shape, not a texture.",
+    rows: make(["......hh........", "....hhbbh.hh....", "...hbbbbbhbbh..."], [B, EYES, B, B, B, B]) }
+];
+var EXTRA = [
+  { name: "BEAR", body: "#8B6B4E", rows: make(["....bb....bs...."], [B, B, EYES, "....bbbddbbs....", B, B, B]) },
+  { name: "CAPY", body: "#A68A6D", rows: make([".....b....s....."], [B, B, "....bbbebbes....", "....bbbbbbbbbd..", "....bbbbbbbbbs..", "....bbbbbbbsss..", B]) },
+  { name: "OWL", body: "#8E86B5", rows: make(["....b......s...."], [B, B, EYES, B, "....bbhhhhbs....", "....bbhhhhbs....", "....bbhhhhbs...."]) }
+];
+var TOP = ["BEAR", "KOALA", "CAPY", "SHEEP", "OWL"];
+
+var COS = {
+  "hat.beanie": { at: [4, 2], rows: ["...wW...", ".LLrrrR.", "LrrrrrrR", "ddddddDD"], pal: { w: "#F8FAFC", W: "#CBD5E1", r: "#EF4444", L: "#F87171", R: "#B91C1C", d: "#B91C1C", D: "#7F1D1D" } },
+  "hat.cap": { at: [4, 4], rows: [".LbbbbR....", "bbbbbbbbkkk"], pal: { b: "#2563EB", L: "#60A5FA", R: "#1E40AF", k: "#1E3A8A" } },
+  "hat.crown": { at: [4, 3], rows: ["y..yy..Y", "LyyyyyyY", "yryyyyrY"], pal: { y: "#FACC15", L: "#FDE68A", Y: "#CA8A04", r: "#EF4444" } },
+  "hat.party": { at: [6, 1], rows: ["..p.", ".Ls.", ".sS.", "LssS", "sssS"], pal: { p: "#F472B6", L: "#C4B5FD", s: "#A78BFA", S: "#7C3AED" } },
+  "head.band": { at: [4, 6], rows: ["LssssssSS.", ".........S"], pal: { L: "#FB7185", s: "#F43F5E", S: "#BE123C" } },
+  "face.shades": { at: [4, 8], rows: ["kgkkkgkk", ".kk..kk."], pal: { k: "#0B0B10", g: "#64748B" } },
+  "face.round": { at: [5, 7], rows: ["FFFFFf", "f.ff.f", "ffffff"], pal: { F: "#FCD34D", f: "#D97706" } },
+  "neck.scarf": { at: [3, 10], rows: ["LssssssssS", ".ddddddLs.", ".......Ls.", ".......dd."], pal: { L: "#F87171", s: "#DC2626", S: "#991B1B", d: "#991B1B" } },
+  "neck.bandana": { at: [5, 10], rows: ["Lbbbbb", ".bwbB.", "..bB.."], pal: { L: "#60A5FA", b: "#2563EB", B: "#1E40AF", w: "#F8FAFC" } }
+};
+
+function grid(rows) { return rows.map(function (r) { return r.split(""); }); }
+function flat(g) { return g.map(function (r) { return r.join(""); }); }
+function isEye(c) { return c === "e" || c === "w"; }
+function eyesOf(g) { var out = []; for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) if (isEye(g[y][x])) out.push([x, y, g[y][x]]); return out; }
+function isBody(c) { return c !== "." && c !== "z" && !isEye(c); }
+function blank() { var o = []; for (var y = 0; y < N; y++) o.push(E.split("")); return o; }
+
+var POSE = {
+  sleep: function (g) { eyesOf(g).forEach(function (p, i) { var nx = i % 2 === 0 ? p[0] - 1 : p[0] + 1; if (isBody(g[p[1]][nx])) g[p[1]][nx] = p[2]; }); return g; },
+  look: function (g) { var es = eyesOf(g); es.forEach(function (p) { g[p[1]][p[0]] = "b"; }); es.forEach(function (p) { g[p[1]][p[0] + 1] = p[2]; }); return g; },
+  hop: function (g) { var out = blank(); for (var y = 2; y < 15; y++) for (var x = 0; x < N; x++) if (g[y][x] !== ".") out[y - 2][x] = g[y][x]; for (var x2 = 5; x2 < 11; x2++) out[15][x2] = "z"; return out; },
+  squash: function (g) { var out = blank(); for (var y = 0; y < 15; y++) { if (y === 7) continue; var ty = y < 7 ? y + 1 : y; for (var x = 0; x < N; x++) if (g[y][x] !== ".") out[ty][x] = g[y][x]; } for (var x2 = 2; x2 < 14; x2++) out[15][x2] = "z"; return out; },
+  arms: function (g, kind) {
+    function put(x, y, c) { if (g[y][x] === ".") g[y][x] = c; }
+    if (kind === "cheer") { put(3, 9, "b"); put(2, 8, "b"); put(12, 9, "s"); put(13, 8, "s"); }
+    if (kind === "wave") { put(12, 9, "s"); put(13, 8, "s"); }
+    if (kind === "dig") { put(3, 12, "h"); put(2, 12, "h"); put(12, 12, "h"); put(13, 12, "h"); }
+    return g;
+  },
+  hang: function (g) {
+    var out = blank();
+    for (var y = 0; y < 15; y++) for (var x = 0; x < N; x++) if (g[y][x] !== "." && g[y][x] !== "z") out[14 - y][x] = g[y][x];
+    for (var x2 = 2; x2 < 14; x2++) out[0][x2] = "d";
+    return POSE.sleep(out);
+  },
+  wag: function (g) { function put(x, y, c) { if (g[y][x] === ".") g[y][x] = c; } put(12, 10, "s"); put(13, 9, "s"); put(14, 8, "s"); return POSE.look(g); }
+};
+function pose(rows, name) {
+  var g = grid(rows);
+  if (name === "sleep") g = POSE.sleep(g);
+  else if (name === "look") g = POSE.look(g);
+  else if (name === "hop") g = POSE.hop(g);
+  else if (name === "cheer") g = POSE.hop(POSE.arms(g, "cheer"));
+  else if (name === "wave") g = POSE.arms(g, "wave");
+  else if (name === "dig") g = POSE.arms(POSE.sleep(g), "dig");
+  else if (name === "tucked") g = POSE.squash(POSE.squash(POSE.sleep(g)));
+  else if (name === "hang") g = POSE.hang(g);
+  else if (name === "wag") g = POSE.wag(g);
+  return flat(g);
+}
+
+function rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function hx2(n) { var s = Math.max(0, Math.min(255, Math.round(n))).toString(16); return s.length < 2 ? "0" + s : s; }
+function mix(a, b, k) { var x = rgb(a), y = rgb(b); return "#" + hx2(x[0] * (1 - k) + y[0] * k) + hx2(x[1] * (1 - k) + y[1] * k) + hx2(x[2] * (1 - k) + y[2] * k); }
+function darken(a, k) { var x = rgb(a); return "#" + hx2(x[0] * k) + hx2(x[1] * k) + hx2(x[2] * k); }
+function lum(h) { var c = rgb(h).map(function (v) { v = v / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+function ramp(body) { return { b: body, h: mix(body, "#FFFFFF", 0.25), s: darken(body, 0.78), d: darken(body, 0.6), e: lum(body) > 0.2 ? "#14161B" : "#F5F5F4", w: "#F8FAFC", z: "rgba(0,0,0,0.35)" }; }
+function groundFor(body) { return lum(body) < 0.12 ? "#EDEBE6" : "#1B1E25"; }
+
+function compose(rows, body, cosId) {
+  var p = ramp(body), cells = [];
+  for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) { var L = rows[y][x]; cells.push(L === "." ? null : p[L]); }
+  var c = cosId && COS[cosId];
+  if (c) c.rows.forEach(function (r, j) { for (var k = 0; k < r.length; k++) { if (r[k] === ".") continue; var X = c.at[0] + k, Y = c.at[1] + j; if (X < N && Y < N) cells[Y * N + X] = c.pal[r[k]]; } });
+  return cells;
+}
+function layers(cells, s) {
+  var by = {}, order = [];
+  for (var y = 0; y < N; y++) {
+    var x = 0;
+    while (x < N) {
+      var c = cells[y * N + x];
+      if (!c) { x++; continue; }
+      var n = 1;
+      while (x + n < N && cells[y * N + x + n] === c) n++;
+      if (!by[c]) { by[c] = ""; order.push(c); }
+      by[c] += "M" + x * s + " " + y * s + "h" + n * s + "v" + s + "h-" + n * s + "z";
+      x += n;
+    }
+  }
+  return order.map(function (f) { return { fill: f, d: by[f] }; });
+}
+function sprite(rows, body, s, cosId) { return { px: N * s, layers: layers(compose(rows, body, cosId), s) }; }
+
+class Component extends DCLogic {
+  renderVals() {
+    var dirs = DIRS.map(function (d) {
+      var tiles = [
+        { label: "default", ground: "#1B1E25", s: sprite(d.rows, d.body, 3) },
+        { label: "sky", ground: "#1B1E25", s: sprite(d.rows, PASTEL, 3) },
+        { label: "ink", ground: groundFor(INK), s: sprite(d.rows, INK, 3) }
+      ].concat(d.poses.map(function (p) { return { label: p, ground: "#1B1E25", s: sprite(pose(d.rows, p), d.body, 3) }; }),
+        [{ label: d.cos, ground: "#1B1E25", s: sprite(d.rows, d.body, 3, d.cos) }]);
+      return {
+        name: d.name, sig: d.sig, note: d.note, pick: !!d.pick,
+        border: d.pick ? "2px solid #93C5FD" : "1px solid #23262E",
+        big: sprite(d.rows, d.body, 6), mid: sprite(d.rows, d.body, 2), small: sprite(d.rows, d.body, 1),
+        tiles: tiles
+      };
+    });
+    var all = DIRS.concat(EXTRA);
+    var top = TOP.map(function (n) { var d = all.filter(function (x) { return x.name === n; })[0]; return { name: n, s: sprite(d.rows, d.body, 1) }; });
+    return { dirs: dirs, top: top };
+  }
+}
+</script>
+</body>
+</html>

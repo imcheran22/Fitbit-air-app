@@ -1,0 +1,118 @@
+name: Android Rust Core
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (e.g. v13.0)"
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  build-android-core:
+    name: Build Rust core for Android
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Resolve tag
+        id: resolve-tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out repository at main
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Java 21
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: >-
+            aarch64-linux-android
+            armv7-linux-androideabi
+            x86_64-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Set up Android NDK
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          packages: "ndk;28.2.13676358 platforms;android-36 build-tools;36.0.0"
+
+      - name: Build Rust core for Android targets
+        working-directory: Rust/core
+        run: |
+          cargo ndk \
+            -t arm64-v8a \
+            -t armeabi-v7a \
+            -t x86_64 \
+            -o ../../android-libs \
+            build --release --lib
+
+      - name: Package Android libs
+        id: package
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          ARCHIVE="goose-android-core-${TAG}.tar.gz"
+          tar -czf "$ARCHIVE" android-libs/
+          echo "archive=$ARCHIVE" >> "$GITHUB_OUTPUT"
+          echo "size=$(du -sh "$ARCHIVE" | cut -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Attach APK to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          APK_NAME="goose-${TAG}-unsigned.apk"
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk "$APK_NAME"
+          gh release upload "$TAG" "$APK_NAME" \
+            --clobber --repo "$GITHUB_REPOSITORY"
+
+      - name: Attach to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+        run: |
+          gh release upload "$TAG" "$ARCHIVE" \
+            --clobber \
+            --repo "$GITHUB_REPOSITORY"
+
+      - name: Summary
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+          ARCHIVE: ${{ steps.package.outputs.archive }}
+          SIZE: ${{ steps.package.outputs.size }}
+        run: |
+          echo "## Android Build" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Tag:** $TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Rust archive:** $ARCHIVE ($SIZE)" >> "$GITHUB_STEP_SUMMARY"
+          echo "**APK:** goose-${TAG}-unsigned.apk" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Targets:** arm64-v8a, armeabi-v7a, x86_64" >> "$GITHUB_STEP_SUMMARY"
