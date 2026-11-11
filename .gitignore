@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android / IDE
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# Secrets — never commit OAuth client config or keys
+secrets.properties
+*.jks
+*.keystore
+google-services.json
+
+# OS
+.DS_Store
