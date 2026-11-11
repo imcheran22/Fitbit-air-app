@@ -30,10 +30,20 @@ jobs:
       # not just the first one. The release build is unsigned unless signing material is
       # provided through local.properties or the environment (never committed).
       - name: Tests, lint, debug and release builds
-        run: >
-          ./gradlew --continue --stacktrace
-          :core:domain:test :core:analytics:test testDebugUnitTest
-          :app:lintDebug :app:assembleDebug :app:assembleRelease
+        run: |
+          set -o pipefail
+          ./gradlew --continue \
+            :core:domain:test :core:analytics:test testDebugUnitTest \
+            :app:lintDebug :app:assembleDebug :app:assembleRelease 2>&1 | tee build-output.txt
+
+      # Compiler, KSP, R8 and lint errors in a few lines at the end of the log, without the
+      # Gradle stack traces, so failures can be read from the tail of the job log.
+      - name: Summarise build errors
+        if: always()
+        run: |
+          echo "==== BUILD ERROR SUMMARY ===="
+          grep -E "^e: |^\[ksp\] .*error|ERROR:|> Task .* FAILED|^\* What went wrong|Lint found [0-9]+ error|Execution failed for task|Missing class|could not be resolved|Could not resolve" build-output.txt | grep -v "^\s*at " | sort -u | head -150 || true
+          echo "==== END SUMMARY ===="
 
       - name: Summarise test failures
         if: always()
