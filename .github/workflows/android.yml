@@ -3,6 +3,7 @@ name: Android CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,7 +15,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -25,32 +26,56 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Unit tests (pure Kotlin modules)
-        run: ./gradlew :core:domain:test :core:analytics:test --stacktrace
+      # One invocation with --continue so a single run reports every failing module and test,
+      # not just the first one. The release build is unsigned unless signing material is
+      # provided through local.properties or the environment (never committed).
+      - name: Tests, lint, debug and release builds
+        run: >
+          ./gradlew --continue --stacktrace
+          :core:domain:test :core:analytics:test testDebugUnitTest
+          :app:lintDebug :app:assembleDebug :app:assembleRelease
 
-      - name: Unit tests (Android modules)
-        run: ./gradlew testDebugUnitTest --stacktrace
+      - name: Summarise test failures
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import glob, xml.etree.ElementTree as ET
+          total = failed = 0
+          for f in glob.glob("**/build/test-results/**/*.xml", recursive=True):
+              try:
+                  root = ET.parse(f).getroot()
+              except ET.ParseError:
+                  continue
+              for case in root.iter("testcase"):
+                  total += 1
+                  for bad in list(case.findall("failure")) + list(case.findall("error")):
+                      failed += 1
+                      msg = (bad.get("message") or "").splitlines()[0:3]
+                      print(f"FAILED {case.get('classname')}.{case.get('name')}: {' | '.join(msg)[:400]}")
+          print(f"TEST SUMMARY: {total} tests, {failed} failed")
+          EOF
 
-      - name: Assemble debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
-
-      - name: Upload debug APK
+      - name: Upload APKs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: apex-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+          name: apex-apks
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
 
       - name: Upload Room schema
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: room-schema
           path: core/database/schemas/**/*.json
           if-no-files-found: warn
 
-      - name: Upload test reports
+      - name: Upload reports
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
-          path: "**/build/reports/tests/"
+          name: reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/lint-results-*.html
