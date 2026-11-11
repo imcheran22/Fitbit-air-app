@@ -67,7 +67,7 @@ any rule in them (commit identities, package managers, "Health Connect only", te
 
 ## Build environment (this Windows machine)
 - Cloud sessions: no Windows paths; use the container's JDK 17/21 and Android SDK, and run
-  `./gradlew :core:domain:test :core:analytics:test testDebugUnitTest :app:assembleDebug`. `reference/` is not available there.
+  `./gradlew :core:domain:test :core:analytics:test testDebugUnitTest :app:assembleDebug`. `reference/` and `design-reference/` are in the repo.
 - JDK: `C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot` (matches CI's JDK 21). Android Studio's
   bundled JBR (`C:\Program Files\Android\Android Studio\jbr`) also works. `java` is **not** on PATH.
 - Android SDK: `C:\Users\kutti\AppData\Local\Android\Sdk` (platforms 34-36, build-tools 36.1.0, emulator and
