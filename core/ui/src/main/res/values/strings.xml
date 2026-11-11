@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <string name="brand_wordmark">Apex</string>
+
+    <!-- Provenance: short human labels for DataProvenance -->
+    <string name="provenance_measured">Measured</string>
+    <string name="provenance_health_connect">Health Connect</string>
+    <string name="provenance_imported_file">Imported file</string>
+    <string name="provenance_self_reported">Self-reported</string>
+    <string name="provenance_calculated">Calculated</string>
+    <string name="provenance_ai">AI interpreted</string>
+    <string name="provenance_estimated">Estimated</string>
+    <string name="provenance_unavailable">Unavailable</string>
+    <string name="provenance_demo">Demo data</string>
+    <string name="provenance_unknown">Source unknown</string>
+    <string name="provenance_with_age">%1$s, %2$s</string>
+
+    <!-- Tags and chips -->
+    <string name="tag_provisional">Provisional</string>
+    <string name="tag_calibrating">Calibrating</string>
+    <string name="tag_stale">Stale</string>
+    <string name="chip_in_range">In your range</string>
+    <string name="chip_out_of_range">Outside your range</string>
+
+    <!-- Bands and statuses -->
+    <string name="band_green">Green</string>
+    <string name="band_yellow">Yellow</string>
+    <string name="band_red">Red</string>
+    <string name="status_poor">Poor</string>
+    <string name="status_sufficient">Sufficient</string>
+    <string name="status_optimal">Optimal</string>
+
+    <!-- Reasons a metric has no number -->
+    <string name="reason_no_data_short">No data</string>
+    <string name="reason_no_data_long">No data for this day</string>
+    <string name="reason_not_worn_short">Not worn</string>
+    <string name="reason_not_worn_long">No data: the band was not worn</string>
+    <string name="reason_no_hrv_short">No HRV last night</string>
+    <string name="reason_no_hrv_long">No HRV last night (needs about 3 hours of sleep)</string>
+    <string name="reason_awaiting_sleep_short">Waiting for sleep</string>
+    <string name="reason_awaiting_sleep_long">Waiting for last night\'s sleep to sync</string>
+    <string name="reason_insufficient_hr_short">Not enough data</string>
+    <string name="reason_insufficient_hr_long">Not enough heart-rate data</string>
+    <string name="reason_not_connected_short">Not connected</string>
+    <string name="reason_not_connected_long">Connect a data source to see this</string>
+    <string name="reason_permission_short">Permission needed</string>
+    <string name="reason_permission_long">Permission is needed to read this data</string>
+    <string name="reason_calibrating_short">Calibrating</string>
+    <string name="reason_error_short">Could not load this</string>
+    <plurals name="reason_calibrating_long">
+        <item quantity="one">Calibrating: %1$d night left</item>
+        <item quantity="other">Calibrating: %1$d nights left</item>
+    </plurals>
+
+    <!-- TalkBack -->
+    <string name="cd_loading">Loading</string>
+    <string name="cd_metric_loading">%1$s, loading</string>
+    <string name="cd_metric_value">%1$s %2$s</string>
+    <string name="cd_metric_stale">Stale, since %1$s</string>
+    <string name="cd_metric_unavailable">%1$s unavailable: %2$s</string>
+    <string name="cd_dial_target">target %1$s to %2$s</string>
+    <string name="cd_time_range">%1$s to %2$s</string>
+    <string name="cd_delta_above">above %1$s</string>
+    <string name="cd_delta_below">below %1$s</string>
+    <string name="cd_delta_same">same as %1$s</string>
+    <string name="cd_average_value">%1$s %2$s</string>
+    <string name="cd_driver_raised">%1$s raised the score by %2$s %3$s</string>
+    <string name="cd_driver_lowered">%1$s lowered the score by %2$s %3$s</string>
+    <string name="cd_driver_neutral">%1$s had no effect on the score</string>
+
+    <!-- Rows and bars -->
+    <string name="stat_average_30d">30-day average</string>
+    <string name="contributor_points">%1$s pts</string>
+    <string name="contributor_points_cd">%1$s points</string>
+    <string name="drivers_lowered">Lowered</string>
+    <string name="drivers_raised">Raised</string>
+    <string name="drivers_empty">No drivers yet. Recovery needs a few nights of data first.</string>
+    <string name="strain_target_bar_label">Strain</string>
+    <string name="strain_so_far">%1$s so far</string>
+    <string name="strain_target_range">Target %1$s - %2$s</string>
+    <string name="strain_target_unavailable">Target not available yet</string>
+
+    <!-- Component gallery (debug) -->
+    <string name="gallery_title">Component gallery</string>
+    <string name="gallery_dials">Dials</string>
+    <string name="gallery_rows">Rows and lists</string>
+    <string name="gallery_cards">Cards and days</string>
+    <string name="gallery_state_view">States, tags and sources</string>
+    <string name="gallery_banners">Banners</string>
+    <string name="gallery_controls">Controls</string>
+    <string name="gallery_as_of">2 min ago</string>
+    <string name="gallery_since">3 h ago</string>
+    <string name="gallery_sleep">Sleep</string>
+    <string name="gallery_recovery">Recovery</string>
+    <string name="gallery_strain">Strain</string>
+    <string name="gallery_hrv">Heart rate variability</string>
+    <string name="gallery_run">Running</string>
+    <string name="gallery_points_unit">pts</string>
+    <string name="gallery_insight">Your HRV is above your baseline, which lifted Recovery today.</string>
+    <string name="gallery_insight_link">Explore your recovery insights</string>
+    <string name="gallery_choose_day">Choose a day</string>
+    <string name="gallery_day_green">Monday 21, Recovery green</string>
+    <string name="gallery_day_yellow">Tuesday 22, Recovery yellow</string>
+    <string name="gallery_day_none">Wednesday 23, no Recovery</string>
+    <string name="gallery_day_red">Thursday 24, Recovery red</string>
+    <string name="gallery_today">Today</string>
+    <string name="gallery_prev">Previous day</string>
+    <string name="gallery_next">Next day</string>
+    <string name="gallery_banner_demo">Demo mode</string>
+    <string name="gallery_banner_demo_body">You are looking at synthetic data in a separate store.</string>
+    <string name="gallery_banner_import">Importing history</string>
+    <string name="gallery_banner_stale">Sync is behind</string>
+    <string name="gallery_banner_stale_body">Last successful sync was 3 hours ago.</string>
+    <string name="gallery_banner_offline">You are offline</string>
+    <string name="gallery_banner_revoked">Reconnect Google</string>
+    <string name="gallery_retry">Retry</string>
+    <string name="gallery_reconnect">Reconnect</string>
+    <string name="gallery_primary">Primary</string>
+    <string name="gallery_secondary">Secondary</string>
+    <string name="gallery_destructive">Delete</string>
+    <string name="gallery_setting_toggle">Notifications</string>
+    <string name="gallery_setting_sub">Morning briefing</string>
+    <string name="gallery_setting_nav">Units</string>
+    <string name="gallery_setting_value">Metric</string>
+    <string name="gallery_setting_readonly">Algorithm version</string>
+    <string name="gallery_setting_version">1.0</string>
+    <string name="gallery_field">Resting heart rate</string>
+    <string name="gallery_field_hint">Beats per minute</string>
+    <string name="gallery_field_error">Enter a number between 30 and 120</string>
+</resources>

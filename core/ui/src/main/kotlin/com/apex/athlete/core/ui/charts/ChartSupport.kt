@@ -1,6 +1,5 @@
 package com.apex.athlete.core.ui.charts
 
-import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -24,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
@@ -58,14 +56,9 @@ object ChartHeights {
     val sparkline: Dp = 48.dp
 }
 
-/** True when the system "Remove animations" (animator duration scale 0) setting is on. */
+/** True when the system "Remove animations" setting is on. One implementation, shared with the components. */
 @Composable
-fun rememberReducedMotion(): Boolean {
-    val context = LocalContext.current
-    return remember(context) {
-        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    }
-}
+fun rememberReducedMotion(): Boolean = com.apex.athlete.core.ui.state.rememberReducedMotion()
 
 /**
  * Draw-in progress 0..1 over [ApexMotion.CHART_DRAW_MS]; snaps to 1 when [reducedMotion]. Re-runs when [key]
