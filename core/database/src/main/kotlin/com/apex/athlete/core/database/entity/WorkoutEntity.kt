@@ -40,6 +40,8 @@ data class WorkoutEntity(
     val derivedTrimp: Double? = null,
     /** 0–21 strain computed by this app for the workout alone. */
     val derivedStrain: Double? = null,
+    /** Session rating of perceived exertion (Borg CR10, 1-10) typed in by the user; schema v2. */
+    val perceivedExertion: Int? = null,
     /** Provenance of the session record itself; the two derived columns are always computed here. */
     val provenance: DataProvenance,
     val updatedAtEpochMillis: Long,

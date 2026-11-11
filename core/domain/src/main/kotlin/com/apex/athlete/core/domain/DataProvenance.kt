@@ -43,7 +43,10 @@ enum class DataProvenance(
     ESTIMATED("estimated", "ESTIMATED", false),
 
     /** The value does not exist for this day/source. Shown as a gap, never substituted. */
-    UNAVAILABLE("unavailable", "UNAVAILABLE", false);
+    UNAVAILABLE("unavailable", "UNAVAILABLE", false),
+
+    /** Synthetic reading produced by Demo mode. Exists only in the separate demo store. */
+    SYNTHETIC_DEMO("demo", "DEMO", false);
 
     companion object {
         private val byKey = entries.associateBy { it.storageKey }

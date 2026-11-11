@@ -6,7 +6,10 @@ enum class SyncSource(val storageKey: String) {
     GOOGLE_HEALTH_API("ghealth_api"),
 
     /** On-device Health Connect store. */
-    HEALTH_CONNECT("health_connect");
+    HEALTH_CONNECT("health_connect"),
+
+    /** A Google Takeout export of Fitbit data that the user picked; parsed on the phone, never stored. */
+    FITBIT_TAKEOUT_ARCHIVE("fitbit_takeout");
 
     companion object {
         private val byKey = entries.associateBy { it.storageKey }

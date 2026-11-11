@@ -1,6 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-// Design system and Canvas chart components. Sources arrive in Phase 4.
+// Design system and Canvas chart components.
+// Theme foundation (tokens, type, fonts) is in place; components and charts are built in M2.
+// Design source: docs/design/DESIGN_SYSTEM.md (translated from the Pulse Mobile 0.5.0 reference).
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -40,4 +42,6 @@ dependencies {
     api(libs.androidx.compose.material3)
     api(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    testImplementation(libs.junit)
 }

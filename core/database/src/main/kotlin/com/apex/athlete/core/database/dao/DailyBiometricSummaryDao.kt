@@ -116,6 +116,17 @@ abstract class DailyBiometricSummaryDao {
     @Query("DELETE FROM daily_biometric_summary WHERE provenance = :provenance")
     abstract suspend fun deleteByProvenance(provenance: DataProvenance): Int
 
+    /** Removes one metric's value for one day (a derived score whose inputs disappeared). */
+    @Query("DELETE FROM daily_biometric_summary WHERE metricType = :metric AND epochDay = :epochDay")
+    abstract suspend fun delete(metric: MetricType, epochDay: Long): Int
+
+    /** Every stored value, oldest first, for export. */
+    @Query("SELECT * FROM daily_biometric_summary ORDER BY epochDay, metricType")
+    abstract suspend fun all(): List<DailyBiometricSummaryEntity>
+
+    @Query("SELECT COUNT(*) FROM daily_biometric_summary")
+    abstract suspend fun count(): Int
+
     @Query("DELETE FROM daily_biometric_summary")
     abstract suspend fun deleteAll()
 

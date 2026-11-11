@@ -27,6 +27,14 @@ object ApexDatabaseFactory {
     }
 
     /**
+     * A throw-away, in-memory database for Demo mode. Same schema and DAOs as the real one, holds
+     * only synthetic data, is never written to disk and never shares a file with [create], so demo
+     * values cannot leak into real history, exports or imports.
+     */
+    fun createDemo(context: Context): ApexDatabase =
+        Room.inMemoryDatabaseBuilder(context.applicationContext, ApexDatabase::class.java).build()
+
+    /**
      * Deletes the database file and the passphrase that protected it. Backs the
      * "delete all my data" control; the wrapped passphrase is useless without the file and
      * vice versa, so both go.

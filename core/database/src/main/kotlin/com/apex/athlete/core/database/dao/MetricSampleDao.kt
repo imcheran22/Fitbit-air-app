@@ -53,6 +53,9 @@ interface MetricSampleDao {
     )
     suspend fun deleteRange(metric: MetricType, fromMillis: Long, toMillis: Long): Int
 
+    @Query("SELECT COUNT(*) FROM metric_sample")
+    suspend fun count(): Int
+
     @Query("DELETE FROM metric_sample")
     suspend fun deleteAll()
 }

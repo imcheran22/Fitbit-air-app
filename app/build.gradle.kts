@@ -17,8 +17,6 @@ android {
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "0.1.0"
-        // Custom-scheme redirect used by the OAuth sign-in (AppAuth) in :core:network.
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.apex.athlete"
     }
 
     buildTypes {

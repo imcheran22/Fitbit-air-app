@@ -86,6 +86,13 @@ interface IntradayHeartRateDao {
     @Query("SELECT MAX(avgBpm) FROM intraday_heart_rate WHERE timestampEpochMillis >= :sinceMillis")
     suspend fun peakMinuteAverage(sinceMillis: Long): Double?
 
+    /** Highest one-minute average inside a half-open time range. */
+    @Query("SELECT MAX(avgBpm) FROM intraday_heart_rate WHERE timestampEpochMillis >= :fromMillis AND timestampEpochMillis < :toMillis")
+    suspend fun peakMinuteAverageBetween(fromMillis: Long, toMillis: Long): Double?
+
+    @Query("SELECT COUNT(*) FROM intraday_heart_rate")
+    suspend fun count(): Int
+
     @Query("SELECT MAX(timestampEpochMillis) FROM intraday_heart_rate")
     suspend fun latestTimestamp(): Long?
 

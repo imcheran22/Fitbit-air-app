@@ -1,0 +1,21 @@
+diff --git a/android/src/main/java/com/horcrux/svg/SvgView.java b/android/src/main/java/com/horcrux/svg/SvgView.java
+index f04da14fcbc42f05e36839f71256363528169f0b..7076b9679363df80f3bb2d8c97a743ca0a60f624 100644
+--- a/android/src/main/java/com/horcrux/svg/SvgView.java
++++ b/android/src/main/java/com/horcrux/svg/SvgView.java
+@@ -116,13 +116,12 @@ public class SvgView extends ReactViewGroup implements ReactCompoundView, ReactC
+     mRemovalTransitionStarted = true;
+   }
+ 
++  // Pulse: keep the rendered bitmap across a detach. A tab or screen that is hidden and shown again (react-native-screens
++  // detaches it) would otherwise re-render every SVG on the main thread when it comes back. invalidate() still drops it
++  // on any real change, and the GC frees it with the view.
+   @Override
+   protected void onDetachedFromWindow() {
+     super.onDetachedFromWindow();
+-    if (mBitmap != null) {
+-      mBitmap.recycle();
+-    }
+-    mBitmap = null;
+   }
+ 
+   @Override

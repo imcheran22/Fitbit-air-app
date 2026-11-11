@@ -1,5 +1,6 @@
 package com.apex.athlete.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
@@ -27,8 +28,10 @@ import com.apex.athlete.core.database.entity.WorkoutEntity
         WorkoutEntity::class,
         SyncWatermarkEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    // v2: workout.perceivedExertion (nullable). Additive, so Room generates the migration.
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 @TypeConverters(Converters::class)
 abstract class ApexDatabase : RoomDatabase() {

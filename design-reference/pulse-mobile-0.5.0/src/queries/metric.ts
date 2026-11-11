@@ -1,0 +1,529 @@
+// A metric's own screen `/metric/[key]?d=&r=` (spec §11 MD1): one shell for every metric without a richer screen (the
+// day's value against its 30-day average, history over W / M / 6M / 1Y with the range's stats, where the number comes
+// from), plus the sections that make that metric useful, chosen per key below. Ported from Pulse's
+// src/server/queries/metric.ts; the hourly section reads the day's steps from store.readSteps.
+import { i18n } from "@/i18n/config";
+import { metricLabel } from "@/lib/metricLabels";
+import { clockTick, formatValue, NBSP } from "@/lib/format";
+import { quantity } from "@/lib/units";
+import { addDays, localMidnight } from "@/lib/time";
+import {
+  type BodyKey,
+  DAY,
+  EXTRA_KEYS,
+  EXTRA_METRICS,
+  type ExtraKey,
+  type ExtraMetric,
+  formatDay,
+  type FormatKey,
+  type GoodDirection,
+  type LoggedEntry,
+  RANGE_DAYS,
+  RANGES,
+  type TrendRange,
+  weekOf,
+} from "./_lib";
+import {
+  ACTIVITY_NAME,
+  activityKind,
+  dayStartOf,
+  type DayRow,
+  type ExerciseRow,
+  exercisesBetween,
+  finite,
+  loadDays,
+  meanSd,
+  ms,
+  none,
+  ok,
+  priorStats,
+  type QueryCtx,
+  todayOf,
+  vitalReason,
+} from "./common";
+import { recentEntries } from "./log";
+import { trendMetric } from "./trends";
+import { monitorVital } from "./vitalsExtras";
+import type { KeyStat, Metric } from "./types";
+
+export type VitalDetailKey = "hrv" | "rhr" | "resp" | "spo2" | "skin" | "bp";
+export type DetailKey = "steps" | "calories" | VitalDetailKey | BodyKey | ExtraKey;
+export const DETAIL_KEYS: readonly DetailKey[] = ["steps", "calories", "hrv", "rhr", "resp", "spo2", "skin", "bp", "weight", "body_fat", ...EXTRA_KEYS];
+export const isDetailKey = (k: string): k is DetailKey => (DETAIL_KEYS as readonly string[]).includes(k);
+
+type Group = "activity" | "body" | "nutrition" | "vitals";
+type SectionKind = Section["kind"];
+
+/** Per metric: what it is, where it comes from, and the sections its screen adds to the shell. */
+type Config = {
+  group: Group;
+  sections: SectionKind[];
+  /** Sums make sense over a range (steps, distance), so the stats show a total. */
+  total?: boolean;
+  /** A spot reading (weight, glucose): the hero is the latest reading on or before the day. */
+  reading?: boolean;
+  /** History draws a split (Strain's calorie stack) or the normal range. */
+  stack?: "calories" | "distance";
+  baseline?: boolean;
+};
+
+/** The 7,000-a-day step reference (Lancet Public Health 2025), and the 150 weekly active minutes (WHO 2020). */
+export const STEP_TARGET = 7000;
+export const WEEKLY_TARGET = 150;
+const PROTEIN_G_PER_KG = 0.8;
+
+const LEVELS = ["intensity"] as const;
+const CONFIG: Record<DetailKey, Config> = {
+  steps: { group: "activity", total: true, sections: ["hourly", "goal", "weekday"] },
+  calories: {
+    group: "activity",
+    total: true,
+    stack: "calories",
+    sections: ["workouts"],
+  },
+  hrv: { group: "vitals", baseline: true, sections: ["outliers"] },
+  rhr: { group: "vitals", baseline: true, sections: ["outliers"] },
+  resp: { group: "vitals", baseline: true, sections: ["outliers"] },
+  spo2: { group: "vitals", baseline: true, sections: ["outliers"] },
+  skin: { group: "vitals", baseline: true, sections: ["outliers"] },
+  bp: { group: "vitals", reading: true, baseline: true, sections: ["outliers"] },
+  weight: { group: "body", reading: true, sections: ["readings"] },
+  body_fat: { group: "body", reading: true, sections: ["readings"] },
+  distance: { group: "activity", total: true, stack: "distance", sections: ["weekday"] },
+  floors: { group: "activity", total: true, sections: ["weekday"] },
+  elevation: { group: "activity", total: true, sections: ["weekday"] },
+  active_minutes: { group: "activity", total: true, sections: ["weekly", ...LEVELS] },
+  light_minutes: { group: "activity", total: true, sections: [...LEVELS] },
+  azm: {
+    group: "activity",
+    total: true,
+    sections: ["weekly", ...LEVELS],
+  },
+  active_calories: { group: "activity", total: true, sections: ["workouts"] },
+  sedentary_minutes: {
+    group: "activity",
+    sections: ["hourly", ...LEVELS],
+  },
+  avg_hr: { group: "vitals", baseline: true, sections: ["outliers"] },
+  water: { group: "nutrition", total: true, sections: ["entries"] },
+  calories_in: { group: "nutrition", sections: ["balance", "macros", "entries"] },
+  protein: { group: "nutrition", sections: ["macros", "entries"] },
+  carbs: { group: "nutrition", sections: ["macros", "entries"] },
+  fat: { group: "nutrition", sections: ["macros", "entries"] },
+  glucose: { group: "vitals", reading: true, baseline: true, sections: ["outliers"] },
+  core_temp: { group: "vitals", reading: true, baseline: true, sections: ["outliers"] },
+  swim_strokes: { group: "activity", total: true, sections: [] },
+};
+
+/** Vitals and body measurements are levels with no meaningful zero; activity and nutrition are amounts counted from zero. */
+export const isLevelMetric = (k: string) => isDetailKey(k) && (CONFIG[k].group === "vitals" || CONFIG[k].group === "body");
+
+const CALORIES = {
+  key: "calories",
+  get label() { return metricLabel("calories"); },
+  unit: "kcal",
+  format: "grouped" as FormatKey,
+  direction: "neutral" as GoodDirection,
+  pick: (r: DayRow) => r.metrics?.calories,
+  partialToday: true,
+};
+
+function defOf(key: DetailKey) {
+  const t = key === "calories" ? CALORIES : trendMetric(key);
+  // mobile: an extra Pulse derives itself (activity minutes, AZM, average HR) says so in place of the group's source line.
+  const note = (EXTRA_METRICS as readonly ExtraMetric[]).find((m) => m.key === key)?.note;
+  return { key, label: t.label, unit: t.unit, format: t.format, direction: t.direction, pick: t.pick, partialToday: !!t.partialToday, note, ...CONFIG[key], about: i18n.t(`trends:metricAbout.${key}`) };
+}
+
+export type Point = { day: string; value: number | null; provisional?: boolean; parts?: Record<string, number> | null };
+export type Extreme = { day: string; value: number } | null;
+export type RangeStats = { average: number | null; prior: number | null; high: Extreme; low: Extreme; total: number | null; withData: number; days: number };
+export type Hour = { t: number; label: string; value: number | null };
+
+export type Section =
+  | { kind: "hourly"; hours: Metric<Hour[]>; still: { from: number; to: number; minutes: number } | null }
+  | { kind: "goal"; target: number; streak: number; longest: number; met: number; days: number }
+  | { kind: "weekday"; weeks: number; days: { label: string; value: number | null }[] }
+  | { kind: "weekly"; target: number; week: { from: string; to: string; total: number }; weeks: { from: string; value: number | null }[]; met: number }
+  | { kind: "intensity"; rows: KeyStat[] }
+  | { kind: "workouts"; active: number | null; items: { id: string; name: string; start: number; end: number; calories: number | null }[] }
+  | { kind: "entries"; items: LoggedEntry[] }
+  | { kind: "balance"; rows: KeyStat[] }
+  | { kind: "macros"; rows: KeyStat[] }
+  | { kind: "readings"; changes: KeyStat[]; items: { day: string; value: number }[] }
+  | { kind: "outliers"; mean: number; sd: number; items: { day: string; value: number; dir: "high" | "low" }[] };
+
+export type MetricDetailVM = {
+  key: DetailKey;
+  label: string;
+  unit?: string;
+  format: FormatKey;
+  direction: GoodDirection;
+  group: Group;
+  about: string;
+  source: string;
+  day: string;
+  today: string;
+  /** The selected day's value, or for a reading metric the latest reading on or before it (`valueDay`). */
+  value: Metric<number>;
+  valueDay: string | null;
+  /** Today's running total of a metric that accrues through the day. */
+  soFar: boolean;
+  /** Mean over the 30 days before `valueDay`. */
+  average: number | null;
+  sd?: number;
+  /**
+   * 365 days ending on the selected day, oldest first. Today's running total is drawn as a provisional point but stays
+   * out of the stats and ranges, as on Trends.
+   */
+  history: Metric<Point[]>;
+  ranges: Record<TrendRange, RangeStats>;
+  total: boolean;
+  chart: { stack?: "calories" | "distance"; baseline?: { mean: number; sd: number } | null };
+  sections: Section[];
+};
+/** Alias: the task's name for the metric screen's view model. */
+export type MetricVM = MetricDetailVM;
+
+const SPAN = RANGE_DAYS["1y"];
+/** Sedentary time's daytime window, local minutes. */
+const DAY_FROM = 7 * 60;
+const DAY_TO = 22 * 60;
+/** Mon to Sun in the language in use (2024-01-01 was a Monday). */
+const weekdayName = (i: number) => formatDay(addDays("2024-01-01", i), { weekday: "short" });
+
+/** The metric's screen for `day`. */
+export async function getMetricDetail(key: DetailKey, day: string, ctx: QueryCtx): Promise<MetricDetailVM> {
+  const m = defOf(key);
+  const today = todayOf(ctx);
+  const isToday = day === today;
+  // Two years: the 1Y stats compare with the year before.
+  const from = addDays(day, -(2 * SPAN - 1));
+  const needExs = !!m.stack || m.sections.includes("workouts");
+  const [rows, exs] = await Promise.all([loadDays(ctx, from, day), needExs ? exercisesBetween(ctx, addDays(day, -(SPAN - 1)), day) : []]);
+  const read = (r: DayRow) => monitorVital(key, r)?.value ?? m.pick(r);
+  const raw = (d: string) => {
+    const r = rows.get(d);
+    const v = r ? read(r) : null;
+    return finite(v) ? v : null;
+  };
+  // Today's running total is not a day's value yet (Trends' rule): a gap in history and stats.
+  const val = (d: string) => (m.partialToday && d === today ? null : raw(d));
+  const days = Array.from({ length: 2 * SPAN }, (_, k) => addDays(from, k));
+
+  let valueDay: string | null = day;
+  if (m.reading) valueDay = [...days].reverse().find((d) => raw(d) !== null) ?? null;
+  const value = valueDay ? raw(valueDay) : null;
+  const prior = valueDay ? priorStats(rows, valueDay, read) : { mean: null, sd: undefined };
+
+  const shown: Point[] = days.slice(-SPAN).map((d) => {
+    const soFar = m.partialToday && d === today && raw(d) !== null;
+    const v = soFar ? raw(d) : val(d);
+    return { day: d, value: v, ...(soFar && { provisional: true }), ...(m.stack && { parts: partsOf(m.stack, rows.get(d), v, exs) }) };
+  });
+
+  const ranges = Object.fromEntries(RANGES.map((r) => [r, rangeStats(days.map(val), days, RANGE_DAYS[r], !!m.total)])) as Record<TrendRange, RangeStats>;
+  const out = m.baseline ? outliers(days.slice(-90), val) : null;
+  const monitor = monitorVital(key, rows.get(day));
+  const baseline = monitor ? monitor.baseline : out && { mean: out.mean, sd: out.sd };
+  const source = monitor
+    ? i18n.t(monitor.baseline ? "trends:metricSource.monitor" : "trends:metricSource.monitorUnavailable")
+    : i18n.t(`trends:metricSource.${m.group}`);
+
+  const s: SectionCtx = { ctx, rows, day, today, isToday, val, raw, exs };
+  const built = await Promise.all(m.sections.map((k) => (k === "outliers" ? out : BUILD[k](s, key))));
+  return {
+    key,
+    label: m.label,
+    ...(m.unit && { unit: m.unit }),
+    format: m.format,
+    direction: m.direction,
+    group: m.group,
+    about: m.about,
+    source: m.note ?? source,
+    day,
+    today,
+    value: value === null ? none(detailReason(key, rows.get(day), isToday)) : ok(value),
+    valueDay: value === null ? null : valueDay,
+    soFar: m.partialToday && isToday && valueDay === today && value !== null,
+    average: prior.mean,
+    ...(prior.sd !== undefined && { sd: prior.sd }),
+    history: shown.some((p) => p.value !== null) ? ok(shown) : none("no_data"),
+    ranges,
+    total: !!m.total,
+    chart: { stack: m.stack, baseline },
+    sections: built.filter((sec): sec is Section => !!sec),
+  };
+}
+
+function detailReason(key: DetailKey, row: DayRow | undefined, isToday: boolean) {
+  if (key === "skin" && row?.metrics?.nightlyTempC != null) return "calibrating" as const;
+  if (["hrv", "rhr", "resp", "spo2", "skin"].includes(key)) return vitalReason(row, isToday, key === "hrv");
+  return "no_data" as const;
+}
+
+/** Alias: the task's name for the metric screen query. */
+export const getMetric = getMetricDetail;
+
+type SectionCtx = {
+  ctx: QueryCtx;
+  rows: Map<string, DayRow>;
+  day: string;
+  today: string;
+  isToday: boolean;
+  /** The metric's value on a day (today's running total excluded) and its raw value (included). */
+  val: (d: string) => number | null;
+  raw: (d: string) => number | null;
+  exs: ExerciseRow[];
+};
+
+/**
+ * A day's split. Calories: active over resting (resting = total − active, active capped at the total, as on Strain).
+ * Distance: recorded workouts' distance over everyday movement. Null when a day has a total but no breakdown.
+ */
+function partsOf(stack: "calories" | "distance", r: DayRow | undefined, total: number | null, exs: SectionCtx["exs"]): Record<string, number> | null {
+  if (total === null || !r) return null;
+  if (stack === "calories") {
+    const a = r.extra.active_calories;
+    if (!finite(a)) return null;
+    const active = Math.min(Math.max(0, a), total);
+    return { resting: total - active, active };
+  }
+  // `total` is in the person's units (the metric's pick), so the workouts' metres convert the same way.
+  const workouts = Math.min(quantity("km").value(exs.filter((e) => e.day === r.day).reduce((a, e) => a + (e.distanceM ?? 0), 0) / 1000), total);
+  return { workouts, everyday: total - workouts };
+}
+
+/** Stats over the last `n` of `values` (aligned with `days`), and the average of the `n` before them. */
+export function rangeStats(values: (number | null)[], days: string[], n: number, total: boolean): RangeStats {
+  const v = values.slice(-n);
+  const d = days.slice(-n);
+  const have = v.flatMap((x, i) => (x === null ? [] : [{ day: d[i], value: x }]));
+  const sum = have.reduce((a, x) => a + x.value, 0);
+  const priorV = values.slice(-2 * n, -n).filter(finite);
+  const pick = (better: (a: number, b: number) => boolean) => have.reduce<Extreme>((best, x) => (!best || better(x.value, best.value) ? x : best), null);
+  return {
+    average: have.length ? sum / have.length : null,
+    prior: priorV.length ? priorV.reduce((a, b) => a + b, 0) / priorV.length : null,
+    high: pick((a, b) => a > b),
+    low: pick((a, b) => a < b),
+    total: total && have.length ? sum : null,
+    withData: have.length,
+    days: v.length,
+  };
+}
+
+/** Days in `days` outside mean ± 2 σ of those days; needs a week of values to call a range. */
+function outliers(days: string[], val: (d: string) => number | null): Extract<Section, { kind: "outliers" }> | null {
+  const xs = days.map((d) => ({ day: d, value: val(d) })).filter((x): x is { day: string; value: number } => x.value !== null);
+  const { mean, sd } = meanSd(xs.map((x) => x.value));
+  if (mean === null || sd === undefined || xs.length < 7) return null;
+  const items = xs
+    .filter((x) => Math.abs(x.value - mean) > 2 * sd)
+    .reverse()
+    .slice(0, 6)
+    .map((x) => ({ ...x, dir: x.value > mean ? ("high" as const) : ("low" as const) }));
+  return { kind: "outliers", mean, sd, items };
+}
+
+const stat = (s: SectionCtx, key: string, label: string, pick: (r: DayRow) => number | null | undefined, direction: KeyStat["direction"], extra: Partial<KeyStat> = {}): KeyStat => {
+  const v = s.rows.get(s.day) ? pick(s.rows.get(s.day)!) : null;
+  const { mean, sd } = priorStats(s.rows, s.day, pick);
+  return { key, label, metric: finite(v) ? ok(v) : none("no_data"), average: mean, ...(sd !== undefined && { sd }), direction, format: "duration", ...extra };
+};
+
+const BUILD: Record<Exclude<SectionKind, "outliers">, (s: SectionCtx, key: DetailKey) => Section | null | Promise<Section | null>> = {
+  hourly: (s, key) => hourly(s, key === "sedentary_minutes"),
+
+  goal: (s) => {
+    const met = (d: string) => (s.raw(d) ?? 0) >= STEP_TARGET;
+    // Today counts once it is met; until then the streak runs to yesterday.
+    let d = s.isToday && !met(s.day) ? addDays(s.day, -1) : s.day;
+    let streak = 0;
+    while (met(d) && streak < 2 * SPAN) {
+      streak++;
+      d = addDays(d, -1);
+    }
+    let longest = 0;
+    let run = 0;
+    for (let k = SPAN - 1; k >= 0; k--) {
+      run = met(addDays(s.day, -k)) ? run + 1 : 0;
+      longest = Math.max(longest, run);
+    }
+    const month = Array.from({ length: 30 }, (_, k) => addDays(s.day, -k));
+    return { kind: "goal", target: STEP_TARGET, streak, longest, met: month.filter(met).length, days: 30 };
+  },
+
+  weekday: (s) => {
+    // Twelve whole weeks ending on the day; today's running total stays out.
+    const sums = Array.from({ length: 7 }, () => ({ sum: 0, n: 0 }));
+    for (let k = 0; k < 84; k++) {
+      const d = addDays(s.day, -k);
+      const v = s.val(d);
+      if (v === null) continue;
+      const w = (new Date(`${d}T00:00:00Z`).getUTCDay() + 6) % 7;
+      sums[w].sum += v;
+      sums[w].n++;
+    }
+    if (sums.every((x) => !x.n)) return null;
+    return { kind: "weekday", weeks: 12, days: sums.map((x, i) => ({ label: weekdayName(i), value: x.n ? x.sum / x.n : null })) };
+  },
+
+  weekly: (s) => {
+    const [mon] = weekOf(s.day);
+    const total = (from: string, to: string) => {
+      const vs: number[] = [];
+      for (let d = from; d <= to; d = addDays(d, 1)) vs.push(...(s.raw(d) === null ? [] : [s.raw(d)!]));
+      return vs.length ? vs.reduce((a, b) => a + b, 0) : null;
+    };
+    const weeks = Array.from({ length: 12 }, (_, k) => {
+      const from = addDays(mon, -7 * (11 - k));
+      const to = addDays(from, 6) < s.day ? addDays(from, 6) : s.day;
+      return { from, value: total(from, to) };
+    });
+    return {
+      kind: "weekly",
+      target: WEEKLY_TARGET,
+      week: { from: mon, to: s.day, total: weeks[11].value ?? 0 },
+      weeks,
+      met: weeks.filter((w) => (w.value ?? 0) >= WEEKLY_TARGET).length,
+    };
+  },
+
+  intensity: (s, key) => ({
+    kind: "intensity",
+    rows:
+      key === "azm"
+        ? [
+            stat(s, "zones13", i18n.t("trends:stat.zones13"), (r) => r.metrics?.lightModerateMin, "up"),
+            stat(s, "zones45", i18n.t("trends:stat.zones45"), (r) => r.metrics?.vigorousPeakMin, "up"),
+          ]
+        : [
+            stat(s, "active_minutes", metricLabel("active_minutes"), (r) => r.extra.active_minutes, "up"),
+            stat(s, "light_minutes", metricLabel("light_minutes"), (r) => r.extra.light_minutes, "up"),
+            stat(s, "sedentary_minutes", metricLabel("sedentary_minutes"), (r) => r.extra.sedentary_minutes, "down"),
+          ],
+  }),
+
+  workouts: (s) => {
+    const items = s.exs
+      .filter((e) => e.day === s.day)
+      .map((e) => ({ id: e.id, name: e.name ?? ACTIVITY_NAME[activityKind(e.type)], start: ms(e.startTs), end: ms(e.endTs), calories: e.calories }));
+    const a = s.rows.get(s.day)?.extra.active_calories;
+    return { kind: "workouts", active: finite(a) ? a : null, items };
+  },
+
+  // mobile: the entries logged in Pulse's Journal (log.ts), kept on the phone only, and those the sync read from Health
+  // Connect (logged in Fitbit). Pulse's never reach Health Connect, so the day loader adds them to the roll-up (Fitbit's
+  // are in it already, and a Pulse food repeating a Fitbit one is left out: food.ts).
+  entries: async (s, key) => {
+    const type = key === "water" ? "hydration-log" : "nutrition-log";
+    const start = localMidnight(s.day, s.ctx.timeZone);
+    return { kind: "entries", items: (await recentEntries(s.ctx.store, start)).filter((e) => e.day === s.day && e.type === type).reverse() };
+  },
+
+  balance: (s) => {
+    const r = s.rows.get(s.day);
+    const eaten = r?.extra.calories_in;
+    const burned = r?.metrics?.calories;
+    const opts = { unit: "kcal", format: "grouped" as const };
+    return {
+      kind: "balance",
+      rows: [
+        stat(s, "calories_in", i18n.t("trends:stat.eaten"), (x) => x.extra.calories_in, "none", opts),
+        stat(s, "calories", i18n.t("trends:stat.burned"), (x) => x.metrics?.calories, "none", opts),
+        {
+          key: "balance",
+          label: i18n.t("trends:stat.difference"),
+          caption: i18n.t("trends:stat.eatenMinusBurned"),
+          metric: finite(eaten) && finite(burned) ? ok(eaten - burned) : none("no_data"),
+          average: null,
+          direction: "none",
+          unit: "kcal",
+          format: "signedInt",
+        },
+      ],
+    };
+  },
+
+  macros: (s) => {
+    const r = s.rows.get(s.day);
+    const g = { protein: r?.extra.protein, carbs: r?.extra.carbs, fat: r?.extra.fat };
+    const kcal = (finite(g.protein) ? g.protein * 4 : 0) + (finite(g.carbs) ? g.carbs * 4 : 0) + (finite(g.fat) ? g.fat * 9 : 0);
+    const share = (v: number | undefined, per: number) => (finite(v) && kcal > 0 ? i18n.t("trends:stat.macroShare", { percent: Math.round(((v * per) / kcal) * 100) }) : undefined);
+    const row = (key: "protein" | "carbs" | "fat", label: string, per: number): KeyStat => ({
+      ...stat(s, key, label, (x) => x.extra[key], "none", { unit: "g", format: "int" }),
+      ...(share(g[key], per) && { caption: share(g[key], per) }),
+    });
+    const rows = [row("protein", metricLabel("protein"), 4), row("carbs", metricLabel("carbs"), 4), row("fat", metricLabel("fat"), 9)];
+    // Protein's reference: 0.8 g per kg of the latest weight on or before the day.
+    let weight: number | null = null;
+    for (let k = 0; k < 2 * SPAN && weight === null; k++) weight = s.rows.get(addDays(s.day, -k))?.metrics?.weightKg ?? null;
+    // In the person's units: 0.36 g per lb at 154.3 lb.
+    const kg = quantity("kg");
+    if (weight)
+      rows.push({
+        key: "protein_target",
+        label: i18n.t("trends:stat.proteinReference"),
+        caption: i18n.t("trends:stat.proteinPerUnit", { perUnit: Number((PROTEIN_G_PER_KG / kg.change(1)).toFixed(2)), unit: kg.unit, weight: `${formatValue("decimal1", kg.value(weight))}${NBSP}${kg.unit}` }),
+        metric: ok(weight * PROTEIN_G_PER_KG),
+        average: null,
+        direction: "none",
+        unit: "g",
+        format: "int",
+      });
+    return { kind: "macros", rows };
+  },
+
+  readings: (s, key) => {
+    const items: { day: string; value: number }[] = [];
+    for (let k = 0; k < 2 * SPAN; k++) {
+      const d = addDays(s.day, -k);
+      const v = s.raw(d);
+      if (v !== null) items.push({ day: d, value: v });
+    }
+    const unit = trendMetric(key).unit;
+    const change = (n: 30 | 90): KeyStat => {
+      const latest = items[0];
+      const before = latest && items.find((x) => x.day <= addDays(latest.day, -n));
+      return {
+        key: `change${n}`,
+        label: i18n.t("trends:stat.changeOverDays", { count: n }),
+        ...(before && { caption: i18n.t("trends:stat.since", { day: formatDay(before.day, DAY.monthDay) }) }),
+        metric: before ? ok(latest.value - before.value) : none("no_data"),
+        average: null,
+        direction: "none",
+        unit,
+        format: "signed1",
+      };
+    };
+    return { kind: "readings", changes: [change(30), change(90)], items: items.slice(0, 8) };
+  },
+};
+
+/**
+ * Steps per hour of the day from the stored steps per minute; hours still to come today are gaps. `still` adds the longest
+ * stretch without a step between 07:00 and 22:00 (or now, today), for Sedentary time. Reads only the day's minutes.
+ */
+async function hourly(s: SectionCtx, still: boolean): Promise<Extract<Section, { kind: "hourly" }>> {
+  const start = dayStartOf(s.ctx, s.day);
+  const end = dayStartOf(s.ctx, addDays(s.day, 1));
+  const mins = (await s.ctx.store.readSteps(start, end)).filter((x) => x.v > 0).map((x) => ({ ts: x.ts, steps: x.v }));
+  if (!mins.length) return { kind: "hourly", hours: none("no_data"), still: null };
+  const n = Math.round((end - start) / 3600);
+  const now = s.isToday ? Math.floor((s.ctx.now - start) / 3600) : n;
+  const sums = new Array<number>(n).fill(0);
+  for (const m of mins) sums[Math.min(n - 1, Math.floor((m.ts - start) / 3600))] += m.steps;
+  const hours = sums.map((v, h) => ({ t: ms(start + h * 3600), label: clockTick(ms(start + h * 3600), s.ctx.timeZone), value: h > now ? null : v }));
+  let gap: { from: number; to: number; minutes: number } | null = null;
+  if (still) {
+    // ponytail: daytime is 07:00-22:00 so a night's sleep never reads as sitting; sleep times would be exact with a band.
+    const [lo, hi] = [start + DAY_FROM * 60, start + DAY_TO * 60];
+    const ts = [lo - 60, ...mins.map((m) => m.ts).filter((t) => t >= lo && t < hi), Math.min(hi, s.isToday ? s.ctx.now - (s.ctx.now % 60) : hi)];
+    for (let i = 1; i < ts.length; i++) {
+      const minutes = Math.round((ts[i] - ts[i - 1]) / 60) - 1;
+      if (minutes > 0 && (!gap || minutes > gap.minutes)) gap = { from: ms(ts[i - 1] + 60), to: ms(ts[i]), minutes };
+    }
+  }
+  return { kind: "hourly", hours: ok(hours), still: gap };
+}

@@ -63,6 +63,9 @@ interface WorkoutDao {
     @Query("UPDATE workout SET derivedTrimp = :trimp, derivedStrain = :strain WHERE id = :id")
     suspend fun updateDerivedLoad(id: String, trimp: Double?, strain: Double?): Int
 
+    @Query("SELECT * FROM workout ORDER BY startEpochMillis")
+    suspend fun all(): List<WorkoutEntity>
+
     @Query("DELETE FROM workout WHERE id = :id")
     suspend fun deleteById(id: String): Int
 

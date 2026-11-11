@@ -14,7 +14,7 @@ The project is delivered in seven phases. Phases 1 and 2 are in this repository.
 | 1 | Architecture, Gradle multi-module setup, encrypted Room database, DAOs | Done |
 | 2 | Sports-science analytics engine (pure Kotlin) | Done |
 | 3 | Google sign-in (OAuth 2.0 + PKCE), Google Health API client, Health Connect reader, watermark sync | Next |
-| 4 | Design system and Compose Canvas charts | Planned |
+| 4 | Design system and Compose Canvas charts | Theme foundation done (tokens, type, fonts); components planned |
 | 5 | Screens and view models | Planned |
 | 6 | AI coach and smart alerts | Planned |
 | 7 | Device verification and setup guide | Planned |
@@ -38,10 +38,18 @@ Details, including what is and is not available, are in [docs/ARCHITECTURE.md](d
 | `:core:database` | Android library | Room entities and DAOs on SQLCipher |
 | `:core:network` | Android library | Google Health API client and OAuth (Phase 3) |
 | `:core:data` | Android library | Repositories, Health Connect, sync (Phase 3) |
-| `:core:ui` | Android library | Design system and charts (Phase 4) |
+| `:core:ui` | Android library | Design system and charts (Phase 4); theme in place, see [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) |
 | `:app` | Android application | Screens and wiring (Phase 5) |
 
 Every formula in `:core:analytics` is written out in [docs/FORMULAS.md](docs/FORMULAS.md).
+
+## Design and build brief
+
+- UI/UX: [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md), a Compose translation of the
+  Pulse Mobile 0.5.0 design (dark-first, opaque cards, glass tab bar, Figtree + Barlow).
+- Build brief for the agent completing the app: [docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md](docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md);
+  working rules in [CLAUDE.md](CLAUDE.md); third-party study material indexed in [docs/REFERENCES.md](docs/REFERENCES.md).
+- Bundled fonts Figtree and Barlow are under the SIL Open Font License 1.1 (`core/ui/fonts-licenses/`).
 
 ## Build and test
 

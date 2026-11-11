@@ -88,6 +88,9 @@ abstract class SleepDao {
     @Query("SELECT * FROM sleep_stage_segment WHERE sessionId = :sessionId ORDER BY startEpochMillis")
     abstract suspend fun stagesFor(sessionId: String): List<SleepStageSegmentEntity>
 
+    @Query("SELECT * FROM sleep_session ORDER BY startEpochMillis")
+    abstract suspend fun allSessions(): List<SleepSessionEntity>
+
     @Query("DELETE FROM sleep_session WHERE id = :id")
     abstract suspend fun deleteById(id: String): Int
 
