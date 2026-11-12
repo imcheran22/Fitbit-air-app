@@ -1,5 +1,6 @@
 package com.apex.athlete.ui.datasources
 
+import com.apex.athlete.core.data.diagnostics.GoogleAuthSnapshot
 import com.apex.athlete.core.data.healthconnect.HcFamily
 import com.apex.athlete.core.data.healthconnect.HcSdkStatus
 import com.apex.athlete.core.data.healthconnect.HealthConnectPermissions
@@ -291,3 +292,14 @@ data class DataSourcesUiState(
     val earliestDay: Long?,
     val takeout: TakeoutUi,
 )
+
+// --- Diagnostics -----------------------------------------------------------------------------------
+
+/** The report preview: [text] is null until built; [failed] when building threw. */
+data class DiagnosticsUi(val text: String? = null, val loading: Boolean = false, val failed: Boolean = false)
+
+/** Reduces the auth state to what the report may show: signed in or not, and scope names. No account data. */
+fun googleAuthSnapshot(configured: Boolean, auth: AuthState?): GoogleAuthSnapshot = when (auth) {
+    is AuthState.SignedIn -> GoogleAuthSnapshot(configured, signedIn = true, grantedScopes = auth.grantedScopes)
+    else -> GoogleAuthSnapshot(configured, signedIn = false, grantedScopes = emptySet())
+}

@@ -8,6 +8,8 @@ import com.apex.athlete.core.data.alerts.AlertLedgerStore
 import com.apex.athlete.core.data.coach.ask.AiKeyStore
 import com.apex.athlete.core.data.coach.ask.AskApexClient
 import com.apex.athlete.core.data.coach.ask.EncryptedAiKeyStore
+import com.apex.athlete.core.data.diagnostics.DiagnosticsCollector
+import com.apex.athlete.core.data.diagnostics.TakeoutDiagnosticsStore
 import com.apex.athlete.core.data.export.DataDeletion
 import com.apex.athlete.core.data.export.DataExporter
 import com.apex.athlete.core.data.export.DataImporter
@@ -98,6 +100,17 @@ class AppContainer(private val app: Application) : DataGraph {
     val healthConnectAvailability: HealthConnectAvailability =
         HealthConnectAvailability(SdkHealthConnectDataSource(app))
 
+    /** Builds the redacted diagnostics report for the Data sources screen (read-only). */
+    val diagnostics: DiagnosticsCollector = DiagnosticsCollector(
+        context = app,
+        stores = stores,
+        settings = settings,
+        healthConnect = healthConnectAvailability,
+        healthConnectData = SdkHealthConnectDataSource(app),
+        appVersion = BuildConfig.VERSION_NAME,
+        buildType = BuildConfig.BUILD_TYPE,
+    )
+
     override val syncOrchestrator: TriSourceSyncOrchestrator = TriSourceSyncOrchestrator(
         sources = listOf(
             GoogleHealthApiSource(
@@ -146,7 +159,10 @@ class AppContainer(private val app: Application) : DataGraph {
         clearGoogleTokens = { tokenStore.wipe() },
         clearHealthConnectTokens = { DataStoreChangeTokenStore(app).clearAll() },
         clearAiKey = { aiKeyStore.clear() },
-        clearAlertRecord = { AlertLedgerStore(app).clear() },
+        clearAlertRecord = {
+            AlertLedgerStore(app).clear()
+            TakeoutDiagnosticsStore(app).clear()
+        },
         resetRealStore = { stores.resetRealStore() },
         discardDemoStore = { stores.discardDemo() },
         clearSettings = { settings.clear() },

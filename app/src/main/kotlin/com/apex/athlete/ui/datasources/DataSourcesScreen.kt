@@ -3,6 +3,8 @@ package com.apex.athlete.ui.datasources
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -83,6 +86,9 @@ class DataSourcesActions(
     val onOpenHealthConnect: () -> Unit,
     val onSyncNow: () -> Unit,
     val onImportTakeout: () -> Unit,
+    val onBuildReport: () -> Unit,
+    val onCopyReport: (String) -> Unit,
+    val onShareReport: (String) -> Unit,
 )
 
 @Composable
@@ -97,10 +103,12 @@ fun DataSourcesRoute(navigator: ApexNavigator) {
             googleHealth = container.googleHealth,
             healthConnect = container.healthConnectAvailability,
             syncRun = SyncScheduler.observe(appContext),
+            diagnostics = container.diagnostics,
             handle = handle,
         )
     }
     val state by vm.state.collectAsStateWithLifecycle()
+    val diagnostics by vm.diagnosticsUi.collectAsStateWithLifecycle()
     var openFailed by rememberSaveable { mutableStateOf(false) }
 
     // Settings screens in Health Connect can change what is granted, so look again on every resume.
@@ -124,8 +132,28 @@ fun DataSourcesRoute(navigator: ApexNavigator) {
         },
         onSyncNow = { SyncScheduler.syncNow(appContext) },
         onImportTakeout = navigator::openTakeoutImport,
+        onBuildReport = vm::buildDiagnostics,
+        onCopyReport = { text -> copyReport(context, text) },
+        onShareReport = { text -> shareReport(context, text) },
     )
-    DataSourcesContent(state, actions, openFailed)
+    DataSourcesContent(state, actions, openFailed, diagnostics)
+}
+
+private fun copyReport(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
+    clipboard.setPrimaryClip(ClipData.newPlainText("Apex diagnostics", text))
+}
+
+private fun shareReport(context: Context, text: String) {
+    val send = Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(Intent.EXTRA_TEXT, text)
+    val chooser = Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(chooser)
+    } catch (_: ActivityNotFoundException) {
+        // No app can take plain text: Copy still works.
+    }
 }
 
 private fun Context.findActivity(): Activity? {
@@ -154,7 +182,12 @@ private fun openHealthConnect(context: Context, sdk: HcSdkStatus?): Boolean {
 }
 
 @Composable
-internal fun DataSourcesContent(state: DataSourcesUiState?, actions: DataSourcesActions, openFailed: Boolean) {
+internal fun DataSourcesContent(
+    state: DataSourcesUiState?,
+    actions: DataSourcesActions,
+    openFailed: Boolean,
+    diagnostics: DiagnosticsUi = DiagnosticsUi(),
+) {
     Column(Modifier.fillMaxSize()) {
         DetailHeader(
             title = stringResource(R.string.datasources_title),
@@ -179,6 +212,7 @@ internal fun DataSourcesContent(state: DataSourcesUiState?, actions: DataSources
                 MarksSection(state)
                 CountsSection(state)
                 TakeoutSection(state, actions)
+                DiagnosticsSection(diagnostics, actions)
             }
         }
     }
@@ -706,6 +740,79 @@ private fun TakeoutSection(state: DataSourcesUiState, actions: DataSourcesAction
     }
 }
 
+// --- Diagnostics -----------------------------------------------------------------------------------
+
+@Composable
+private fun DiagnosticsSection(diagnostics: DiagnosticsUi, actions: DataSourcesActions) {
+    var copied by rememberSaveable { mutableStateOf(false) }
+    SectionShell(stringResource(R.string.datasources_diag_section)) {
+        ApexCard(Modifier.fillMaxWidth()) {
+            BodyText(stringResource(R.string.datasources_diag_body))
+            Spacer8()
+            val text = diagnostics.text
+            if (text == null) {
+                if (diagnostics.failed) {
+                    Text(stringResource(R.string.datasources_diag_failed), style = ApexTheme.type.body, color = ApexTheme.colors.warningText)
+                    Spacer8()
+                }
+                ApexButton(
+                    text = stringResource(
+                        if (diagnostics.loading) R.string.datasources_diag_building else R.string.datasources_diag_build,
+                    ),
+                    onClick = {
+                        copied = false
+                        actions.onBuildReport()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !diagnostics.loading,
+                )
+            } else {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 320.dp)
+                        .clip(ApexShapes.card)
+                        .background(ApexTheme.colors.muted)
+                        .verticalScroll(rememberScrollState())
+                        .padding(ApexSpacing.md),
+                ) {
+                    Text(text, style = ApexTheme.type.caption, color = ApexTheme.colors.foregroundBody)
+                }
+                Spacer8()
+                ApexButton(
+                    text = stringResource(R.string.datasources_diag_copy),
+                    onClick = {
+                        copied = true
+                        actions.onCopyReport(text)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer8()
+                ApexButton(
+                    text = stringResource(R.string.datasources_diag_share),
+                    onClick = { actions.onShareReport(text) },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = ApexButtonStyle.Secondary,
+                )
+                Spacer8()
+                ApexButton(
+                    text = stringResource(R.string.datasources_diag_refresh),
+                    onClick = {
+                        copied = false
+                        actions.onBuildReport()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = ApexButtonStyle.Secondary,
+                )
+                if (copied) {
+                    Spacer8()
+                    Text(stringResource(R.string.datasources_diag_copied), style = ApexTheme.type.caption, color = ApexTheme.colors.mutedForeground)
+                }
+            }
+        }
+    }
+}
+
 // --- Previews --------------------------------------------------------------------------------------
 
 private fun previewState(demo: Boolean): DataSourcesUiState {
@@ -736,7 +843,7 @@ private fun previewState(demo: Boolean): DataSourcesUiState {
     )
 }
 
-private val noActions = DataSourcesActions({}, {}, {}, {}, {}, {}, {}, {})
+private val noActions = DataSourcesActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
 @Composable
 private fun PreviewBody(theme: ThemePreference, demo: Boolean) = ApexTheme(theme) {

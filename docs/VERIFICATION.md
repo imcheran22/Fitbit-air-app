@@ -65,26 +65,22 @@ Steps for each stream:
 4. Run the check twice, once after a Google Health sync and once after a Takeout import, to see the source change.
 5. Write down date, stream, both values and the source label.
 
-## Capturing a diagnostic report
+## How to capture a diagnostics report
 
-There is no single "export diagnostic report" button in the app today. What exists:
+1. Open More, then "Data sources and diagnostics", scroll to "Diagnostics report" and press "Build report".
+2. Read the preview. It starts with "Apex diagnostics (redacted, contains no health values)" and holds only app and
+   phone versions, settings, permission and scope names, Health Connect writing-app package names (for example
+   com.fitbit.FitbitMobile), the measured heart-rate sampling interval and coverage, per-stream row counts with first
+   and last day, the last Takeout import's counts and redacted layout, and the database schema version. It has no
+   health values, tokens, client ID, email, account name, file names or times finer than a day.
+3. Press "Copy report" (then paste it into a message) or "Share report" (pick an app). Send that text back, plus a
+   note of what you expected versus what you saw.
+4. Run it after the first Google Health sync and again after the first Takeout import; the layout section appears
+   once an import has finished. Heart-rate sampling is estimated from the stored one-minute buckets' sample counts,
+   so the report also gives coverage (minutes present of minutes in 7 days).
 
-- More, then "Data sources and diagnostics": sync status, request budget, Health Connect permissions, "Diagnostics
-  by stream", and counts "Stored on this phone".
-- The Takeout import result screen: counts only ("Files imported", "Files skipped", "Rows imported", "Rows
-  left out", "Rows set aside", "Other files ignored", "Days recalculated", and "Data from ... to ...").
-- The Takeout engine can build a redacted layout report (entry names reduced to patterns, no content) but the
-  screens do not show or share it yet. Not exposing it is a known gap; the first real import's layout is still
-  `UNVERIFIED-NEEDS-REAL-ACCOUNT`.
-
-Manual method until a report feature exists:
-
-1. Open "Data sources and diagnostics" and take screenshots while scrolling, so each section is covered once.
-2. Take a screenshot of the Takeout result screen after an import.
-3. Before sharing, look at each screenshot and cover or crop the Google account name or email, the Google client
-   ID if visible, and any exact health values you do not want to share. Counts, statuses and dates are fine.
-4. Share the cropped images, plus a note naming Android version, phone model, app version (More, "App version"),
-   and what you expected versus saw.
+If something in the preview looks personal, do not send it and report it as a bug. Screenshots are no longer needed
+and should not be used for this.
 
 ## What never to share
 

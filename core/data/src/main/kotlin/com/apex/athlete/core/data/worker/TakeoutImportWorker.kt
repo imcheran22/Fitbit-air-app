@@ -13,6 +13,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.apex.athlete.core.data.dataGraph
+import com.apex.athlete.core.data.diagnostics.TakeoutDiagnosticsStore
 import com.apex.athlete.core.data.takeout.TakeoutArchivePart
 import com.apex.athlete.core.data.takeout.TakeoutImportProgress
 import com.apex.athlete.core.data.takeout.takeoutImporter
@@ -80,6 +81,8 @@ class TakeoutImportWorker(appContext: Context, params: WorkerParameters) : Corou
             return if (runAttemptCount + 1 < MAX_ATTEMPTS) Result.retry() else Result.failure(failure(TakeoutFailure.FAILED))
         }
 
+        // Value-free copy for the diagnostics report (counts, enum names, redacted name patterns).
+        runCatching { TakeoutDiagnosticsStore(applicationContext).save(report) }
         TakeoutImportCodec.failureOf(report)?.let { return Result.failure(failure(it)) }
         graph.settings.update { it.copy(lastTakeoutImportMillis = report.finishedAtMillis) }
         if (report.rowsImported > 0 || report.recomputedDays > 0) graph.stores.notifyChanged()

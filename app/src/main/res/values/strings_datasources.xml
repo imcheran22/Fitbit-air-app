@@ -163,4 +163,15 @@
     <string name="datasources_takeout_body">A Google Takeout file adds your full Fitbit history. It is read on this phone and not uploaded.</string>
     <string name="datasources_takeout_demo">Importing is turned off in Demo mode so made-up data never mixes with your own. Leave Demo mode in Settings to import.</string>
     <string name="datasources_takeout_import">Import Takeout archive</string>
+
+    <!-- Diagnostics report -->
+    <string name="datasources_diag_section">Diagnostics report</string>
+    <string name="datasources_diag_body">A short text report for troubleshooting. It holds no health values, no account details and no exact times, only versions, settings, permission names, counts and days. Check it before you share it.</string>
+    <string name="datasources_diag_build">Build report</string>
+    <string name="datasources_diag_building">Building report</string>
+    <string name="datasources_diag_failed">The report could not be built. Try again.</string>
+    <string name="datasources_diag_copy">Copy report</string>
+    <string name="datasources_diag_share">Share report</string>
+    <string name="datasources_diag_refresh">Build again</string>
+    <string name="datasources_diag_copied">Copied to the clipboard</string>
 </resources>

@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.apex.athlete.core.data.diagnostics.DiagnosticsCollector
 import com.apex.athlete.core.data.healthconnect.HealthConnectAvailability
 import com.apex.athlete.core.data.healthconnect.HealthConnectStatus
 import com.apex.athlete.core.data.repository.AthleteRepository
@@ -13,15 +14,18 @@ import com.apex.athlete.core.network.GoogleHealthNetwork
 import com.apex.athlete.core.network.auth.AuthState
 import com.apex.athlete.core.network.rate.RateLimitState
 import com.apex.athlete.di.AuthController
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -38,9 +42,10 @@ class DataSourcesViewModel(
     repository: AthleteRepository,
     settings: SettingsStore,
     private val auth: AuthController,
-    googleHealth: StateFlow<GoogleHealthNetwork>,
+    private val googleHealth: StateFlow<GoogleHealthNetwork>,
     private val healthConnect: HealthConnectAvailability,
     syncRun: Flow<SyncRunState>,
+    private val diagnostics: DiagnosticsCollector,
     @Suppress("UNUSED_PARAMETER") handle: SavedStateHandle,
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
@@ -101,6 +106,27 @@ class DataSourcesViewModel(
             takeout = takeoutUi(h.settings, demo, now),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private val _diagnostics = MutableStateFlow(DiagnosticsUi())
+
+    /** The redacted report preview; built on request, never automatically. */
+    val diagnosticsUi: StateFlow<DiagnosticsUi> = _diagnostics.asStateFlow()
+
+    fun buildDiagnostics() {
+        if (_diagnostics.value.loading) return
+        _diagnostics.value = DiagnosticsUi(loading = true)
+        viewModelScope.launch {
+            _diagnostics.value = try {
+                val configured = googleHealth.value is GoogleHealthNetwork.Ready
+                val snapshot = googleAuthSnapshot(configured, auth.authState.first())
+                DiagnosticsUi(text = diagnostics.report(snapshot))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                DiagnosticsUi(failed = true)
+            }
+        }
+    }
 
     /** The permission list the dialog should ask for, from the last check. */
     fun permissionRequest(): Set<String> = healthConnectStatus.value?.toRequest().orEmpty()
