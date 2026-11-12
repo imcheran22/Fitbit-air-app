@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="coach_title">Coach</string>
+
+    <!-- Briefing -->
+    <string name="coach_briefing_title">Today\'s briefing</string>
+    <string name="coach_briefing_source">Rule-based, worked out on this phone</string>
+    <string name="coach_briefing_loading">Loading today\'s briefing</string>
+    <string name="coach_briefing_cd">Today\'s briefing, rule-based. %1$s</string>
+    <string name="coach_advice_hard">Hard training suits today</string>
+    <string name="coach_advice_moderate">Moderate training suits today</string>
+    <string name="coach_advice_easy">Keep today easy</string>
+    <string name="coach_advice_rest">Rest or defer hard work today</string>
+    <string name="coach_briefing_note">This briefing never leaves your phone. It restates your own numbers and is not medical advice.</string>
+
+    <!-- Ask Apex: off -->
+    <string name="coach_ask_title">Ask Apex</string>
+    <string name="coach_off_body">Ask Apex is optional and off. When you switch it on and add your own Anthropic key, you can ask a question about today\'s briefing. Nothing is sent until you have seen exactly what would be sent and confirmed it.</string>
+    <string name="coach_off_action">Open settings</string>
+
+    <!-- Ask Apex: key -->
+    <string name="coach_key_intro">Add your own Anthropic API key to use Ask Apex. It is stored encrypted on this phone and is never shown again.</string>
+    <string name="coach_key_label">API key</string>
+    <string name="coach_key_placeholder">Paste your key</string>
+    <string name="coach_key_error">Enter a key to save.</string>
+    <string name="coach_key_save">Save key</string>
+    <string name="coach_key_saved">A key is saved on this phone.</string>
+    <string name="coach_key_remove">Remove key</string>
+
+    <!-- Ask Apex: question -->
+    <string name="coach_question_label">Your question</string>
+    <string name="coach_question_placeholder">For example: why is my recovery lower today?</string>
+    <string name="coach_question_count">%1$d of %2$d characters</string>
+    <string name="coach_question_review">Review what will be sent</string>
+    <string name="coach_preview_title">What gets sent</string>
+    <string name="coach_preview_intro">Check this before anything leaves your phone.</string>
+    <string name="coach_preview_send">Send to Anthropic</string>
+    <string name="coach_preview_cancel">Do not send</string>
+    <string name="coach_sending">Asking</string>
+
+    <!-- Result -->
+    <string name="coach_answer_title">Answer</string>
+    <string name="coach_answer_cd">Answer from the AI model. %1$s</string>
+    <string name="coach_answer_truncated">The answer may end early because it hit the length limit.</string>
+    <string name="coach_unverified_chip">Some numbers could not be checked against your data</string>
+    <string name="coach_unverified_detail">Treat any number in this answer that is not in your briefing with care.</string>
+    <string name="coach_refused_title">No answer this time</string>
+    <string name="coach_refused_body">The model chose not to answer that question. Your rule-based briefing above is still available.</string>
+    <string name="coach_result_dismiss">Clear answer</string>
+    <string name="coach_fallback_title">Your briefing instead</string>
+
+    <string name="coach_unavailable_title">Ask Apex could not answer</string>
+    <string name="coach_unavailable_not_enabled">Ask Apex is switched off in settings.</string>
+    <string name="coach_unavailable_no_key">No key is saved, so nothing was sent.</string>
+    <string name="coach_unavailable_key_rejected">The saved key was not accepted for this request. Check it, or remove it and add it again.</string>
+    <string name="coach_unavailable_rate_limited">Too many requests right now. Try again in a minute.</string>
+    <string name="coach_unavailable_offline">There is no connection right now. Try again when you are online.</string>
+    <string name="coach_unavailable_server">The service is busy or unavailable. Try again later.</string>
+    <string name="coach_unavailable_bad_request">The request was not accepted, so no answer came back.</string>
+    <string name="coach_unavailable_empty">The model returned no text this time.</string>
+    <string name="coach_unavailable_unknown">Something went wrong, so no answer came back.</string>
+</resources>
