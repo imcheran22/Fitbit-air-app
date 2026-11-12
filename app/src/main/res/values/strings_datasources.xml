@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="datasources_title">Data sources</string>
+    <string name="datasources_loading">Loading data sources</string>
+
+    <!-- Demo -->
+    <string name="datasources_demo_title">Live sources are paused</string>
+    <string name="datasources_demo_body">Demo mode shows made-up data from a separate store. Google Health, Health Connect and Takeout are not read, and demo data never touches your real data. Leave Demo mode in Settings to use live sources.</string>
+
+    <!-- Google Health card -->
+    <string name="datasources_google_section">Google Health</string>
+    <string name="datasources_google_status_label">Connection</string>
+    <string name="datasources_google_connected">Connected</string>
+    <string name="datasources_google_signed_out">Not connected</string>
+    <string name="datasources_google_needs_reauth">Sign in again</string>
+    <string name="datasources_google_not_configured">Not set up</string>
+    <string name="datasources_google_loading">Checking</string>
+    <string name="datasources_google_not_configured_body">Apex has no Google client ID yet, so it cannot sign in. Add one in Settings or in local.properties and rebuild. The steps are in docs/SETUP.md.</string>
+    <string name="datasources_google_signed_out_body">Connect to read the data your Fitbit Air uploaded to Google Health. Apex asks for read-only access and never writes.</string>
+    <string name="datasources_google_connected_body">Apex reads your wearable data from Google Health with read-only access.</string>
+    <string name="datasources_google_reauth_refresh_rejected">Google ended this sign-in. If your Google Cloud consent screen is still in Testing, Google expires sign-ins after 7 days. Sign in again, or set the consent screen to In production. Your data on this phone is untouched.</string>
+    <string name="datasources_google_reauth_access_rejected">Google no longer accepts this sign-in. Please sign in again. Your data on this phone is untouched.</string>
+    <string name="datasources_google_reauth_no_refresh">Google did not give Apex a way to renew the sign-in. Sign in again and accept the consent screen. Your data on this phone is untouched.</string>
+    <string name="datasources_google_reauth_client_changed">The Google client ID changed, so the old sign-in cannot be used. Please sign in again.</string>
+    <string name="datasources_google_reauth_client_rejected">Google rejected this app\'s client. Check the client ID and that your account is listed as a test user, then sign in again.</string>
+    <string name="datasources_google_connect">Connect Google Health</string>
+    <string name="datasources_google_reconnect">Sign in again</string>
+    <string name="datasources_google_disconnect">Disconnect</string>
+    <string name="datasources_google_disconnect_title">Disconnect Google Health?</string>
+    <string name="datasources_google_disconnect_body">Apex will stop reading from Google Health and ask Google to end the grant. Data already on this phone stays.</string>
+    <string name="datasources_google_disconnect_confirm">Disconnect</string>
+    <string name="datasources_google_disconnect_cancel">Keep connected</string>
+
+    <string name="datasources_notice_waiting">Finish signing in in your browser, then come back.</string>
+    <string name="datasources_notice_completing">Finishing sign-in</string>
+    <string name="datasources_notice_done">Connected. The first sync has started.</string>
+    <plurals name="datasources_notice_done_missing">
+        <item quantity="one">Connected, but %1$d permission was not ticked. Some data will be missing until you sign in again and tick it.</item>
+        <item quantity="other">Connected, but %1$d permissions were not ticked. Some data will be missing until you sign in again and tick them.</item>
+    </plurals>
+    <string name="datasources_notice_no_browser">No browser could open the Google sign-in page. Install or enable a browser and try again.</string>
+    <string name="datasources_notice_denied">Sign-in was cancelled or denied. Nothing was connected.</string>
+    <string name="datasources_notice_network">Sign-in could not reach Google. Check your connection and try again.</string>
+    <string name="datasources_notice_refused">Google did not accept the sign-in. Try again.</string>
+    <string name="datasources_notice_unexpected">Sign-in stopped unexpectedly. Try again.</string>
+    <string name="datasources_notice_mismatch">The client ID saved in Settings needs the redirect scheme %2$s, but this build uses %1$s, so Google cannot return to the app. Put the client ID in local.properties and rebuild (docs/SETUP.md).</string>
+    <string name="datasources_notice_dismiss">Dismiss</string>
+
+    <!-- Rate limit -->
+    <string name="datasources_rate_label">Request budget this hour</string>
+    <string name="datasources_rate_used">%1$s of %2$s used</string>
+    <string name="datasources_rate_unknown">Not known yet</string>
+    <string name="datasources_rate_resets">Refills %1$s</string>
+    <string name="datasources_rate_resets_in">in %1$d min</string>
+    <string name="datasources_rate_cooldown">Paused for about %1$d min after Google asked Apex to slow down. Sync resumes by itself.</string>
+    <string name="datasources_rate_source_local">Counted by Apex on this phone</string>
+    <string name="datasources_rate_source_server">Reported by Google</string>
+    <string name="datasources_rate_cd">Request budget this hour, %1$s</string>
+
+    <!-- Health Connect -->
+    <string name="datasources_hc_section">Health Connect</string>
+    <string name="datasources_hc_loading">Checking Health Connect</string>
+    <string name="datasources_hc_sdk_label">Health Connect</string>
+    <string name="datasources_hc_sdk_available">Installed and ready</string>
+    <string name="datasources_hc_sdk_unavailable">Not available on this phone</string>
+    <string name="datasources_hc_sdk_update">Needs an update</string>
+    <string name="datasources_hc_unavailable_body">Health Connect is not installed or not supported here. Google Health can still be used.</string>
+    <string name="datasources_hc_update_body">Update Health Connect from the Play Store, then come back.</string>
+    <string name="datasources_hc_permissions_label">Data types allowed</string>
+    <string name="datasources_hc_permissions_all">All requested types</string>
+    <string name="datasources_hc_permissions_count">%1$d allowed, %2$d missing</string>
+    <string name="datasources_hc_missing_label">Missing</string>
+    <string name="datasources_hc_history_label">Older history</string>
+    <string name="datasources_hc_history_granted">Allowed</string>
+    <string name="datasources_hc_history_missing">Not allowed: only about 30 days before the first grant can be read</string>
+    <string name="datasources_hc_background_label">Background reads</string>
+    <string name="datasources_hc_background_granted">Allowed</string>
+    <string name="datasources_hc_background_missing">Not allowed: sync only reads while Apex is open</string>
+    <string name="datasources_hc_unsupported">Not offered by this phone</string>
+    <string name="datasources_hc_grant">Grant permissions</string>
+    <string name="datasources_hc_open">Open Health Connect</string>
+    <string name="datasources_hc_open_failed">Health Connect could not be opened from here.</string>
+    <string name="datasources_hc_read_only">Apex only reads from Health Connect and never writes to it.</string>
+
+    <string name="datasources_hc_family_heart_rate">Heart rate</string>
+    <string name="datasources_hc_family_resting_heart_rate">Resting heart rate</string>
+    <string name="datasources_hc_family_hrv">Heart rate variability</string>
+    <string name="datasources_hc_family_sleep">Sleep</string>
+    <string name="datasources_hc_family_oxygen">Blood oxygen</string>
+    <string name="datasources_hc_family_respiratory">Breathing rate</string>
+    <string name="datasources_hc_family_skin_temperature">Skin temperature</string>
+    <string name="datasources_hc_family_steps">Steps</string>
+    <string name="datasources_hc_family_exercise">Exercise</string>
+    <string name="datasources_hc_family_calories">Calories</string>
+    <string name="datasources_hc_family_vo2">VO2 max</string>
+    <string name="datasources_hc_family_floors">Floors</string>
+    <string name="datasources_hc_family_distance">Distance</string>
+
+    <!-- Sync -->
+    <string name="datasources_sync_section">Sync</string>
+    <string name="datasources_sync_status_label">Status</string>
+    <string name="datasources_sync_loading">Checking</string>
+    <string name="datasources_sync_idle">Waiting for the next sync</string>
+    <string name="datasources_sync_running">Syncing now</string>
+    <string name="datasources_sync_succeeded">Finished %1$s</string>
+    <string name="datasources_sync_failed_network">Failed: no connection</string>
+    <string name="datasources_sync_failed_rate">Failed: request budget used up, will retry</string>
+    <string name="datasources_sync_failed_permission">Failed: a permission is missing</string>
+    <string name="datasources_sync_failed_no_source">Failed: no source is connected</string>
+    <string name="datasources_sync_failed_store">Failed: the data store was not available</string>
+    <string name="datasources_sync_failed_other">Failed for an unknown reason</string>
+    <string name="datasources_sync_needs_sign_in">Sign in to Google Health again to sync</string>
+    <string name="datasources_sync_last_label">Last successful sync</string>
+    <string name="datasources_sync_now">Sync now</string>
+    <string name="datasources_sync_now_demo">Sync is off in Demo mode.</string>
+    <string name="datasources_sync_source_note">Sources: Google Health and Health Connect</string>
+
+    <!-- Watermarks -->
+    <string name="datasources_marks_section">Diagnostics by stream</string>
+    <string name="datasources_marks_empty">No sync has run yet. Streams appear here after the first sync.</string>
+    <string name="datasources_marks_demo">Demo data has no sync history.</string>
+    <string name="datasources_marks_loading">Loading sync history</string>
+    <string name="datasources_source_google">Google Health</string>
+    <string name="datasources_source_hc">Health Connect</string>
+    <string name="datasources_source_takeout">Takeout archive</string>
+    <string name="datasources_mark_up_to">Read up to %1$s</string>
+    <string name="datasources_mark_never_synced">Never synced</string>
+    <string name="datasources_mark_success">Last success %1$s</string>
+    <string name="datasources_mark_attempt">Last attempt %1$s</string>
+    <string name="datasources_mark_ok">Up to date</string>
+    <string name="datasources_mark_partial">Partly synced</string>
+    <string name="datasources_mark_failed">Failed</string>
+    <string name="datasources_mark_permission">Permission missing</string>
+    <string name="datasources_mark_fail_permission">Missing permission</string>
+    <string name="datasources_mark_fail_rate">Request budget used up</string>
+    <string name="datasources_mark_fail_sign_in">Sign-in expired</string>
+    <string name="datasources_mark_fail_other">Unknown error</string>
+    <plurals name="datasources_mark_failures">
+        <item quantity="one">%1$d failure in a row</item>
+        <item quantity="other">%1$d failures in a row</item>
+    </plurals>
+
+    <!-- Stored counts -->
+    <string name="datasources_counts_section">Stored on this phone</string>
+    <string name="datasources_counts_source">Counted from the local database</string>
+    <string name="datasources_counts_none">None yet</string>
+    <string name="datasources_counts_hr">Heart rate minutes</string>
+    <string name="datasources_counts_daily">Daily values</string>
+    <string name="datasources_counts_samples">Other samples</string>
+    <string name="datasources_counts_earliest">Earliest day</string>
+    <string name="datasources_counts_loading">Counting</string>
+
+    <!-- Takeout -->
+    <string name="datasources_takeout_section">Takeout archive</string>
+    <string name="datasources_takeout_last_label">Last import</string>
+    <string name="datasources_takeout_reminder_label">Reminder</string>
+    <string name="datasources_takeout_reminder_off">Off</string>
+    <plurals name="datasources_takeout_reminder_days">
+        <item quantity="one">After %1$d day</item>
+        <item quantity="other">After %1$d days</item>
+    </plurals>
+    <string name="datasources_takeout_overdue">It is time to import a fresh archive to keep your history complete.</string>
+    <string name="datasources_takeout_body">A Google Takeout file adds your full Fitbit history. It is read on this phone and not uploaded.</string>
+    <string name="datasources_takeout_demo">Importing is turned off in Demo mode so made-up data never mixes with your own. Leave Demo mode in Settings to import.</string>
+    <string name="datasources_takeout_import">Import Takeout archive</string>
+</resources>
