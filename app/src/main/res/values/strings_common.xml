@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Apex</string>
+
+    <!-- Tabs and shell -->
+    <string name="tab_overview">Overview</string>
+    <string name="tab_health">Health</string>
+    <string name="tab_journal">Journal</string>
+    <string name="tab_more">More</string>
+    <string name="coach_action_description">Open Coach</string>
+    <string name="common_back">Back</string>
+    <string name="common_cancel">Cancel</string>
+
+    <!-- Demo banner -->
+    <string name="banner_demo_title">Demo mode</string>
+    <string name="banner_demo_body">Everything here is synthetic and kept in a separate store. Your real data is untouched.</string>
+    <string name="banner_demo_action">Settings</string>
+
+    <!-- Store status -->
+    <string name="preparing_demo_title">Preparing demo data</string>
+    <string name="preparing_demo_body">Building synthetic history with the same engines that score real data. %1$d%% done.</string>
+    <string name="store_failed_title">Your data could not be opened</string>
+    <string name="store_failed_body">The encrypted database on this phone could not be opened. This can happen after a device restore, when the key that protects it is no longer available, or if the file is damaged.</string>
+    <string name="store_failed_demo_body">The demo data could not be prepared. Leave Demo mode to return to your own data.</string>
+    <string name="store_failed_reassure">Nothing has been deleted. Your data in Google and Health Connect is not affected, and you can sync or import again after a clean start.</string>
+    <string name="store_failed_detail">Technical detail: %1$s</string>
+    <string name="store_failed_leave_demo">Leave Demo mode</string>
+    <string name="store_failed_start_clean">Start clean</string>
+    <string name="store_failed_confirm_title">Delete local data and start clean?</string>
+    <string name="store_failed_confirm_body">This removes the encrypted database on this phone, including imported history and manual entries. It cannot be undone.</string>
+    <string name="store_failed_confirm_delete">Delete and start clean</string>
+
+    <!-- Days and times -->
+    <string name="common_day_today">Today</string>
+    <string name="common_day_yesterday">Yesterday</string>
+    <string name="common_day_tomorrow">Tomorrow</string>
+    <string name="common_time_never">Never</string>
+    <string name="common_time_just_now">Just now</string>
+    <string name="common_time_minutes_ago">%1$d min ago</string>
+    <string name="common_time_hours_ago">%1$d h ago</string>
+    <string name="common_time_days_ago">%1$d d ago</string>
+    <string name="common_sync_never">Not synced yet</string>
+    <string name="common_sync_ago">Synced %1$s</string>
+    <string name="common_duration_min">%1$d min</string>
+    <string name="common_duration_h">%1$d h</string>
+    <string name="common_duration_h_min">%1$d h %2$d min</string>
+
+    <!-- Units -->
+    <string name="common_unit_km">km</string>
+    <string name="common_unit_mi">mi</string>
+    <string name="common_unit_kg">kg</string>
+    <string name="common_unit_lb">lb</string>
+    <string name="common_unit_cm">cm</string>
+    <string name="common_unit_ft_in">%1$d ft %2$d in</string>
+    <string name="common_unit_c">°C</string>
+    <string name="common_unit_f">°F</string>
+
+    <!-- State mapper copy (observational, never diagnostic) -->
+    <string name="mapper_needs_resting_hr">Needs a resting heart rate. Add one in your profile.</string>
+    <string name="mapper_needs_max_hr">Needs a maximum heart rate. Add your age or a measured value in your profile.</string>
+    <string name="mapper_fatigue_none">No fatigue signals</string>
+    <string name="mapper_fatigue_watch">Worth watching</string>
+    <string name="mapper_fatigue_elevated">Elevated</string>
+    <string name="mapper_fatigue_high">High</string>
+    <string name="mapper_signal_hrv_drop">Heart rate variability dropped sharply from your usual range.</string>
+    <string name="mapper_signal_hrv_sustained">Heart rate variability has stayed below your usual range for several days.</string>
+    <string name="mapper_signal_hrv_weekly">Your 7-day heart rate variability average is below your usual range.</string>
+    <string name="mapper_signal_rhr_high">Resting heart rate is above your usual range.</string>
+    <string name="mapper_signal_rhr_sustained">Resting heart rate has stayed above your usual range for several days.</string>
+    <string name="mapper_signal_resp_high">Respiratory rate is above your usual range.</string>
+    <string name="mapper_caveat_short_history">Less than 28 days of history, so the chronic average has not settled.</string>
+    <string name="mapper_caveat_low_chronic">Your usual load is low, so small changes swing the ratio.</string>
+    <string name="mapper_caveat_sparse">Several days have no heart-rate data.</string>
+
+    <!-- Debug -->
+    <string name="gallery_title">Component gallery</string>
+</resources>

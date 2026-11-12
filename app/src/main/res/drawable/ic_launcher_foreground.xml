@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Original APEX mark: a peak (an "A" without its right foot) with a crossbar. 108 dp adaptive layer,
+     artwork kept inside the 66 dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M31,75 L54,33 L77,75"
+        android:strokeColor="@color/apex_mark"
+        android:strokeWidth="7"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="miter" />
+    <path
+        android:pathData="M43,62 L65,62"
+        android:strokeColor="@color/apex_mark_accent"
+        android:strokeWidth="6"
+        android:strokeLineCap="butt" />
+</vector>

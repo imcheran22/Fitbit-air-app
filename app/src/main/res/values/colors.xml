@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window and launcher colours: equivalents of the dark ground tokens in :core:ui (ApexDarkColors).
+         Compose paints the real ground; these only cover the window before the first frame. -->
+    <color name="apex_ground">#101518</color>
+    <color name="apex_ground_top">#1D2529</color>
+    <color name="apex_mark">#FFFFFF</color>
+    <color name="apex_mark_accent">#7095FE</color>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Window theme. Compose draws every pixel above it; the dark window background avoids a white
+         flash. Not a Material theme on purpose: screens style themselves from ApexTheme tokens. -->
+    <style name="Theme.Apex" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/apex_ground</item>
+        <item name="android:colorBackground">@color/apex_ground</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Splash screen shown until the settings have loaded (see MainActivity). -->
+    <style name="Theme.Apex.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/apex_ground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Apex</item>
+    </style>
+
+    <!-- OAuthRedirectActivity: invisible, finishes in onCreate. -->
+    <style name="Theme.Apex.Transparent" parent="Theme.Apex">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>
