@@ -275,4 +275,115 @@ class GoogleHealthApiSourceTest {
         assertEquals(names.size, names.toSet().size)
         assertIs<GoogleHealthNetworkException>(GoogleHealthNetworkException())
     }
+
+    // --- band-only heart rate, sleep-stage HRV, estimated VO2, sleeping HR --------------------------------
+
+    private val wearables = "users/me/dataSourceFamilies/google-wearables"
+
+    @Test
+    fun heartRateRequestCarriesTheWearablesFamilyAndSleepDoesNot() {
+        handler = { json(page(emptyList())) }
+        pull("heart-rate", "2026-11-10T00:00:00Z", "2026-11-11T00:00:00Z")
+        pull("sleep", "2026-11-09T00:00:00Z", "2026-11-12T00:00:00Z")
+        pull("resting-heart-rate", "2026-11-09T00:00:00Z", "2026-11-12T00:00:00Z")
+        val hr = requests.first { it.requestUrl!!.encodedPath.contains("/dataTypes/heart-rate/") }
+        assertEquals(wearables, hr.requestUrl!!.queryParameter("dataSourceFamily"))
+        val sleep = requests.first { it.requestUrl!!.encodedPath.contains("/dataTypes/sleep/") }
+        assertEquals(null, sleep.requestUrl!!.queryParameter("dataSourceFamily"))
+        val rhr = requests.first { it.requestUrl!!.encodedPath.contains("/dataTypes/daily-resting-heart-rate/") }
+        assertEquals(null, rhr.requestUrl!!.queryParameter("dataSourceFamily"))
+    }
+
+    private fun sleepWithStages(id: String, vararg stages: Triple<String, String, String>, nap: Boolean = false) =
+        """{"name":"users/me/dataTypes/sleep/dataPoints/$id","sleep":{"interval":{"startTime":"2026-11-10T22:00:00Z","endTime":"2026-11-11T06:00:00Z","startUtcOffset":"0s","endUtcOffset":"0s"},""" +
+            """"metadata":{"mainSleep":${!nap},"nap":$nap},"stages":[${stages.joinToString(",") { (t, a, b) -> """{"type":"$t","startTime":"$a","endTime":"$b"}""" }}]}}"""
+
+    private fun hrvPoint(iso: String, rmssd: Int) =
+        """{"heartRateVariability":{"rootMeanSquareOfSuccessiveDifferencesMilliseconds":$rmssd,"sampleTime":{"physicalTime":"$iso","utcOffset":"0s"}}}"""
+
+    @Test
+    fun sleepHrvUsesOnlySamplesInsideAsleepStagesAndNeverWritesHrvRmssd() {
+        handler = { r ->
+            val path = r.requestUrl!!.encodedPath
+            when {
+                path.contains("/dataTypes/sleep/") -> json(
+                    page(
+                        listOf(
+                            sleepWithStages(
+                                "n1",
+                                Triple("LIGHT", "2026-11-10T22:00:00Z", "2026-11-11T02:00:00Z"),
+                                Triple("AWAKE", "2026-11-11T02:00:00Z", "2026-11-11T03:00:00Z"),
+                                Triple("DEEP", "2026-11-11T03:00:00Z", "2026-11-11T06:00:00Z"),
+                            ),
+                        ),
+                    ),
+                )
+                path.contains("/dataTypes/heart-rate-variability/") -> json(
+                    page(listOf(hrvPoint("2026-11-10T23:00:00Z", 40), hrvPoint("2026-11-11T02:30:00Z", 200), hrvPoint("2026-11-11T04:00:00Z", 60))),
+                )
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        val batches = pull("hrv-sleep", "2026-11-11T00:00:00Z", "2026-11-12T00:00:00Z")
+        val rows = batches.flatMap { it.daily }
+        assertEquals(1, rows.size)
+        assertEquals(MetricType.HRV_SLEEP_SAMPLES, rows.single().metric)
+        assertEquals(50.0, rows.single().value, 1e-9) // the awake-segment sample (200) is excluded
+        assertEquals(2, rows.single().sampleCount)
+        assertEquals(LocalDate.parse("2026-11-11").toEpochDay(), rows.single().epochDay)
+        assertTrue(batches.all { it.provenance == DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API })
+        assertTrue(batches.flatMap { it.daily }.none { it.metric == MetricType.HRV_RMSSD })
+        assertTrue(batches.flatMap { it.samples }.none { it.metric == MetricType.HRV_RMSSD })
+        val hrv = requests.first { it.requestUrl!!.encodedPath.contains("/dataTypes/heart-rate-variability/") }
+        assertEquals(wearables, hrv.requestUrl!!.queryParameter("dataSourceFamily"))
+        val sleep = requests.first { it.requestUrl!!.encodedPath.contains("/dataTypes/sleep/") }
+        assertEquals(null, sleep.requestUrl!!.queryParameter("dataSourceFamily"))
+    }
+
+    @Test
+    fun sleepHrvForANapOrAStagelessNightProducesNothing() {
+        handler = { r ->
+            val path = r.requestUrl!!.encodedPath
+            when {
+                path.contains("/dataTypes/sleep/") -> json(
+                    page(listOf(sleepPoint("noStages", "2026-11-10T22:00:00Z", "2026-11-11T06:00:00Z"), sleepWithStages("nap", Triple("LIGHT", "2026-11-11T13:00:00Z", "2026-11-11T14:00:00Z"), nap = true))),
+                )
+                else -> json(page(listOf(hrvPoint("2026-11-11T01:00:00Z", 50))))
+            }
+        }
+        assertTrue(pull("hrv-sleep", "2026-11-11T00:00:00Z", "2026-11-12T00:00:00Z").flatMap { it.daily }.isEmpty())
+    }
+
+    @Test
+    fun estimatedVo2RowsAreSentWithEstimatedProvenanceAndMeasuredOnesStayMeasured() {
+        handler = {
+            json(
+                page(
+                    listOf(
+                        """{"dailyVo2Max":{"date":{"year":2026,"month":11,"day":9},"vo2Max":44.0,"estimated":true}}""",
+                        """{"dailyVo2Max":{"date":{"year":2026,"month":11,"day":10},"vo2Max":47.0,"estimated":false}}""",
+                        """{"dailyVo2Max":{"date":{"year":2026,"month":11,"day":11},"vo2Max":48.0}}""",
+                    ),
+                ),
+            )
+        }
+        val batches = pull("vo2-max", "2026-11-01T00:00:00Z", "2026-11-12T00:00:00Z")
+        val estimated = batches.filter { it.provenance == DataProvenance.ESTIMATED }.flatMap { it.daily }
+        val measured = batches.filter { it.provenance == DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API }.flatMap { it.daily }
+        assertEquals(listOf(44.0), estimated.map { it.value })
+        assertEquals(setOf(47.0, 48.0), measured.map { it.value }.toSet())
+    }
+
+    @Test
+    fun dailyHrvStreamStoresTheVendorNonRemHeartRateAsSleepingHeartRateWithGoogleProvenance() {
+        handler = {
+            json(page(listOf("""{"dailyHeartRateVariability":{"date":{"year":2026,"month":11,"day":10},"averageHeartRateVariabilityMilliseconds":55.0,"nonRemHeartRateBeatsPerMinute":"52"}}""")))
+        }
+        val batches = pull("hrv", "2026-11-09T00:00:00Z", "2026-11-12T00:00:00Z")
+        assertTrue(batches.all { it.provenance == DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API })
+        val byMetric = batches.flatMap { it.daily }.associate { it.metric to it.value }
+        assertEquals(52.0, byMetric[MetricType.SLEEPING_HEART_RATE])
+        assertEquals(55.0, byMetric[MetricType.HRV_RMSSD])
+        assertEquals(null, byMetric[MetricType.HRV_SLEEP_SAMPLES])
+    }
 }

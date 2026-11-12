@@ -13,6 +13,7 @@ import com.apex.athlete.core.network.GoogleHealthNetwork
 import com.apex.athlete.core.network.auth.AuthState
 import com.apex.athlete.core.network.googlehealth.ApiResult
 import com.apex.athlete.core.network.googlehealth.DataPoint
+import com.apex.athlete.core.network.googlehealth.DataSourceFamily
 import com.apex.athlete.core.network.googlehealth.GoogleHealthApiClient
 import com.apex.athlete.core.network.googlehealth.GoogleHealthDataType
 import com.apex.athlete.core.network.googlehealth.GoogleHealthError
@@ -60,8 +61,9 @@ data class GoogleHealthSourceStats(
  *
  * | stream | window | notes |
  * |---|---|---|
- * | `heart-rate` | **24 h** | intraday; see below |
+ * | `heart-rate` | **24 h** | intraday, `dataSourceFamily=google-wearables` (band only); see below |
  * | `sleep`, `exercise` | 14 days | pages of at most 25 |
+ * | `hrv-sleep` | 7 days | reads the sleeps ending in the window, then the HRV samples of each night (band only); stored as `HRV_SLEEP_SAMPLES` |
  * | `resting-heart-rate`, `hrv`, `spo2`, `respiratory-rate`, `skin-temperature`, `vo2-max` | 30 days | one point per day |
  * | `steps`, `distance`, `floors`, `calories`, `active-zone-minutes`, `active-minutes`, `sedentary` | 7 days | read through `dataPoints:reconcile` (one merged stream), summed per civil day |
  * | `weight`, `body-fat` | 30 days | samples |
@@ -95,7 +97,7 @@ class GoogleHealthApiSource(
 
     override val source: SyncSource = SyncSource.GOOGLE_HEALTH_API
 
-    private enum class Kind { HEART_RATE, SLEEP, EXERCISE, DAILY, BODY, INTERVAL, CALORIES }
+    private enum class Kind { HEART_RATE, SLEEP, HRV_SLEEP, EXERCISE, DAILY, VO2, BODY, INTERVAL, CALORIES }
 
     private class Spec(val name: String, val kind: Kind, val windowMillis: Long, val types: List<GoogleHealthDataType>) {
         val stream = SourceStream(name, windowMillis)
@@ -104,13 +106,14 @@ class GoogleHealthApiSource(
     private val specs: List<Spec> = listOf(
         Spec("heart-rate", Kind.HEART_RATE, DAY, listOf(GoogleHealthDataType.HEART_RATE)),
         Spec("sleep", Kind.SLEEP, 14 * DAY, listOf(GoogleHealthDataType.SLEEP)),
+        Spec("hrv-sleep", Kind.HRV_SLEEP, 7 * DAY, listOf(GoogleHealthDataType.SLEEP, GoogleHealthDataType.HEART_RATE_VARIABILITY)),
         Spec("exercise", Kind.EXERCISE, 14 * DAY, listOf(GoogleHealthDataType.EXERCISE)),
         Spec("resting-heart-rate", Kind.DAILY, 30 * DAY, listOf(GoogleHealthDataType.DAILY_RESTING_HEART_RATE)),
         Spec("hrv", Kind.DAILY, 30 * DAY, listOf(GoogleHealthDataType.DAILY_HEART_RATE_VARIABILITY)),
         Spec("spo2", Kind.DAILY, 30 * DAY, listOf(GoogleHealthDataType.DAILY_OXYGEN_SATURATION)),
         Spec("respiratory-rate", Kind.DAILY, 30 * DAY, listOf(GoogleHealthDataType.DAILY_RESPIRATORY_RATE)),
         Spec("skin-temperature", Kind.DAILY, 30 * DAY, listOf(GoogleHealthDataType.DAILY_SLEEP_TEMPERATURE_DERIVATIONS)),
-        Spec("vo2-max", Kind.DAILY, 30 * DAY, listOf(GoogleHealthDataType.DAILY_VO2_MAX)),
+        Spec("vo2-max", Kind.VO2, 30 * DAY, listOf(GoogleHealthDataType.DAILY_VO2_MAX)),
         Spec("steps", Kind.INTERVAL, 7 * DAY, listOf(GoogleHealthDataType.STEPS)),
         Spec("distance", Kind.INTERVAL, 7 * DAY, listOf(GoogleHealthDataType.DISTANCE)),
         Spec("floors", Kind.INTERVAL, 7 * DAY, listOf(GoogleHealthDataType.FLOORS)),
@@ -154,8 +157,10 @@ class GoogleHealthApiSource(
         when (spec.kind) {
             Kind.HEART_RATE -> run.heartRate(fromMillis, toMillis)
             Kind.SLEEP -> run.sleep(fromMillis, toMillis)
+            Kind.HRV_SLEEP -> run.hrvSleep(fromMillis, toMillis)
             Kind.EXERCISE -> run.exercise(fromMillis, toMillis)
             Kind.DAILY -> run.daily(fromMillis, toMillis)
+            Kind.VO2 -> run.vo2(fromMillis, toMillis)
             Kind.BODY -> run.body(fromMillis, toMillis)
             Kind.INTERVAL -> run.interval(fromMillis, toMillis)
             Kind.CALORIES -> run.calories(fromMillis, toMillis)
@@ -175,7 +180,9 @@ class GoogleHealthApiSource(
 
         suspend fun heartRate(from: Long, to: Long) {
             val seen = HashSet<Long>()
-            read(GoogleHealthDataType.HEART_RATE, filter(GoogleHealthDataType.HEART_RATE, from, to), reconcile = false) { page ->
+            // Band only: the default `all-sources` would average heart rate from the phone or from
+            // Health Connect into the band's minutes.
+            read(GoogleHealthDataType.HEART_RATE, filter(GoogleHealthDataType.HEART_RATE, from, to), reconcile = false, family = DataSourceFamily.GOOGLE_WEARABLES) { page ->
                 val m = mapper.heartRate(page, from, to, seen)
                 count(m.malformed, m.implausible, m.ignored)
                 send(heartRate = m.items)
@@ -188,6 +195,35 @@ class GoogleHealthApiSource(
                 val m = mapper.sleeps(page)
                 count(m.malformed, m.implausible, m.ignored)
                 send(sleeps = m.items)
+            }
+        }
+
+        /**
+         * Sleep-stage HRV (`HRV_SLEEP_SAMPLES`). Both the night's stages and its HRV samples are needed, so this
+         * stream reads the main sleeps ending in [from, to) (no `dataSourceFamily`: `sleep` does not support it)
+         * and then the `heart-rate-variability` samples of each night (band only), and lets the mapper keep
+         * only samples inside asleep stages. A failure here never touches the `sleep` stream. Naps are skipped;
+         * when several non-nap sessions end on one day the longest one is used.
+         */
+        suspend fun hrvSleep(from: Long, to: Long) {
+            val sleepType = GoogleHealthDataType.SLEEP
+            val sessions = ArrayList<SleepObservation>()
+            read(sleepType, filter(sleepType, from, to), reconcile = false) { page ->
+                val m = mapper.sleeps(page)
+                count(m.malformed, m.implausible, m.ignored)
+                sessions += m.items
+            }
+            val nights = sessions
+                .filter { it.isNap != true && it.stages.isNotEmpty() && it.endEpochMillis >= from && it.endEpochMillis < to }
+                .groupBy { Instant.ofEpochMilli(it.endEpochMillis).atOffset(java.time.ZoneOffset.ofTotalSeconds(it.endZoneOffsetSeconds)).toLocalDate() }
+                .values.map { day -> day.maxBy { it.endEpochMillis - it.startEpochMillis } }
+            val type = GoogleHealthDataType.HEART_RATE_VARIABILITY
+            for (night in nights) {
+                val points = ArrayList<DataPoint>()
+                read(type, filter(type, night.startEpochMillis, night.endEpochMillis), reconcile = false, family = DataSourceFamily.GOOGLE_WEARABLES) { page -> points += page }
+                val m = mapper.hrvDuringSleep(night, points)
+                count(m.malformed, m.implausible, m.ignored)
+                send(daily = m.items)
             }
         }
 
@@ -206,6 +242,17 @@ class GoogleHealthApiSource(
                 val m = mapper.daily(type, page)
                 count(m.malformed, m.implausible, m.ignored)
                 send(daily = m.items)
+            }
+        }
+
+        /** `daily-vo2-max`: rows the API marks `estimated` are a model output and are labelled ESTIMATED, not measured. */
+        suspend fun vo2(from: Long, to: Long) {
+            val type = spec.types.single()
+            read(type, filter(type, from, to), reconcile = false) { page ->
+                val m = mapper.dailyVo2Max(page)
+                count(m.malformed, m.implausible, m.ignored)
+                send(daily = m.measured)
+                send(daily = m.estimated, provenance = DataProvenance.ESTIMATED)
             }
         }
 
@@ -267,6 +314,7 @@ class GoogleHealthApiSource(
             type: GoogleHealthDataType,
             filter: String,
             reconcile: Boolean,
+            family: DataSourceFamily? = null,
             onPage: suspend (List<DataPoint>) -> Unit,
         ) {
             val request = ListRequest(
@@ -274,6 +322,7 @@ class GoogleHealthApiSource(
                 filter = filter,
                 pageSize = type.maxPageSize,
                 reconcile = reconcile,
+                dataSourceFamily = family,
                 priority = priority(),
             )
             when (val r = client.forEachPage(request) { page ->

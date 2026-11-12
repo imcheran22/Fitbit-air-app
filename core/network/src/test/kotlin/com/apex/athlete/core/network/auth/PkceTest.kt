@@ -154,6 +154,17 @@ class GoogleHealthAuthConfigTest {
     }
 
     @Test
+    fun onlyTheThreeScopesThatCallsUseAreRequested() {
+        val c = (GoogleHealthAuthConfig.create("123-abc.apps.googleusercontent.com") as AuthConfigState.Configured).config
+        assertEquals(
+            listOf(GoogleHealthAuthConfig.SCOPE_HEALTH_METRICS, GoogleHealthAuthConfig.SCOPE_ACTIVITY, GoogleHealthAuthConfig.SCOPE_SLEEP),
+            c.scopes,
+        )
+        // settings.readonly was only for the paired-devices list, which no code path calls.
+        assertTrue(GoogleHealthAuthConfig.SCOPE_SETTINGS !in c.scopes)
+    }
+
+    @Test
     fun writeScopesAreRefusedByTheConfigType() {
         assertFailsWith<IllegalArgumentException> {
             OAuthProviderConfig("x", "id", "https://a", "https://b", null,

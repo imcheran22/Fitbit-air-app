@@ -38,6 +38,12 @@ enum class MetricType(
     RESTING_HEART_RATE("rhr", MetricCategory.CARDIOVASCULAR, "bpm", Polarity.LOWER_IS_BETTER),
     HRV_RMSSD("hrv_rmssd", MetricCategory.CARDIOVASCULAR, "ms", Polarity.HIGHER_IS_BETTER),
     HRV_DEEP_SLEEP_RMSSD("hrv_deep_rmssd", MetricCategory.CARDIOVASCULAR, "ms", Polarity.HIGHER_IS_BETTER),
+    /**
+     * Mean RMSSD of the Google `heart-rate-variability` samples that fall inside the night's non-awake
+     * sleep stages (one value per night). Deliberately separate from [HRV_RMSSD], which is the vendor's
+     * nightly figure; the two are never mixed into one baseline.
+     */
+    HRV_SLEEP_SAMPLES("hrv_sleep_samples", MetricCategory.CARDIOVASCULAR, "ms", Polarity.HIGHER_IS_BETTER),
     SLEEPING_HEART_RATE("sleeping_hr", MetricCategory.CARDIOVASCULAR, "bpm", Polarity.LOWER_IS_BETTER),
     HEART_RATE_AVG("hr_avg", MetricCategory.CARDIOVASCULAR, "bpm"),
     HEART_RATE_MIN("hr_min", MetricCategory.CARDIOVASCULAR, "bpm"),

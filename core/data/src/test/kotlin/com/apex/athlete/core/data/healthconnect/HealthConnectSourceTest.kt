@@ -25,6 +25,8 @@ private class FakeData : HealthConnectDataSource {
     val records = HashMap<HcFamily, List<HcRecord>>()
     var pageSize = 1000
     var readCalls = 0
+    /** The `from` of every readPage call, per family. */
+    val readFroms = HashMap<HcFamily, MutableList<Long>>()
     /** Throws SecurityException on the Nth readPage call (1-based). */
     var revokeAtCall: Int? = null
 
@@ -39,6 +41,7 @@ private class FakeData : HealthConnectDataSource {
 
     override suspend fun readPage(family: HcFamily, fromMillis: Long, toMillis: Long, pageToken: String?): HcPage {
         readCalls++
+        readFroms.getOrPut(family) { ArrayList() } += fromMillis
         if (revokeAtCall == readCalls) throw SecurityException("revoked")
         val all = records[family].orEmpty()
         val start = pageToken?.toInt() ?: 0
@@ -129,6 +132,15 @@ class HealthConnectSourceTest {
         }
         assertEquals("heart-rate", e.stream)
         assertEquals(1, seen.size) // the first page had already been delivered
+    }
+
+    @Test fun `heart rate reads start a day before the window and samples are still kept to the window`() {
+        // A record that began before the window and crosses its edge: Health Connect only returns it to a read whose range contains its start.
+        val crossing = HcHeartRateRecord("o", listOf(HcHrSample(from - 3_600_000L, 55), HcHrSample(from + 1_000L, 61), HcHrSample(to + 1_000L, 70)))
+        val d = FakeData().apply { records[HcFamily.HEART_RATE] = listOf(crossing) }
+        val points = collect(source(d), "heart-rate").flatMap { it.heartRate }
+        assertEquals(listOf(from + 1_000L), points.map { it.epochMillis }) // before-window and after-window samples are not delivered here
+        assertEquals(from - 24L * 3_600_000L, d.readFroms.getValue(HcFamily.HEART_RATE).single())
     }
 
     @Test fun `all pages are read and delivered`() {

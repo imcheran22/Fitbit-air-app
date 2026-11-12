@@ -131,7 +131,7 @@ class HealthConnectMapper(
         val out = java.util.TreeMap<Long, List<Double>>()
         for ((day, s) in main) {
             val values = readings.asSequence()
-                .filter { it.epochMillis in s.startEpochMillis..s.endEpochMillis && Plausibility.isPlausible(metric, it.value) }
+                .filter { it.epochMillis in s.startEpochMillis..(s.endEpochMillis + NIGHT_END_GRACE_MS) && Plausibility.isPlausible(metric, it.value) }
                 .map { it.value }
                 .toList()
             if (values.isNotEmpty()) out[day] = values
@@ -295,6 +295,12 @@ class HealthConnectMapper(
         const val STAGE_AWAKE_IN_BED = 7
 
         private const val MAX_OFFSET = 18 * 3600
+
+        /**
+         * Fitbit stamps its one nightly HRV (and possibly SpO2 / respiratory rate) value at or up to about two
+         * minutes after the sleep ends (Pulse `health/sync.ts`, IMPORT_VERSION 9). UNVERIFIED-NEEDS-REAL-BAND.
+         */
+        const val NIGHT_END_GRACE_MS = 2 * 60_000L
         private const val MIN_BPM = 25L
         private const val MAX_BPM = 240L
     }

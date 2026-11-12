@@ -28,6 +28,15 @@ Dated 2026-11-11. Source: `docs/api-snapshots/google-health-v4-discovery-2026-11
   Steps, Distance, Floors, Active*, Weight, BodyFat, PairedDevice, Identity). int64 values are JSON strings.
 - `ReconciledDataPoint` uses `dataPointName` where `DataPoint` uses `name`; both are read.
 - `sleep` does not support `dataSourceFamily` on list (use `reconcile`).
+- `dataSourceFamily` (query parameter, `users/{user}/dataSourceFamilies/{all-sources|google-wearables|google-sources}`;
+  default `all-sources`, `google-wearables` = Google and Fitbit tracker devices, excludes manual data): verified in the
+  snapshot for `list` and `reconcile`. Apex sends `google-wearables` on the `heart-rate` and `heart-rate-variability`
+  list calls only, so phone or Health Connect heart rate is not averaged into the band's minutes.
+- `DailyHeartRateVariability.nonRemHeartRateBeatsPerMinute` and `DailyVO2Max.estimated` are in the snapshot schemas
+  (the former is on the daily HRV type, not on `sleep`). Apex stores the first as SLEEPING_HEART_RATE and labels rows
+  with `estimated == true` ESTIMATED. What Google means by `estimated` for a band without GPS is unverified.
+- Scopes requested: the three data scopes only. `googlehealth.settings.readonly` is no longer requested because the
+  only call that needs it (`pairedDevices.list`) has no caller; add it back with the first caller.
 - No quota is published in the document.
 
 ## Verified by tests only (mock server, not Google)
@@ -45,3 +54,5 @@ OAuth PKCE S256 (RFC 7636 appendix B vector), state check, token exchange/refres
 5. Whether a Fitbit Air returns heart rate at 1-second or 1-minute resolution, and HRV/SpO2 sample data (vs daily only).
 6. "Testing" publishing status expires refresh tokens after 7 days (Google OAuth policy); confirm the project's status.
 7. Data retention/history depth and review/verification requirements for the sensitive health scopes.
+8. Whether `heart-rate-variability` samples (RMSSD, plus LF/HF in `metadata`) exist for an Air, and their cadence.
+   The `hrv-sleep` stream (HRV_SLEEP_SAMPLES) is empty until they do. Whether `google-wearables` returns only the Air.

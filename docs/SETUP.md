@@ -34,11 +34,10 @@ confirmed. Step 3.5 gives the fallback.
    choose Enable. The page may word this differently.
 4. Set up the OAuth consent screen. Choose the External user type. Leave publishing status on Testing. Under
    test users, add your own Google account. The page may word these steps differently.
-5. Add the four read-only scopes if the page asks for scopes (these are exactly what Apex requests):
+5. Add the three read-only scopes if the page asks for scopes (these are exactly what Apex requests):
    - `https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly`
    - `https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly`
    - `https://www.googleapis.com/auth/googlehealth.sleep.readonly`
-   - `https://www.googleapis.com/auth/googlehealth.settings.readonly`
 
    These may be marked sensitive or restricted by Google. For one personal account in Testing mode, adding
    yourself as a test user is the intended route. Whether Google needs any review for these scopes is not
@@ -158,7 +157,7 @@ off with "Turn off demo mode"; your real data is untouched.
 
 | What you see | Cause | Fix |
 |---|---|---|
-| Data sources: "Failed: a permission is missing", or stream "Missing permission"; a 403 from Google. The error names the scope when Google or Apex can tell which | A Google permission box was unticked at sign-in, or the Google Health API is not enabled for the project | Data sources, "Sign in again", tick every box. Check the API is enabled in step 3.3 and the four scopes are on the consent screen |
+| Data sources: "Failed: a permission is missing", or stream "Missing permission"; a 403 from Google. The error names the scope when Google or Apex can tell which | A Google permission box was unticked at sign-in, or the Google Health API is not enabled for the project | Data sources, "Sign in again", tick every box. Check the API is enabled in step 3.3 and the three scopes are on the consent screen |
 | "Google ended this sign-in. If your Google Cloud consent screen is still in Testing, Google expires sign-ins after 7 days." (this is `invalid_grant`, a refresh the server rejects) Also "Google no longer accepts this sign-in" | Testing-mode 7-day expiry, a revoked grant, or a changed client | Press "Sign in again". For a lasting fix set the consent screen to In production |
 | "Google rejected this app's client. Check the client ID and that your account is listed as a test user" | Wrong client ID, or account not a test user | Re-check steps 3.4 and 3.6, rebuild with the correct ID, sign in again |
 | "The client ID saved in Settings needs the redirect scheme ... but this build uses ..." | The build was made with another ID | Put the ID in `local.properties`, rebuild, reinstall |

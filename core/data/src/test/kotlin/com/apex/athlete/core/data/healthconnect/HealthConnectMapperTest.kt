@@ -135,6 +135,26 @@ class HealthConnectMapperTest {
         assertEquals(6, mapper.samples(readings, MetricType.HRV_RMSSD, from, to).size)
     }
 
+    @Test fun `a nightly reading stamped up to two minutes after the sleep ends still belongs to the night`() {
+        val main = HcSleepRecord("m", "o", ms("2026-03-10T00:00:00Z"), ms("2026-03-10T07:00:00Z"), 0, 0, emptyList())
+        val from = ms("2026-03-10T00:00:00Z")
+        val to = ms("2026-03-11T00:00:00Z")
+        // Fitbit stamps its one nightly value at or just after the end of the sleep.
+        val r = listOf(reading(HcFamily.HRV_RMSSD, "2026-03-10T07:01:30Z", 64.0))
+        assertEquals(64.0, mapper.nightlyMean(r, listOf(main), MetricType.HRV_RMSSD, from, to).single().value)
+        val atEdge = listOf(reading(HcFamily.HRV_RMSSD, "2026-03-10T07:02:00Z", 64.0))
+        assertEquals(1, mapper.nightlyMean(atEdge, listOf(main), MetricType.HRV_RMSSD, from, to).size)
+        // Three minutes later it is a daytime reading again.
+        val late = listOf(reading(HcFamily.HRV_RMSSD, "2026-03-10T07:03:00Z", 64.0))
+        assertTrue(mapper.nightlyMean(late, listOf(main), MetricType.HRV_RMSSD, from, to).isEmpty())
+        // A reading before the sleep started is still outside the night.
+        val early = listOf(reading(HcFamily.HRV_RMSSD, "2026-03-09T23:59:00Z", 64.0))
+        assertTrue(mapper.nightlyMean(early, listOf(main), MetricType.HRV_RMSSD, from, to).isEmpty())
+        // The same tolerance applies to SpO2.
+        val spo2 = listOf(reading(HcFamily.OXYGEN_SATURATION, "2026-03-10T07:01:00Z", 95.0))
+        assertEquals(3, mapper.nightlySpo2(spo2, listOf(main), from, to).size)
+    }
+
     @Test fun `a night belongs to exactly one window and no sleep means no daily value`() {
         val main = HcSleepRecord("m", "o", ms("2026-03-10T00:00:00Z"), ms("2026-03-10T07:00:00Z"), 0, 0, emptyList())
         val r = listOf(reading(HcFamily.HRV_RMSSD, "2026-03-10T02:00:00Z", 60.0))

@@ -48,6 +48,7 @@ with `GET /v4/users/me/dataTypes/{type}/dataPoints`, filtered by time range and 
 Scopes are grouped by area, read-only variants are enough:
 `googlehealth.activity_and_fitness.readonly`, `googlehealth.health_metrics_and_measurements.readonly`,
 `googlehealth.sleep.readonly`, `googlehealth.profile.readonly`, `googlehealth.settings.readonly`.
+Apex requests only the first three (activity, health metrics, sleep); settings is needed only for `pairedDevices.list`, which nothing calls yet.
 
 ### What is not available
 

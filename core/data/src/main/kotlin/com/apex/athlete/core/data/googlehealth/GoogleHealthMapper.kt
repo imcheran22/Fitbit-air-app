@@ -164,6 +164,9 @@ class GoogleHealthMapper(private val zone: ZoneId = ZoneId.systemDefault()) {
                     if (day == null) { malformed++; continue }
                     add(MetricType.HRV_RMSSD, day, d.averageHeartRateVariabilityMilliseconds)
                     add(MetricType.HRV_DEEP_SLEEP_RMSSD, day, d.deepSleepRootMeanSquareOfSuccessiveDifferencesMilliseconds)
+                    // Fitbit's own sleeping heart rate (mean non-REM HR of the night): observed, so it
+                    // outranks the value the pipeline derives from heart-rate minutes.
+                    add(MetricType.SLEEPING_HEART_RATE, day, d.nonRemHeartRateBeatsPerMinute?.toDouble())
                 }
                 GoogleHealthDataType.DAILY_OXYGEN_SATURATION -> {
                     val d = p.dailyOxygenSaturation
@@ -205,6 +208,68 @@ class GoogleHealthMapper(private val zone: ZoneId = ZoneId.systemDefault()) {
             }
         }
         return GhMapped(out, malformed, implausible, ignored)
+    }
+
+    /** Daily VO2 max split by the API's `estimated` flag, so a modelled value is never labelled as measured. */
+    data class GhVo2Split(val measured: List<DailyObservation>, val estimated: List<DailyObservation>, val malformed: Int, val implausible: Int, val ignored: Int)
+
+    /**
+     * `daily-vo2-max` points. Rows with `estimated == true` go to [GhVo2Split.estimated] (the caller labels
+     * them [com.apex.athlete.core.domain.DataProvenance.ESTIMATED]); `false` and absent stay measured.
+     * [daily] with the same type returns both kinds together and is kept for callers that do not label.
+     */
+    fun dailyVo2Max(points: List<DataPoint>): GhVo2Split {
+        val measured = ArrayList<DailyObservation>()
+        val estimated = ArrayList<DailyObservation>()
+        var malformed = 0
+        var implausible = 0
+        var ignored = 0
+        for (p in points) {
+            val d = p.dailyVo2Max
+            if (d == null) { ignored++; continue }
+            val day = dateToEpochDay(d.date)
+            val v = d.vo2Max
+            if (day == null || v == null) { malformed++; continue }
+            if (!Plausibility.isPlausible(MetricType.VO2_MAX, v)) { implausible++; continue }
+            (if (d.estimated == true) estimated else measured) += DailyObservation(MetricType.VO2_MAX, day, v)
+        }
+        return GhVo2Split(measured, estimated, malformed, implausible, ignored)
+    }
+
+    // --- Heart-rate variability inside sleep stages -------------------------------------------------
+
+    /**
+     * The night's HRV from `heart-rate-variability` samples, as one [MetricType.HRV_SLEEP_SAMPLES] value
+     * on the civil day the sleep ended: the mean RMSSD of the samples that lie inside a stage segment
+     * where the person was asleep ([SleepStage.isAsleep]; AWAKE and RESTLESS are excluded).
+     *
+     * Needs the night's stages, so it is called with the already mapped [sleep] (see
+     * `GoogleHealthApiSource` stream `hrv-sleep`). A night without stages produces nothing, because
+     * without them awake samples cannot be excluded; nothing is guessed. Never writes [MetricType.HRV_RMSSD].
+     * Samples are de-duplicated by instant; implausible values are counted and dropped.
+     */
+    fun hrvDuringSleep(sleep: SleepObservation, points: List<DataPoint>): GhMapped<DailyObservation> {
+        val asleep = sleep.stages.filter { it.stage.isAsleep }
+        val seen = HashSet<Long>()
+        val values = ArrayList<Double>()
+        var malformed = 0
+        var implausible = 0
+        var ignored = 0
+        for (p in points) {
+            val h = p.heartRateVariability
+            if (h == null) { ignored++; continue }
+            val t = sampleInstant(h.sampleTime)
+            val v = h.rootMeanSquareOfSuccessiveDifferencesMilliseconds
+            if (t == null || v == null) { malformed++; continue }
+            if (t < sleep.startEpochMillis || t >= sleep.endEpochMillis) continue
+            if (asleep.none { t >= it.startEpochMillis && t < it.endEpochMillis }) continue
+            if (!Plausibility.isPlausible(MetricType.HRV_SLEEP_SAMPLES, v)) { implausible++; continue }
+            if (!seen.add(t)) continue
+            values += v
+        }
+        if (values.isEmpty()) return GhMapped(emptyList(), malformed, implausible, ignored)
+        val day = epochDay(sleep.endEpochMillis, sleep.endZoneOffsetSeconds)
+        return GhMapped(listOf(DailyObservation(MetricType.HRV_SLEEP_SAMPLES, day, values.average(), sampleCount = values.size)), malformed, implausible, ignored)
     }
 
     // --- Timestamped samples -----------------------------------------------------------------------

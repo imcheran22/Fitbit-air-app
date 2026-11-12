@@ -224,7 +224,9 @@ class HealthConnectSource(
             Kind.HEART_RATE -> {
                 var token: String? = null
                 do {
-                    val page = data.readPage(HcFamily.HEART_RATE, from, to, token)
+                    // Health Connect returns an interval record only to a read whose range contains its start, so
+                    // read from a lead before the window; the mapper keeps only samples inside [from, to).
+                    val page = data.readPage(HcFamily.HEART_RATE, from - READ_LEAD, to, token)
                     val points = mapper.heartRate(page.records.filterIsInstance<HcHeartRateRecord>(), from, to)
                     for (chunk in points.chunked(HR_CHUNK)) emit(batch(heartRate = chunk))
                     token = nextToken(token, page.nextPageToken)
@@ -327,6 +329,9 @@ class HealthConnectSource(
 
         /** Margin read around a window so a night or a day with another zone offset is complete. */
         private const val MARGIN = 14 * HOUR
+
+        /** Look-back for heart-rate reads (Pulse `READ_LEAD_S`): a record that began before the window must still be returned. */
+        private const val READ_LEAD = 24 * HOUR
         private const val HR_CHUNK = 20_000
         private const val MAX_CATCH_UP_CHUNKS = 200
 

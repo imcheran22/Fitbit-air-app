@@ -213,30 +213,36 @@ How this was checked:
    for `heart-rate`, so the default `all-sources` includes data synced from Health Connect and from other devices,
    and it is averaged into the band's minutes. Fix: `dataSourceFamily = DataSourceFamily.GOOGLE_WEARABLES` for
    HEART_RATE (and HRV samples). The discovery document allows this on `list` for every type except sleep and food.
+   Fixed: `GoogleHealthApiSource.read` takes a `family`; the `heart-rate` stream (and the new `hrv-sleep` HRV read) send `dataSourceFamily=users/me/dataSourceFamilies/google-wearables`, sleep and daily streams send none. Test `heartRateRequestCarriesTheWearablesFamilyAndSleepDoesNot`. Needs a real band to confirm (OPEN_POINTS).
 7. **Medium. Health Connect nightly readings may miss the night's value.** `HealthConnectMapper.kt:134` keeps only
    readings within `start..end` of the main sleep. Pulse (`health/sync.ts`, IMPORT_VERSION 9) found that Fitbit
    stamps its one nightly HRV value up to 2 minutes after the sleep ends, so HC HRV (and possibly SpO2 and
    respiratory rate) would be empty. Fix: end the window at `endEpochMillis + 2 min`, with a test. Needs a real band
    to confirm.
+   Fixed: `HealthConnectMapper.nightlyValues` now accepts readings up to `NIGHT_END_GRACE_MS` (2 min) after the sleep end (HRV, SpO2 and respiratory rate). Test `a nightly reading stamped up to two minutes after the sleep ends still belongs to the night`.
 8. **Medium. Health Connect heart-rate reads have no lead before the window.** `HealthConnectSource.kt:224-232`
    reads `[from, to)` and keeps only the samples inside it. Health Connect returns an interval record only to reads
    whose range contains the record's start (Pulse `READ_LEAD_S`, citing the AOSP read clause). The samples of a
    `HeartRateRecord` that crosses a window edge are therefore dropped, and the next window never receives that
    record. Fix: read from `from - 24 h` and keep filtering samples to `[from, to)`.
+   Fixed: `HealthConnectSource` heart-rate reads start `READ_LEAD` (24 h) before the window; samples are still kept to [from, to). Test `heart rate reads start a day before the window and samples are still kept to the window`.
 9. **Low-medium. A scope is requested for calls that are never made.** `GoogleHealthAuthConfig.kt:24` requests
    `googlehealth.settings.readonly` for `listPairedDevices`, which is never called. `getIdentity` is never called
    either. Fix: either show the Air's `lastSyncTime` and battery on Data sources (a cheap check of how fresh the
    data is), or drop the scope.
+   Fixed: `settings.readonly` is no longer in `GoogleHealthAuthConfig.READ_SCOPES` (three data scopes remain; the constant stays for the first `pairedDevices` caller). SETUP.md, ARCHITECTURE.md and API_VALIDATION.md updated. Test `onlyTheThreeScopesThatCallsUseAreRequested`.
 10. **Low-medium. Source ranking for BODY points to a source that is never read.** `SourceReconciler.kt:48`
     prefers HC for BODY, but HC has no Weight or BodyFat stream (`HealthConnectSource.kt:69-82`). READ_DISTANCE is
     granted but there is no daily distance stream, and ActiveCaloriesBurned is never read. Fix: add the HC
     Weight, BodyFat and Distance streams, or remove the preference and the permission.
+    Fixed: BODY (weight, body fat) now prefers the Google Health API in `SourceReconciler.preferredSource`, since that is the only source read; EXTERNAL_HEALTH keeps Health Connect. Test `body metrics prefer the Google Health API...`. The unused READ_DISTANCE permission is not touched.
 11. **Low. Window edges are not on whole minutes.** The orchestrator's `floor = end - 90 d` and `to` are not
     whole minutes, so a minute split across two windows is replaced instead of merged (`MinuteLedger` has forgotten
     it). It fixes itself on the next overlap re-read. Fix: round `floor` and window ends down to the minute.
 12. **Low. A modelled VO2 max is labelled MEASURED.** `GoogleHealthMapper.kt:197-203` drops `estimated` and
     `cardioFitnessLevel`. Fitbit's cardio-fitness value for a band without GPS is a model estimate. Fix: send rows
     with `estimated == true` in a batch with ESTIMATED provenance.
+    Fixed: the `vo2-max` stream splits rows with `estimated == true` into a batch with ESTIMATED provenance (`GoogleHealthMapper.dailyVo2Max`). Tests `vo2MaxIsSplitByTheEstimatedFlag`, `estimatedVo2RowsAreSentWithEstimatedProvenance...`.
 13. **Low. Background and permission edges.**
     - A Health Connect read refused in the background (READ_HEALTH_DATA_IN_BACKGROUND absent or unsupported) is
       recorded as PERMISSION_MISSING (`HealthConnectSource.kt:122-125`) although the record permission is granted.

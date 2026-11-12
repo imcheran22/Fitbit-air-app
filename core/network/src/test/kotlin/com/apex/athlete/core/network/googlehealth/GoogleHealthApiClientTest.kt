@@ -574,6 +574,6 @@ class GoogleHealthApiClientTest {
     @Test
     fun tokenStoreStateCarriesGrantedScopesForTheClient() {
         stack.store.save(StoredTokens("a", "r", stack.clock.nowMillis() + 3_600_000, GoogleHealthAuthConfig.READ_SCOPES.toSet(), stack.oauth.clientId))
-        assertEquals(4, (stack.store.currentState() as AuthState.SignedIn).grantedScopes.size)
+        assertEquals(3, (stack.store.currentState() as AuthState.SignedIn).grantedScopes.size)
     }
 }

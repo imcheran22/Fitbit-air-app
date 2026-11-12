@@ -1,5 +1,7 @@
 package com.apex.athlete.core.data.googlehealth
 
+import com.apex.athlete.core.data.model.SleepObservation
+import com.apex.athlete.core.data.model.SleepStageObservation
 import com.apex.athlete.core.domain.MetricType
 import com.apex.athlete.core.domain.SleepStage
 import com.apex.athlete.core.network.NetworkJson
@@ -527,5 +529,81 @@ class GoogleHealthMapperTest {
         val p = NetworkJson.instance.decodeFromString(DataPoint.serializer(), body)
         val m = utc.dailyTotals(GoogleHealthDataType.STEPS, listOf(p), day("2026-11-10"), day("2026-11-10"))
         assertEquals(1234.0, m.items.single().value)
+    }
+
+    // --- sleep-stage HRV, estimated VO2, non-REM HR --------------------------------------------------
+
+    private fun night(vararg stages: Triple<SleepStage, String, String>) = SleepObservation(
+        id = "gh:sleep:n", startEpochMillis = ms("2026-11-10T22:00:00Z"), endEpochMillis = ms("2026-11-11T06:00:00Z"),
+        startZoneOffsetSeconds = 0, endZoneOffsetSeconds = 0,
+        stages = stages.map { (st, a, b) -> SleepStageObservation(ms(a), ms(b), st) },
+    )
+
+    private fun hrv(iso: String, v: Double?) = DataPoint(heartRateVariability = GhHeartRateVariability(rootMeanSquareOfSuccessiveDifferencesMilliseconds = v, sampleTime = st(iso)))
+
+    @Test
+    fun sleepHrvExcludesAwakeAndRestlessSegmentsAndOutOfNightSamples() {
+        val n = night(
+            Triple(SleepStage.LIGHT, "2026-11-10T22:00:00Z", "2026-11-11T02:00:00Z"),
+            Triple(SleepStage.AWAKE, "2026-11-11T02:00:00Z", "2026-11-11T03:00:00Z"),
+            Triple(SleepStage.RESTLESS, "2026-11-11T03:00:00Z", "2026-11-11T03:30:00Z"),
+            Triple(SleepStage.REM, "2026-11-11T03:30:00Z", "2026-11-11T06:00:00Z"),
+        )
+        val out = utc.hrvDuringSleep(
+            n,
+            listOf(
+                hrv("2026-11-10T23:00:00Z", 30.0),
+                hrv("2026-11-11T02:30:00Z", 300.0), // awake
+                hrv("2026-11-11T03:10:00Z", 250.0), // restless
+                hrv("2026-11-11T04:00:00Z", 50.0),
+                hrv("2026-11-11T04:00:00Z", 50.0), // same instant twice
+                hrv("2026-11-11T06:00:00Z", 90.0), // at the end: outside [start, end)
+                hrv("2026-11-10T21:00:00Z", 90.0), // before bed
+                hrv("2026-11-11T05:00:00Z", null), // malformed
+            ),
+        )
+        val row = out.items.single()
+        assertEquals(MetricType.HRV_SLEEP_SAMPLES, row.metric)
+        assertEquals(40.0, row.value, 1e-9)
+        assertEquals(2, row.sampleCount)
+        assertEquals(day("2026-11-11"), row.epochDay)
+        assertEquals(1, out.malformed)
+    }
+
+    @Test
+    fun sleepHrvNeedsStagesAndAnAsleepSample() {
+        assertTrue(utc.hrvDuringSleep(night(), listOf(hrv("2026-11-11T01:00:00Z", 50.0))).items.isEmpty())
+        val awakeOnly = night(Triple(SleepStage.AWAKE, "2026-11-10T22:00:00Z", "2026-11-11T06:00:00Z"))
+        assertTrue(utc.hrvDuringSleep(awakeOnly, listOf(hrv("2026-11-11T01:00:00Z", 50.0))).items.isEmpty())
+        val implausible = night(Triple(SleepStage.DEEP, "2026-11-10T22:00:00Z", "2026-11-11T06:00:00Z"))
+        val out = utc.hrvDuringSleep(implausible, listOf(hrv("2026-11-11T01:00:00Z", 900.0)))
+        assertTrue(out.items.isEmpty())
+        assertEquals(1, out.implausible)
+    }
+
+    @Test
+    fun vo2MaxIsSplitByTheEstimatedFlag() {
+        fun p(dayOfMonth: Int, v: Double, est: Boolean?) = DataPoint(dailyVo2Max = GhDailyVo2Max(GhDate(2026, 11, dayOfMonth), v, "GOOD", est))
+        val out = utc.dailyVo2Max(listOf(p(8, 41.0, true), p(9, 42.0, false), p(10, 43.0, null), p(11, 500.0, true)))
+        assertEquals(listOf(41.0), out.estimated.map { it.value })
+        assertEquals(listOf(42.0, 43.0), out.measured.map { it.value })
+        assertEquals(1, out.implausible)
+        assertTrue((out.measured + out.estimated).all { it.metric == MetricType.VO2_MAX })
+    }
+
+    @Test
+    fun nonRemHeartRateBecomesTheObservedSleepingHeartRate() {
+        val d = date("2026-11-10")
+        val out = utc.daily(
+            GoogleHealthDataType.DAILY_HEART_RATE_VARIABILITY,
+            listOf(DataPoint(dailyHeartRateVariability = GhDailyHeartRateVariability(nonRemHeartRateBeatsPerMinute = 54, date = d))),
+        )
+        assertEquals(listOf(MetricType.SLEEPING_HEART_RATE to 54.0), out.items.map { it.metric to it.value })
+        val bad = utc.daily(
+            GoogleHealthDataType.DAILY_HEART_RATE_VARIABILITY,
+            listOf(DataPoint(dailyHeartRateVariability = GhDailyHeartRateVariability(nonRemHeartRateBeatsPerMinute = 5, date = d))),
+        )
+        assertTrue(bad.items.isEmpty())
+        assertEquals(1, bad.implausible)
     }
 }

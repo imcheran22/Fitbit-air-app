@@ -83,3 +83,20 @@ Status: `UNVERIFIED-NEEDS-REAL-ACCOUNT` unless stated. The Room-backed tests for
 4. **Owed-replay mark in `cursorToken`.** Not visible to the user; disconnecting a source (`deleteForSource`) drops
    its mark with the row. Confirm once on a device by cancelling a first 90-day backfill (Data Sources, then kill
    the app) and checking that the days from the first windows have scores after the next sync.
+
+## Google band-only heart rate, sleep-stage HRV, estimated VO2, Health Connect night values
+
+Status: `UNVERIFIED-NEEDS-REAL-ACCOUNT`.
+
+1. **`google-wearables` returns only the Air.** Confirm on a real account that the `heart-rate` minutes no longer
+   include phone or Health Connect samples (compare a day with and without the filter in a debug build).
+2. **`heart-rate-variability` samples for an Air.** If the API returns none, `HRV_SLEEP_SAMPLES` stays empty (no value
+   is invented). Confirm cadence and that LF/HF `metadata` is present.
+3. **Meaning of `estimated` on `daily-vo2-max`** for a band without GPS. If Google marks every row estimated, the
+   VO2 max shows as ESTIMATED throughout; confirm and decide whether the label is still right.
+4. **`nonRemHeartRateBeatsPerMinute`** is stored as SLEEPING_HEART_RATE (Google provenance, outranks the derived
+   value). Confirm it is a mean over the night's non-REM sleep and not a lowest value.
+5. **Health Connect night stamp.** The 2-minute allowance after sleep end (`HealthConnectMapper.NIGHT_END_GRACE_MS`) is
+   from Pulse; confirm when the Fitbit/Google app stamps HRV, SpO2 and respiratory rate on an Air.
+6. **Health Connect read lead.** The 24 h look-back on heart-rate reads relies on the platform returning interval records
+   by start time; confirm on the owner's Android version.

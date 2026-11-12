@@ -18,7 +18,7 @@ data class SourceCandidate(
  * 3. Between two automatic sources, the finer sampling resolution wins when both are known.
  * 4. Otherwise a file archive the user imported wins for the days and metrics it covers (it is the
  *    full-resolution export of the same account). After that the source preferred for the metric's category wins: Health Connect for
- *    measurements that come from third-party devices (scales, cuffs, glucose meters, food logs),
+ *    measurements that come from third-party devices (cuffs, glucose meters, food logs),
  *    the Google Health API for everything the wearable itself records.
  * 5. Same source: the newer write wins, so re-syncing a day refreshes it.
  */
@@ -45,7 +45,8 @@ object SourceReconciler {
 
     /** The source expected to hold the best copy of [metric] when resolution does not decide. */
     fun preferredSource(metric: MetricType): DataProvenance = when (metric.category) {
-        MetricCategory.BODY, MetricCategory.EXTERNAL_HEALTH -> DataProvenance.IMPORTED_HEALTH_CONNECT
+        // BODY (weight, body fat) is read only from the Google Health API: Health Connect has no stream for it.
+        MetricCategory.EXTERNAL_HEALTH -> DataProvenance.IMPORTED_HEALTH_CONNECT
         MetricCategory.SUBJECTIVE -> DataProvenance.USER_REPORTED
         MetricCategory.SCORE, MetricCategory.TRAINING_LOAD -> DataProvenance.MATHEMATICALLY_DERIVED
         else -> DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API

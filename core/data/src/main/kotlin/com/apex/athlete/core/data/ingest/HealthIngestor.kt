@@ -410,7 +410,7 @@ object Plausibility {
         return when (metric) {
             MetricType.RESTING_HEART_RATE, MetricType.SLEEPING_HEART_RATE,
             MetricType.HEART_RATE_AVG, MetricType.HEART_RATE_MIN, MetricType.HEART_RATE_MAX -> value in 25.0..240.0
-            MetricType.HRV_RMSSD, MetricType.HRV_DEEP_SLEEP_RMSSD -> value > 0.0 && value <= 400.0
+            MetricType.HRV_RMSSD, MetricType.HRV_DEEP_SLEEP_RMSSD, MetricType.HRV_SLEEP_SAMPLES -> value > 0.0 && value <= 400.0
             MetricType.SPO2_AVG, MetricType.SPO2_LOWER_BOUND, MetricType.SPO2_UPPER_BOUND -> value in 50.0..100.0
             MetricType.RESPIRATORY_RATE -> value in 4.0..60.0
             MetricType.SKIN_TEMP_DEVIATION -> value in -10.0..10.0

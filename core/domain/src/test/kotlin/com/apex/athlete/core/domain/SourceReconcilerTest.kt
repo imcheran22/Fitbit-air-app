@@ -34,8 +34,31 @@ class SourceReconcilerTest {
     fun `third party device metrics prefer Health Connect`() {
         val api = c(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API)
         val hc = c(DataProvenance.IMPORTED_HEALTH_CONNECT)
-        assertTrue(SourceReconciler.shouldReplace(MetricType.WEIGHT, api, hc))
+        assertTrue(SourceReconciler.shouldReplace(MetricType.BLOOD_PRESSURE_SYSTOLIC, api, hc))
         assertFalse(SourceReconciler.shouldReplace(MetricType.BLOOD_PRESSURE_SYSTOLIC, hc, api))
+        assertEquals(DataProvenance.IMPORTED_HEALTH_CONNECT, SourceReconciler.preferredSource(MetricType.BLOOD_GLUCOSE))
+    }
+
+    @Test
+    fun `body metrics prefer the Google Health API because Health Connect has no weight or body fat stream`() {
+        // Health Connect never delivers WEIGHT or BODY_FAT (no stream reads them), so ranking it first pointed at a source that is never read.
+        val api = c(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API)
+        val hc = c(DataProvenance.IMPORTED_HEALTH_CONNECT)
+        for (m in listOf(MetricType.WEIGHT, MetricType.BODY_FAT)) {
+            assertEquals(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API, SourceReconciler.preferredSource(m))
+            assertTrue(SourceReconciler.shouldReplace(m, hc, api))
+            assertFalse(SourceReconciler.shouldReplace(m, api, hc))
+        }
+    }
+
+    @Test
+    fun `sleep stage HRV is its own metric, GH-preferred and kept apart from nightly RMSSD`() {
+        val m = MetricType.HRV_SLEEP_SAMPLES
+        assertEquals("hrv_sleep_samples", m.storageKey)
+        assertEquals(MetricType.HRV_SLEEP_SAMPLES, MetricType.fromStorageKey("hrv_sleep_samples"))
+        assertTrue(m != MetricType.HRV_RMSSD && m.storageKey != MetricType.HRV_RMSSD.storageKey)
+        assertEquals(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API, SourceReconciler.preferredSource(m))
+        assertFalse(m.isDerived)
     }
 
     @Test
