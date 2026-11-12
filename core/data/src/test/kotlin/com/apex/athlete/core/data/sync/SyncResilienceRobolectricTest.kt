@@ -107,8 +107,8 @@ class SyncResilienceRobolectricTest {
         val later = now + 5 * 60_000L // five minutes later: ordinary use, within the tolerance
         TriSourceSyncOrchestrator(listOf(source), Mutex(), { later }, config).sync(store)
         assertEquals(later, dao.get(SyncSource.GOOGLE_HEALTH_API, stream)!!.lastSyncedEpochMillis)
-        // Second run reads only from watermark minus overlap, never from the floor.
-        assertEquals(later - config.overlapMillis, source.pulledWindows.last().first)
+        // Second run reads only from the stored watermark (now) minus the overlap, never from the floor.
+        assertEquals(now - config.overlapMillis, source.pulledWindows.last().first)
     }
 
     // --- interrupted run owes a replay --------------------------------------------------------------
