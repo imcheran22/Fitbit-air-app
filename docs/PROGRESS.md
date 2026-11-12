@@ -18,19 +18,32 @@ The build gate is GitHub Actions (`.github/workflows/android.yml`): this cloud s
 Room schema is v3 (`takeout_file_mark`, AutoMigration 2→3); `core/database/schemas/.../3.json` is committed from the CI artifact.
 
 ## Verification state
-- CI command: `./gradlew --continue :core:domain:test :core:analytics:test testDebugUnitTest lint :app:assembleDebug :app:assembleRelease`
-  (the workflow prints a build-error summary and a test summary). Run 22 (commit 18ea6de): everything compiled, lint and
-  both APKs built, 606/615 tests passed; the 9 failures were one Robolectric class booting the real Application, fixed in ecccdd0.
-- APKs are uploaded by CI as the `apex-apks` artifact (`app/build/outputs/apk/debug/app-debug.apk`,
-  `app/build/outputs/apk/release/app-release-unsigned.apk` unless signing env vars are set; see `SETUP.md`).
-- Not done: launching the release APK on an emulator (spec section 13 item 4), screenshot tests light/dark.
+- CI run for 152fc2b: **green**: every unit and Robolectric test, lint, debug and release builds, and the
+  emulator smoke job (release APK on API 34: launch, Demo mode, all four tabs, rotation, 200 % font,
+  kill and relaunch, dark mode; screenshots in the `smoke-screens` artifact).
+- Later commits (sync resume fix) need their CI run checked.
+- APKs: CI artifact `apex-apks` (`app-debug.apk`, `app-release-unsigned.apk`); `smoke-apk` holds a copy signed with
+  a throwaway CI key for the emulator only.
+
+## Verification reviews (owner request, Opus): `docs/review/`
+- `AI_AND_SCREENS.md`: coach and Ask Apex pass (model ID, request format, no logging, preview = payload,
+  degrades offline, numbers bound). Bugs 1-8 listed there. **Fixes are half done in
+  `docs/review/wip-ai-screens-fixes.patch`** (journal day key, profile recompute, coach units/wording,
+  numeral check, payload). Apply with `git apply docs/review/wip-ai-screens-fixes.patch`, finish, test, commit.
+- `DATA_FLOW_E2E.md`: broken links 1-2 (capped runs never advanced; oldest data first) are **fixed** in the sync
+  resume commit. Items 3-14 open (live HR provenance, stored-but-unshown streams, GH heart-rate source family,
+  HC nightly readings, scope trim, VO2 max estimated label, Takeout coverage).
+- `METRICS_ALIGNMENT.md`: bugs B1-B12 open (B1 recovery renormalisation and B2 partly worn days are high),
+  plus ranked Pulse alignment gaps (stress, energy bank, etc.).
+- Pulse "cleaned" zip from the owner's Drive (42 MB) could not be fetched (private, Drive tool limit 10 MB);
+  reviews used `reference/design/pulse-mobile-main`.
 
 ## Open for the owner (details in `docs/OPEN_POINTS.md`)
 - Sleep Poor/Sufficient/Optimal bands (FORMULAS section 4 has proposals); whether manual-workout RPE feeds load.
 - Citations in `EVIDENCE.md` are unverified.
 - Everything marked `UNVERIFIED-NEEDS-REAL-BAND` / `...REAL-ACCOUNT`: run the diagnostics report on the phone and send it back.
 
-## Next three actions
-1. Get CI fully green on the latest commit and record the run number here.
-2. Add an emulator smoke job: install the release APK, start it, check it stays alive in Demo mode.
-3. README status table and the final report (spec section 16).
+## Next actions (agents paused by the weekly usage limit until Nov 17, 18:00 UTC)
+1. Apply and finish `wip-ai-screens-fixes.patch` (AI_AND_SCREENS bugs 1-8), tests first; CI green.
+2. METRICS_ALIGNMENT B1, B2, B5, B9 and DATA_FLOW 3, 6, 7, 12 (tests first, Sonnet; science items on the science-reviewer).
+3. Re-run CI including the smoke job; then the final report with APK paths.
