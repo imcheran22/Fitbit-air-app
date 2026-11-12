@@ -476,10 +476,10 @@ private fun HealthConnectSection(state: DataSourcesUiState, actions: DataSources
                     } else {
                         stringResource(R.string.datasources_hc_permissions_count, hc.grantedCount, hc.missing.size)
                     }
-                    val missingNames = if (hc.missing.isEmpty()) null else
-                        hc.missing.joinToString(", ") { stringResource(familyRes(it)) }.let {
-                            stringResource(R.string.datasources_hc_missing_label) + ": " + it
-                        }
+                    val missingLabel = stringResource(R.string.datasources_hc_missing_label)
+                    val familyNames = hc.missing.map { stringResource(familyRes(it)) }
+                    val missingNames = if (familyNames.isEmpty()) null else
+                        missingLabel + ": " + familyNames.joinToString(", ")
                     InfoRow(stringResource(R.string.datasources_hc_permissions_label), permissions, missingNames)
                     InfoRow(stringResource(R.string.datasources_hc_history_label), featureText(hc.history, R.string.datasources_hc_history_granted, R.string.datasources_hc_history_missing))
                     InfoRow(stringResource(R.string.datasources_hc_background_label), featureText(hc.background, R.string.datasources_hc_background_granted, R.string.datasources_hc_background_missing))
