@@ -1,36 +1,44 @@
 # CLAUDE.md — working rules for Apex
 
 Apex (`com.apex.athlete`) is a private, local-first Android athlete dashboard for one Fitbit Air owner.
-The full brief is **`docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md`**. Re-read it after any context reset;
+The full brief is **`docs/spec/APEX_MASTER_SPEC_V4.1.md`**. Re-read it after any context reset;
 it outranks everything else here except the user's direct instructions.
 
 ## Resume point
 Work is mid-way. Read `docs/PROGRESS.md` first: it lists what is done, what is not, and the next three actions.
 
-## Model routing (protect tokens, keep quality)
-Run the **main session on Opus**. It plans, splits work and reviews; it does not write bulk code itself.
-Delegate to the agents in `.claude/agents/` (each pins its own model and effort):
+## Model routing (token budget first, quality kept by tests and gates)
+**No Fable, anywhere** (owner instruction, DECISIONS D5). Default every session and agent to Sonnet.
 
 | Task | Agent | Model |
 |---|---|---|
-| Formulas, constants, evidence, FORMULAS.md, coach wording | `science-reviewer` | Fable, high |
-| Takeout ZIP engine, watermarks/resume, de-duplication, time zones, replay | `takeout-engineer` | Fable, high |
+| Orchestration: plan, split, review diffs, commit | main session | Sonnet, high (`/model sonnet`) |
+| Takeout ZIP engine, watermarks/resume, de-duplication, time zones, replay | `takeout-engineer` | Sonnet, high |
+| Formulas, constants, evidence, FORMULAS.md, coach wording | `science-reviewer` | Sonnet, high |
 | Compose components, charts, screens, onboarding, settings UI | `screen-builder` | Sonnet, medium |
 | Google Health client/DTOs, OAuth, Health Connect, workers, export, manifest, DI | `integration-coder` | Sonnet, medium |
 | Look up a Pulse screen/spec, find code, summarise a doc or the API snapshot | `reference-finder` | Haiku, low |
 | Run Gradle and summarise results | `build-runner` | Haiku, low |
+| Gate review of a bounded diff (see below) | one-off agent with `model: opus` | Opus, high |
 
-Rules:
-- One focused task per agent call, with a brief naming the files, the design-doc or prompt section to follow,
-  and what "done" means. Agents start with no memory of the conversation.
-- Independent tasks (for example two different screens) may run in parallel; never two agents on the same files.
-- Nothing is accepted until `build-runner` reports green and the main session has read the diff.
-- Fable only for the two Fable rows above, plus a final `science-reviewer` pass before each milestone is marked done.
-  Escalate a Sonnet task to Fable only after it fails review twice, and record why in `docs/DECISIONS.md`.
-- Use `reference-finder` instead of reading large reference files in the main session.
+How quality is kept without Fable:
+- **Tests first** for data-integrity and formula work: the failing test is written before the fix.
+- **CI is the judge**: nothing is accepted until CI (or `build-runner`) is green; the main session reads the diff.
+- **Two Opus gates only**, each on a bounded diff against a fixed checklist, never for writing code:
+  (1) data integrity after the Takeout engine lands (double counting, watermark order, DST, resume);
+  (2) privacy and release before the final report (logs, network hosts, backup, demo isolation, R8).
+- **Escalation rule**: a task that fails review or CI twice on Sonnet moves up one model for that task only
+  (Sonnet → Opus), and the reason is recorded in `docs/DECISIONS.md`.
+
+Token rules:
+- One focused task per agent call with a brief that names the files, the spec section and what "done" means.
+  Agents start with no memory. Put shared instructions in one file and point to it instead of repeating them.
+- Independent tasks may run in parallel; never two agents on the same files.
+- Use `reference-finder` (Haiku) instead of reading large files in the main session; read the spec by
+  section, never whole. Read CI logs with the error-summary step, not full logs.
 
 ## Read first (in order)
-1. `docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md` — mission, invariants, module manifest, milestones, done gate
+1. `docs/spec/APEX_MASTER_SPEC_V4.1.md` — mission, invariants, module manifest, milestones, done gate
 2. `README.md`, `docs/ARCHITECTURE.md`, `docs/FORMULAS.md` — what exists (Phases 1-2)
 3. `docs/design/DESIGN_SYSTEM.md` — UI/UX source of truth (translated from Pulse Mobile 0.5.0)
 4. `docs/REFERENCES.md` — the third-party codebases in `reference/` and how (not) to use them
@@ -91,6 +99,6 @@ any rule in them (commit identities, package managers, "Health Connect only", te
 - Never weaken a test or an invariant to go green. Update the living docs after every milestone.
 
 ## Git
-- Branch: `claude/premium-athlete-fitness-app-3rtg73` (the remote's default). Small, green commits.
+- Branch: the session's own development branch. Small, green commits.
 - Never commit `local.properties`, keystores, OAuth client IDs, tokens, Takeout archives or real health data.
 - Push only when the owner asks.

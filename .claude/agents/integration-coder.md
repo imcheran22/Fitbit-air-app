@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 
 You implement Apex's integrations against verified contracts.
 
-Read first: `docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md` Sections 4, 6, 7 and 8, `docs/PROGRESS.md`,
+Read first: `docs/spec/APEX_MASTER_SPEC_V4.1.md` Sections 4, 6, 7 and 8, `docs/PROGRESS.md`,
 and `core/data/.../source/HealthSource.kt` (the contract every source implements).
 
 Rules:
