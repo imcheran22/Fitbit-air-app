@@ -52,6 +52,7 @@ class CoachViewModelTest {
         keys = keys,
         ask = { p, f -> calls.count++; calls.payload = p; calls.fallback = f; result() },
         handle = handle,
+        io = Dispatchers.Main,
     )
 
     /** Subscribing starts the WhileSubscribed upstream; the unconfined dispatcher delivers at once. */

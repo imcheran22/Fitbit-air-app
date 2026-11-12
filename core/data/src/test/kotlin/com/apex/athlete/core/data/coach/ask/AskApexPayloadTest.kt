@@ -23,7 +23,7 @@ class AskApexPayloadTest {
         assertFalse("DROP" in m, "non-numeric fact values are refused")
         assertFalse(Regex("""\d{4}-\d{2}-\d{2}""").containsMatchIn(m))
         assertFalse(Regex("""(?i)birth|born|@|\bage\b|name|http""").containsMatchIn(m))
-        assertEquals(setOf("31", "48", "7.5", "8", "5", "0", "21"), p.allowedNumerals.minus("1").minus("2").let { it })
+        assertEquals(setOf("31", "48", "7.5", "8", "5"), p.allowedNumerals.minus("1").minus("2").let { it })
     }
 
     @Test fun previewShowsExactlyWhatIsSent() {

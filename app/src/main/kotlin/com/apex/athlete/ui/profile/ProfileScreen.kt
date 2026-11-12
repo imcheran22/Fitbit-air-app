@@ -54,7 +54,7 @@ import com.apex.athlete.ui.common.apexViewModel
 
 @Composable
 fun ProfileRoute(navigator: ApexNavigator) {
-    val vm = apexViewModel { container, handle -> ProfileViewModel(container.settings, handle) }
+    val vm = apexViewModel { container, handle -> ProfileViewModel(container.settings, handle) { container.repository.recomputeAll() } }
     val stored by vm.stored.collectAsStateWithLifecycle()
     val input by vm.input.collectAsStateWithLifecycle()
     val status by vm.status.collectAsStateWithLifecycle()

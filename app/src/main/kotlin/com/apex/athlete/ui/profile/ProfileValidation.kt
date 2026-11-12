@@ -168,3 +168,13 @@ fun maxHeartRateFromProfile(evaluation: ProfileEvaluation, currentYear: Int): Ma
     val age = currentYear - birth
     return MaxHrInUse((208 - 0.7 * age).roundToInt(), MaxHrSource.AGE_ESTIMATE)
 }
+
+/**
+ * True when the edit changes something the stored scores were computed from (age, sex, measured maximum
+ * heart rate, zone method). Height and weight alone do not feed the load or recovery calculations.
+ */
+fun profileChangeNeedsRecompute(old: UserProfile, new: UserProfile): Boolean =
+    old.birthYear != new.birthYear ||
+        old.sex != new.sex ||
+        old.maxHeartRateOverride != new.maxHeartRateOverride ||
+        old.zoneMethod != new.zoneMethod

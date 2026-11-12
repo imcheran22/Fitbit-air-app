@@ -18,4 +18,14 @@ class NumeralCheckTest {
     @Test fun listMarkersAreIgnored() {
         assertEquals(emptyList(), NumeralCheck.unverified("1. Rest\n2) Hydrate\n3. Sleep 8 h", allowed))
     }
+
+    @Test fun signIsPartOfTheNumber() {
+        val a = NumeralCheck.allowedSet("Skin temperature was +0.3 \u00B0C and \u22120.5 \u00B0C")
+        assertEquals(emptyList(), NumeralCheck.unverified("It was 0.3 and +0.3 and -0.5 and \u22120.5.", a))
+        assertEquals(listOf("-0.3", "0.5"), NumeralCheck.unverified("It was -0.3 and 0.5.", a))
+    }
+
+    @Test fun hyphenInARangeIsNotASign() {
+        assertEquals(emptyList(), NumeralCheck.unverified("Aim for 6-8 minutes", NumeralCheck.allowedSet("6 and 8")))
+    }
 }

@@ -102,6 +102,7 @@ fun SettingsRoute(navigator: ApexNavigator) {
             onAlertsChanged = { enabled -> AlertScheduler.schedule(context, enabled) },
             onBackgroundSyncChanged = { enabled -> SyncScheduler.schedulePeriodic(context, enabled) },
             onEditAiKey = null, // the screen routes key editing to Coach (see below)
+            clearAiKey = { container.aiKeyStore.clear() },
         )
     }
     val settings by vm.settings.collectAsStateWithLifecycle()

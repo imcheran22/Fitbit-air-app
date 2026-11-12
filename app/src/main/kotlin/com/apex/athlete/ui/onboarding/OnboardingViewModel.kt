@@ -29,6 +29,8 @@ class OnboardingViewModel(
     authState: Flow<AuthState>,
     private val handle: SavedStateHandle,
     private val currentYear: () -> Int = { LocalDate.now().year },
+    /** Starts the first sync once real (non-demo) setup is finished; a Health-Connect-only owner has no sign-in to trigger it. */
+    private val onFinishedReal: () -> Unit = {},
 ) : ViewModel() {
 
     val step: StateFlow<OnboardingStep> = handle.getStateFlow(KEY_STEP, OnboardingSteps.first.name)
@@ -136,6 +138,7 @@ class OnboardingViewModel(
         finishing = true
         viewModelScope.launch {
             settings.update { it.copy(onboardingDone = true) }
+            onFinishedReal()
         }
     }
 

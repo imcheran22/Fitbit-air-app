@@ -265,7 +265,13 @@ fun ApexNavHost(
                 isDemo = settings.demoMode,
                 causeName = current.cause.javaClass.simpleName,
                 onCleanStart = { scope.launch { container.stores.resetRealStore() } },
-                onLeaveDemo = { scope.launch { container.settings.update { it.copy(demoMode = false) } } },
+                onLeaveDemo = {
+                    // Same order as Settings: leave the demo store first, then throw it away.
+                    scope.launch {
+                        container.settings.update { it.copy(demoMode = false) }
+                        container.stores.discardDemo()
+                    }
+                },
             )
             else -> Unit
         }

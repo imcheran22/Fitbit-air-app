@@ -8,6 +8,7 @@ import com.apex.athlete.core.analytics.recovery.RecoveryStatus
 import com.apex.athlete.core.analytics.strain.HeartRateZone
 import com.apex.athlete.core.data.pipeline.DayAnalysis
 import com.apex.athlete.core.data.pipeline.MissingReason
+import com.apex.athlete.core.data.settings.UnitSystem
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -33,7 +34,8 @@ data class CoachBriefing(val advice: CoachAdvice, val headline: String, val line
  */
 class RuleBasedCoachEngine {
 
-    fun briefing(a: DayAnalysis): CoachBriefing {
+    /** [units] only changes how the skin-temperature difference is written, so the sentence matches the screen. */
+    fun briefing(a: DayAnalysis, units: UnitSystem = UnitSystem.METRIC): CoachBriefing {
         val lines = ArrayList<CoachLine>()
         val advice = advice(a)
 
@@ -91,7 +93,7 @@ class RuleBasedCoachEngine {
             RecoveryComponent.SKIN_TEMPERATURE -> {
                 val now = a.skinTemperature.current
                 if (now != null) {
-                    lines += line(CoachLine.Topic.DRIVER, "Skin temperature overnight was {0} °C from your baseline.", signed(now))
+                    lines += line(CoachLine.Topic.DRIVER, "Skin temperature overnight was {0} from your baseline.", signed(if (units == UnitSystem.IMPERIAL) now * FAHRENHEIT_PER_CELSIUS else now) + if (units == UnitSystem.IMPERIAL) " °F" else " °C")
                 }
             }
             else -> Unit
@@ -125,12 +127,12 @@ class RuleBasedCoachEngine {
                         line(CoachLine.Topic.STRAIN, "Strain is {0}, inside today's target of {1} to {2}.", now, low, high)
                     else -> {
                         val zone = if (advice == CoachAdvice.TRAIN_HARD) HeartRateZone.ZONE_4 else if (advice == CoachAdvice.TRAIN_MODERATE) HeartRateZone.ZONE_3 else HeartRateZone.ZONE_2
-                        val toLow = a.remaining?.let { rem ->
-                            // Minutes to the lower edge: the capacity figure is to the upper edge, so scale by load.
+                        val toTop = a.remaining?.let { rem ->
+                            // Minutes to the upper edge: the capacity figure is to the upper edge, so scale by load.
                             rem.minutesByZone[zone]?.takeIf { it.isFinite() && it > 0 }
                         }
-                        if (toLow != null && toLow <= 240) {
-                            line(CoachLine.Topic.STRAIN, "Strain is {0}. Today's target is {1} to {2}; about {3} minutes in zone {4} would reach the top of it.", now, low, high, toLow.roundToInt().toString(), zone.number.toString())
+                        if (toTop != null && toTop <= 240) {
+                            line(CoachLine.Topic.STRAIN, "Strain is {0}. Today's target is {1} to {2}; about {3} minutes in zone {4} would reach the top of it.", now, low, high, toTop.roundToInt().toString(), zone.number.toString())
                         } else {
                             line(CoachLine.Topic.STRAIN, "Strain is {0}. Today's target is {1} to {2}.", now, low, high)
                         }
@@ -145,7 +147,14 @@ class RuleBasedCoachEngine {
 
         // --- Fatigue signals ------------------------------------------------------------------
         if (a.fatigue.level == FatigueLevel.ELEVATED || a.fatigue.level == FatigueLevel.HIGH) {
-            val days = maxOf(a.hrv.consecutiveDaysOutsideNormal, a.restingHeartRate.consecutiveDaysOutsideNormal)
+            val hrvFired = FatigueSignal.HRV_SUSTAINED_SUPPRESSION in a.fatigue.signals
+            val rhrFired = FatigueSignal.RESTING_HR_SUSTAINED_ELEVATION in a.fatigue.signals
+            // The count comes from the signal(s) that fired; when both are named, only the days both held are true.
+            val days = when {
+                hrvFired && !rhrFired -> a.hrv.consecutiveDaysOutsideNormal
+                rhrFired && !hrvFired -> a.restingHeartRate.consecutiveDaysOutsideNormal
+                else -> minOf(a.hrv.consecutiveDaysOutsideNormal, a.restingHeartRate.consecutiveDaysOutsideNormal)
+            }
             val what = when {
                 FatigueSignal.HRV_SUSTAINED_SUPPRESSION in a.fatigue.signals && FatigueSignal.RESTING_HR_SUSTAINED_ELEVATION in a.fatigue.signals ->
                     "Heart rate variability and resting heart rate have both been outside your normal range"
@@ -154,9 +163,9 @@ class RuleBasedCoachEngine {
                 else -> "Heart rate variability and resting heart rate are both outside your normal range today"
             }
             lines += if (days >= 2) {
-                line(CoachLine.Topic.FATIGUE, "$what for {0} days. This often follows hard training, short sleep, alcohol or the start of an illness; an easier day is reasonable.", days.toString())
+                line(CoachLine.Topic.FATIGUE, "$what for {0} days. This often follows hard training, short sleep or alcohol; an easier day is reasonable.", days.toString())
             } else {
-                line(CoachLine.Topic.FATIGUE, "$what. This often follows hard training, short sleep, alcohol or the start of an illness; an easier day is reasonable.")
+                line(CoachLine.Topic.FATIGUE, "$what. This often follows hard training, short sleep or alcohol; an easier day is reasonable.")
             }
         }
 
@@ -190,6 +199,10 @@ class RuleBasedCoachEngine {
         var text = template
         slots.forEachIndexed { i, v -> text = text.replace("{$i}", v) }
         return CoachLine(topic, text, slots.toList())
+    }
+
+    private companion object {
+        const val FAHRENHEIT_PER_CELSIUS = 1.8
     }
 
     private fun whole(v: Double) = v.roundToInt().toString()

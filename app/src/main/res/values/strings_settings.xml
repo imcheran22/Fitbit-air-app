@@ -64,7 +64,7 @@
     <string name="settings_coach_title">AI coach</string>
     <string name="settings_coach_subtitle">Uses your own Anthropic API key. Sends the summary shown before each question.</string>
     <string name="settings_coach_key_title">Anthropic API key</string>
-    <string name="settings_coach_key_subtitle">Stored encrypted on this phone.</string>
+    <string name="settings_coach_key_subtitle">Stored encrypted on this phone. Turning the AI coach off deletes it.</string>
 
     <string name="settings_section_demo">Demo mode</string>
     <string name="settings_demo_title">Demo mode</string>

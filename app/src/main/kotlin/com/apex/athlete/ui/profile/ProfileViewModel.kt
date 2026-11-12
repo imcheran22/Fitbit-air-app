@@ -28,6 +28,8 @@ enum class ProfileSaveStatus { IDLE, SAVED, ERROR }
 class ProfileViewModel(
     private val settings: SettingsStore,
     private val handle: SavedStateHandle,
+    /** Recomputes the stored history (the repository does this off the main thread, under the write mutex). */
+    private val recompute: suspend () -> Unit = {},
 ) : ViewModel() {
 
     val stored: StateFlow<StoredProfile?> = combine(
@@ -66,6 +68,10 @@ class ProfileViewModel(
         viewModelScope.launch {
             statusState.value = try {
                 settings.updateProfile(profile)
+                if (profileChangeNeedsRecompute(s.profile, profile)) {
+                    // The profile is saved either way; a failed recompute is retried by the next full recompute.
+                    try { recompute() } catch (e: CancellationException) { throw e } catch (e: Exception) { /* kept stale until next recompute */ }
+                }
                 ProfileSaveStatus.SAVED
             } catch (e: CancellationException) {
                 throw e

@@ -73,19 +73,24 @@ class AskApexPayload private constructor(
             model: String = DEFAULT_MODEL,
         ): AskApexPayload {
             val q = question.trim().replace(Regex("""\s+"""), " ").take(MAX_QUESTION_CHARS)
-            val message = buildString {
+            fun render(withUnits: Boolean) = buildString {
                 appendLine("Question: ${q.ifEmpty { "Explain today's briefing." }}")
                 appendLine()
                 appendLine("Computed readings (these are all the numbers you may use):")
                 val valid = facts.filter { plainNumber.matches(it.value) }
                 if (valid.isEmpty()) appendLine("- none available")
-                valid.distinctBy { it.kind }.forEach { appendLine("- ${it.kind.label}: ${it.value} ${it.kind.unit}") }
+                valid.distinctBy { it.kind }.forEach {
+                    appendLine("- ${it.kind.label}: ${it.value}" + if (withUnits) " ${it.kind.unit}" else "")
+                }
                 appendLine()
                 appendLine("The app's own briefing for today:")
                 appendLine(briefing.headline)
                 briefing.lines.forEach { appendLine("- ${it.text}") }
             }.trimEnd()
-            return AskApexPayload(model.trim().ifEmpty { DEFAULT_MODEL }, SYSTEM_PROMPT, message, NumeralCheck.allowedSet(message))
+            val message = render(withUnits = true)
+            // Unit labels such as "0-21" describe a scale; they are not computed readings and must not widen the allow-list.
+            val allowed = NumeralCheck.allowedSet(render(withUnits = false))
+            return AskApexPayload(model.trim().ifEmpty { DEFAULT_MODEL }, SYSTEM_PROMPT, message, allowed)
         }
     }
 }

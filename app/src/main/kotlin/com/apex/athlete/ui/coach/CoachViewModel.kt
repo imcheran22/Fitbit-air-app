@@ -1,5 +1,8 @@
 package com.apex.athlete.ui.coach
 
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -43,6 +46,8 @@ class CoachViewModel(
     private val keys: AiKeyStore,
     private val ask: AskFunction,
     private val handle: SavedStateHandle,
+    /** Keystore work (decrypting the key) runs here, never on the main thread. */
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     /** Null until the repository has answered: render Loading. */
@@ -52,8 +57,12 @@ class CoachViewModel(
     val aiEnabled: StateFlow<Boolean> = settingsAiEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
-    private val _keySaved = MutableStateFlow(keys.has())
+    private val _keySaved = MutableStateFlow(false)
     val keySaved: StateFlow<Boolean> = _keySaved.asStateFlow()
+
+    init {
+        viewModelScope.launch { _keySaved.value = withContext(io) { keys.has() } }
+    }
 
     private val _question = MutableStateFlow(handle.get<String>(KEY_QUESTION).orEmpty())
     val question: StateFlow<String> = _question.asStateFlow()
@@ -77,13 +86,17 @@ class CoachViewModel(
             _keyError.value = true
             return
         }
-        keys.set(key)
         _keyError.value = false
-        _keySaved.value = keys.has()
+        viewModelScope.launch {
+            _keySaved.value = withContext(io) {
+                keys.set(key)
+                keys.has()
+            }
+        }
     }
 
     fun removeKey() {
-        keys.clear()
+        viewModelScope.launch { withContext(io) { keys.clear() } }
         _keySaved.value = false
         _keyError.value = false
         clearAnswer()

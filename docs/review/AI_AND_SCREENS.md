@@ -107,3 +107,13 @@ are out of scope and are not counted as gaps.
 
 Cheapest high-value UI work: one 14-day bar chart component, reused on Recovery, Sleep and Strain, fed by the three
 unused history lists (S each); steps on Overview and Strain (S); trend links for the five unreachable metrics (S).
+
+## Fixed (2026-11-13)
+1. Journal: the loaded check-in is keyed by its day; a stale or equal value can no longer enable a Save that deletes (`JournalViewModelTest`).
+2. Profile: a change to age, sex, measured max HR or zone method recomputes stored history (`profileChangeNeedsRecompute`, `ProfileValidationTest`).
+3. Live heart rate carries the minute row's provenance (`HeartRateTick.provenance`).
+4. Fatigue sentence counts days from the signal(s) that fired.
+5. Briefing writes the skin-temperature difference in the owner's units (°F for imperial; `DemoPipelineTest`).
+6. Turning the AI coach off deletes the stored key; Settings copy says so.
+7. (a) "illness" wording removed; (b) Health and heart-rate-day screens show loading on day change, never the old day's numbers; (c) saves report failure when the store is not ready; (d) "Leave demo" on the store-failed screen discards the demo store; (e) Coach follows the calendar day; (f) Keystore work runs off the main thread; (g) the number check is sign-aware and unit labels do not widen the allow-list (`NumeralCheckTest`, `AskApexPayloadTest`).
+8. Finishing onboarding (not Demo) starts the first sync, so a Health-Connect-only owner gets data at once.

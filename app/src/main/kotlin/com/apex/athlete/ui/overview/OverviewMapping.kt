@@ -138,7 +138,7 @@ fun buildOverviewUi(dashboard: DailyDashboardState?, day: LocalDate, formatter: 
     val hrState = if (tick?.bpm == null) {
         MetricState.Unavailable(MetricReason.NO_DATA)
     } else {
-        mapper.value(tick.bpm, 0, "bpm", a.provenance[MetricType.HEART_RATE_AVG], tick.epochMillis)
+        mapper.value(tick.bpm, 0, "bpm", tick.provenance, tick.epochMillis)
     }
     val points = d.recentHeartRate.map { ChartPoint(it.epochMillis, it.bpm) }
     val target = a.strainTarget

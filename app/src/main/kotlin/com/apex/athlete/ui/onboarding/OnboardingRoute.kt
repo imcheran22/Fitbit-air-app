@@ -58,6 +58,7 @@ import com.apex.athlete.navigation.ApexNavigator
 import com.apex.athlete.ui.common.LocalAppContainer
 import com.apex.athlete.ui.common.apexViewModel
 import java.time.LocalDate
+import com.apex.athlete.core.data.worker.SyncScheduler
 
 /**
  * First-run setup. Owns its steps (see [OnboardingSteps]); the host leaves this route by itself
@@ -67,12 +68,14 @@ import java.time.LocalDate
 @Composable
 fun OnboardingRoute(navigator: ApexNavigator) {
     val container = LocalAppContainer.current
+    val appContext = LocalContext.current.applicationContext
     val vm = apexViewModel { c, handle ->
         OnboardingViewModel(
             settings = c.settings,
             readHealthConnect = { c.healthConnectAvailability.status() },
             authState = c.auth.authState,
             handle = handle,
+            onFinishedReal = { SyncScheduler.syncNow(appContext) },
         )
     }
     val step by vm.step.collectAsStateWithLifecycle()

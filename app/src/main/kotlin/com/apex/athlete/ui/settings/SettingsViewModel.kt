@@ -12,6 +12,7 @@ import com.apex.athlete.di.SignInUiState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
@@ -26,6 +27,8 @@ class SettingsViewModel(
     private val onAlertsChanged: (Boolean) -> Unit,
     private val onBackgroundSyncChanged: (Boolean) -> Unit,
     val onEditAiKey: (() -> Unit)? = null,
+    /** Forgets the stored AI key; called when the AI coach is switched off (the key store documents this). */
+    private val clearAiKey: () -> Unit = {},
 ) : ViewModel() {
 
     /** Null until the first read from the store: render nothing editable meanwhile. */
@@ -67,7 +70,11 @@ class SettingsViewModel(
         auth.dismiss()
     }
 
-    fun setAiCoachEnabled(on: Boolean) = edit { it.copy(aiCoachEnabled = on) }
+    fun setAiCoachEnabled(on: Boolean) {
+        edit { it.copy(aiCoachEnabled = on) }
+        // Off means off: the key is forgotten too, so nothing can be sent until the owner enters it again.
+        if (!on) viewModelScope.launch(Dispatchers.IO) { runCatching { clearAiKey() } }
+    }
 
     /**
      * Leaves Demo mode. The setting flips first so the app moves off the demo store, then the demo

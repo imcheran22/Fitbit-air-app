@@ -113,7 +113,7 @@ class MetricStateMapper(private val formatter: ApexFormatter) {
     fun heartRate(tick: HeartRateTick?): MetricState {
         val bpm = tick?.bpm
         if (tick == null || bpm == null) return MetricState.Unavailable(MetricReason.NO_DATA)
-        return value(bpm, 0, "bpm", null, tick.epochMillis)
+        return value(bpm, 0, "bpm", tick.provenance, tick.epochMillis)
     }
 
     /** VO2 max when the analysis has one; unavailable otherwise (never estimated here). */

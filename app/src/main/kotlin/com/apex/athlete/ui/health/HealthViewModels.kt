@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -32,11 +34,11 @@ class HealthViewModel(repository: AthleteRepository, initialDay: Long) : ViewMod
 
     /** Null means "not loaded yet": the screen shows skeletons. */
     val dashboard: StateFlow<DailyDashboardState?> = day
-        .flatMapLatest { repository.dashboard(it) }
+        .flatMapLatest { d -> flow<DailyDashboardState?> { emit(null); emitAll(repository.dashboard(d)) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     val trends: StateFlow<TrendIntelligenceState?> = day
-        .flatMapLatest { repository.trends(it, SPARKLINE_DAYS) }
+        .flatMapLatest { d -> flow<TrendIntelligenceState?> { emit(null); emitAll(repository.trends(d, SPARKLINE_DAYS)) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 }
 
@@ -97,6 +99,6 @@ class HeartRateDayViewModel(repository: AthleteRepository, initialDay: Long) : V
 
     /** Null means "not loaded yet". */
     val state: StateFlow<StrainLoadState?> = day
-        .flatMapLatest { repository.strainLoad(it) }
+        .flatMapLatest { d -> flow<StrainLoadState?> { emit(null); emitAll(repository.strainLoad(d)) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 }

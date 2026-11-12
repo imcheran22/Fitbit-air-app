@@ -6,27 +6,47 @@ import androidx.lifecycle.viewModelScope
 import com.apex.athlete.core.data.repository.AthleteRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/** A loaded check-in tagged with its day, so two days with equal ratings still produce two distinct states. */
+internal data class DayCheckIn(val day: Long, val checkIn: StoredCheckIn)
+
 @OptIn(ExperimentalCoroutinesApi::class)
-class JournalViewModel(
-    private val repository: AthleteRepository,
+class JournalViewModel internal constructor(
+    initialDay: Long,
+    private val load: (Long) -> Flow<StoredCheckIn?>,
+    private val persist: suspend (Long, Int?, Int?) -> Unit,
     private val handle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val dayFlow = MutableStateFlow(handle.get<Long>(KEY_DAY) ?: repository.today())
+    constructor(repository: AthleteRepository, handle: SavedStateHandle) : this(
+        initialDay = handle.get<Long>(KEY_DAY) ?: repository.today(),
+        load = { day -> repository.dashboard(day).map { s -> s?.analysis?.let { StoredCheckIn(it.subjectiveFatigue, it.subjectiveSoreness) } } },
+        persist = { day, f, s -> repository.saveCheckIn(day, f, s) },
+        handle = handle,
+    )
 
-    /** The stored check-in for the selected day; null while the repository has not answered. */
-    val stored: StateFlow<StoredCheckIn?> = dayFlow
-        .flatMapLatest { repository.dashboard(it) }
-        .map { state -> state?.analysis?.let { StoredCheckIn(it.subjectiveFatigue, it.subjectiveSoreness) } }
+    private val dayFlow = MutableStateFlow(handle.get<Long>(KEY_DAY) ?: initialDay)
+
+    /** Loaded check-in keyed by its day; null while the repository has not answered for the current day. */
+    private val keyed: StateFlow<DayCheckIn?> = dayFlow
+        .flatMapLatest { day -> load(day).map { c -> c?.let { DayCheckIn(day, it) } } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * The stored check-in for the selected day; null while it is loading. It is null right after a day change
+     * (never the previous day's value), so a stale value cannot enable a Save of the wrong day.
+     */
+    val stored: StateFlow<StoredCheckIn?> = combine(keyed, dayFlow) { k, day -> k?.takeIf { it.day == day }?.checkIn }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val draftState = MutableStateFlow(
@@ -44,8 +64,11 @@ class JournalViewModel(
     init {
         // Seed the draft from the stored check-in until the person changes something.
         viewModelScope.launch {
-            stored.collect { s ->
-                if (s != null && !touched) setDraft(CheckInDraft(s.fatigue ?: 0, s.soreness ?: 0), mark = false)
+            // Collect the day-keyed state, not `stored`: equal ratings on two days must still re-seed the draft.
+            keyed.collect { k ->
+                if (k != null && k.day == dayFlow.value && !touched) {
+                    setDraft(CheckInDraft(k.checkIn.fatigue ?: 0, k.checkIn.soreness ?: 0), mark = false)
+                }
             }
         }
     }
@@ -71,12 +94,12 @@ class JournalViewModel(
 
     fun save() {
         val d = draftState.value.toStored()
-        if (!canSave(draftState.value, stored.value) || _status.value == SaveStatus.SAVING) return
+        if (!canSave(draftState.value, currentStored()) || _status.value == SaveStatus.SAVING) return
         _status.value = SaveStatus.SAVING
         val day = dayFlow.value
         viewModelScope.launch {
             _status.value = try {
-                repository.saveCheckIn(day, d.fatigue, d.soreness)
+                persist(day, d.fatigue, d.soreness)
                 touched = false
                 SaveStatus.SAVED
             } catch (e: CancellationException) {
@@ -86,6 +109,8 @@ class JournalViewModel(
             }
         }
     }
+
+    private fun currentStored(): StoredCheckIn? = keyed.value?.takeIf { it.day == dayFlow.value }?.checkIn
 
     private fun setDraft(d: CheckInDraft, mark: Boolean) {
         handle[KEY_DRAFT_F] = d.fatigue

@@ -1,6 +1,7 @@
 package com.apex.athlete.ui.profile
 
 import com.apex.athlete.core.analytics.strain.Sex
+import com.apex.athlete.core.analytics.strain.ZoneMethod
 import com.apex.athlete.core.data.settings.UnitSystem
 import com.apex.athlete.core.data.settings.UserProfile
 import org.junit.Test
@@ -118,5 +119,15 @@ class ProfileValidationTest {
         assertEquals("180", heightText(180.0, UnitSystem.METRIC))
         assertEquals("70", heightText(177.8, UnitSystem.IMPERIAL))
         assertEquals("", weightText(null, UnitSystem.METRIC))
+    }
+
+    @Test
+    fun onlyScoreInputsTriggerARecompute() {
+        val base = UserProfile(birthYear = 1990, heightCm = 178.0, weightKg = 70.0)
+        assertTrue(profileChangeNeedsRecompute(base, base.copy(birthYear = 1991)))
+        assertTrue(profileChangeNeedsRecompute(base, base.copy(sex = Sex.FEMALE)))
+        assertTrue(profileChangeNeedsRecompute(base, base.copy(maxHeartRateOverride = 190)))
+        assertTrue(profileChangeNeedsRecompute(base, base.copy(zoneMethod = ZoneMethod.entries.last())))
+        assertEquals(false, profileChangeNeedsRecompute(base, base.copy(heightCm = 180.0, weightKg = 72.0)))
     }
 }

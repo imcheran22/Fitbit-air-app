@@ -56,14 +56,30 @@ import com.apex.athlete.core.ui.theme.ThemePreference
 import com.apex.athlete.navigation.ApexNavigator
 import com.apex.athlete.ui.common.apexViewModel
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 
+/** Emits today's epoch day now and again whenever it changes (checked once a minute). */
+internal fun currentDay(today: () -> Long): Flow<Long> = flow {
+    while (true) {
+        emit(today())
+        delay(60_000L)
+    }
+}.distinctUntilChanged()
+
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun CoachRoute(navigator: ApexNavigator) {
     val vm = apexViewModel { container, handle ->
         val repository = container.repository
         val client = container.askApexClient
         CoachViewModel(
-            context = repository.dashboard(repository.today()).map { s ->
+            // Follows the calendar: a screen left open past midnight moves on to the new day.
+            context = currentDay(repository::today).flatMapLatest { repository.dashboard(it) }.map { s ->
                 s?.let { CoachContext(it.briefing, it.analysis.toAskFacts()) }
             },
             settingsAiEnabled = container.settings.settings.map { it.aiCoachEnabled },

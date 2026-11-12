@@ -44,7 +44,7 @@ import java.util.UUID
 data class TrendPoint(val epochDay: Long, val value: Double?)
 
 /** One point of a heart-rate line; a null [bpm] breaks the line. */
-data class HeartRateTick(val epochMillis: Long, val bpm: Double?)
+data class HeartRateTick(val epochMillis: Long, val bpm: Double?, val provenance: DataProvenance? = null)
 
 data class MonitorItem(val metric: MetricType, val intelligence: MetricIntelligence, val provenance: DataProvenance?)
 
@@ -145,14 +145,14 @@ class AthleteRepository(
             val rows = hrDao.range(from, last.timestampEpochMillis + MINUTE_MS).associateBy { it.timestampEpochMillis }
             (0 until 30).map { i ->
                 val t = from + i * MINUTE_MS
-                HeartRateTick(t, rows[t]?.avgBpm)
+                HeartRateTick(t, rows[t]?.avgBpm, rows[t]?.provenance)
             }
         }.orEmpty()
         val newest = listOfNotNull(hrDao.latestTimestamp(), store.db.sleepDao().allSessions().maxOfOrNull { it.endEpochMillis }).maxOrNull()
         DailyDashboardState(
             analysis = a,
             isDemo = store.isDemo,
-            briefing = coach.briefing(a),
+            briefing = coach.briefing(a, settings.currentSettings().units),
             monitor = listOf(
                 MonitorItem(MetricType.HRV_RMSSD, a.hrv, a.provenance[MetricType.HRV_RMSSD]),
                 MonitorItem(a.restingHeartRateMetric, a.restingHeartRate, a.provenance[a.restingHeartRateMetric]),
@@ -160,7 +160,7 @@ class AthleteRepository(
                 MonitorItem(MetricType.SPO2_AVG, a.spo2, a.provenance[MetricType.SPO2_AVG]),
                 MonitorItem(MetricType.SKIN_TEMP_DEVIATION, a.skinTemperature, a.provenance[MetricType.SKIN_TEMP_DEVIATION]),
             ),
-            latestHeartRate = lastRow?.let { HeartRateTick(it.timestampEpochMillis, it.avgBpm) },
+            latestHeartRate = lastRow?.let { HeartRateTick(it.timestampEpochMillis, it.avgBpm, it.provenance) },
             recentHeartRate = recent,
             newestDataMillis = newest,
             lastSyncMillis = if (store.isDemo) null else settings.currentSettings().lastSyncMillis,
@@ -312,8 +312,10 @@ class AthleteRepository(
         store.pipeline.replay(from, store.pipeline.today(), onProgress)
     }
 
+    /** Runs [block] under the write mutex; throws when no store is ready so callers never report a false save. */
     private suspend fun write(block: suspend (ActiveStore) -> Unit) = withContext(io) {
-        val store = (stores.status.value as? StoreStatus.Ready)?.store ?: return@withContext
+        val store = (stores.status.value as? StoreStatus.Ready)?.store
+            ?: throw IllegalStateException("The data store is not ready")
         stores.writeMutex.withLock { block(store) }
         stores.notifyChanged()
     }

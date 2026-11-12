@@ -175,6 +175,22 @@ class DemoPipelineTest {
     }
 
     @Test
+    fun imperialBriefingWritesFahrenheitAndNoLineNamesAnIllness(): Unit = runBlocking {
+        val coach = RuleBasedCoachEngine()
+        val today = pipeline.today()
+        for (day in (today - days + 1)..today) {
+            val a = pipeline.analyze(day, persist = false)
+            val imperial = coach.briefing(a, com.apex.athlete.core.data.settings.UnitSystem.IMPERIAL)
+            val metric = coach.briefing(a, com.apex.athlete.core.data.settings.UnitSystem.METRIC)
+            for (line in imperial.lines) {
+                assertTrue("°C" !in line.text, "imperial briefing shows Celsius: \"${line.text}\"")
+                assertTrue("illness" !in line.text.lowercase(), "diagnostic wording: \"${line.text}\"")
+            }
+            for (line in metric.lines) assertTrue("°F" !in line.text, "metric briefing shows Fahrenheit: \"${line.text}\"")
+        }
+    }
+
+    @Test
     fun replayIsDeterministic(): Unit = runBlocking {
         val dao = db.dailyBiometricSummaryDao()
         val before = dao.all().filter { it.provenance == DataProvenance.MATHEMATICALLY_DERIVED }.map { Triple(it.metricType, it.epochDay, it.value) }
