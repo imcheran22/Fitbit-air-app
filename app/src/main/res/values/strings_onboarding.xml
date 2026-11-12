@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Frame -->
+    <string name="onboarding_step_of">Step %1$d of %2$d</string>
+    <string name="onboarding_step_of_spoken">Step %1$d of %2$d: %3$s</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_skip">Skip for now</string>
+    <string name="onboarding_back">Back</string>
+    <string name="onboarding_finish">Open Apex</string>
+    <string name="onboarding_sources_needed">Connect or choose at least one source to continue.</string>
+
+    <!-- Welcome -->
+    <string name="onboarding_welcome_title">Your training, read from your own data</string>
+    <string name="onboarding_welcome_body">Apex turns the readings from your Fitbit Air into recovery, strain and sleep scores, and shows where every number came from.</string>
+    <string name="onboarding_welcome_private_title">Private and local-first</string>
+    <string name="onboarding_welcome_private_body">Your data is stored encrypted on this phone. Apex only reads from Google, Fitbit and Health Connect, never writes, and has no analytics or ads.</string>
+    <string name="onboarding_welcome_setup">Set up with my data</string>
+    <string name="onboarding_welcome_demo">Explore with demo data</string>
+    <string name="onboarding_welcome_demo_note">Demo data is synthetic and kept in a separate store. Your real data is never mixed in.</string>
+    <string name="onboarding_welcome_companion">Apex reads what the Fitbit app on this phone has already synced from your band. Open that app first if it has not synced recently.</string>
+
+    <!-- Profile -->
+    <string name="onboarding_profile_title">A few basics</string>
+    <string name="onboarding_profile_body">These set your estimated maximum heart rate and the heart rate zones behind strain. Everything is optional, and anything you leave blank stays blank.</string>
+    <string name="onboarding_profile_birth_year">Birth year</string>
+    <string name="onboarding_profile_birth_year_hint">For example 1990</string>
+    <string name="onboarding_profile_sex">Sex</string>
+    <string name="onboarding_profile_sex_male">Male</string>
+    <string name="onboarding_profile_sex_female">Female</string>
+    <string name="onboarding_profile_sex_unspecified">Prefer not to say</string>
+    <string name="onboarding_profile_height">Height (cm)</string>
+    <string name="onboarding_profile_weight">Weight (kg)</string>
+    <string name="onboarding_profile_max_hr">Measured maximum heart rate (bpm)</string>
+    <string name="onboarding_profile_max_hr_hint">Only if you have tested it. Otherwise Apex estimates it from your age, and labels it as an estimate.</string>
+    <string name="onboarding_profile_zone_method">Heart rate zones</string>
+    <string name="onboarding_profile_zone_percent">Percent of maximum</string>
+    <string name="onboarding_profile_zone_reserve">Heart rate reserve</string>
+    <string name="onboarding_profile_zone_reserve_note">Heart rate reserve needs a resting heart rate, which Apex takes from your band readings.</string>
+    <string name="onboarding_profile_error_birth_year">Enter a year between %1$d and %2$d.</string>
+    <string name="onboarding_profile_error_height">Enter a height between %1$d and %2$d cm.</string>
+    <string name="onboarding_profile_error_weight">Enter a weight between %1$d and %2$d kg.</string>
+    <string name="onboarding_profile_error_max_hr">Enter a number between %1$d and %2$d.</string>
+    <string name="onboarding_profile_provenance">Saved on this phone as reported by you.</string>
+
+    <!-- Sources -->
+    <string name="onboarding_sources_title">Connect your data</string>
+    <string name="onboarding_sources_body">Choose at least one way for readings to reach Apex. You can add the others later in Data sources.</string>
+    <string name="onboarding_source_status_connected">Connected</string>
+    <string name="onboarding_source_status_not_connected">Not connected</string>
+    <string name="onboarding_source_status_chosen">Chosen</string>
+
+    <string name="onboarding_google_title">Google Health</string>
+    <string name="onboarding_google_body">Sign in with Google to read your Fitbit Air history and new readings. Read-only access.</string>
+    <string name="onboarding_google_signin">Sign in with Google</string>
+    <string name="onboarding_google_not_configured">Google sign-in needs an OAuth client ID that is not set up in this build. See docs/SETUP.md for the steps, or use Health Connect or a Takeout archive instead.</string>
+    <string name="onboarding_google_waiting">Finish signing in in your browser, then come back to Apex.</string>
+    <string name="onboarding_google_completing">Finishing sign-in</string>
+    <string name="onboarding_google_done">Signed in with Google.</string>
+    <string name="onboarding_google_done_missing">Signed in, but some access was not granted, so some readings will be missing. You can sign in again to allow them.</string>
+    <string name="onboarding_google_connected">Signed in. Readings sync from Google Health.</string>
+    <string name="onboarding_google_mismatch">The client ID you entered in Settings needs the redirect scheme %2$s, but this build uses %1$s. Add the ID to local.properties and rebuild (docs/SETUP.md).</string>
+    <string name="onboarding_google_no_browser">No browser was found to open the Google sign-in page. Install or enable one and try again.</string>
+    <string name="onboarding_google_denied">Sign-in was cancelled or refused. Nothing was saved.</string>
+    <string name="onboarding_google_failed_network">Sign-in could not reach Google. Check your connection and try again.</string>
+    <string name="onboarding_google_failed_other">Sign-in did not complete. Try again.</string>
+    <string name="onboarding_google_unexpected">Something unexpected stopped sign-in. Try again.</string>
+    <string name="onboarding_google_dismiss">Dismiss</string>
+
+    <string name="onboarding_hc_title">Health Connect</string>
+    <string name="onboarding_hc_body">Read what the Fitbit app has written to Health Connect on this phone. Apex asks for read permissions only.</string>
+    <string name="onboarding_hc_unavailable">Health Connect is not installed on this phone.</string>
+    <string name="onboarding_hc_update">Health Connect needs an update before Apex can read from it.</string>
+    <string name="onboarding_hc_install">Open Play Store</string>
+    <string name="onboarding_hc_allow">Allow reading</string>
+    <string name="onboarding_hc_allow_more">Allow remaining permissions</string>
+    <string name="onboarding_hc_checking">Checking Health Connect</string>
+    <string name="onboarding_hc_none_granted">No readings are allowed yet. Apex cannot read from Health Connect until you allow at least one.</string>
+    <string name="onboarding_hc_granted_heading">Allowed</string>
+    <string name="onboarding_hc_missing_heading">Not allowed</string>
+    <string name="onboarding_hc_history_on">Older history: allowed</string>
+    <string name="onboarding_hc_history_off">Older history: not allowed, so only about the last 30 days can be read</string>
+    <string name="onboarding_hc_history_unavailable">Older history: not offered by this version of Health Connect</string>
+    <string name="onboarding_hc_background_on">Background reading: allowed</string>
+    <string name="onboarding_hc_background_off">Background reading: not allowed, so Apex updates only while it is open</string>
+    <string name="onboarding_hc_background_unavailable">Background reading: not offered by this version of Health Connect</string>
+    <string name="onboarding_hc_provenance">Source: Health Connect, read only</string>
+    <string name="onboarding_hc_play_store_missing">The Play Store could not be opened.</string>
+
+    <string name="onboarding_takeout_title">Google Takeout archive</string>
+    <string name="onboarding_takeout_body">Import a Fitbit export from Google Takeout to bring in your older history. You can do this any time from More, then Import a Takeout archive. Choosing it here counts as a source for now.</string>
+    <string name="onboarding_takeout_choose">I will import an archive</string>
+    <string name="onboarding_takeout_chosen">Planned. Open More after setup to import the archive.</string>
+    <string name="onboarding_takeout_undo">Undo</string>
+
+    <string name="onboarding_perm_heart_rate">Heart rate</string>
+    <string name="onboarding_perm_resting_heart_rate">Resting heart rate</string>
+    <string name="onboarding_perm_hrv">Heart rate variability</string>
+    <string name="onboarding_perm_sleep">Sleep</string>
+    <string name="onboarding_perm_oxygen">Blood oxygen</string>
+    <string name="onboarding_perm_respiratory">Breathing rate</string>
+    <string name="onboarding_perm_skin_temperature">Skin temperature</string>
+    <string name="onboarding_perm_steps">Steps</string>
+    <string name="onboarding_perm_exercise">Exercise sessions</string>
+    <string name="onboarding_perm_calories">Calories burned</string>
+    <string name="onboarding_perm_vo2_max">VO2 max</string>
+    <string name="onboarding_perm_floors">Floors climbed</string>
+    <string name="onboarding_perm_distance">Distance</string>
+
+    <!-- Notifications -->
+    <string name="onboarding_notifications_title">Alerts</string>
+    <string name="onboarding_notifications_body">Apex can tell you when your data goes stale, or when your recovery or fatigue signals change. Alerts describe what the data shows and never give medical advice. You choose which ones in Settings.</string>
+    <string name="onboarding_notifications_enable">Turn on alerts</string>
+    <string name="onboarding_notifications_on">Alerts are on.</string>
+    <string name="onboarding_notifications_denied">Android did not allow notifications. You can allow them later in system settings.</string>
+
+    <!-- Calibration -->
+    <string name="onboarding_calibration_title">Scores need a few days to calibrate</string>
+    <string name="onboarding_calibration_body">Apex compares you with your own normal, not with a population. Until it has enough of your readings, a score shows as calibrating or unavailable rather than a guess.</string>
+    <string name="onboarding_calibration_baseline">Recovery: after %1$d days of readings within the last %2$d days</string>
+    <string name="onboarding_calibration_sleep">Sleep need: personal base after %1$d nights</string>
+    <string name="onboarding_calibration_workload">Workload ratio: after %1$d days of history</string>
+    <string name="onboarding_calibration_provenance">Lengths come from the same rules Apex scores with. A Takeout archive or a history permission can shorten the wait.</string>
+    <string name="onboarding_calibration_missing">Missing data is shown as two dashes, never as zero.</string>
+</resources>
