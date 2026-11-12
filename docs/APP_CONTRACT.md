@@ -90,10 +90,17 @@ fun RecoveryRoute(navigator: ApexNavigator, day: LocalDate, onDayChange: (LocalD
 | `formatter: Flow<ApexFormatter>` | Same formatter as `LocalFormatter`, for ViewModels that must format. |
 | `tokenStore`, `appScope`, `healthConnectSource` | Rarely needed by screens. |
 
-Not in the container yet (the main session wires them later; do not invent stand-ins): data export / import / delete-all
-(`ExportDeleteRoute` reads `core.data.export` types only after wiring), the Takeout importer start, the coach "Ask Apex" key store,
-and alert settings beyond `AppSettings` fields. Build those screens against the `AppSettings` fields and leave the action callbacks as
-constructor parameters of the ViewModel that the wiring step fills; report what you need.
+Added by the main session after the data-layer work landed:
+
+| Member | Use |
+|---|---|
+| `dataExporter(): DataExporter` | `suspend exportJson(out: OutputStream)`, `suspend exportCsvZip(out)` → `ExportReport(counts, format)`; does not close the stream; throws `DemoStoreRefusedException` in Demo mode. Write through `ActivityResultContracts.CreateDocument`. |
+| `dataImporter(): DataImporter` | `suspend import(input: InputStream, onProgress)` → `ImportReport(status: COMPLETED/PARTIAL/NOT_AN_EXPORT/NEWER_VERSION, quarantined, ingested, replayedDays, declaredCounts, ...)`. Read through `OpenDocument`. |
+| `dataDeletion(): DataDeletion` | `suspend deleteEverything(): DeletionReport` (every step runs; the report lists failed steps by type). Afterwards set nothing: settings are cleared, so `onboardingDone` is false and the host returns to Onboarding. |
+| `aiKeyStore: AiKeyStore` | `has()`, `set(key)`, `clear()`. Never display the key back; show only "saved". |
+| `askApexClient: AskApexClient` | `suspend ask(payload, fallbackBriefing)` → `Answer` / `Refused` / `Unavailable(reason, message, fallback)`. Build the payload with `AskApexPayload.build(question, briefing, dayAnalysis.toAskFacts(), model)`; show `payload.preview` before sending. Answers are `AI_INTERPRETED`; show `unverifiedNumerals` as a warning chip. |
+
+Not in the container yet: the Takeout importer start (added when the Takeout engine lands).
 
 `AppSettings` fields: `onboardingDone, demoMode, theme (ThemeChoice), units (UnitSystem), clock24h, notificationsEnabled, notifyRecovery,
 notifyFatigue, notifyStale, quietStartMinute, quietEndMinute, backgroundSync, aiCoachEnabled, takeoutNudgeDays, lastTakeoutImportMillis,

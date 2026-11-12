@@ -4,6 +4,17 @@ import android.app.Application
 import com.apex.athlete.BuildConfig
 import com.apex.athlete.core.data.DataGraph
 import com.apex.athlete.core.data.alerts.AlertScheduler
+import com.apex.athlete.core.data.alerts.AlertLedgerStore
+import com.apex.athlete.core.data.coach.ask.AiKeyStore
+import com.apex.athlete.core.data.coach.ask.AskApexClient
+import com.apex.athlete.core.data.coach.ask.EncryptedAiKeyStore
+import com.apex.athlete.core.data.export.DataDeletion
+import com.apex.athlete.core.data.export.DataExporter
+import com.apex.athlete.core.data.export.DataImporter
+import com.apex.athlete.core.data.export.cancelAllWorkManagerWork
+import com.apex.athlete.core.data.export.dataExporter
+import com.apex.athlete.core.data.export.dataImporter
+import com.apex.athlete.core.data.healthconnect.DataStoreChangeTokenStore
 import com.apex.athlete.core.data.healthconnect.HealthConnectAvailability
 import com.apex.athlete.core.data.healthconnect.SdkHealthConnectDataSource
 import com.apex.athlete.core.data.repository.AthleteRepository
@@ -35,8 +46,8 @@ import java.time.ZoneId
  * Shared by screens (through `LocalAppContainer`) and by WorkManager workers (through
  * `Context.dataGraph()`, since [DataGraph] is implemented here).
  *
- * Deliberately absent for now: data export and "delete all my data". Their collaborators are wired
- * in once those components exist.
+ * Export, import and "delete all my data" are factories ([dataExporter], [dataImporter],
+ * [dataDeletion]) because the stores they act on change with Demo mode and resets.
  */
 class AppContainer(private val app: Application) : DataGraph {
 
@@ -100,6 +111,45 @@ class AppContainer(private val app: Application) : DataGraph {
         // Intraday heart rate is read in 24 h windows; three per run keeps a run inside the
         // hourly request budget (master prompt Alert A). Later runs continue from the watermark.
         config = TriSourceSyncOrchestrator.Config(maxWindowsPerStream = 3),
+    )
+
+    /** The owner's own Anthropic API key for "Ask Apex" (Keystore-encrypted, never logged). */
+    val aiKeyStore: AiKeyStore = EncryptedAiKeyStore(app)
+
+    /**
+     * "Ask Apex": answers only while the AI coach is enabled in Settings and a key is stored. Sends
+     * exactly the payload preview the Coach screen shows before each question.
+     */
+    val askApexClient: AskApexClient = AskApexClient(
+        keys = aiKeyStore,
+        isEnabled = { aiCoachEnabled.value },
+    )
+
+    private val aiCoachEnabled: StateFlow<Boolean> =
+        settings.settings.map { it.aiCoachEnabled }.distinctUntilChanged()
+            .stateIn(appScope, SharingStarted.Eagerly, false)
+
+    /** Exporter for the real store. Throws `DemoStoreRefusedException` while Demo mode is active. */
+    fun dataExporter(): DataExporter = stores.dataExporter(BuildConfig.VERSION_NAME)
+
+    /** Importer of an Apex export into the real store (idempotent; refuses the demo store). */
+    fun dataImporter(): DataImporter = stores.dataImporter()
+
+    /**
+     * "Delete all my data": stops background work, revokes Google access (best effort), clears
+     * every local token, key, alert record, both stores and the settings. Nothing in Health Connect
+     * or the Google account is deleted (Apex has read-only access).
+     */
+    fun dataDeletion(): DataDeletion = DataDeletion(
+        cancelAllWork = { cancelAllWorkManagerWork(app) },
+        revokeGoogleAccess = { (googleHealth.value as? GoogleHealthNetwork.Ready)?.pkce?.signOut(revokeAtGoogle = true) },
+        clearGoogleTokens = { tokenStore.wipe() },
+        clearHealthConnectTokens = { DataStoreChangeTokenStore(app).clearAll() },
+        clearAiKey = { aiKeyStore.clear() },
+        clearAlertRecord = { AlertLedgerStore(app).clear() },
+        resetRealStore = { stores.resetRealStore() },
+        discardDemoStore = { stores.discardDemo() },
+        clearSettings = { settings.clear() },
     )
 
     /** Formatter for the current units, clock style and locale; re-emits when settings change. */
