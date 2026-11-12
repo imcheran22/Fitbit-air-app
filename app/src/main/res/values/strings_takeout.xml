@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="takeout_title">Import Takeout archive</string>
+    <string name="takeout_provenance">Imported from Takeout archive</string>
+
+    <!-- Demo -->
+    <string name="takeout_demo_title">Import is off in Demo mode</string>
+    <string name="takeout_demo_body">Demo data stays in its own separate store, so an archive can never be loaded into it. Leave Demo mode in Settings to import your own archive.</string>
+
+    <!-- Last import -->
+    <string name="takeout_last_import">Last import: %1$s</string>
+    <string name="takeout_last_import_cd">Last Takeout import: %1$s</string>
+
+    <!-- Explainer -->
+    <string name="takeout_how_section">Get your archive</string>
+    <string name="takeout_how_1">Open Google Takeout in a browser and sign in with the account your Fitbit uses.</string>
+    <string name="takeout_how_2">Choose only Fitbit in the list of products.</string>
+    <string name="takeout_how_3">Choose ZIP as the file type. Other formats such as TGZ cannot be read.</string>
+    <string name="takeout_how_4">Allow for the size. A long history can be several gigabytes, and Google may split it into more than one ZIP file.</string>
+    <string name="takeout_how_5">Download the files to this phone, then pick them below. When the export comes in parts, pick all of them together.</string>
+    <string name="takeout_what_section">What the import does</string>
+    <string name="takeout_what_local">It reads the archive on this phone. Nothing is uploaded, and the archive is never changed.</string>
+    <string name="takeout_what_long">It can take a long time. It runs in the background, so you can leave this screen.</string>
+    <string name="takeout_what_safe">Anything already imported is skipped, so importing the same archive again is safe.</string>
+
+    <!-- Pick -->
+    <string name="takeout_pick_section">Import</string>
+    <string name="takeout_pick_action">Choose archive files</string>
+    <string name="takeout_pick_hint">Pick one ZIP file, or every part of a split export.</string>
+    <string name="takeout_force_action">Re-import everything</string>
+    <string name="takeout_force_title">Re-import everything?</string>
+    <string name="takeout_force_body">This reads every file in the archive again, including ones already imported. It takes longer. Use it only if something looked wrong after an earlier import. Readings are matched, not duplicated.</string>
+    <string name="takeout_force_confirm">Choose files and re-import</string>
+    <string name="takeout_force_back">Not now</string>
+
+    <!-- Progress -->
+    <string name="takeout_running_title">Importing</string>
+    <string name="takeout_running_listing">Listing the files in the archive</string>
+    <string name="takeout_running_files">%1$s of %2$s files</string>
+    <string name="takeout_running_rows">%1$s rows written</string>
+    <string name="takeout_running_stage">Now: %1$s</string>
+    <string name="takeout_running_cd">Importing. %1$s. %2$s. %3$s.</string>
+    <string name="takeout_running_listing_cd">Importing. Listing the files in the archive.</string>
+    <string name="takeout_cancel">Cancel import</string>
+    <string name="takeout_cancelled_title">Import stopped</string>
+    <string name="takeout_cancelled_body">The work done so far is kept. The next import resumes where this one stopped.</string>
+
+    <!-- Stages and categories -->
+    <string name="takeout_stage_working">Reading files</string>
+    <string name="takeout_stage_inspecting">Looking inside the archive</string>
+    <string name="takeout_stage_recalculating">Recalculating your scores</string>
+    <string name="takeout_cat_heart_rate">Heart rate</string>
+    <string name="takeout_cat_resting_heart_rate">Resting heart rate</string>
+    <string name="takeout_cat_steps">Steps</string>
+    <string name="takeout_cat_sleep">Sleep</string>
+    <string name="takeout_cat_exercise">Exercise</string>
+    <string name="takeout_cat_hrv_details">Heart rate variability, detailed</string>
+    <string name="takeout_cat_hrv_daily">Heart rate variability, daily</string>
+    <string name="takeout_cat_spo2_minute">Blood oxygen, by minute</string>
+    <string name="takeout_cat_spo2_daily">Blood oxygen, daily</string>
+    <string name="takeout_cat_respiratory_rate">Breathing rate</string>
+    <string name="takeout_cat_device_temperature">Device temperature</string>
+    <string name="takeout_cat_computed_temperature">Skin temperature</string>
+
+    <!-- Result -->
+    <string name="takeout_done">Import finished</string>
+    <string name="takeout_done_warnings">Import finished with some problems</string>
+    <string name="takeout_done_warnings_body">Some files were damaged or cut short. What could be read was imported. Download the archive again and import it to fill the gaps.</string>
+    <string name="takeout_done_nothing_new">Nothing new to import</string>
+    <string name="takeout_done_nothing_new_body">Everything in this archive was already imported.</string>
+    <string name="takeout_count_files_imported">Files imported</string>
+    <string name="takeout_count_files_skipped">Files skipped</string>
+    <string name="takeout_count_rows">Rows imported</string>
+    <string name="takeout_count_dropped">Rows left out (empty or low confidence)</string>
+    <string name="takeout_count_quarantined">Rows set aside</string>
+    <string name="takeout_count_unknown">Other files ignored</string>
+    <string name="takeout_count_recomputed">Days recalculated</string>
+    <string name="takeout_count_row_cd">%1$s: %2$s</string>
+    <string name="takeout_range">Data from %1$s to %2$s</string>
+    <string name="takeout_range_missing">Data range: %1$s</string>
+    <string name="takeout_dismiss_hint">Anything that was imported is shown next to its source in your screens.</string>
+
+    <!-- Failures: calm, with what to do -->
+    <string name="takeout_fail_title">Import did not run</string>
+    <string name="takeout_fail_demo">Import is off in Demo mode. Leave Demo mode in Settings, then try again.</string>
+    <string name="takeout_fail_store">Your data store is not ready. Close Apex, open it again and try again.</string>
+    <string name="takeout_fail_no_input">No file was chosen. Choose the ZIP file or files from Google Takeout.</string>
+    <string name="takeout_fail_not_archive">That does not look like a Takeout ZIP. Check that you picked the downloaded ZIP file, not a folder or a different file.</string>
+    <string name="takeout_fail_no_files">The ZIP is readable but holds no Fitbit data Apex can use. Request a new export from Google Takeout with Fitbit selected.</string>
+    <string name="takeout_fail_unreadable">Apex could not open the file. Choose it again, and make sure it is still on this phone and the phone has free space.</string>
+    <string name="takeout_fail_unsupported">This looks like a TGZ file, which Apex cannot read. Request the export again at Google Takeout and choose ZIP.</string>
+    <string name="takeout_fail_generic">Something went wrong and the import stopped. What was already imported is kept. Try again, and the import resumes.</string>
+</resources>
