@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sleep_dial_label">Sleep performance</string>
+    <string name="sleep_info_description">How sleep is calculated</string>
+    <string name="sleep_prev_day">Previous day</string>
+    <string name="sleep_next_day">Next day</string>
+    <string name="sleep_error">Sleep could not be read from the data on this phone. Leave this screen and open it again to retry.</string>
+    <string name="sleep_status_cd">Sleep performance status: %1$s</string>
+
+    <string name="sleep_row_hours">Hours vs. needed</string>
+    <string name="sleep_row_consistency">Sleep consistency</string>
+    <string name="sleep_row_efficiency">Sleep efficiency</string>
+    <string name="sleep_row_restorative">Restorative sleep</string>
+    <string name="sleep_detail_hours">%1$s of %2$s needed</string>
+    <string name="sleep_detail_consistency">Bedtime varied by about %1$s over the last week</string>
+    <string name="sleep_detail_consistency_needs">Needs at least 3 nights of timing</string>
+    <string name="sleep_detail_efficiency">Time asleep out of time in bed</string>
+    <string name="sleep_detail_restorative">Deep and REM sleep as a share of time asleep</string>
+    <string name="sleep_detail_no_stages">This night was scored without stage detail</string>
+    <string name="sleep_legend_cd">Legend: Poor, Sufficient, Optimal</string>
+
+    <string name="sleep_insight_sufficient">Your sleep covered at least 90 percent of what you needed.</string>
+    <string name="sleep_insight_short">You slept %1$s less than you needed.</string>
+    <string name="sleep_insight_consistency">Consistency is the easiest win: your bedtime varied by about %1$s.</string>
+
+    <string name="sleep_stages_title">Sleep stages</string>
+    <string name="sleep_attribution_note">Sleep that runs past midnight counts toward the day you woke up.</string>
+    <string name="sleep_stage_deep">Deep</string>
+    <string name="sleep_stage_rem">REM</string>
+    <string name="sleep_stage_light">Light</string>
+    <string name="sleep_stage_awake">Awake</string>
+
+    <string name="sleep_need_title">Hours vs. need</string>
+    <string name="sleep_need_base">Baseline need</string>
+    <string name="sleep_need_strain">Yesterday\'s strain</string>
+    <string name="sleep_need_debt">Sleep debt</string>
+    <string name="sleep_need_total">Total need</string>
+    <string name="sleep_need_default_base">Your need settles after 14 nights. Using 7 h 45 min as the baseline until then.</string>
+    <string name="sleep_need_personal_base">Baseline from your own recent nights.</string>
+
+    <string name="sleep_details_title">Details</string>
+    <string name="sleep_detail_in_bed">Time in bed</string>
+    <string name="sleep_detail_latency">Time to fall asleep</string>
+    <string name="sleep_detail_wake_bouts">Wake events</string>
+    <string name="sleep_detail_wake_bouts_note">Awakenings longer than 3 minutes</string>
+
+    <string name="sleep_tonight_title">Tonight\'s sleep</string>
+    <string name="sleep_tonight_need">Sleep need tonight</string>
+    <string name="sleep_tonight_bedtime">Suggested bedtime</string>
+    <string name="sleep_tonight_wake">Usual wake time</string>
+    <string name="sleep_tonight_needs_history">Needs at least 3 recent nights to learn your usual wake time.</string>
+    <string name="sleep_tonight_note">Bedtime is worked back from your usual wake time and how efficiently you sleep.</string>
+
+    <string name="sleep_how_title">How sleep is calculated</string>
+    <string name="sleep_how_link">How this is calculated</string>
+    <string name="sleep_how_p1">Sleep performance blends four parts: duration against your need (40 percent), restorative stages (25), efficiency (20) and consistency (15).</string>
+    <string name="sleep_how_p2">Your need is a baseline of 7 h 45 min, or the 75th percentile of your last 30 nights once 14 exist, plus extra for yesterday\'s strain and half of your recent sleep debt, up to 10 h.</string>
+    <string name="sleep_how_p3">Restorative sleep is deep plus REM as a share of time asleep. Efficiency is time asleep over time in bed. Consistency is how closely your bed and wake times match over the last 7 days.</string>
+    <string name="sleep_how_p4">A part that cannot be measured, such as stages on a night scored by movement alone, drops out and the others are scaled up. This is a summary of your sleep, not medical advice.</string>
+    <string name="sleep_how_close">Close</string>
+</resources>

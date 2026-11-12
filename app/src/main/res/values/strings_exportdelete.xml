@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exportdelete_title">Your data</string>
+    <string name="exportdelete_provenance">Source: the readings stored by Apex on this phone</string>
+
+    <!-- Demo -->
+    <string name="exportdelete_demo_title">Export and import are off in Demo mode</string>
+    <string name="exportdelete_demo_body">Demo mode uses synthetic data in a separate store. It never leaves the app, and a file can never be loaded into it. Leave Demo mode in Settings to use these.</string>
+
+    <!-- Export -->
+    <string name="exportdelete_export_section">Export</string>
+    <string name="exportdelete_export_intro">Save a copy of your readings to a file you choose. Each row keeps its source label, so you can always see where a value came from.</string>
+    <string name="exportdelete_export_warning">This file contains your health data and is not encrypted. It is yours to keep safe: anyone who has the file can read it. Apex does not send it anywhere.</string>
+    <string name="exportdelete_export_not_included">Not included: sign-in details, keys and settings.</string>
+    <string name="exportdelete_export_json">Export as JSON</string>
+    <string name="exportdelete_export_json_hint">One file. Can be imported back into Apex.</string>
+    <string name="exportdelete_export_csv">Export as CSV ZIP</string>
+    <string name="exportdelete_export_csv_hint">One spreadsheet file per kind of reading, in a ZIP. For other tools.</string>
+    <string name="exportdelete_export_running">Writing your export</string>
+    <string name="exportdelete_export_running_body">Keep this screen open if you can. Large histories take a little while.</string>
+    <string name="exportdelete_export_done_json">JSON export saved</string>
+    <string name="exportdelete_export_done_csv">CSV ZIP export saved</string>
+    <string name="exportdelete_export_skipped">%1$s rows were left out because a value was not a valid number.</string>
+    <string name="exportdelete_export_empty">There was nothing to export yet.</string>
+    <string name="exportdelete_dismiss">Done</string>
+
+    <!-- Counts per type -->
+    <string name="exportdelete_type_daily">Daily values</string>
+    <string name="exportdelete_type_hr">Heart rate minutes</string>
+    <string name="exportdelete_type_samples">Other readings</string>
+    <string name="exportdelete_type_sleeps">Sleep sessions</string>
+    <string name="exportdelete_type_stages">Sleep stages</string>
+    <string name="exportdelete_type_workouts">Workouts</string>
+    <string name="exportdelete_count_row">%1$s: %2$s</string>
+
+    <!-- Import -->
+    <string name="exportdelete_import_section">Import</string>
+    <string name="exportdelete_import_intro">Load an Apex JSON export back into this phone. Rows keep the source they had. Computed scores are not imported: Apex recalculates them from the readings.</string>
+    <string name="exportdelete_import_safe">Importing the same file twice gives the same result.</string>
+    <string name="exportdelete_import_action">Choose an Apex export</string>
+    <string name="exportdelete_import_running">Importing</string>
+    <string name="exportdelete_import_running_body">%1$s rows read so far. Apex then recalculates your scores.</string>
+    <string name="exportdelete_import_running_start">Reading the file.</string>
+    <string name="exportdelete_import_completed_title">Import complete</string>
+    <string name="exportdelete_import_completed_body">Your readings were added and your scores were recalculated.</string>
+    <string name="exportdelete_import_partial_title">Imported part of the file</string>
+    <string name="exportdelete_import_partial_body">The file ended or was damaged part-way. Everything before that point was imported and recalculated. Export again from the original phone to get the rest.</string>
+    <string name="exportdelete_import_not_export_title">Not an Apex export</string>
+    <string name="exportdelete_import_not_export_body">This file is not an Apex JSON export, so nothing was imported. Choose a file made by Export as JSON. A CSV ZIP cannot be imported.</string>
+    <string name="exportdelete_import_newer_title">Made by a newer version of Apex</string>
+    <string name="exportdelete_import_newer_body">This file uses a format this version does not understand, so nothing was imported. Update Apex and try again.</string>
+    <string name="exportdelete_import_ingested_label">Added</string>
+    <string name="exportdelete_import_quarantined_label">Set aside</string>
+    <string name="exportdelete_import_replayed_label">Days recalculated</string>
+    <string name="exportdelete_import_quarantined_note">Set-aside rows were damaged, from an unknown source or not importable. Their content is not kept. %1$s of them are computed values, which Apex recalculates itself.</string>
+
+    <!-- Failures -->
+    <string name="exportdelete_failure_demo">This is not available in Demo mode.</string>
+    <string name="exportdelete_failure_open">The file could not be opened. Pick it again, or choose another place.</string>
+    <string name="exportdelete_failure_io">Something went wrong while reading or writing the file. A partly written file may remain: delete it and try again.</string>
+
+    <!-- Delete -->
+    <string name="exportdelete_delete_section">Delete all my data</string>
+    <string name="exportdelete_delete_intro">Remove everything Apex keeps on this phone and return to the start. This cannot be undone. Export first if you want a copy.</string>
+    <string name="exportdelete_delete_removes_title">What is removed</string>
+    <string name="exportdelete_delete_removes_1">Background sync and alerts are stopped.</string>
+    <string name="exportdelete_delete_removes_2">Apex\'s access to your Google account is revoked at Google, and the sign-in details on this phone are erased.</string>
+    <string name="exportdelete_delete_removes_3">Health Connect sync positions on this phone are erased.</string>
+    <string name="exportdelete_delete_removes_4">Your saved Coach key, if you added one.</string>
+    <string name="exportdelete_delete_removes_5">The record of alerts already sent.</string>
+    <string name="exportdelete_delete_removes_6">All readings, scores, check-ins and manual workouts in the encrypted database.</string>
+    <string name="exportdelete_delete_removes_7">Demo data, if any.</string>
+    <string name="exportdelete_delete_removes_8">Your settings and profile.</string>
+    <string name="exportdelete_delete_kept_title">What is not deleted</string>
+    <string name="exportdelete_delete_kept_body">Nothing in Health Connect and nothing in your Google account is deleted. Apex only reads from them. To remove that data, open Health Connect, then Data and access, and delete it there. For your Google account, use the Google Health or Fitbit data controls in your account settings. You can also remove Apex under Apps and access in your Google account.</string>
+    <string name="exportdelete_delete_action">Delete all my data</string>
+    <string name="exportdelete_delete_confirm1_title">Delete everything Apex keeps on this phone?</string>
+    <string name="exportdelete_delete_confirm1_body">Your readings, scores, check-ins, manual workouts, settings and profile will be erased and you will return to the start. This cannot be undone.</string>
+    <string name="exportdelete_delete_continue">Continue</string>
+    <string name="exportdelete_delete_confirm2_title">Type DELETE to confirm</string>
+    <string name="exportdelete_delete_field_label">Type DELETE</string>
+    <string name="exportdelete_delete_field_hint">DELETE</string>
+    <string name="exportdelete_delete_final">Delete everything now</string>
+    <string name="exportdelete_delete_running">Deleting your data</string>
+    <string name="exportdelete_delete_running_body">This keeps going even if you leave this screen. Apex returns to the start when it finishes.</string>
+    <string name="exportdelete_delete_failed_title">Some steps did not finish</string>
+    <string name="exportdelete_delete_failed_body">These steps failed. Everything else was removed. Try again, or clear Apex\'s storage in Android settings.</string>
+    <string name="exportdelete_delete_done_title">Everything was removed</string>
+    <string name="exportdelete_delete_done_body">Apex is returning to the start.</string>
+    <string name="exportdelete_delete_retry">Try again</string>
+    <string name="exportdelete_delete_close_report">Close</string>
+    <string name="exportdelete_cancel">Cancel</string>
+
+    <!-- Deletion step names (failure report) -->
+    <string name="exportdelete_step_cancel_work">Stop background work</string>
+    <string name="exportdelete_step_revoke">Revoke access at Google</string>
+    <string name="exportdelete_step_google_tokens">Erase Google sign-in details</string>
+    <string name="exportdelete_step_hc_tokens">Erase Health Connect sync positions</string>
+    <string name="exportdelete_step_ai_key">Erase Coach key</string>
+    <string name="exportdelete_step_alerts">Erase alert record</string>
+    <string name="exportdelete_step_store">Erase readings database</string>
+    <string name="exportdelete_step_demo">Erase demo data</string>
+    <string name="exportdelete_step_settings">Erase settings and profile</string>
+
+    <!-- Accessibility -->
+    <string name="exportdelete_a11y_progress_running">%1$s, in progress</string>
+    <string name="exportdelete_a11y_destructive">Warning: this cannot be undone</string>
+</resources>

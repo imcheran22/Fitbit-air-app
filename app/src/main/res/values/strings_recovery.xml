@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recovery_dial_label">Recovery</string>
+    <string name="recovery_info_description">How recovery is calculated</string>
+    <string name="recovery_prev_day">Previous day</string>
+    <string name="recovery_next_day">Next day</string>
+    <string name="recovery_loading">Loading recovery</string>
+    <string name="recovery_error">Recovery could not be read from the data on this phone. Leave this screen and open it again to retry.</string>
+
+    <string name="recovery_stat_hrv">Heart rate variability</string>
+    <string name="recovery_stat_rhr">Resting heart rate</string>
+    <string name="recovery_stat_resp">Respiratory rate</string>
+    <string name="recovery_stat_sleep">Sleep performance</string>
+    <string name="recovery_stats_title">Today versus your 30 days</string>
+    <string name="recovery_stat_open_trend">Open the trend for %1$s</string>
+
+    <string name="recovery_insight_raised">%1$s raised your recovery the most today.</string>
+    <string name="recovery_insight_lowered">%1$s held your recovery back the most today.</string>
+    <string name="recovery_insight_balanced">Your inputs sit close to your usual range today.</string>
+    <string name="recovery_insight_calibrating">Apex is still learning your usual range. Recovery appears once enough nights are in.</string>
+    <string name="recovery_insight_unavailable">There is not enough overnight data to score recovery for this day.</string>
+
+    <string name="recovery_component_hrv">Heart rate variability</string>
+    <string name="recovery_component_rhr">Resting heart rate</string>
+    <string name="recovery_component_sleep">Sleep</string>
+    <string name="recovery_component_resp">Respiratory rate</string>
+    <string name="recovery_component_skin">Skin temperature</string>
+    <string name="recovery_component_fatigue">Your fatigue rating</string>
+    <string name="recovery_component_load">Training load</string>
+
+    <string name="recovery_fatigue_title">Fatigue signals</string>
+    <string name="recovery_fatigue_no_data">Not enough heart rate variability or resting heart rate data to look for signals.</string>
+    <string name="recovery_fatigue_note">These describe physiological load. They are not a diagnosis.</string>
+
+    <string name="recovery_calibration_title">Learning your range</string>
+    <string name="recovery_calibration_item">%1$s: %2$d of %3$d days</string>
+    <string name="recovery_calibration_body">Personal ranges need several nights of readings before recovery can use them.</string>
+    <string name="recovery_calibration_cd">%1$s: %2$d of %3$d days collected</string>
+
+    <string name="recovery_drivers_title">What moved the score</string>
+    <string name="recovery_drivers_unit">pts</string>
+    <string name="recovery_drivers_empty">No inputs to compare yet.</string>
+
+    <string name="recovery_how_title">How recovery is calculated</string>
+    <string name="recovery_how_link">How this is calculated</string>
+    <string name="recovery_how_p1">Recovery blends the inputs that are available: heart rate variability (40 percent), resting heart rate (25), sleep (25), breathing rate (5) and skin temperature (5). Your fatigue rating and training load join in when you have them.</string>
+    <string name="recovery_how_p2">Each input is compared with your own last 30 days. A reading at your usual level scores about 50, higher heart rate variability and lower resting heart rate score above that.</string>
+    <string name="recovery_how_p3">If an input is missing, its weight is shared among the others so the score still spans 0 to 100. Heart rate variability or resting heart rate must be present.</string>
+    <string name="recovery_how_p4">67 to 100 is green, 34 to 66 yellow and 0 to 33 red. The score describes how recovered your body looks. It is not medical advice.</string>
+    <string name="recovery_how_close">Close</string>
+</resources>
