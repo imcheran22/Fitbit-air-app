@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Health tab -->
+    <string name="health_title">Health</string>
+    <string name="health_section_monitor">Health monitor</string>
+    <string name="health_monitor_caption">Each reading is compared with your own 30-day average.</string>
+    <string name="health_section_trends">Trends</string>
+    <string name="health_trends_caption">The last 14 days. The shaded band is your usual range.</string>
+    <string name="health_section_fitness">Fitness</string>
+    <string name="health_section_heart_rate">Heart rate</string>
+    <string name="health_trends_empty">No trend data yet. Trends appear after your first sync or import.</string>
+    <string name="health_monitor_open_cd">Open %1$s trend</string>
+
+    <!-- Metric names -->
+    <string name="health_metric_hrv">Heart rate variability</string>
+    <string name="health_metric_rhr">Resting heart rate</string>
+    <string name="health_metric_sleeping_hr">Sleeping heart rate</string>
+    <string name="health_metric_resp">Breathing rate</string>
+    <string name="health_metric_spo2">Blood oxygen</string>
+    <string name="health_metric_skin">Skin temperature</string>
+    <string name="health_metric_vo2">Cardio fitness</string>
+    <string name="health_metric_recovery">Recovery</string>
+    <string name="health_metric_sleep_score">Sleep score</string>
+    <string name="health_metric_sleep_duration">Sleep duration</string>
+    <string name="health_metric_strain">Strain</string>
+    <string name="health_metric_trimp">Training load</string>
+    <string name="health_metric_steps">Steps</string>
+    <string name="health_metric_other">Metric</string>
+
+    <!-- Range status -->
+    <string name="health_status_within">Within your usual range</string>
+    <string name="health_status_above">Above your usual range</string>
+    <string name="health_status_below">Below your usual range</string>
+    <string name="health_status_calibrating">Learning your baseline</string>
+    <string name="health_status_no_reading">No reading</string>
+    <string name="health_baseline_range">30-day range %1$s to %2$s</string>
+    <string name="health_baseline_none">No baseline yet</string>
+
+    <!-- Fitness -->
+    <string name="health_fitness_estimate_caveat">This is an estimate from your resting and maximum heart rate. It is useful for following a trend, not as an exact value.</string>
+    <string name="health_fitness_method">Method: %1$s</string>
+    <string name="health_fitness_action">See the trend</string>
+
+    <!-- Heart rate entry -->
+    <string name="health_hr_entry_title">Heart rate</string>
+    <string name="health_hr_entry_action">See the day</string>
+    <string name="health_hr_entry_cd">Open the heart rate day view</string>
+
+    <!-- Trend detail -->
+    <string name="health_trend_range_selector_cd">Time range</string>
+    <plurals name="health_range_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="health_range_option_cd">
+        <item quantity="one">Show the last %d day</item>
+        <item quantity="other">Show the last %d days</item>
+    </plurals>
+    <string name="health_trend_min">Lowest</string>
+    <string name="health_trend_max">Highest</string>
+    <string name="health_trend_mean">Average</string>
+    <string name="health_trend_summary_title">In this range</string>
+    <string name="health_trend_readings">%1$d of %2$d days have a reading.</string>
+    <string name="health_trend_baseline_note">Shaded band: your usual range as of today, the 30-day average plus or minus one standard deviation.</string>
+    <string name="health_trend_no_data">No readings for this metric yet.</string>
+    <string name="health_trend_now_label">Latest</string>
+    <string name="health_trend_z">Z %1$s</string>
+    <string name="health_trend_info_description">How the baseline is calculated</string>
+    <string name="health_info_close">Close</string>
+    <string name="health_calc_title">How the baseline is calculated</string>
+    <string name="health_calc_window">Your baseline is the average of your valid readings over the 30 days before the day you are looking at. That day is left out, so a reading is never compared with an average it helped to make.</string>
+    <string name="health_calc_range">Your usual range is that average plus or minus one standard deviation. The Z badge counts how many standard deviations a reading sits from your average, limited to plus or minus 3.</string>
+    <string name="health_calc_calibration">A baseline needs at least 7 valid days. Until then Apex says it is still learning instead of using population averages.</string>
+    <string name="health_calc_hrv">Heart rate variability is averaged on a log scale because it changes in proportion, so its range is slightly wider above the average than below.</string>
+    <string name="health_calc_floor">Very steady readings get a small minimum spread, so a tiny change cannot look dramatic.</string>
+    <string name="health_calc_progress">%1$d of %2$d valid days so far.</string>
+    <string name="health_calc_established">Baseline ready, built from %1$d valid days.</string>
+
+    <!-- Heart rate day -->
+    <string name="health_hr_day_title">Heart rate</string>
+    <string name="health_hr_prev_day">Previous day</string>
+    <string name="health_hr_next_day">Next day</string>
+    <string name="health_hr_go_today">Go to today</string>
+    <string name="health_hr_chart_note">Shown as 5-minute averages. A gap means nothing was recorded, and Apex does not fill it in.</string>
+    <string name="health_hr_resting">Resting heart rate</string>
+    <string name="health_hr_lowest">Lowest 5-minute average</string>
+    <string name="health_hr_highest">Highest 5-minute average</string>
+    <string name="health_hr_zones_title">Time in zones</string>
+    <string name="health_hr_zones_caption">Calculated from the day\'s heart rate and your zone limits.</string>
+    <string name="health_zone_label">Zone %1$d</string>
+    <string name="health_zone_rest">Rest</string>
+    <string name="health_zone_range">%1$d to %2$d bpm</string>
+    <string name="health_zone_below">Below %1$d bpm</string>
+    <string name="health_hr_info_description">How this is shown</string>
+    <string name="health_hr_info_title">How heart rate is shown</string>
+    <string name="health_hr_info_buckets">Apex draws the day from 5-minute averages, so the lowest and highest values here are averages, not single beats. Gaps stay gaps.</string>
+    <string name="health_hr_info_zones">Zone limits are 50, 60, 70, 80 and 90 percent of your maximum heart rate or heart rate reserve, as set in your profile.</string>
+    <string name="health_hr_info_resting">Resting heart rate comes from your overnight data and is compared with your own 30-day average.</string>
+</resources>
