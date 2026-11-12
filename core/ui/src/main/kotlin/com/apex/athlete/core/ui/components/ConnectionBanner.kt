@@ -144,9 +144,9 @@ private fun BannersPreviewLight() = ApexPreview(dark = false) { BannersPreviewBo
 @Composable
 private fun BannersPreviewBody() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ConnectionBanner(BannerKind.Demo, "Demo mode", "Synthetic data in a separate store.")
-        ConnectionBanner(BannerKind.Importing, "Importing history", "42 of 180 days.", progress = 0.23f)
-        ConnectionBanner(BannerKind.Stale, "Sync is behind", "Last sync 3 h ago.", actionLabel = "Retry", onAction = {})
-        ConnectionBanner(BannerKind.AuthRevoked, "Reconnect Google", "Access was revoked.", actionLabel = "Reconnect", onAction = {})
+        ConnectionBanner(BannerKind.Demo, "Demo mode", description = "Synthetic data in a separate store.")
+        ConnectionBanner(BannerKind.Importing, "Importing history", description = "42 of 180 days.", progress = 0.23f)
+        ConnectionBanner(BannerKind.Stale, "Sync is behind", description = "Last sync 3 h ago.", actionLabel = "Retry", onAction = {})
+        ConnectionBanner(BannerKind.AuthRevoked, "Reconnect Google", description = "Access was revoked.", actionLabel = "Reconnect", onAction = {})
     }
 }

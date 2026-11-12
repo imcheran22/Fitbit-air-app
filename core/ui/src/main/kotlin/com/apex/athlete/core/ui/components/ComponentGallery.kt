@@ -140,9 +140,9 @@ fun ComponentGallery(modifier: Modifier = Modifier) {
         }
 
         SectionShell(stringResource(R.string.gallery_banners)) {
-            ConnectionBanner(BannerKind.Demo, stringResource(R.string.gallery_banner_demo), stringResource(R.string.gallery_banner_demo_body))
+            ConnectionBanner(BannerKind.Demo, stringResource(R.string.gallery_banner_demo), description = stringResource(R.string.gallery_banner_demo_body))
             ConnectionBanner(BannerKind.Importing, stringResource(R.string.gallery_banner_import), progress = 0.23f)
-            ConnectionBanner(BannerKind.Stale, stringResource(R.string.gallery_banner_stale), stringResource(R.string.gallery_banner_stale_body), actionLabel = stringResource(R.string.gallery_retry), onAction = {})
+            ConnectionBanner(BannerKind.Stale, stringResource(R.string.gallery_banner_stale), description = stringResource(R.string.gallery_banner_stale_body), actionLabel = stringResource(R.string.gallery_retry), onAction = {})
             ConnectionBanner(BannerKind.Offline, stringResource(R.string.gallery_banner_offline))
             ConnectionBanner(BannerKind.AuthRevoked, stringResource(R.string.gallery_banner_revoked), actionLabel = stringResource(R.string.gallery_reconnect), onAction = {})
         }
