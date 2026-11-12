@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Exercise types -->
+    <string name="workout_type_running">Running</string>
+    <string name="workout_type_running_treadmill">Treadmill running</string>
+    <string name="workout_type_walking">Walking</string>
+    <string name="workout_type_hiking">Hiking</string>
+    <string name="workout_type_biking">Cycling</string>
+    <string name="workout_type_biking_stationary">Indoor cycling</string>
+    <string name="workout_type_swimming_pool">Pool swimming</string>
+    <string name="workout_type_swimming_open_water">Open water swimming</string>
+    <string name="workout_type_strength_training">Strength training</string>
+    <string name="workout_type_weightlifting">Weightlifting</string>
+    <string name="workout_type_hiit">Interval training</string>
+    <string name="workout_type_yoga">Yoga</string>
+    <string name="workout_type_pilates">Pilates</string>
+    <string name="workout_type_elliptical">Elliptical</string>
+    <string name="workout_type_rowing">Rowing</string>
+    <string name="workout_type_rowing_machine">Rowing machine</string>
+    <string name="workout_type_stair_climbing">Stair climber</string>
+    <string name="workout_type_stretching">Stretching</string>
+    <string name="workout_type_dancing">Dancing</string>
+    <string name="workout_type_other">Other workout</string>
+
+    <!-- Detail -->
+    <string name="workout_detail_title">Workout</string>
+    <string name="workout_detail_strain_label">Workout strain</string>
+    <string name="workout_detail_duration_label">Duration</string>
+    <string name="workout_detail_times">%1$s, %2$s to %3$s</string>
+    <string name="workout_detail_stats_title">Key statistics</string>
+    <string name="workout_stat_duration">Duration</string>
+    <string name="workout_stat_avg_hr">Average heart rate</string>
+    <string name="workout_stat_max_hr">Maximum heart rate</string>
+    <string name="workout_stat_strain">Strain from this workout</string>
+    <string name="workout_stat_load">Training load (TRIMP)</string>
+    <string name="workout_stat_rpe">Perceived exertion</string>
+    <string name="workout_stat_rpe_unit">of 10</string>
+    <string name="workout_unit_min">min</string>
+    <string name="workout_stat_source">Recorded by</string>
+    <string name="workout_zones_title">Time in zones</string>
+    <string name="workout_zones_caption">Zones as reported by the source of this workout.</string>
+    <string name="workout_zone_light">Light</string>
+    <string name="workout_zone_moderate">Moderate</string>
+    <string name="workout_zone_vigorous">Vigorous</string>
+    <string name="workout_zone_peak">Peak</string>
+    <string name="workout_zones_none">This workout has no heart-rate zone data.</string>
+    <string name="workout_zones_none_manual">You logged this workout by hand, so there is no heart-rate zone data.</string>
+    <string name="workout_how_title">How this is calculated</string>
+    <string name="workout_how_body">Workout strain uses the same 0 to 21 scale as Day Strain and comes from the minute heart rate recorded during the session. A workout you logged by hand shows your rating of perceived exertion, but its strain stays unavailable unless heart rate was recorded in that time. Apex does not convert the rating into strain.</string>
+    <string name="workout_delete_action">Delete workout</string>
+    <string name="workout_delete_title">Delete this workout?</string>
+    <string name="workout_delete_body">This removes the workout you logged and recalculates your strain and training load. It cannot be undone.</string>
+    <string name="workout_delete_confirm">Delete</string>
+    <string name="workout_delete_cancel">Keep it</string>
+    <string name="workout_delete_failed">The workout could not be deleted. Try again.</string>
+    <string name="workout_not_found_title">Workout not found</string>
+    <string name="workout_not_found_body">This workout is no longer in your data. It may have been deleted or replaced by a later sync.</string>
+    <string name="workout_not_found_back">Go back</string>
+
+    <!-- Add -->
+    <string name="workout_add_title">Add workout</string>
+    <string name="workout_add_intro">Log a session the band did not record, with a rating of how hard it felt. It is saved as self-reported. Strain for the session is calculated only when heart rate was recorded during it.</string>
+    <string name="workout_field_name">Name</string>
+    <string name="workout_field_name_hint">Optional. Defaults to the type.</string>
+    <string name="workout_field_type">Type</string>
+    <string name="workout_field_type_open">Choose a type, now %1$s</string>
+    <string name="workout_field_type_sheet_title">Workout type</string>
+    <string name="workout_field_start">Start time</string>
+    <string name="workout_field_start_value">%1$s on %2$s</string>
+    <string name="workout_start_hour">Hour</string>
+    <string name="workout_start_minute">Minute</string>
+    <string name="workout_start_hour_plus">Later by one hour</string>
+    <string name="workout_start_hour_minus">Earlier by one hour</string>
+    <string name="workout_start_minute_plus">Later by five minutes</string>
+    <string name="workout_start_minute_minus">Earlier by five minutes</string>
+    <string name="workout_field_duration">Duration in minutes</string>
+    <string name="workout_field_duration_hint">1 to 600</string>
+    <string name="workout_field_rpe">How hard did it feel</string>
+    <string name="workout_field_rpe_help">Rate the whole session from 1 to 10 on the Borg CR-10 scale.</string>
+    <string name="workout_rpe_option">%1$d, %2$s</string>
+    <string name="workout_rpe_selected">%1$d, %2$s. Selected.</string>
+    <string name="workout_rpe_group">Perceived exertion, 1 to 10</string>
+    <string name="workout_rpe_1">Very weak</string>
+    <string name="workout_rpe_2">Weak</string>
+    <string name="workout_rpe_3">Moderate</string>
+    <string name="workout_rpe_4">Somewhat strong</string>
+    <string name="workout_rpe_5">Strong</string>
+    <string name="workout_rpe_6">Between strong and very strong</string>
+    <string name="workout_rpe_7">Very strong</string>
+    <string name="workout_rpe_8">Between very strong and maximal</string>
+    <string name="workout_rpe_9">Almost maximal</string>
+    <string name="workout_rpe_10">Extremely strong, maximal</string>
+    <string name="workout_add_save">Save workout</string>
+    <string name="workout_add_saving">Saving</string>
+    <string name="workout_add_save_failed">The workout could not be saved. Try again.</string>
+    <string name="workout_add_provenance">Saved as self-reported. Strain is calculated by Apex from recorded heart rate, not from your rating.</string>
+
+    <!-- Validation -->
+    <string name="workout_error_duration_number">Enter the duration as a whole number of minutes.</string>
+    <string name="workout_error_duration_range">Duration must be between 1 and 600 minutes.</string>
+    <string name="workout_error_start_future">The start time is in the future. Pick a time that has already passed.</string>
+    <string name="workout_error_type">Choose a workout type.</string>
+    <string name="workout_error_rpe">Pick a rating from 1 to 10.</string>
+    <string name="workout_error_name_long">Keep the name to 60 characters or fewer.</string>
+</resources>

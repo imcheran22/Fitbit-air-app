@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="strain_title">Strain</string>
+    <string name="strain_dial_label">Day strain</string>
+    <string name="strain_provisional_note">So far today. This number keeps growing until midnight and can only go up.</string>
+    <string name="strain_date_previous">Previous day</string>
+    <string name="strain_date_next">Next day</string>
+    <string name="strain_date_go_today">Go to today</string>
+
+    <!-- Time in zones -->
+    <string name="strain_zones_title">Time in zones</string>
+    <string name="strain_zone_5">Zone 5, maximum</string>
+    <string name="strain_zone_4">Zone 4, hard</string>
+    <string name="strain_zone_3">Zone 3, moderate</string>
+    <string name="strain_zone_2">Zone 2, light</string>
+    <string name="strain_zone_1">Zone 1, very light</string>
+    <string name="strain_zone_below">Below zone 1</string>
+    <string name="strain_zone_range">%1$d - %2$d bpm</string>
+    <string name="strain_zone_range_top">%1$d bpm and above</string>
+    <string name="strain_zone_range_below">Under %1$d bpm</string>
+    <string name="strain_zone_caption">Zones from your max heart rate of %1$d bpm.</string>
+    <string name="strain_zones_provenance">Calculated by Apex from your minute heart rate.</string>
+    <string name="strain_zones_empty">No heart-rate zones for this day.</string>
+
+    <!-- Activities -->
+    <string name="strain_activities_title">Activities</string>
+    <string name="strain_activities_empty">No activities on this day.</string>
+    <string name="strain_activity_untitled">Workout</string>
+    <string name="strain_add_workout">Add workout</string>
+    <string name="strain_add_workout_hint">Log a session the band did not record, with a rating of perceived exertion.</string>
+
+    <!-- Training load -->
+    <string name="strain_load_title">Training load</string>
+    <string name="strain_load_blurb">Compares the last 7 days with the longer run of weeks before them. 0.80 - 1.30 is the usual range. This is load guidance, not a prediction of injury.</string>
+    <string name="strain_load_ratio">Workload ratio</string>
+    <string name="strain_load_fitness">Fitness load (CTL)</string>
+    <string name="strain_load_fatigue">Fatigue load (ATL)</string>
+    <string name="strain_load_balance">Training balance (TSB)</string>
+    <string name="strain_load_monotony">Monotony</string>
+    <string name="strain_load_provenance">Calculated by Apex from your daily heart-rate load.</string>
+    <string name="strain_load_empty">Not enough days of heart-rate data yet to show training load.</string>
+
+    <!-- How it is calculated -->
+    <string name="strain_how_title">How this is calculated</string>
+    <string name="strain_how_scale">Strain measures the cardiovascular load of your day on a 0 to 21 scale, from the time you spend at higher heart rates. The scale is not linear: each point is harder to earn than the last. It is Apex\'s own derived number.</string>
+    <string name="strain_how_trimp">Each minute of heart rate above 30 percent of your reserve adds load, and harder minutes add disproportionately more. The day\'s load is the sum of those minutes.</string>
+    <string name="strain_how_zones">Zones are set at 50, 60, 70, 80 and 90 percent of your maximum heart rate.</string>
+    <string name="strain_how_target">Your Strain Target is a range of one point either side of a centre set from today\'s Recovery. A Recovery of 0 percent points to 6, 50 percent to 12 and 100 percent to 18.</string>
+    <string name="strain_how_load">Training load uses a 7-day and a 28-day average of daily load. Monotony is the 7-day mean divided by its spread; a high value means very similar days.</string>
+    <string name="strain_how_today">Today\'s strain is provisional until the day ends.</string>
+</resources>
