@@ -1,41 +1,36 @@
 # Progress (cold-resume note)
 
-Last updated: 2026-11-11. Nothing is committed yet; all work is in the working tree.
+Last updated: 2026-11-12. Branch `claude/fitbit-air-compatible-app-ykbju8`; everything below is committed and pushed.
+The build gate is GitHub Actions (`.github/workflows/android.yml`): this cloud session has no Android SDK.
 
-## Done and verified
-- **M0 audit (read-through):** `:core:domain`, `:core:analytics`, `:core:database` read in full. Engines and DAOs are sound; no defects found that needed a fix. `docs/AUDIT.md` not written yet.
-- **Reality gate (partial):** Google Health API v4 discovery document fetched and saved to
-  `docs/api-snapshots/google-health-v4-discovery-2026-11-11.json` (revision 20261109). Endpoints, filter
-  syntax, scopes and the schemas of heart-rate, HRV, SpO2, respiratory rate, skin temperature, sleep,
-  exercise, steps, VO2 max and paired devices were read from it. `api.fitbit.com` now answers with a
-  Google-style 401, so the legacy Fitbit Web API is treated as retired and is **not** being implemented.
-- **Additive changes to finished modules:** `SyncSource.FITBIT_TAKEOUT_ARCHIVE`, `DataProvenance.SYNTHETIC_DEMO`,
-  archive ranked first in `SourceReconciler`, database schema v2 (`workout.perceivedExertion`, auto-migration),
-  `ApexDatabaseFactory.createDemo`, a few DAO read/count/delete methods.
-- **`:core:ui`:** theme foundation (tokens, type, fonts, contrast test).
-- **`:core:data` (walking skeleton core), 9 tests green** (`./gradlew :core:data:testDebugUnitTest`, Robolectric):
-  `model/Observations.kt`, `ingest/HealthIngestor.kt`, `settings/Settings.kt`, `source/HealthSource.kt`,
-  `source/DemoSource.kt`, `pipeline/DailyIntelligencePipeline.kt`, `store/ApexStores.kt`,
-  `sync/TriSourceSyncOrchestrator.kt`, `coach/RuleBasedCoachEngine.kt`, `repository/AthleteRepository.kt`.
-  Tests cover: demo data through the real ingestor, database and pipeline; calibration; missing data stays
-  missing; idempotent re-ingest; finer heart rate never overwritten by coarser; split-minute merge;
-  implausible values rejected; coach numerals bound to slots; deterministic replay.
+## Done
+| Milestone | State | Evidence |
+|---|---|---|
+| M0 audit and baseline | done | `docs/AUDIT.md`, `docs/DECISIONS.md` |
+| M1 walking skeleton | done | Demo store through the real ingestor and pipeline; Overview on engine output |
+| M2 `:core:ui` | done | tokens, components, shells, Canvas charts, component gallery, contrast test |
+| M3 `:core:network` + `:core:data` | done | OAuth PKCE + Keystore token store, Google Health v4 client from the saved discovery document, Health Connect reader (read-only, change tokens), tri-source orchestrator, workers, Takeout ZIP engine (streaming, resume, per-file marks, D6), export/import/delete-all |
+| M4 `:app` screens | done | all 21 routes in `docs/APP_CONTRACT.md`, process-death safe state, manifest with Health Connect rationale, `allowBackup=false` |
+| M5 insights, alerts, coach | done | rule-based coach, alert ledger and scheduler, optional Ask Apex (own key, encrypted, preview, `AI_INTERPRETED`) |
+| M6 hardening, red team | mostly done | `docs/REDTEAM.md`; the five critical/high gaps fixed tests-first (D7); diagnostics report (Data sources screen) for the known unknowns |
+| M7 docs and handoff | mostly done | `SETUP.md`, `VERIFICATION.md`, `API_VALIDATION.md`, `API_MAPPING.md`, `EVIDENCE.md`, `OPEN_POINTS.md`, `FORMULAS.md` v2 |
 
-## Not started
-- `:core:network` (OAuth PKCE, token store, Google Health client) — build file cleaned, no Kotlin yet.
-- `:core:data`: Health Connect source, Google Health source, Takeout engine, workers, export/delete, alerts.
-- `:core:ui` components, shells and charts.
-- `:app`: Application, DI, manifest, navigation, every screen, proguard rules.
-- Docs: AUDIT, DECISIONS, EVIDENCE, OPEN_POINTS, SETUP, VERIFICATION, API_VALIDATION, API_MAPPING, REDTEAM;
-  FORMULAS.md evidence grading.
-- Emulator: system image exists but no AVD is created.
+Room schema is v3 (`takeout_file_mark`, AutoMigration 2→3); `core/database/schemas/.../3.json` is committed from the CI artifact.
 
-## Not yet re-run after the latest changes
-Full build (`:core:domain:test :core:analytics:test testDebugUnitTest :app:assembleDebug`) and the database
-migration test for schema v2.
+## Verification state
+- CI command: `./gradlew --continue :core:domain:test :core:analytics:test testDebugUnitTest lint :app:assembleDebug :app:assembleRelease`
+  (the workflow prints a build-error summary and a test summary). Run 22 (commit 18ea6de): everything compiled, lint and
+  both APKs built, 606/615 tests passed; the 9 failures were one Robolectric class booting the real Application, fixed in ecccdd0.
+- APKs are uploaded by CI as the `apex-apks` artifact (`app/build/outputs/apk/debug/app-debug.apk`,
+  `app/build/outputs/apk/release/app-release-unsigned.apk` unless signing env vars are set; see `SETUP.md`).
+- Not done: launching the release APK on an emulator (spec section 13 item 4), screenshot tests light/dark.
+
+## Open for the owner (details in `docs/OPEN_POINTS.md`)
+- Sleep Poor/Sufficient/Optimal bands (FORMULAS section 4 has proposals); whether manual-workout RPE feeds load.
+- Citations in `EVIDENCE.md` are unverified.
+- Everything marked `UNVERIFIED-NEEDS-REAL-BAND` / `...REAL-ACCOUNT`: run the diagnostics report on the phone and send it back.
 
 ## Next three actions
-1. Run the full build; add a v1→v2 migration test; write `docs/AUDIT.md` and `docs/DECISIONS.md`.
-2. Build `:core:ui` components (ScoreDial, cards, rows, charts, glass tab bar) and the `:app` shell with
-   Overview on Demo data; produce a debug APK and look at it on an emulator.
-3. Health Connect source, then the Takeout engine, then the Google Health client.
+1. Get CI fully green on the latest commit and record the run number here.
+2. Add an emulator smoke job: install the release APK, start it, check it stays alive in Demo mode.
+3. README status table and the final report (spec section 16).

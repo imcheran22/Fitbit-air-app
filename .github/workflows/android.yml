@@ -65,6 +65,32 @@ jobs:
           print(f"TEST SUMMARY: {total} tests, {failed} failed")
           EOF
 
+      # The release APK is unsigned unless real signing material is configured. For the emulator
+      # smoke test only, sign a copy with a throwaway key made here; it is never published.
+      - name: Sign a CI-only copy of the release APK
+        if: always()
+        run: |
+          set -e
+          IN=$(ls app/build/outputs/apk/release/*.apk 2>/dev/null | head -1 || true)
+          [ -n "$IN" ] || { echo "no release APK"; exit 0; }
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          keytool -genkeypair -keystore ci-throwaway.jks -storepass cithrowaway -keypass cithrowaway \
+            -alias ci -keyalg RSA -keysize 2048 -validity 2 -dname "CN=Apex CI smoke" -noprompt
+          mkdir -p smoke-apk
+          "$BT/zipalign" -f -p 4 "$IN" smoke-apk/aligned.apk
+          "$BT/apksigner" sign --ks ci-throwaway.jks --ks-pass pass:cithrowaway --key-pass pass:cithrowaway \
+            --out smoke-apk/app-release-ci-signed.apk smoke-apk/aligned.apk
+          rm -f smoke-apk/aligned.apk ci-throwaway.jks
+
+      - name: Upload CI-signed release for the smoke test
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-apk
+          path: smoke-apk/app-release-ci-signed.apk
+          if-no-files-found: warn
+          retention-days: 3
+
       - name: Upload APKs
         if: always()
         uses: actions/upload-artifact@v4
@@ -89,3 +115,42 @@ jobs:
           path: |
             **/build/reports/tests/
             **/build/reports/lint-results-*.html
+
+  # Spec section 13 item 4: the release APK launches on a clean emulator and survives Demo mode,
+  # tab switches, rotation, 200 % font, a kill and relaunch, and dark mode.
+  emulator-smoke:
+    needs: build
+    if: always() && needs.build.result != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: smoke-apk
+          path: smoke-apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Smoke test on API 34
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash .github/scripts/smoke.sh smoke-apk/app-release-ci-signed.apk
+
+      - name: Upload smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-screens
+          path: smoke/
+          if-no-files-found: warn
