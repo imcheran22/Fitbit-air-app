@@ -50,7 +50,10 @@ class HealthIngestor(
      * already written and merges later points into them instead of replacing them.
      */
     class Session internal constructor() {
-        internal val writtenMinutes = HashSet<Long>()
+        internal val writtenMinutes = MinuteLedger()
+
+        /** Minutes the run still remembers; stays a few thousand however long the run is. For tests. */
+        internal val trackedMinuteCount: Int get() = writtenMinutes.size
         var counts: IngestCounts = IngestCounts()
             internal set
         /** Earliest civil day this run changed; null when nothing was written. */
@@ -90,9 +93,10 @@ class HealthIngestor(
     ): IngestCounts {
         if (points.isEmpty()) return IngestCounts()
         var rejected = 0L
+        val now = nowMillis()
         val buckets = HashMap<Long, Bucket>()
         for (p in points) {
-            if (p.bpm !in MIN_BPM..MAX_BPM || p.epochMillis <= 0 || p.epochMillis > nowMillis() + FUTURE_TOLERANCE_MS) {
+            if (p.bpm !in MIN_BPM..MAX_BPM || !ObservationBounds.isPlausibleInstant(p.epochMillis, now)) {
                 rejected++
                 continue
             }
@@ -109,7 +113,7 @@ class HealthIngestor(
         val z = zone()
         val minutes = buckets.keys.sorted()
         for (chunk in minutes.chunked(BATCH_ROWS)) {
-            db.withTransaction {
+            val committed = db.withTransaction {
                 val dao = db.intradayHeartRateDao()
                 val existing = dao.range(chunk.first(), chunk.last() + 1).associateBy { it.timestampEpochMillis }
                 val rows = ArrayList<IntradayHeartRateEntity>(chunk.size)
@@ -139,10 +143,10 @@ class HealthIngestor(
                 }
                 if (rows.isNotEmpty()) dao.upsertAll(rows)
                 written += rows.size
-                for (r in rows) {
-                    session.writtenMinutes += r.timestampEpochMillis
-                }
+                rows.map { it.timestampEpochMillis }
             }
+            // Only committed minutes are remembered, and only those near this chunk (see MinuteLedger).
+            session.writtenMinutes.recordChunk(committed)
             session.touch(Instant.ofEpochMilli(chunk.first()).atZone(z).toLocalDate().toEpochDay())
             session.touch(Instant.ofEpochMilli(chunk.last()).atZone(z).toLocalDate().toEpochDay())
         }
@@ -168,9 +172,10 @@ class HealthIngestor(
     private suspend fun ingestDaily(batch: HealthBatch, session: Session): IngestCounts {
         if (batch.daily.isEmpty()) return IngestCounts()
         val now = nowMillis()
+        val today = Instant.ofEpochMilli(now).atZone(zone()).toLocalDate().toEpochDay()
         var rejected = 0L
         val rows = batch.daily.mapNotNull { o ->
-            if (!Plausibility.isPlausible(o.metric, o.value)) {
+            if (!Plausibility.isPlausible(o.metric, o.value) || !ObservationBounds.isPlausibleDay(o.epochDay, today)) {
                 rejected++
                 null
             } else {
@@ -197,8 +202,9 @@ class HealthIngestor(
         if (batch.samples.isEmpty()) return IngestCounts()
         var rejected = 0L
         val z = zone()
+        val now = nowMillis()
         val rows = batch.samples.mapNotNull { o ->
-            if (!Plausibility.isPlausible(o.metric, o.value) || o.epochMillis <= 0) {
+            if (!Plausibility.isPlausible(o.metric, o.value) || !ObservationBounds.isPlausibleInstant(o.epochMillis, now)) {
                 rejected++
                 null
             } else {
@@ -218,7 +224,9 @@ class HealthIngestor(
 
     private suspend fun ingestSleep(o: SleepObservation, provenance: DataProvenance, session: Session): IngestCounts {
         val durationMin = ((o.endEpochMillis - o.startEpochMillis) / MINUTE_MS).toInt()
-        if (durationMin !in MIN_SLEEP_MINUTES..MAX_SLEEP_MINUTES || o.endEpochMillis > nowMillis() + FUTURE_TOLERANCE_MS) {
+        if (durationMin !in MIN_SLEEP_MINUTES..MAX_SLEEP_MINUTES || o.endEpochMillis > nowMillis() + FUTURE_TOLERANCE_MS ||
+            o.startEpochMillis < ObservationBounds.MIN_EPOCH_MILLIS
+        ) {
             return IngestCounts(rejected = 1)
         }
         val stages = o.stages
@@ -249,7 +257,8 @@ class HealthIngestor(
 
         val epochDay = Instant.ofEpochMilli(o.endEpochMillis)
             .atOffset(ZoneOffset.ofTotalSeconds(o.endZoneOffsetSeconds)).toLocalDate().toEpochDay()
-        val isNap = o.isNap ?: (asleep < MAIN_SLEEP_MIN_MINUTES)
+        // A source's "main sleep" flag cannot bypass the minimum duration (SleepClassification).
+        val kind = SleepClassification.classify(asleep, o.isMainSleep, o.isNap)
         val entity = SleepSessionEntity(
             id = o.id,
             startEpochMillis = o.startEpochMillis,
@@ -257,8 +266,8 @@ class HealthIngestor(
             startZoneOffsetSeconds = o.startZoneOffsetSeconds,
             endZoneOffsetSeconds = o.endZoneOffsetSeconds,
             epochDay = epochDay,
-            isMainSleep = o.isMainSleep ?: !isNap,
-            isNap = isNap,
+            isMainSleep = kind.isMain,
+            isNap = kind.isNap,
             hasStages = hasStages,
             minutesAsleep = asleep,
             minutesAwake = awake,
@@ -312,7 +321,9 @@ class HealthIngestor(
 
     private suspend fun ingestWorkout(o: WorkoutObservation, provenance: DataProvenance, session: Session): IngestCounts {
         val duration = o.endEpochMillis - o.startEpochMillis
-        if (duration < MINUTE_MS || duration > MAX_WORKOUT_MS || o.endEpochMillis > nowMillis() + FUTURE_TOLERANCE_MS) {
+        if (duration < MINUTE_MS || duration > MAX_WORKOUT_MS || o.endEpochMillis > nowMillis() + FUTURE_TOLERANCE_MS ||
+            o.startEpochMillis < ObservationBounds.MIN_EPOCH_MILLIS
+        ) {
             return IngestCounts(rejected = 1)
         }
         val epochDay = Instant.ofEpochMilli(o.startEpochMillis)
@@ -386,9 +397,9 @@ class HealthIngestor(
         const val MAX_BPM = 240
         const val MIN_SLEEP_MINUTES = 10
         const val MAX_SLEEP_MINUTES = 24 * 60
-        const val MAIN_SLEEP_MIN_MINUTES = 180
+        const val MAIN_SLEEP_MIN_MINUTES = SleepClassification.MAIN_SLEEP_MIN_MINUTES
         const val MAX_WORKOUT_MS = 24 * 60 * MINUTE_MS
-        const val FUTURE_TOLERANCE_MS = 10 * MINUTE_MS
+        const val FUTURE_TOLERANCE_MS = ObservationBounds.FUTURE_TOLERANCE_MS
     }
 }
 

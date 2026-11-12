@@ -28,12 +28,13 @@ interface SyncWatermarkDao {
     /**
      * Records a window that was fully written to the database. The watermark only ever moves
      * forward: re-running an older window can never pull it back and cause re-downloads.
+     * A null [cursorToken] keeps the stored token (it may carry a pending-replay mark); a value replaces it.
      */
     @Query(
         """
         UPDATE sync_watermark
         SET lastSyncedEpochMillis = MAX(lastSyncedEpochMillis, :syncedThroughMillis),
-            cursorToken = :cursorToken,
+            cursorToken = COALESCE(:cursorToken, cursorToken),
             lastAttemptEpochMillis = :nowMillis,
             lastSuccessEpochMillis = :nowMillis,
             status = :status,
@@ -50,6 +51,21 @@ interface SyncWatermarkDao {
         status: SyncStatus,
         nowMillis: Long,
     ): Int
+
+    /**
+     * Sets the watermark back to [millis], whatever it was. Only for a watermark that lies in the future
+     * (the phone clock was set ahead): [advance] is forward-only and would leave it stranded.
+     */
+    @Query("UPDATE sync_watermark SET lastSyncedEpochMillis = :millis WHERE source = :source AND stream = :stream")
+    suspend fun rewindTo(source: SyncSource, stream: String, millis: Long): Int
+
+    /** Stores or clears the opaque token of a stream; the sync uses it for its pending-replay mark. */
+    @Query("UPDATE sync_watermark SET cursorToken = :token WHERE source = :source AND stream = :stream")
+    suspend fun setCursorToken(source: SyncSource, stream: String, token: String?): Int
+
+    /** Every stream row of every source, for the owed-replay check at the start and end of a run. */
+    @Query("SELECT * FROM sync_watermark")
+    suspend fun all(): List<SyncWatermarkEntity>
 
     /** Records a failed attempt. The watermark stays where it was, so the next run retries the gap. */
     @Query(

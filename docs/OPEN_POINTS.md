@@ -67,3 +67,19 @@ matched and which did not, with no personal content.
     death, so WorkManager keeps them until the work is pruned (`TakeoutImportScheduler.cancel` prunes). The brief says to
     persist nothing about the URI beyond the session; this is the unavoidable cost of resuming by itself. Decide whether
     to prune finished work on a timer.
+
+## Ingest bounds and sync recovery (`core/data/.../ingest`, `sync/SyncResumePlan.kt`)
+
+Status: `UNVERIFIED-NEEDS-REAL-ACCOUNT` unless stated. The Room-backed tests for these run on CI only (no Android SDK in the cloud session).
+
+1. **Floor of 2010-01-01.** Assumed no real Fitbit or Health Connect record is older. A real archive that holds
+   older weight or sleep logs would have them counted as `rejected`. Confirm with the first import report's
+   rejected count; lower `ObservationBounds.MIN_EPOCH_MILLIS` if genuine older data shows up.
+2. **Split night.** Both parts of a night split by a long awake period that clear 180 minutes are reduced to the
+   longer one as main sleep; the shorter is a nap and is not scored. Whether the real Google/Fitbit sleep log splits
+   nights, and how the owner expects them scored (merge versus longest), needs a real account with such a night.
+3. **Main-sleep floor of 180 minutes asleep** is the existing constant (`MAIN_SLEEP_MIN_MINUTES`); it is now also
+   enforced against a source flag. A genuine short main sleep (night shift worker, 2 h 50 min) becomes a nap.
+4. **Owed-replay mark in `cursorToken`.** Not visible to the user; disconnecting a source (`deleteForSource`) drops
+   its mark with the row. Confirm once on a device by cancelling a first 90-day backfill (Data Sources, then kill
+   the app) and checking that the days from the first windows have scores after the next sync.

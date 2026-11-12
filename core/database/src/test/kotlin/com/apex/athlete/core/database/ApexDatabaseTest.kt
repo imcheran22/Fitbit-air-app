@@ -309,4 +309,24 @@ class ApexDatabaseTest {
         dao.insertIfAbsent(SyncWatermarkEntity(source, "sleep"))
         assertEquals(0L, dao.oldestWatermark(source))
     }
+
+    @Test
+    fun rewindMovesAStaleWatermarkBackAndAReplayMarkSurvivesAdvance() = runBlocking {
+        val dao = db.syncWatermarkDao()
+        val source = SyncSource.GOOGLE_HEALTH_API
+        dao.insertIfAbsent(SyncWatermarkEntity(source, "heart-rate"))
+        dao.advance(source, "heart-rate", 9_000, null, SyncStatus.SUCCESS, nowMillis = 10)
+        // advance stays forward-only; rewindTo is the explicit way back.
+        dao.advance(source, "heart-rate", 1_000, null, SyncStatus.SUCCESS, nowMillis = 11)
+        assertEquals(9_000L, dao.get(source, "heart-rate")!!.lastSyncedEpochMillis)
+        assertEquals(1, dao.rewindTo(source, "heart-rate", 2_000))
+        assertEquals(2_000L, dao.get(source, "heart-rate")!!.lastSyncedEpochMillis)
+
+        dao.setCursorToken(source, "heart-rate", "replay-from:20000")
+        dao.advance(source, "heart-rate", 3_000, null, SyncStatus.SUCCESS, nowMillis = 12)
+        assertEquals("replay-from:20000", dao.get(source, "heart-rate")!!.cursorToken, "a null token keeps the stored one")
+        assertEquals(listOf("replay-from:20000"), dao.all().map { it.cursorToken })
+        dao.setCursorToken(source, "heart-rate", null)
+        assertNull(dao.get(source, "heart-rate")!!.cursorToken)
+    }
 }

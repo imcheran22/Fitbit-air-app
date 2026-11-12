@@ -7,10 +7,13 @@ import com.apex.athlete.core.data.source.SourceAvailability
 import com.apex.athlete.core.data.source.SourcePermissionException
 import com.apex.athlete.core.data.source.SourceRateLimitedException
 import com.apex.athlete.core.data.store.ActiveStore
+import com.apex.athlete.core.database.dao.SyncWatermarkDao
 import com.apex.athlete.core.database.entity.SyncWatermarkEntity
 import com.apex.athlete.core.domain.SyncSource
 import com.apex.athlete.core.domain.SyncStatus
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -84,7 +87,10 @@ class TriSourceSyncOrchestrator(
                 val mark = dao.get(source.source, stream.name)!!
                 val end = nowMillis()
                 val floor = end - config.backfillDays * DAY_MS
-                var from = if (mark.lastSyncedEpochMillis <= 0L) floor else maxOf(floor, mark.lastSyncedEpochMillis - config.overlapMillis)
+                // A watermark in the future (clock was set ahead, then corrected) is stale: re-read from the floor.
+                val plan = SyncResumePlan.readPlan(mark.lastSyncedEpochMillis, end, floor, config.overlapMillis)
+                var from = plan.fromMillis
+                plan.rewindTo?.let { dao.rewindTo(source.source, stream.name, it) }
                 if (mark.lastSyncedEpochMillis <= 0L) dao.extendBackfillFloor(source.source, stream.name, floor)
 
                 var windows = 0
@@ -93,7 +99,9 @@ class TriSourceSyncOrchestrator(
                     while (from < end && windows < config.maxWindowsPerStream) {
                         val to = minOf(end, from + stream.maxWindowMillis)
                         source.pull(stream, from, to) { batch -> store.ingestor.ingest(batch, session) }
-                        // The window is committed; only now may the watermark move.
+                        // The window is committed. Record the replay it owes before the watermark moves, so a
+                        // kill between here and the final replay cannot leave committed days unscored.
+                        recordReplayOwed(dao, source.source, stream.name, session.earliestAffectedDay)
                         dao.advance(source.source, stream.name, to, null, SyncStatus.SUCCESS, nowMillis())
                         from = to
                         windows++
@@ -120,14 +128,37 @@ class TriSourceSyncOrchestrator(
                     // Only the exception type is recorded: messages can carry URLs or payload fragments.
                     outcome = StreamOutcome.FAILED
                     dao.recordFailure(source.source, stream.name, SyncStatus.FAILED, e.javaClass.simpleName, nowMillis())
+                } finally {
+                    // Batches of a window that failed or was cancelled midway are already committed: owe their replay too.
+                    withContext(NonCancellable) { recordReplayOwed(dao, source.source, stream.name, session.earliestAffectedDay) }
                 }
                 reports += StreamReport(source.source, stream.name, outcome, windows)
             }
         }
 
-        val earliest = session.earliestAffectedDay
+        // Replay from the earliest day owed: this run's changes and any run that was interrupted before its replay.
+        val earliest = SyncResumePlan.replayFrom(
+            dao.all().map { SyncResumePlan.decodeReplayMark(it.cursorToken) },
+            session.earliestAffectedDay,
+        )
         val recomputed = if (earliest != null) store.pipeline.replay(earliest, store.pipeline.today()) else 0
+        // Cleared only after a replay that finished; a throw or cancellation above leaves the marks in place.
+        clearReplayMarks(dao)
         SyncReport(started, nowMillis(), skipped, reports, session.counts, recomputed)
+    }
+
+    /** Keeps `min(existing, earliest)` on the stream's row. The row's cursor token is otherwise unused. */
+    private suspend fun recordReplayOwed(dao: SyncWatermarkDao, source: SyncSource, stream: String, earliestDay: Long?) {
+        if (earliestDay == null) return
+        val existing = SyncResumePlan.decodeReplayMark(dao.get(source, stream)?.cursorToken)
+        val owed = minOf(existing ?: earliestDay, earliestDay)
+        if (owed != existing) dao.setCursorToken(source, stream, SyncResumePlan.encodeReplayMark(owed))
+    }
+
+    private suspend fun clearReplayMarks(dao: SyncWatermarkDao) {
+        for (row in dao.all()) {
+            if (SyncResumePlan.decodeReplayMark(row.cursorToken) != null) dao.setCursorToken(row.source, row.stream, null)
+        }
     }
 
     private companion object {
