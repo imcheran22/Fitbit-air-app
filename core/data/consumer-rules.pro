@@ -19,3 +19,7 @@
 -dontwarn com.networknt.**
 -dontwarn com.github.victools.**
 -dontwarn com.standardwebhooks.**
+
+# The Anthropic SDK's structured-output helper references java.lang.reflect.AnnotatedType, which is
+# not on Android's runtime classpath. Apex never uses structured outputs, so the reference is dead.
+-dontwarn java.lang.reflect.AnnotatedType

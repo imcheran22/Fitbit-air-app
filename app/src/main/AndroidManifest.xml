@@ -99,9 +99,9 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:path="/oauth2redirect"
-                    android:scheme="${appAuthRedirectScheme}" />
+                <!-- Google's installed-app redirect has no host (`<scheme>:/oauth2redirect`), so the
+                     filter matches the scheme only; PkceManager.isRedirect checks the path and state. -->
+                <data android:scheme="${appAuthRedirectScheme}" />
             </intent-filter>
         </activity>
 

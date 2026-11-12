@@ -110,7 +110,7 @@ class RoundTripTest {
         try {
             assertFailsWith<DemoStoreRefusedException> { runBlocking { DataExporter({ RoomExportDataSource(demo) }, "t").exportJson(ByteArrayOutputStream()) } }
             assertFailsWith<DemoStoreRefusedException> { importInto(demo, exportBytes()) }
-            assertEquals(0, demo.db.intradayHeartRateDao().count())
+            assertEquals(0, runBlocking { demo.db.intradayHeartRateDao().count() })
         } finally { demo.db.close() }
     }
 }
