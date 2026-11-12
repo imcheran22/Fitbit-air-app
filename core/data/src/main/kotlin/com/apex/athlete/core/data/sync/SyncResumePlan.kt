@@ -15,9 +15,16 @@ internal object SyncResumePlan {
     /** Where to read from; [rewindTo] is the value the stored watermark must be reset to, if any. */
     data class ReadPlan(val fromMillis: Long, val rewindTo: Long?)
 
-    fun readPlan(lastSyncedMillis: Long, nowMillis: Long, floorMillis: Long, overlapMillis: Long): ReadPlan = when {
+    /**
+     * [caughtUp] is true when the previous run reached "now" (status SUCCESS). Only then is the overlap
+     * re-read; after a run that stopped early (window cap, rate limit, failure) the watermark is exactly
+     * where committed data ends, so the walk resumes there. Re-reading the overlap after a capped run
+     * could cancel the run's progress (e.g. three 12 h windows against a 36 h overlap) and never advance.
+     */
+    fun readPlan(lastSyncedMillis: Long, nowMillis: Long, floorMillis: Long, overlapMillis: Long, caughtUp: Boolean = true): ReadPlan = when {
         lastSyncedMillis <= 0L -> ReadPlan(floorMillis, null)
         lastSyncedMillis > nowMillis + FUTURE_TOLERANCE_MS -> ReadPlan(floorMillis, floorMillis)
+        !caughtUp -> ReadPlan(maxOf(floorMillis, lastSyncedMillis), null)
         else -> ReadPlan(maxOf(floorMillis, lastSyncedMillis - overlapMillis), null)
     }
 

@@ -88,7 +88,7 @@ class TriSourceSyncOrchestrator(
                 val end = nowMillis()
                 val floor = end - config.backfillDays * DAY_MS
                 // A watermark in the future (clock was set ahead, then corrected) is stale: re-read from the floor.
-                val plan = SyncResumePlan.readPlan(mark.lastSyncedEpochMillis, end, floor, config.overlapMillis)
+                val plan = SyncResumePlan.readPlan(mark.lastSyncedEpochMillis, end, floor, config.overlapMillis, caughtUp = mark.status == SyncStatus.SUCCESS)
                 var from = plan.fromMillis
                 plan.rewindTo?.let { dao.rewindTo(source.source, stream.name, it) }
                 if (mark.lastSyncedEpochMillis <= 0L) dao.extendBackfillFloor(source.source, stream.name, floor)
@@ -110,6 +110,12 @@ class TriSourceSyncOrchestrator(
                     if (from < end) {
                         outcome = StreamOutcome.PARTIAL
                         dao.advance(source.source, stream.name, from, null, SyncStatus.PARTIAL, nowMillis())
+                        // Still behind: also read the newest window so today is on screen while the backlog
+                        // walks forward. The watermark does not move (the gap before it is still owed);
+                        // writes are idempotent upserts, so reading it again later is harmless.
+                        val newestFrom = maxOf(from, end - stream.maxWindowMillis)
+                        source.pull(stream, newestFrom, end) { batch -> store.ingestor.ingest(batch, session) }
+                        recordReplayOwed(dao, source.source, stream.name, session.earliestAffectedDay)
                     }
                 } catch (e: CancellationException) {
                     throw e

@@ -111,6 +111,37 @@ class SyncResilienceRobolectricTest {
         assertEquals(now - config.overlapMillis, source.pulledWindows.last().first)
     }
 
+    // --- capped runs must advance, and today must arrive first -------------------------------------
+
+    @Test
+    fun cappedRunsWalkForwardAndTheNewestWindowArrivesOnTheFirstRun(): Unit = runBlocking {
+        // 12 h windows, three per run, the default 36 h overlap: re-reading the overlap after a capped run
+        // would cancel every run's progress and the watermark would never leave the floor.
+        val config = TriSourceSyncOrchestrator.Config(backfillDays = 6, maxWindowsPerStream = 3)
+        val floor = now - 6 * dayMs
+        val points = (0 until 24).map { HeartRatePoint(floor + 3600_000L + it * 6 * 3600_000L, 60 + it % 10) } +
+            HeartRatePoint(now - 10 * 60_000L, 72)
+        val source = FixtureReplaySource(
+            SyncSource.GOOGLE_HEALTH_API,
+            listOf(HealthBatch(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API, heartRate = points)),
+            windowMillis = dayMs / 2,
+        )
+        val dao = db.syncWatermarkDao()
+        val orchestrator = TriSourceSyncOrchestrator(listOf(source), Mutex(), { now }, config)
+
+        orchestrator.sync(store)
+        assertTrue(db.intradayHeartRateDao().range(now - 10 * 60_000L, now).isNotEmpty(), "today is stored on the first run")
+        assertEquals(floor + 3 * dayMs / 2, dao.get(SyncSource.GOOGLE_HEALTH_API, stream)!!.lastSyncedEpochMillis)
+
+        orchestrator.sync(store)
+        assertEquals(floor + 3 * dayMs, dao.get(SyncSource.GOOGLE_HEALTH_API, stream)!!.lastSyncedEpochMillis, "the second run resumes, not re-reads")
+
+        orchestrator.sync(store)
+        orchestrator.sync(store)
+        assertEquals(now, dao.get(SyncSource.GOOGLE_HEALTH_API, stream)!!.lastSyncedEpochMillis, "caught up after four runs")
+        assertEquals(points.size, db.intradayHeartRateDao().count(), "every point once, none doubled")
+    }
+
     // --- interrupted run owes a replay --------------------------------------------------------------
 
     private fun nights(): HealthBatch = HealthBatch(

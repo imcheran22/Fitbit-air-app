@@ -52,4 +52,15 @@ class SyncResumePlanTest {
         assertEquals(5L, SyncResumePlan.replayFrom(listOf(12L), 5L))
         assertEquals(12L, SyncResumePlan.replayFrom(listOf(12L, null), null))
     }
+
+    @Test
+    fun afterACappedOrFailedRunTheWalkResumesAtTheWatermarkWithoutOverlap() {
+        val now = 100 * 86_400_000L
+        val floor = now - 90 * 86_400_000L
+        val overlap = 36 * 3_600_000L
+        val mark = floor + 36 * 3_600_000L
+        assertEquals(SyncResumePlan.ReadPlan(mark, null), SyncResumePlan.readPlan(mark, now, floor, overlap, caughtUp = false))
+        assertEquals(SyncResumePlan.ReadPlan(floor, null), SyncResumePlan.readPlan(mark, now, floor, overlap, caughtUp = true))
+        assertEquals(SyncResumePlan.ReadPlan(now - overlap, null), SyncResumePlan.readPlan(now, now, floor, overlap, caughtUp = true))
+    }
 }
