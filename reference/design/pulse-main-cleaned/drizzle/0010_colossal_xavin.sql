@@ -1,0 +1,1 @@
+ALTER TABLE "profile" ADD COLUMN "time_format" text DEFAULT '24' NOT NULL;

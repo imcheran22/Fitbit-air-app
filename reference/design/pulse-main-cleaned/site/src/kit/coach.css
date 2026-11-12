@@ -1,0 +1,25 @@
+/* The coach screens (screens/*-coach.html) come from an earlier app, kept because they show the coach best. These
+   are the rules they use that the app no longer ships, so `pnpm screens` cannot rebuild them: taken from that
+   capture's kit.css. Delete this file when the coach screens are captured again. */
+@layer kit{
+@layer utilities{@container kit (min-width: 48rem){.kit .md\:before\:-bottom-6::before{content: var(--tw-content); bottom: calc(var(--spacing) * -6);}}}
+@layer utilities{.kit .bottom-\[calc\(max\(env\(safe-area-inset-bottom\)\,12px\)\+var\(--kb\)\)\]{bottom: calc(max(env(safe-area-inset-bottom), 12px) + var(--kb));}}
+@layer utilities{.kit .-mb-\[calc\(62px\+max\(env\(safe-area-inset-bottom\)-6px\,12px\)\+24px\)\]{margin-bottom: calc(calc(62px + max(env(safe-area-inset-bottom) - 6px, 12px) + 24px) * -1);}}
+@layer utilities{.kit .min-h-\[calc\(100svh-76px-env\(safe-area-inset-top\)\)\]{min-height: calc(calc(var(--kit-vh) * 100) - 76px - env(safe-area-inset-top));}}
+@layer utilities{.kit .scroll-mb-28{scroll-margin-bottom: calc(var(--spacing) * 28);}}
+@layer utilities{.kit .before\:pointer-events-none::before{content: var(--tw-content); pointer-events: none;}}
+@layer utilities{.kit .before\:inset-x-0::before{content: var(--tw-content); inset-inline: 0px;}}
+@layer utilities{.kit .before\:-top-8::before{content: var(--tw-content); top: calc(var(--spacing) * -8);}}
+@layer utilities{.kit .before\:-bottom-\[max\(env\(safe-area-inset-bottom\)\,12px\)\]::before{content: var(--tw-content); bottom: calc(max(env(safe-area-inset-bottom), 12px) * -1);}}
+@layer utilities{.kit .before\:-z-10::before{content: var(--tw-content); z-index: calc(-10);}}
+@layer utilities{.kit .before\:bg-linear-to-b::before{content: var(--tw-content); --tw-gradient-position: to bottom;}}
+@layer utilities{@supports (background-image: linear-gradient(in lab, red, red)){.kit .before\:bg-linear-to-b::before{--tw-gradient-position: to bottom in oklab;}}}
+@layer utilities{.kit .before\:bg-linear-to-b::before{background-image: linear-gradient(var(--tw-gradient-stops));}}
+@layer utilities{.kit .before\:from-transparent::before{content: var(--tw-content); --tw-gradient-from: transparent; --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));}}
+@layer utilities{.kit .before\:to-background::before{content: var(--tw-content); --tw-gradient-to: var(--background); --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));}}
+@layer utilities{.kit .before\:to-45\%::before{content: var(--tw-content); --tw-gradient-to-position: 45%;}}
+@layer utilities{@container kit (min-width: 48rem){.kit .md\:bottom-\[calc\(1\.5rem\+var\(--kb\)\)\]{bottom: calc(1.5rem + var(--kb));}}}
+@layer utilities{@container kit (min-width: 48rem){.kit .md\:-mb-10{margin-bottom: calc(var(--spacing) * -10);}}}
+@layer utilities{@container kit (min-width: 48rem){.kit .md\:min-h-\[calc\(100svh-84px-env\(safe-area-inset-top\)\)\]{min-height: calc(calc(var(--kit-vh) * 100) - 84px - env(safe-area-inset-top));}}}
+@layer utilities{@container kit (min-width: 80rem){.kit .xl\:min-h-\[calc\(100svh-92px\)\]{min-height: calc(-92px + calc(var(--kit-vh) * 100));}}}
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "logged_entries" ADD COLUMN "source" text DEFAULT 'pulse' NOT NULL;

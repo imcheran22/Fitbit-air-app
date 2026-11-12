@@ -1,0 +1,1 @@
+ALTER TABLE "logged_entries" ADD COLUMN "app" text;
