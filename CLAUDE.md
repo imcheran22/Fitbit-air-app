@@ -31,6 +31,8 @@ How quality is kept without Fable:
   (Sonnet → Opus), and the reason is recorded in `docs/DECISIONS.md`.
 
 Token rules:
+- **Always pass `model` explicitly** when starting an agent (`sonnet`, `haiku`, or `opus` for a gate). A session
+  keeps the agent definitions it loaded at start, so an edited `.claude/agents/*.md` is not enough on its own.
 - One focused task per agent call with a brief that names the files, the spec section and what "done" means.
   Agents start with no memory. Put shared instructions in one file and point to it instead of repeating them.
 - Independent tasks may run in parallel; never two agents on the same files.
