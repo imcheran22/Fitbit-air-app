@@ -74,6 +74,11 @@ data class SleepScoreResult(
  *
  * A component that cannot be computed (no stage data, fewer than three nights of timing) drops
  * out and the remaining weights are scaled up proportionally.
+ *
+ * Evidence: the duration target comes from the sleep-need model (adult consensus of at least 7 h,
+ * Watson et al. 2015; 7–9 h, Hirshkowitz et al. 2015). The weights, the 38–50 % restorative band,
+ * the 65/92 % efficiency anchors, the wake-bout penalty and the 45/150-minute consistency anchors
+ * are Apex calibration choices; consumer-wearable stage labels are not polysomnography stages.
  */
 class SleepScoreEngine(private val config: Config = Config()) {
 
@@ -113,26 +118,34 @@ class SleepScoreEngine(private val config: Config = Config()) {
         recentTimings: List<SleepTiming> = emptyList(),
         restorativeZ: Double? = null,
     ): SleepScoreResult {
-        require(needMinutes > 0) { "needMinutes must be > 0" }
+        require(needMinutes > 0 && needMinutes.isFinite()) { "needMinutes must be finite and > 0" }
+        require(night.asleepMinutes.isFinite()) { "asleepMinutes must be finite; pass no night instead of an unknown one" }
         val asleep = night.asleepMinutes.coerceAtLeast(0.0)
+        // Optional parts of the night that are non-finite are treated as absent, never as zero.
+        val deep = night.deepMinutes?.takeIf { it.isFinite() }
+        val rem = night.remMinutes?.takeIf { it.isFinite() }
+        val light = night.lightMinutes?.takeIf { it.isFinite() }
 
         val duration = (100.0 * asleep / needMinutes).coerceIn(0.0, 100.0)
 
         val restorativeFraction =
-            if (night.deepMinutes != null && night.remMinutes != null && asleep > 0) {
-                ((night.deepMinutes + night.remMinutes) / asleep).coerceIn(0.0, 1.0)
+            if (deep != null && rem != null && asleep > 0) {
+                ((deep + rem) / asleep).coerceIn(0.0, 1.0)
             } else null
-        val restorative = restorativeFraction?.let { restorativeSubScore(it, restorativeZ) }
+        val restorative = restorativeFraction?.let { restorativeSubScore(it, restorativeZ?.takeIf { z -> z.isFinite() }) }
 
         val efficiencyPercent =
-            if (night.inBedMinutes > 0) (100.0 * asleep / night.inBedMinutes).coerceIn(0.0, 100.0) else null
+            if (night.inBedMinutes.isFinite() && night.inBedMinutes > 0) {
+                (100.0 * asleep / night.inBedMinutes).coerceIn(0.0, 100.0)
+            } else null
         val efficiency = efficiencyPercent?.let { efficiencySubScore(it, night.wakeBoutsOverThreeMinutes) }
 
+        val validTimings = recentTimings.filter { it.onsetMinuteOfDay.isFinite() && it.wakeMinuteOfDay.isFinite() }
         val onsetSd: Double?
         val wakeSd: Double?
-        if (recentTimings.size >= config.minNightsForConsistency) {
-            onsetSd = CircularTime.stdDevMinutes(recentTimings.map { it.onsetMinuteOfDay })
-            wakeSd = CircularTime.stdDevMinutes(recentTimings.map { it.wakeMinuteOfDay })
+        if (validTimings.size >= config.minNightsForConsistency) {
+            onsetSd = CircularTime.stdDevMinutes(validTimings.map { it.onsetMinuteOfDay })
+            wakeSd = CircularTime.stdDevMinutes(validTimings.map { it.wakeMinuteOfDay })
         } else {
             onsetSd = null
             wakeSd = null
@@ -161,9 +174,9 @@ class SleepScoreEngine(private val config: Config = Config()) {
             asleepMinutes = asleep,
             deficitMinutes = (needMinutes - asleep).coerceAtLeast(0.0),
             restorativeFraction = restorativeFraction,
-            deepFraction = night.deepMinutes?.takeIf { asleep > 0 }?.let { it / asleep },
-            remFraction = night.remMinutes?.takeIf { asleep > 0 }?.let { it / asleep },
-            lightFraction = night.lightMinutes?.takeIf { asleep > 0 }?.let { it / asleep },
+            deepFraction = deep?.takeIf { asleep > 0 }?.let { it / asleep },
+            remFraction = rem?.takeIf { asleep > 0 }?.let { it / asleep },
+            lightFraction = light?.takeIf { asleep > 0 }?.let { it / asleep },
             efficiencyPercent = efficiencyPercent,
             onsetStdDevMinutes = onsetSd,
             wakeStdDevMinutes = wakeSd,

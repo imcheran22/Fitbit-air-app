@@ -107,6 +107,12 @@ data class RecoveryResult(
  * Because the weights of missing inputs are redistributed in proportion to the remaining ones,
  * the score always spans the full 0–100 range no matter which sensors exist. At least one
  * autonomic marker (HRV or resting heart rate) is required; sleep alone is not a recovery score.
+ *
+ * Evidence: the inputs follow published practice (ln RMSSD against a personal baseline, Plews
+ * et al. 2013; resting heart rate against a personal baseline, Buchheit 2014), but the weights,
+ * the logistic steepness, the penalty slopes and the 34/67 category edges are Apex calibration
+ * choices. The composite has not been validated against any outcome; it is a summary, not a
+ * diagnosis.
  */
 class RecoveryEngine(private val config: Config = Config()) {
 
@@ -132,14 +138,17 @@ class RecoveryEngine(private val config: Config = Config()) {
     )
 
     fun evaluate(inputs: RecoveryInputs): RecoveryResult {
+        // A non-finite input (NaN, ±Infinity) is treated exactly like a missing one: it never
+        // reaches the arithmetic, so it can neither poison the score nor crash the rounding.
+        fun Double?.finite(): Double? = this?.takeIf { it.isFinite() }
         val subScores: Map<RecoveryComponent, Double?> = mapOf(
-            RecoveryComponent.HRV to inputs.hrvZ?.let(::hrvSubScore),
-            RecoveryComponent.RESTING_HEART_RATE to inputs.restingHeartRateZ?.let(::restingHeartRateSubScore),
-            RecoveryComponent.SLEEP to inputs.sleepScore?.coerceIn(0.0, 100.0),
-            RecoveryComponent.RESPIRATORY_RATE to inputs.respiratoryRateZ?.let(::respiratoryRateSubScore),
-            RecoveryComponent.SKIN_TEMPERATURE to inputs.skinTemperatureZ?.let(::skinTemperatureSubScore),
+            RecoveryComponent.HRV to inputs.hrvZ.finite()?.let(::hrvSubScore),
+            RecoveryComponent.RESTING_HEART_RATE to inputs.restingHeartRateZ.finite()?.let(::restingHeartRateSubScore),
+            RecoveryComponent.SLEEP to inputs.sleepScore.finite()?.coerceIn(0.0, 100.0),
+            RecoveryComponent.RESPIRATORY_RATE to inputs.respiratoryRateZ.finite()?.let(::respiratoryRateSubScore),
+            RecoveryComponent.SKIN_TEMPERATURE to inputs.skinTemperatureZ.finite()?.let(::skinTemperatureSubScore),
             RecoveryComponent.SUBJECTIVE_FATIGUE to inputs.subjectiveFatigue?.let(::subjectiveFatigueSubScore),
-            RecoveryComponent.TRAINING_LOAD to inputs.acuteChronicRatio?.let(::trainingLoadSubScore),
+            RecoveryComponent.TRAINING_LOAD to inputs.acuteChronicRatio.finite()?.let(::trainingLoadSubScore),
         )
 
         val missing = RecoveryComponent.entries.filter { !it.isOptional && subScores[it] == null }

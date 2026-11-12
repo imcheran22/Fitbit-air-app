@@ -25,6 +25,7 @@ data class RemainingCapacity(
  *   center = 6 + 12 · (recovery / 100)        window = center ± 1
  *
  * so a recovery of 0 % points to a strain of 6 (active recovery), 50 % to 12, 100 % to 18.
+ * The mapping is an Apex calibration choice with no validated source; it is guidance only.
  */
 class StrainTargetCalculator(
     private val engine: StrainEngine = StrainEngine(),
@@ -52,11 +53,13 @@ class StrainTargetCalculator(
         val strainRemaining = (target.high - currentStrain).coerceAtLeast(0.0)
         val trimpRemaining = (engine.trimpFromStrain(target.high) - currentTrimp).coerceAtLeast(0.0)
 
-        val zones = HeartRateZoneModel.of(profile)
+        // Same zone method and reserve floor as the engine that scored the day, so the minutes
+        // refer to the zones the user actually sees.
+        val zones = HeartRateZoneModel.of(profile, engine.config.zoneMethod)
         val minutes = HeartRateZone.entries
             .filter { it != HeartRateZone.BELOW_ZONES }
             .mapNotNull { zone ->
-                val perMinute = Trimp.perMinute(zones.midpointOf(zone), profile)
+                val perMinute = Trimp.perMinute(zones.midpointOf(zone), profile, engine.config.reserveFloor)
                 if (perMinute > 0) zone to trimpRemaining / perMinute else null
             }
             .toMap()

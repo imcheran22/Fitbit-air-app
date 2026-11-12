@@ -32,7 +32,13 @@ data class MetricIntelligence(
     val previous: Double?,
     val previousDay: Long?,
     val changeFromPrevious: Double?,
-    /** 7-day exponentially weighted average up to and including [asOfDay]. */
+    /**
+     * 7-day exponentially weighted average up to and including [asOfDay], in the metric's own
+     * units. It is averaged on the baseline's scale and transformed back, so for HRV it is a
+     * weighted geometric mean of RMSSD (the 7-day ln RMSSD average of Plews et al. 2013), directly
+     * comparable with [Baseline.lowerNormal] and [Baseline.upperNormal]. Days without a reading are
+     * skipped, so check [validDaysLast7] before treating it as current.
+     */
     val ewma7: Double?,
     /** Plain mean of the readings in the last 7 days (including [asOfDay]). */
     val mean7: Double?,
@@ -67,9 +73,11 @@ object MetricTrendAnalyzer {
     const val TREND_THRESHOLD_FRACTION = 0.05
 
     fun analyze(history: List<DailyValue>, asOfDay: Long, spec: BaselineSpec): MetricIntelligence {
-        val byDay = history
-            .filter { it.epochDay <= asOfDay && spec.transform.isValid(it.value) }
-            .associateBy({ it.epochDay }, { it.value })
+        // One reading per day; the first one listed wins, exactly as in BaselineEngine.
+        val byDay = LinkedHashMap<Long, Double>()
+        for (v in history) {
+            if (v.epochDay <= asOfDay && spec.transform.isValid(v.value)) byDay.putIfAbsent(v.epochDay, v.value)
+        }
 
         val current = byDay[asOfDay]
         val previousDay = byDay.keys.filter { it < asOfDay }.maxOrNull()
@@ -79,9 +87,11 @@ object MetricTrendAnalyzer {
         val z = current?.let { BaselineEngine.zScore(it, baseline) }
 
         // EWMA runs over the baseline window plus today so that it has settled by the last day.
+        // It is taken on the baseline's scale (ln for HRV) so that it compares like with like
+        // against the normal range, which is built on that scale too.
         val ewmaStart = asOfDay - spec.windowDays
-        val ewmaInput = (ewmaStart..asOfDay).map { byDay[it] }
-        val ewma7 = Ewma.last(ewmaInput, span = 7)
+        val ewmaInput = (ewmaStart..asOfDay).map { d -> byDay[d]?.let(spec.transform::apply) }
+        val ewma7 = Ewma.last(ewmaInput, span = 7)?.let(spec.transform::invert)
 
         val last7 = ((asOfDay - 6)..asOfDay).mapNotNull { d -> byDay[d]?.let { d to it } }
         val last7Values = last7.map { it.second }

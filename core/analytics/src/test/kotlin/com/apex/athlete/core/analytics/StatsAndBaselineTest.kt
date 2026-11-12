@@ -66,6 +66,30 @@ class StatsAndBaselineTest {
     }
 
     @Test
+    fun `non finite readings count as missing in every ewma`() {
+        val withNaN = listOf(10.0, Double.NaN, Double.POSITIVE_INFINITY, 20.0)
+        assertEquals(listOf(10.0, 10.0, 10.0, 12.5), Ewma.series(withNaN, 7))
+        assertEquals(listOf(10.0, 7.5, 5.625, 9.21875), Ewma.series(withNaN, 7, MissingValuePolicy.TREAT_AS_ZERO))
+        assertEquals(Ewma.normalizedSeries(listOf(10.0, null, null, 20.0), 7), Ewma.normalizedSeries(withNaN, 7))
+    }
+
+    @Test
+    fun `normalised ewma does not depend on a seed and matches the explicit weighted mean`() {
+        // y1 = (20 + 0.75·10) / 1.75; y2 = (20 + 0.75·20 + 0.5625·10) / 2.3125
+        val y = Ewma.normalizedSeries(listOf(10.0, 20.0, 20.0), 7)
+        assertEquals(10.0, y[0]!!, eps)
+        assertEquals(27.5 / 1.75, y[1]!!, eps)
+        assertEquals(40.625 / 2.3125, y[2]!!, eps)
+        // Leading gaps yield null; later gaps are skipped, not counted as zero.
+        assertEquals(listOf(null, 10.0, 10.0), Ewma.normalizedSeries(listOf(null, 10.0, null), 7))
+        // Constant input is returned unchanged (up to floating-point rounding).
+        assertTrue(Ewma.normalizedSeries(List(50) { 42.0 }, 28).all { kotlin.math.abs(it!! - 42.0) < 1e-9 })
+        // On a long history it converges to the recursive EWMA (the seed's weight has decayed).
+        val long = List(400) { i -> 30.0 + 20.0 * kotlin.math.sin(i / 5.0) }
+        assertEquals(Ewma.last(long, 28)!!, Ewma.normalizedSeries(long, 28).last()!!, 1e-9)
+    }
+
+    @Test
     fun `clock times average across midnight`() {
         val mean = CircularTime.meanMinuteOfDay(listOf(1430.0, 10.0))!!
         assertTrue(mean < 1e-6 || mean > 1440 - 1e-6, "mean was $mean")

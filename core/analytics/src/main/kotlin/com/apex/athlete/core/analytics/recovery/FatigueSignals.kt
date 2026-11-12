@@ -9,7 +9,11 @@ enum class FatigueSignal {
     HRV_ACUTE_DROP,
     /** HRV has been below the personal normal range for three or more days in a row. */
     HRV_SUSTAINED_SUPPRESSION,
-    /** The 7-day HRV average itself has slipped below the normal range. */
+    /**
+     * The 7-day HRV average (ln scale) has slipped below the normal range. Needs at least
+     * [FatigueSignalDetector.MIN_WEEKLY_READINGS] readings in the last 7 days, so a carried-forward
+     * average from an old reading cannot raise it.
+     */
     HRV_WEEKLY_AVERAGE_BELOW_RANGE,
     /** Today's resting heart rate is at least 1.5 SD above the personal baseline. */
     RESTING_HR_ELEVATED,
@@ -27,12 +31,23 @@ data class FatigueAssessment(val level: FatigueLevel, val signals: Set<FatigueSi
  * Combines the HRV, resting-heart-rate and breathing-rate analyses into a short list of fatigue
  * indicators. Thresholds are deliberately conservative so a single noisy night does not raise an
  * alert: sustained signals need three consecutive days, acute ones need 1.5–2 SD.
+ *
+ * The thresholds (1.5 SD, 2 SD, 3 days) are Apex calibration choices, not validated cut-offs. The
+ * signals mean "recovery may be incomplete"; they never diagnose illness or overtraining.
  */
 object FatigueSignalDetector {
 
     const val ACUTE_Z = 1.5
     const val RESPIRATORY_Z = 2.0
     const val SUSTAINED_DAYS = 3
+
+    /**
+     * Readings needed in the last 7 days before the weekly HRV average is judged. Plews et al.
+     * (2014, Int J Sports Physiol Perform) studied how many readings a week are needed for a valid
+     * weekly ln RMSSD mean (recalled, not re-opened: unverified, docs/EVIDENCE.md). The value 3 is
+     * an Apex choice; with fewer readings the average is mostly old data carried forward.
+     */
+    const val MIN_WEEKLY_READINGS = 3
 
     fun assess(
         hrv: MetricIntelligence?,
@@ -49,7 +64,7 @@ object FatigueSignalDetector {
             }
             val lower = hrv.baseline.lowerNormal
             val weekly = hrv.ewma7
-            if (lower != null && weekly != null && weekly < lower) {
+            if (lower != null && weekly != null && hrv.validDaysLast7 >= MIN_WEEKLY_READINGS && weekly < lower) {
                 signals += FatigueSignal.HRV_WEEKLY_AVERAGE_BELOW_RANGE
             }
         }

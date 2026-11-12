@@ -160,4 +160,61 @@ class StrainEngineTest {
         assertEquals(DataProvenance.ESTIMATED, e.provenance)
         assertNull(CardioFitness.estimateFromHeartRateRatio(maxHeartRate = 190.0, restingHeartRate = 10.0))
     }
+
+    @Test
+    fun `calibration anchors quoted in FORMULAS md hold`() {
+        // HRrest 50, HRmax 190, sex unspecified (the two weightings averaged). Derivation:
+        // TRIMP = minutes · x · (0.64·e^(1.92x) + 0.86·e^(1.67x)) / 2, strain = 21·ln(1 + T/20)/ln(31).
+        val p = CardioProfile(restingHeartRate = 50.0, maxHeartRate = 190.0)
+        fun strainOf(bpm: Double, minutes: Int) = engine.evaluate(List(minutes) { HeartRateSample(bpm) }, p)
+        val jog = strainOf(134.0, 30)       // 60 % of reserve
+        val hard = strainOf(169.0, 60)      // 85 % of reserve
+        val marathon = strainOf(162.0, 210) // 80 % of reserve, 3.5 h
+        assertEquals(39.309, jog.trimp, 1e-3)
+        assertEquals(6.648, jog.strain, 1e-3)
+        assertEquals(174.144, hard.trimp, 1e-3)
+        assertEquals(13.899, hard.strain, 1e-3)
+        assertEquals(524.554, marathon.trimp, 1e-3)
+        assertEquals(20.207, marathon.strain, 1e-3)
+    }
+
+    @Test
+    fun `strain never decreases with more or harder minutes and stays within zero to twenty one`() {
+        var previous = 0.0
+        for (bpm in 40..220 step 5) {
+            val s = engine.evaluate(List(60) { HeartRateSample(bpm.toDouble()) }, male).strain
+            assertTrue(s >= previous && s in 0.0..21.0, "bpm $bpm gave $s after $previous")
+            previous = s
+        }
+        previous = 0.0
+        for (minutes in listOf(0, 1, 10, 60, 240, 1440)) {
+            val s = engine.evaluate(List(minutes) { HeartRateSample(150.0) }, male).strain
+            assertTrue(s >= previous && s <= 21.0)
+            previous = s
+        }
+    }
+
+    @Test
+    fun `remaining minutes use the engine's zone method and reserve floor`() {
+        val hrrEngine = StrainEngine(StrainEngine.Config(zoneMethod = ZoneMethod.HEART_RATE_RESERVE))
+        val calc = StrainTargetCalculator(hrrEngine)
+        val target = calc.targetFor(50.0)
+        val r = calc.remaining(currentTrimp = 30.0, target = target, profile = male)
+        // Karvonen zone 5 for 60/180 runs 168..180, midpoint 174 bpm (v1 used 171, the %HRmax zone).
+        assertEquals(r.trimpRemaining / Trimp.perMinute(174.0, male), r.minutesByZone.getValue(HeartRateZone.ZONE_5), 1e-9)
+
+        // With a 40 % reserve floor, zone 1's midpoint (99 bpm = 32.5 % of reserve) earns nothing.
+        val strict = StrainTargetCalculator(StrainEngine(StrainEngine.Config(reserveFloor = 0.40)))
+        val s = strict.remaining(currentTrimp = 30.0, target = target, profile = male)
+        assertTrue(HeartRateZone.ZONE_1 !in s.minutesByZone)
+        assertTrue(HeartRateZone.ZONE_2 in s.minutesByZone)
+    }
+
+    @Test
+    fun `non finite sample durations are ignored`() {
+        val r = engine.evaluate(listOf(HeartRateSample(150.0, Double.NaN), HeartRateSample(150.0, Double.POSITIVE_INFINITY), HeartRateSample(150.0)), male)
+        assertEquals(1.0, r.recordedMinutes, eps)
+        assertEquals(Trimp.perMinute(150.0, male), r.trimp, eps)
+        assertEquals(0.0, engine.strainFromTrimp(Double.NaN), eps)
+    }
 }

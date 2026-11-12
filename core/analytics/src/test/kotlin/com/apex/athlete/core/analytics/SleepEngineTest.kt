@@ -9,6 +9,7 @@ import com.apex.athlete.core.analytics.sleep.SleepScoreEngine
 import com.apex.athlete.core.analytics.sleep.SleepTiming
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -100,6 +101,20 @@ class SleepEngineTest {
     }
 
     @Test
+    fun `duration carries 40 percent so a short night can still reach the top bands`() {
+        // Characterisation for docs/FORMULAS.md (sleep bands): every other component perfect
+        // (restorative 100, efficiency 100, consistency 100), only the duration varies.
+        // score = 0.40 * duration + 0.60 * 100, hand-computed.
+        fun scoreFor(asleep: Double): Double = score.evaluate(
+            SleepNightInput(asleepMinutes = asleep, inBedMinutes = asleep, deepMinutes = 0.20 * asleep, remMinutes = 0.25 * asleep),
+            needMinutes = 465.0, recentTimings = steady,
+        ).score
+        assertEquals(88.0, scoreFor(0.70 * 465.0), eps)  // 5 h 25 min: 28 + 60
+        assertEquals(80.0, scoreFor(0.50 * 465.0), eps)  // 3 h 53 min: 20 + 60
+        assertEquals(100.0, scoreFor(465.0), eps)
+    }
+
+    @Test
     fun `nights without stage data are scored on the remaining components`() {
         val night = SleepNightInput(asleepMinutes = 465.0, inBedMinutes = 500.0)
         val r = score.evaluate(night, needMinutes = 465.0)
@@ -152,5 +167,32 @@ class SleepEngineTest {
         assertEquals(32.863353450309965, r.onsetStdDevMinutes!!, 1e-6) // sqrt(6·30² / 5)
         assertEquals(0.0, r.wakeStdDevMinutes!!, 1e-6)
         assertTrue(r.contributions.first { it.component == SleepComponent.CONSISTENCY }.available)
+    }
+
+    @Test
+    fun `non finite optional sleep values are absent, not zero`() {
+        val night = SleepNightInput(
+            asleepMinutes = 465.0, inBedMinutes = Double.NaN,
+            deepMinutes = Double.NaN, remMinutes = 100.0, lightMinutes = 300.0,
+        )
+        val timings = steady.take(3) + SleepTiming(Double.NaN, 420.0)
+        val r = score.evaluate(night, needMinutes = 465.0, recentTimings = timings, restorativeZ = Double.NaN)
+        assertNull(r.restorativeFraction)
+        assertNull(r.deepFraction)
+        assertNull(r.efficiencyPercent)
+        assertEquals(0.0, r.onsetStdDevMinutes!!, 1e-6) // the NaN night is dropped, three valid remain
+        assertEquals(100.0, r.score, eps)               // duration 100 and consistency 100
+        assertFailsWith<IllegalArgumentException> {
+            score.evaluate(night.copy(asleepMinutes = Double.NaN), needMinutes = 465.0)
+        }
+    }
+
+    @Test
+    fun `non finite nights and strain are skipped by the need model`() {
+        val nights = listOf(NightBalance(98, 465.0, Double.NaN), NightBalance(99, 465.0, 405.0))
+        assertEquals(60.0, need.accumulatedDebt(nights, asOfDay = 100), eps)
+        assertEquals(0.0, need.strainSurcharge(Double.NaN), eps)
+        val n = need.need(emptyList(), Double.NaN, nights, 100)
+        assertEquals(465.0 + 30.0, n.totalMinutes, eps)
     }
 }

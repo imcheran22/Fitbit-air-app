@@ -46,7 +46,7 @@ data class StrainResult(
  * and a marathon-sized day near 20. k and the ceiling are calibration constants, not physiology;
  * they only set where on the scale typical days fall.
  */
-class StrainEngine(private val config: Config = Config()) {
+class StrainEngine(val config: Config = Config()) {
 
     data class Config(
         val reserveFloor: Double = Trimp.DEFAULT_RESERVE_FLOOR,
@@ -70,7 +70,7 @@ class StrainEngine(private val config: Config = Config()) {
         var recorded = 0.0
 
         for (s in samples) {
-            if (s.durationMinutes <= 0 || !s.bpm.isFinite() || s.bpm <= 0) continue
+            if (!s.durationMinutes.isFinite() || s.durationMinutes <= 0 || !s.bpm.isFinite() || s.bpm <= 0) continue
             recorded += s.durationMinutes
             val zone = zones.zoneFor(s.bpm)
             minutesByZone[zone] = minutesByZone.getValue(zone) + s.durationMinutes
@@ -91,7 +91,7 @@ class StrainEngine(private val config: Config = Config()) {
     }
 
     fun strainFromTrimp(trimp: Double): Double {
-        if (trimp <= 0) return 0.0
+        if (trimp.isNaN() || trimp <= 0) return 0.0
         val s = config.maxStrain * ln(1 + trimp / config.trimpScale) / ln(1 + config.trimpCeiling / config.trimpScale)
         return s.coerceIn(0.0, config.maxStrain)
     }

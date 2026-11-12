@@ -146,4 +146,35 @@ class RecoveryEngineTest {
         assertEquals(RecoveryCategory.MODERATE, categoryAt(34.0))
         assertEquals(RecoveryCategory.RESTORATIVE, categoryAt(33.0))
     }
+
+    @Test
+    fun `non finite inputs are missing inputs, never a crash or a NaN score`() {
+        val r = engine.evaluate(
+            RecoveryInputs(
+                hrvZ = Double.NaN, restingHeartRateZ = 0.0, sleepScore = Double.POSITIVE_INFINITY,
+                respiratoryRateZ = Double.NaN, skinTemperatureZ = 0.0, acuteChronicRatio = Double.NaN,
+            ),
+        )
+        assertEquals(RecoveryStatus.SCORED, r.status)
+        assertEquals(
+            listOf(RecoveryComponent.HRV, RecoveryComponent.SLEEP, RecoveryComponent.RESPIRATORY_RATE),
+            r.missingComponents,
+        )
+        // RHR at baseline (50, weight 0.25) and skin temperature (100, weight 0.05), renormalised.
+        assertEquals((0.25 * 50.0 + 0.05 * 100.0) / 0.30, r.score!!, eps)
+
+        val none = engine.evaluate(RecoveryInputs(hrvZ = Double.NaN, restingHeartRateZ = Double.NEGATIVE_INFINITY, sleepScore = 80.0))
+        assertEquals(RecoveryStatus.UNAVAILABLE, none.status)
+        assertNull(none.score)
+    }
+
+    @Test
+    fun `recovery is monotone in hrv z and anti monotone in resting heart rate z`() {
+        val zs = (-30..30).map { it / 10.0 }
+        val byHrv = zs.map { engine.evaluate(RecoveryInputs(hrvZ = it, restingHeartRateZ = 0.5, sleepScore = 70.0)).score!! }
+        assertTrue(byHrv.zipWithNext().all { (a, b) -> b > a })
+        val byRhr = zs.map { engine.evaluate(RecoveryInputs(hrvZ = 0.5, restingHeartRateZ = it, sleepScore = 70.0)).score!! }
+        assertTrue(byRhr.zipWithNext().all { (a, b) -> b <= a })
+        assertTrue((byHrv + byRhr).all { it in 0.0..100.0 })
+    }
 }

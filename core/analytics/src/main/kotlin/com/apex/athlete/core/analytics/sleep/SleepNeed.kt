@@ -42,6 +42,11 @@ data class SleepNeed(
  *
  * The cap exists because sleep debt cannot be repaid in a single night; without it a week of
  * six-hour nights would prescribe a fourteen-hour night. Total need never exceeds 10 h.
+ *
+ * Evidence: the 7–9 h band matches the adult recommendation of Hirshkowitz et al. (2015,
+ * National Sleep Foundation) and the "at least 7 h" consensus of Watson et al. (2015, AASM/SRS).
+ * The 7 h 45 min default, the 75th percentile, the strain surcharge and the debt rules are Apex
+ * calibration choices without a validated source.
  */
 class SleepNeedCalculator(private val config: Config = Config()) {
 
@@ -73,7 +78,7 @@ class SleepNeedCalculator(private val config: Config = Config()) {
     }
 
     fun strainSurcharge(precedingDayStrain: Double?): Double =
-        if (precedingDayStrain == null) 0.0
+        if (precedingDayStrain == null || !precedingDayStrain.isFinite()) 0.0
         else maxOf(0.0, precedingDayStrain - config.strainThreshold) * config.minutesPerStrainPoint
 
     /**
@@ -84,7 +89,7 @@ class SleepNeedCalculator(private val config: Config = Config()) {
     fun accumulatedDebt(nights: List<NightBalance>, asOfDay: Long): Double {
         val from = asOfDay - config.debtWindowNights
         val net = nights
-            .filter { it.epochDay in from until asOfDay }
+            .filter { it.epochDay in from until asOfDay && it.needMinutes.isFinite() && it.asleepMinutes.isFinite() }
             .distinctBy { it.epochDay }
             .sumOf { (it.needMinutes - it.asleepMinutes).coerceAtLeast(-config.maxSurplusCreditMinutes) }
         return net.coerceAtLeast(0.0)

@@ -8,8 +8,12 @@ import com.apex.athlete.core.analytics.recovery.FatigueSignalDetector
 import com.apex.athlete.core.analytics.trend.MetricTrendAnalyzer
 import com.apex.athlete.core.analytics.trend.RangeStatus
 import com.apex.athlete.core.analytics.trend.TrendDirection
+import com.apex.athlete.core.analytics.stats.Ewma
+import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -88,5 +92,50 @@ class TrendAndFatigueTest {
         assertTrue(FatigueSignal.RESTING_HR_SUSTAINED_ELEVATION in high.signals)
 
         assertEquals(FatigueLevel.NONE, FatigueSignalDetector.assess(null, null).level)
+    }
+
+    @Test
+    fun `hrv weekly average is taken on the ln scale like its normal range`() {
+        val history = series(60.0, 4.0, listOf(70.0, 40.0, 75.0, 38.0, 80.0))
+        val m = MetricTrendAnalyzer.analyze(history, 100, BaselineSpecs.HRV)
+        // Independent derivation: EWMA (alpha 0.25, seeded with the first value) of ln RMSSD over
+        // days 70..100, transformed back with exp.
+        val byDay = history.associate { it.epochDay to it.value }
+        val lnEwma = Ewma.last((70L..100L).map { byDay[it]?.let(::ln) }, 7)!!
+        assertEquals(exp(lnEwma), m.ewma7!!, 1e-9)
+        // Version 1 averaged raw milliseconds, which is higher than the geometric average for
+        // a right-skewed metric and so hid real drops against the (geometric) normal range.
+        val rawEwma = Ewma.last((70L..100L).map { byDay[it] }, 7)!!
+        assertTrue(m.ewma7!! < rawEwma)
+    }
+
+    @Test
+    fun `weekly hrv signal needs three readings in the last seven days`() {
+        // 30 normal days (days 60..89), three low nights on days 90..92, then nothing until today.
+        val normal = (60L..89L).map { DailyValue(it, if (it % 2 == 0L) 64.0 else 56.0) }
+        val low = (90L..92L).map { DailyValue(it, 35.0) }
+        val stale = MetricTrendAnalyzer.analyze(normal + low, 100, BaselineSpecs.HRV)
+        assertEquals(0, stale.validDaysLast7)
+        // The carried-forward average is below range, so only the coverage rule keeps it quiet.
+        assertTrue(stale.ewma7!! < stale.baseline.lowerNormal!!, "ewma ${stale.ewma7} lower ${stale.baseline.lowerNormal}")
+        val quiet = FatigueSignalDetector.assess(stale, null)
+        assertFalse(FatigueSignal.HRV_WEEKLY_AVERAGE_BELOW_RANGE in quiet.signals)
+        assertEquals(FatigueLevel.NONE, quiet.level)
+
+        // The same three low nights ending today are recent enough to be judged.
+        val recent = (68L..97L).map { DailyValue(it, if (it % 2 == 0L) 64.0 else 56.0) } +
+            (98L..100L).map { DailyValue(it, 35.0) }
+        val fresh = MetricTrendAnalyzer.analyze(recent, 100, BaselineSpecs.HRV)
+        assertEquals(7, fresh.validDaysLast7) // 4 normal days (94..97) + 3 low ones
+        assertTrue(FatigueSignal.HRV_WEEKLY_AVERAGE_BELOW_RANGE in FatigueSignalDetector.assess(fresh, null).signals)
+    }
+
+    @Test
+    fun `duplicate readings for a day resolve to the first one everywhere`() {
+        val history = series(60.0, 2.0, emptyList()).filter { it.epochDay < 100 } +
+            DailyValue(100, 61.0) + DailyValue(100, 90.0)
+        val m = MetricTrendAnalyzer.analyze(history, 100, BaselineSpecs.RESTING_HEART_RATE)
+        assertEquals(61.0, m.current!!, eps)
+        assertEquals(RangeStatus.WITHIN_NORMAL, m.rangeStatus)
     }
 }

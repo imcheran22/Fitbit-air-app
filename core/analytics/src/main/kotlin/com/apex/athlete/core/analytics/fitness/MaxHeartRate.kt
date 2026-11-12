@@ -8,7 +8,12 @@ data class MaxHeartRateEstimate(val bpm: Double, val provenance: DataProvenance,
 
 object MaxHeartRate {
 
-    /** Tanaka, Monahan & Seals (2001): HRmax = 208 − 0.7 · age. Standard error is about ±10 bpm. */
+    /**
+     * Tanaka, Monahan & Seals (2001, J Am Coll Cardiol 37(1):153–156): HRmax = 208 − 0.7 · age,
+     * a meta-analysis of healthy adults confirmed in a laboratory sample (sample sizes in
+     * docs/EVIDENCE.md, unverified). It predicts a group mean: an individual's true maximum is
+     * commonly reported to lie roughly ±10 bpm away, so the result is always labelled ESTIMATED.
+     */
     fun agePredicted(ageYears: Int): Double {
         require(ageYears in 5..110) { "age must be within 5..110" }
         return 208.0 - 0.7 * ageYears
@@ -22,6 +27,9 @@ object MaxHeartRate {
      *    actually recorded: a heart cannot beat faster than its maximum, so a recorded peak above
      *    the prediction proves the prediction was too low. A recorded peak below it proves nothing,
      *    because most people rarely reach their maximum.
+     *
+     * 3. Without an age, the recorded peak alone is used. It is a lower bound of the true maximum,
+     *    so strain computed from it errs high; the UI should invite the user to enter age or HRmax.
      *
      * @param observedPeakBpm highest sustained heart rate in the stored history (the caller should
      *   pass a robust peak, e.g. the highest one-minute average, to ignore optical glitches).

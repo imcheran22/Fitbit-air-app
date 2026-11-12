@@ -33,14 +33,17 @@ enum class LoadCaveat {
 data class LoadPoint(val epochDay: Long, val trimp: Double?, val acute: Double?, val chronic: Double?)
 
 /**
- * @property acuteLoad ATL: 7-day EWMA of daily TRIMP ("fatigue").
- * @property chronicLoad CTL: 28-day EWMA of daily TRIMP ("fitness").
+ * @property acuteLoad ATL: 7-day EWMA of daily TRIMP ("fatigue"), normalised weights.
+ * @property chronicLoad CTL: 28-day EWMA of daily TRIMP ("fitness"), normalised weights.
  * @property acwrCoupled ATL / CTL. The acute week is part of the chronic average, which pulls
  *   the ratio towards 1 and understates spikes.
  * @property acwrUncoupled mean of the last 7 days / mean of the 21 days before them.
  * @property workloadZone zone of the uncoupled ratio (falls back to the coupled one).
- * @property monotony Foster: mean daily load / SD of daily load over the last 7 days.
+ * @property monotony Foster: mean daily load / SD of daily load over the last 7 days (needs 6 recorded days).
  * @property fosterStrain Foster: weekly load × monotony.
+ * @property weeklyLoad sum of the recorded days among the last 7; a lower bound when days are missing.
+ * @property weekOverWeekChange relative change of the mean recorded daily load, last 7 days versus
+ *   the 7 before; null unless both weeks have at least [Config.minValidAcuteDays] recorded days.
  * @property trainingBalance yesterday's CTL − yesterday's ATL. Positive = fresh, negative = fatigued.
  * @property chronicLoadChange7d CTL today − CTL a week ago: how fast fitness load is ramping.
  */
@@ -72,7 +75,8 @@ data class TrainingLoadResult(
  * A caution on the ratio itself: the acute:chronic workload ratio is a description of how this
  * week compares with the preceding weeks. The research linking specific ratio bands to injury is
  * contested (Impellizzeri et al. 2020), so the bands are presented as load-management guidance,
- * never as an injury prediction.
+ * never as an injury prediction. The bands themselves (0.8–1.3, ≥ 1.5) come from team-sport studies
+ * of session-RPE and GPS load (Gabbett 2016), not from TRIMP; using them on TRIMP is an Apex choice.
  */
 class TrainingLoadEngine(private val config: Config = Config()) {
 
@@ -95,7 +99,8 @@ class TrainingLoadEngine(private val config: Config = Config()) {
     )
 
     fun analyze(history: List<DailyLoad>, asOfDay: Long): TrainingLoadResult {
-        val byDay = history.filter { it.epochDay <= asOfDay && it.trimp != null }
+        // A null or non-finite TRIMP is "no data" for the day; it must not become a rest day or a NaN.
+        val byDay = history.filter { it.epochDay <= asOfDay && it.trimp != null && it.trimp.isFinite() }
             .associateBy({ it.epochDay }, { it.trimp!!.coerceAtLeast(0.0) })
         val firstDay = byDay.keys.minOrNull()
 
@@ -113,8 +118,10 @@ class TrainingLoadEngine(private val config: Config = Config()) {
         val days = (firstDay..asOfDay).toList()
         val values: List<Double?> = days.map { byDay[it] }
         // Days without data leave the averages unchanged instead of being counted as rest.
-        val acuteSeries = Ewma.series(values, config.acuteSpanDays, MissingValuePolicy.CARRY_FORWARD)
-        val chronicSeries = Ewma.series(values, config.chronicSpanDays, MissingValuePolicy.CARRY_FORWARD)
+        // Normalised weights: the first recorded day is not used as a seed, so a rest day (or a
+        // race) at the start of the history cannot distort the chronic load for weeks.
+        val acuteSeries = Ewma.normalizedSeries(values, config.acuteSpanDays, MissingValuePolicy.CARRY_FORWARD)
+        val chronicSeries = Ewma.normalizedSeries(values, config.chronicSpanDays, MissingValuePolicy.CARRY_FORWARD)
         val series = days.indices.map { LoadPoint(days[it], values[it], acuteSeries[it], chronicSeries[it]) }
 
         val daysOfHistory = days.size
@@ -166,9 +173,12 @@ class TrainingLoadEngine(private val config: Config = Config()) {
 
         val weekly = if (last7.isNotEmpty()) last7.sum() else null
         val previousWeekly = if (prior7.isNotEmpty()) prior7.sum() else null
-        val weekChange =
-            if (weekly != null && previousWeekly != null && previousWeekly > 0) (weekly - previousWeekly) / previousWeekly
-            else null
+        // Compares the average recorded day of each week, and only when both weeks are mostly
+        // recorded: comparing raw sums would report missing wear time as a drop in training.
+        val weekChange = if (last7.size >= config.minValidAcuteDays && prior7.size >= config.minValidAcuteDays) {
+            val previousMean = Stats.mean(prior7)!!
+            if (previousMean > 0) (Stats.mean(last7)!! - previousMean) / previousMean else null
+        } else null
 
         val yesterdayIndex = days.size - 2
         val balance = if (yesterdayIndex >= 0) {
