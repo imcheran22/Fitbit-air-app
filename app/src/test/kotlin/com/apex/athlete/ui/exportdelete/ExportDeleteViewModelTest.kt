@@ -38,7 +38,8 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [35])
+// A plain Application: the real one starts the encrypted store, which has no native library on the JVM.
+@Config(sdk = [35], application = android.app.Application::class)
 class ExportDeleteViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private val uri: Uri = Uri.parse("content://test/apex-export.json")

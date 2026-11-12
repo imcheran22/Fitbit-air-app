@@ -24,7 +24,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [35], qualifiers = "en-rUS")
+@Config(sdk = [35], qualifiers = "en-rUS", application = android.app.Application::class)
 class StateMappersTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val now = 1_800_000_000_000L

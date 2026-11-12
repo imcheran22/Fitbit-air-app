@@ -12,7 +12,7 @@ import java.time.ZoneOffset
 import kotlin.test.assertEquals
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [35], qualifiers = "en-rUS")
+@Config(sdk = [35], qualifiers = "en-rUS", application = android.app.Application::class)
 class FormattersTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val now = LocalDate.of(2026, 11, 11).atTime(12, 0).toInstant(ZoneOffset.UTC).toEpochMilli()
