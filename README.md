@@ -47,7 +47,7 @@ Every formula in `:core:analytics` is written out in [docs/FORMULAS.md](docs/FOR
 
 - UI/UX: [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md), a Compose translation of the
   Pulse Mobile 0.5.0 design (dark-first, opaque cards, glass tab bar, Figtree + Barlow).
-- Build brief for the agent completing the app: [docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md](docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md);
+- Build brief for the agent completing the app: [docs/ROUTE_MAP.md](docs/ROUTE_MAP.md) (staged plan) and the frozen spec [docs/spec/APEX_MASTER_SPEC_V4.1.md](docs/spec/APEX_MASTER_SPEC_V4.1.md);
   working rules in [CLAUDE.md](CLAUDE.md); third-party study material indexed in [docs/REFERENCES.md](docs/REFERENCES.md).
 - Bundled fonts Figtree and Barlow are under the SIL Open Font License 1.1 (`core/ui/fonts-licenses/`).
 

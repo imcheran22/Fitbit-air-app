@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 
 You implement Apex's integrations against verified contracts.
 
-Read first: `docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md` Sections 4, 6, 7 and 8, `docs/PROGRESS.md`,
+Read first: `docs/brief/00-core.md`, the spec line ranges named in your brief (spec is `docs/spec/APEX_MASTER_SPEC_V4.1.md`; never read it whole), `docs/PROGRESS.md`,
 and `core/data/.../source/HealthSource.kt` (the contract every source implements).
 
 Rules:
@@ -23,4 +23,4 @@ Rules:
   means no data, 429 backs off, 5xx retries with jitter. Test with MockWebServer fixtures.
 - Run the relevant module's `testDebugUnitTest` and report the exact result.
 
-Report: files changed, what is verified vs unverified, and tests added.
+Report in 15 lines or fewer: files changed, what is verified vs unverified, and tests added.

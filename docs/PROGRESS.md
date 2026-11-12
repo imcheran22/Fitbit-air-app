@@ -1,6 +1,7 @@
 # Progress (cold-resume note)
 
-Last updated: 2026-11-11. Nothing is committed yet; all work is in the working tree.
+Last updated: 2026-11-12. Work is committed. Planning change: the build now runs in 7 stages (`docs/ROUTE_MAP.md`), no Fable, one model per stage chosen by the owner.
+**Current stage: 1 (Lock the base).** Start with `/stage 1`.
 
 ## Done and verified
 - **M0 audit (read-through):** `:core:domain`, `:core:analytics`, `:core:database` read in full. Engines and DAOs are sound; no defects found that needed a fix. `docs/AUDIT.md` not written yet.
@@ -35,7 +36,6 @@ Full build (`:core:domain:test :core:analytics:test testDebugUnitTest :app:assem
 migration test for schema v2.
 
 ## Next three actions
-1. Run the full build; add a v1→v2 migration test; write `docs/AUDIT.md` and `docs/DECISIONS.md`.
-2. Build `:core:ui` components (ScoreDial, cards, rows, charts, glass tab bar) and the `:app` shell with
-   Overview on Demo data; produce a debug APK and look at it on an emulator.
-3. Health Connect source, then the Takeout engine, then the Google Health client.
+1. `/stage 1` on Sonnet (low): full build, v1→v2 migration test, `AUDIT.md`, `DECISIONS.md`, `EVIDENCE.md`, `OPEN_POINTS.md`.
+2. `/stage 2` on Sonnet: `:core:ui` kit, `:app` shell, Overview on Demo data, first debug APK.
+3. `/stage 3` on Sonnet (takeout-engineer on Sonnet high, tests first): Health Connect, Takeout engine, replay; optional `/gate 3` on Opus.

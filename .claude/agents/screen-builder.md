@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 
 You build Apex's Compose UI. The look is defined; your job is to reproduce it faithfully, not invent.
 
-Read first: `docs/design/DESIGN_SYSTEM.md` (binding), the theme in `core/ui/src/main/kotlin/com/apex/athlete/core/ui/theme/`,
+Read first: `docs/brief/00-core.md`, `docs/design/DESIGN_SYSTEM.md` (binding; only the sections your brief names), the theme in `core/ui/src/main/kotlin/com/apex/athlete/core/ui/theme/`,
 and the matching Pulse section in `design-reference/pulse-mobile-0.5.0/docs/design/spec.md` plus its screenshot
 in `design-reference/pulse-mobile-0.5.0/docs/screenshots/`. Pulse is a React Native app: translate its layout and
 rules into Compose; do not copy TypeScript, the PULSE wordmark or its icons.
@@ -24,4 +24,4 @@ Rules:
 - All user-facing text in `strings.xml`.
 - Add `@Preview`s in light and dark. Run `./gradlew :core:ui:testDebugUnitTest :app:assembleDebug` and report the result.
 
-Report: files changed, which design-doc sections you followed, and any place you could not match the reference (say exactly why).
+Report in 15 lines or fewer: files changed, which design-doc sections you followed, and any place you could not match the reference (say exactly why).

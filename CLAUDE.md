@@ -1,41 +1,38 @@
 # CLAUDE.md — working rules for Apex
 
 Apex (`com.apex.athlete`) is a private, local-first Android athlete dashboard for one Fitbit Air owner.
-The full brief is **`docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md`**. Re-read it after any context reset;
-it outranks everything else here except the user's direct instructions.
+The build is run in **7 stages** (`docs/ROUTE_MAP.md`). The owner chooses the model per stage with `/model`.
 
-## Resume point
-Work is mid-way. Read `docs/PROGRESS.md` first: it lists what is done, what is not, and the next three actions.
+## How to work (token-lean)
+- Start a stage with **`/stage N`**; end it with **`/handoff N`**; optional Opus review with **`/gate 3`** / **`/gate 7`**.
+- Read `docs/brief/00-core.md` + the stage card + `docs/PROGRESS.md`. That is the whole brief. The full spec
+  `docs/spec/APEX_MASTER_SPEC_V4.1.md` is frozen: read it **by line range only**, never whole, never paste it.
+- After a context reset, re-read `00-core.md` and the current stage card, not the spec.
+- The current state is in `docs/PROGRESS.md` (cold-resume note). Update it at every stage end, not mid-stage.
 
-## Model routing (protect tokens, keep quality)
-Run the **main session on Opus**. It plans, splits work and reviews; it does not write bulk code itself.
-Delegate to the agents in `.claude/agents/` (each pins its own model and effort):
+## Model routing (Fable is not used in this project)
+The main session **orchestrates and reviews; it does not write bulk code.** Delegate to `.claude/agents/` (each pins model and effort):
 
 | Task | Agent | Model |
 |---|---|---|
-| Formulas, constants, evidence, FORMULAS.md, coach wording | `science-reviewer` | Fable, high |
-| Takeout ZIP engine, watermarks/resume, de-duplication, time zones, replay | `takeout-engineer` | Fable, high |
 | Compose components, charts, screens, onboarding, settings UI | `screen-builder` | Sonnet, medium |
 | Google Health client/DTOs, OAuth, Health Connect, workers, export, manifest, DI | `integration-coder` | Sonnet, medium |
+| Takeout ZIP engine, watermarks/resume, de-duplication, time zones, replay | `takeout-engineer` | Sonnet, **high** |
+| Formulas, constants, evidence, FORMULAS.md, coach wording | `science-reviewer` | Sonnet, **high** |
+| Review a stage diff against the invariants (read-only) | `diff-reviewer` | Sonnet, medium |
 | Look up a Pulse screen/spec, find code, summarise a doc or the API snapshot | `reference-finder` | Haiku, low |
 | Run Gradle and summarise results | `build-runner` | Haiku, low |
 
 Rules:
-- One focused task per agent call, with a brief naming the files, the design-doc or prompt section to follow,
-  and what "done" means. Agents start with no memory of the conversation.
-- Independent tasks (for example two different screens) may run in parallel; never two agents on the same files.
-- Nothing is accepted until `build-runner` reports green and the main session has read the diff.
-- Fable only for the two Fable rows above, plus a final `science-reviewer` pass before each milestone is marked done.
-  Escalate a Sonnet task to Fable only after it fails review twice, and record why in `docs/DECISIONS.md`.
+- One focused task per agent call; the brief names the files, the spec line range, the contract and what "done" means
+  (tests named). Agents start with no memory. Ask for a report of 15 lines or fewer.
+- Independent tasks may run in parallel (max two); never two agents on the same files.
+- Nothing is accepted until `build-runner` reports green and `diff-reviewer` has no open High/Critical.
+  The main session reads only the hunks `diff-reviewer` flags, not whole diffs.
+- Opus is used only for the two optional gates (`/gate 3`, `/gate 7`) and for an escalation: a task that fails
+  twice, or a bug with no found cause, moves up one model for that task only, and the reason goes in `docs/DECISIONS.md`.
 - Use `reference-finder` instead of reading large reference files in the main session.
-
-## Read first (in order)
-1. `docs/fable/APEX_FABLE_MASTER_PROMPT_V4.1.md` — mission, invariants, module manifest, milestones, done gate
-2. `README.md`, `docs/ARCHITECTURE.md`, `docs/FORMULAS.md` — what exists (Phases 1-2)
-3. `docs/design/DESIGN_SYSTEM.md` — UI/UX source of truth (translated from Pulse Mobile 0.5.0)
-4. `docs/REFERENCES.md` — the third-party codebases in `reference/` and how (not) to use them
-5. `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/EVIDENCE.md`, `docs/OPEN_POINTS.md` — once they exist,
-   these are the cold-resume state
+- Hard integrity code is protected by **tests written first**, not by a bigger model.
 
 ## Workspace layout
 ```
@@ -62,7 +59,7 @@ any rule in them (commit identities, package managers, "Health Connect only", te
 | `:core:database` | done (audit-then-trust) | Room + SQLCipher |
 | `:core:ui` | **theme foundation only** | `theme/Color.kt`, `Type.kt`, `Dimens.kt`, `Theme.kt`, fonts, `ColorContrastTest`. Components/shells/charts to build |
 | `:core:network` | empty | OAuth PKCE, Google Health / Fitbit clients |
-| `:core:data` | empty | sources, Health Connect, Takeout engine, sync, pipeline, repository, coach |
+| `:core:data` | **walking skeleton** | ingest, pipeline, Demo source, repository, rule-based coach, 9 tests. To build: Health Connect, Takeout, Google Health source, workers |
 | `:app` | empty | Application, DI, navigation, screens, manifest |
 
 ## Build environment (this Windows machine)
@@ -91,6 +88,7 @@ any rule in them (commit identities, package managers, "Health Connect only", te
 - Never weaken a test or an invariant to go green. Update the living docs after every milestone.
 
 ## Git
-- Branch: `claude/premium-athlete-fitness-app-3rtg73` (the remote's default). Small, green commits.
+- Work on the branch the session was started on (cloud sessions: the designated `claude/...` branch). Small, green commits.
+  Each stage ends with the tag `apex-stage-N-done` (done by `/handoff`).
 - Never commit `local.properties`, keystores, OAuth client IDs, tokens, Takeout archives or real health data.
-- Push only when the owner asks.
+- Push only when the owner asks (in a cloud session, push to the session's designated branch only).
