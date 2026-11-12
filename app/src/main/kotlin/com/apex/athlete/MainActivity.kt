@@ -3,6 +3,7 @@ package com.apex.athlete
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -32,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.apex.athlete.core.data.settings.ThemeChoice
+import com.apex.athlete.core.data.worker.SyncScheduler
 import com.apex.athlete.core.ui.theme.ApexTheme
 import com.apex.athlete.core.ui.theme.ThemePreference
 import com.apex.athlete.navigation.ApexNavHost
@@ -62,6 +64,24 @@ class MainActivity : ComponentActivity() {
 
     @Volatile
     private var settingsLoaded = false
+
+    /**
+     * Pulls fresh data when the owner opens the app (the promise in SyncScheduler's KDoc), at most once
+     * every 15 minutes per process so rotation and quick app switches do not spend the request budget.
+     * Never in Demo mode or before onboarding: the demo store takes no live data.
+     */
+    override fun onStart() {
+        super.onStart()
+        val now = SystemClock.elapsedRealtime()
+        if (lastOpenSyncAt != 0L && now - lastOpenSyncAt < OPEN_SYNC_INTERVAL_MS) return
+        val container = (application as ApexAthleteApplication).container
+        lifecycleScope.launch {
+            val settings = runCatching { container.settings.settings.first() }.getOrNull() ?: return@launch
+            if (!settings.onboardingDone || settings.demoMode) return@launch
+            lastOpenSyncAt = now
+            SyncScheduler.syncNow(applicationContext)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
@@ -144,5 +164,9 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val ACTION_SHOW_PERMISSIONS_RATIONALE = "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"
         const val ACTION_VIEW_PERMISSION_USAGE = "android.intent.action.VIEW_PERMISSION_USAGE"
+        const val OPEN_SYNC_INTERVAL_MS = 15 * 60 * 1000L
+
+        @Volatile
+        var lastOpenSyncAt = 0L
     }
 }
