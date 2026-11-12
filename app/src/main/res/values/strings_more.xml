@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="more_title">More</string>
+
+    <string name="more_section_data">Data</string>
+    <string name="more_data_sources">Data sources and diagnostics</string>
+    <string name="more_data_sources_sub">What is connected and when it last synced</string>
+    <string name="more_takeout">Import Takeout archive</string>
+    <string name="more_takeout_sub">Add your full history from a Google Takeout file</string>
+    <string name="more_takeout_demo_value">Not in demo</string>
+    <string name="more_takeout_demo_reason">Importing is turned off in Demo mode so synthetic data never mixes with your own. Leave Demo mode in Settings to import.</string>
+    <string name="more_export_delete">Export, import and delete</string>
+    <string name="more_export_delete_sub">Back up or remove what is stored on this phone</string>
+
+    <string name="more_section_app">App</string>
+    <string name="more_settings">Settings</string>
+    <string name="more_settings_sub">Units, theme, alerts and sync</string>
+    <string name="more_profile">Profile</string>
+    <string name="more_profile_sub">Age, height, weight and maximum heart rate</string>
+
+    <string name="more_section_about">About</string>
+    <string name="more_how_it_works">How Apex works</string>
+    <string name="more_privacy">How Apex uses your data</string>
+    <string name="more_licences">Licences</string>
+
+    <string name="more_section_debug">Debug</string>
+    <string name="more_gallery">Component gallery</string>
+
+    <string name="more_app_version">App version</string>
+    <string name="more_algorithm_version">Algorithm version</string>
+    <string name="more_footer_note">Scores are calculated on this phone from your own data.</string>
+</resources>

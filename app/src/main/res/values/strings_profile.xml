@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_title">Profile</string>
+    <string name="profile_back">Back</string>
+    <string name="profile_loading">Loading your profile</string>
+
+    <string name="profile_intro_title">Why this matters</string>
+    <string name="profile_intro_body">Your profile sets your maximum heart rate, which sets your heart-rate zones and the Strain score. A maximum you enter yourself always wins. Without one, Apex estimates it from your age as 208 minus 0.7 times your age, and uses the higher of that and the highest heart rate your band has recorded. All fields are optional, and nothing leaves this phone. See How Apex works for the full formulas.</string>
+
+    <string name="profile_section_you">About you</string>
+    <string name="profile_birth_year">Birth year</string>
+    <string name="profile_birth_year_hint">Used to estimate maximum heart rate</string>
+    <string name="profile_sex">Sex</string>
+    <string name="profile_sex_hint">Only used for heart-rate calculations</string>
+    <string name="profile_sex_unspecified">Not set</string>
+    <string name="profile_sex_male">Male</string>
+    <string name="profile_sex_female">Female</string>
+    <string name="profile_height_cm">Height (cm)</string>
+    <string name="profile_height_in">Height (in)</string>
+    <string name="profile_weight_kg">Weight (kg)</string>
+    <string name="profile_weight_lb">Weight (lb)</string>
+    <string name="profile_max_hr">Maximum heart rate (bpm)</string>
+    <string name="profile_max_hr_hint">Only if you measured it. Leave empty to use the estimate.</string>
+    <string name="profile_optional">Optional</string>
+    <string name="profile_units_note">Units follow your setting: %1$s. Change it in Settings.</string>
+    <string name="profile_units_metric">metric</string>
+    <string name="profile_units_imperial">imperial</string>
+
+    <string name="profile_error_not_number">Enter a number.</string>
+    <string name="profile_error_not_whole">Enter a whole number.</string>
+    <string name="profile_error_range">Enter a value between %1$d and %2$d.</string>
+
+    <string name="profile_estimate_title">Maximum heart rate in use</string>
+    <string name="profile_estimate_entered">You entered this value</string>
+    <string name="profile_estimate_age">Estimated from age</string>
+    <string name="profile_estimate_none">Add a birth year or a measured maximum to see it.</string>
+    <string name="profile_estimate_unit">bpm</string>
+
+    <string name="profile_save">Save profile</string>
+    <string name="profile_saved">Profile saved.</string>
+    <string name="profile_save_error">The profile could not be saved. Try again.</string>
+    <string name="profile_fix_errors">Fix the fields marked above to save.</string>
+</resources>

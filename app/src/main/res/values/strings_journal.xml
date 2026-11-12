@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journal_title">Journal</string>
+    <string name="journal_prev_day">Previous day</string>
+    <string name="journal_next_day">Next day</string>
+    <string name="journal_go_today">Go to today</string>
+    <string name="journal_checkin_title">Daily check-in</string>
+    <string name="journal_checkin_intro">Rate how you feel from 1 to 10. Your answers are saved as self-reported and used as one small input to Recovery.</string>
+
+    <string name="journal_fatigue_label">Fatigue</string>
+    <string name="journal_soreness_label">Soreness</string>
+    <string name="journal_scale_ends">%1$s is 1, %2$s is 10</string>
+    <string name="journal_option_cd">%1$s, %2$d of 10</string>
+    <string name="journal_selected_state">Selected</string>
+    <string name="journal_selected_summary">%1$d of 10, %2$s</string>
+    <string name="journal_none_selected">Not rated</string>
+
+    <string name="journal_fatigue_1">Fresh</string>
+    <string name="journal_fatigue_2">Light</string>
+    <string name="journal_fatigue_3">Moderate</string>
+    <string name="journal_fatigue_4">Heavy</string>
+    <string name="journal_fatigue_5">Drained</string>
+    <string name="journal_soreness_1">None</string>
+    <string name="journal_soreness_2">Mild</string>
+    <string name="journal_soreness_3">Moderate</string>
+    <string name="journal_soreness_4">Sore</string>
+    <string name="journal_soreness_5">Very sore</string>
+
+    <string name="journal_saved_title">Saved for this day</string>
+    <string name="journal_saved_empty">No check-in saved for this day.</string>
+    <string name="journal_saved_values">Fatigue %1$s, soreness %2$s</string>
+    <string name="journal_saved_unit">of 10</string>
+
+    <string name="journal_save">Save check-in</string>
+    <string name="journal_saving">Saving</string>
+    <string name="journal_save_done">Check-in saved.</string>
+    <string name="journal_save_error">The check-in could not be saved. Try again.</string>
+    <string name="journal_save_hint_clear">Tap a selected number again to clear it.</string>
+
+    <string name="journal_history_note">Past check-ins are used in the Recovery calculation. A list of earlier days is not shown yet.</string>
+</resources>
