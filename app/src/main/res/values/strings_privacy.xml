@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_title">How Apex uses your data</string>
+    <string name="privacy_intro">Apex is a private dashboard for one person. This page explains what it reads, where it goes and how to remove it. It is also the page Health Connect opens when it asks how Apex uses your data.</string>
+
+    <string name="privacy_local_title">Kept on this phone</string>
+    <string name="privacy_local_body">Your readings, scores and history are stored in a database on this phone, encrypted at rest with SQLCipher. The key is protected by the phone\'s hardware-backed keystore. Android backup is switched off, so the data is not copied to a cloud backup.</string>
+    <string name="privacy_noanalytics_title">No analytics, no crash reporting</string>
+    <string name="privacy_noanalytics_body">Apex contains no analytics or crash-reporting libraries and no advertising. Health values, tokens and keys are never written to logs.</string>
+
+    <string name="privacy_readonly_title">Read-only access</string>
+    <string name="privacy_readonly_body">Apex reads from three places: Google Health, Health Connect and a Google Takeout archive you choose. It never writes to any of them and cannot change your data there. Your own entries, such as a check-in or a manual workout, stay in Apex and are marked as yours.</string>
+
+    <string name="privacy_hc_title">What Apex reads from Health Connect</string>
+    <string name="privacy_hc_intro">Each permission below is read-only. You can allow or withdraw each one in Health Connect at any time. Anything you withdraw simply shows as missing.</string>
+    <string name="privacy_hc_heart_rate">Heart rate</string>
+    <string name="privacy_hc_heart_rate_why">For the heart-rate chart, zones and Strain.</string>
+    <string name="privacy_hc_resting_hr">Resting heart rate</string>
+    <string name="privacy_hc_resting_hr_why">For Recovery and your resting baseline.</string>
+    <string name="privacy_hc_hrv">Heart rate variability</string>
+    <string name="privacy_hc_hrv_why">For Recovery, the biggest input.</string>
+    <string name="privacy_hc_sleep">Sleep</string>
+    <string name="privacy_hc_sleep_why">For sleep duration, stages, the sleep score and sleep need.</string>
+    <string name="privacy_hc_spo2">Blood oxygen</string>
+    <string name="privacy_hc_spo2_why">For your overnight oxygen trend.</string>
+    <string name="privacy_hc_respiratory">Breathing rate</string>
+    <string name="privacy_hc_respiratory_why">As a stability check in Recovery and in fatigue signals.</string>
+    <string name="privacy_hc_skin_temp">Skin temperature</string>
+    <string name="privacy_hc_skin_temp_why">As a stability check in Recovery, shown as a change from your usual.</string>
+    <string name="privacy_hc_steps">Steps</string>
+    <string name="privacy_hc_steps_why">For your daily step count.</string>
+    <string name="privacy_hc_exercise">Exercise sessions</string>
+    <string name="privacy_hc_exercise_why">For your workout list and details.</string>
+    <string name="privacy_hc_calories">Total calories burned</string>
+    <string name="privacy_hc_calories_why">For daily activity totals.</string>
+    <string name="privacy_hc_vo2">VO2 max</string>
+    <string name="privacy_hc_vo2_why">To show the VO2 max your wearable reports.</string>
+    <string name="privacy_hc_floors">Floors climbed</string>
+    <string name="privacy_hc_floors_why">For daily activity totals.</string>
+    <string name="privacy_hc_distance">Distance</string>
+    <string name="privacy_hc_distance_why">For daily activity and workout totals.</string>
+    <string name="privacy_hc_history">Past data</string>
+    <string name="privacy_hc_history_why">So Apex can read further back than 30 days before you first allowed access, to build your baselines sooner. Asked only when Health Connect supports it.</string>
+    <string name="privacy_hc_background">Background reading</string>
+    <string name="privacy_hc_background_why">So the periodic sync can read new data while the app is closed. Asked only when Health Connect supports it.</string>
+    <string name="privacy_hc_item_description">%1$s. %2$s</string>
+
+    <string name="privacy_other_permissions_title">Other permissions</string>
+    <string name="privacy_other_permissions_body">Notifications, only if you turn alerts on. Internet, to reach Google and, if you opt in, Anthropic. A foreground service while a Takeout archive is being imported.</string>
+
+    <string name="privacy_network_title">Where data is sent</string>
+    <string name="privacy_network_google">Apex connects to Google to sign you in and to read your Google Health data, with read-only access. It has no other servers.</string>
+    <string name="privacy_network_anthropic">If you turn on Ask Apex and add your own Anthropic API key, the short summary you see before each question is sent to Anthropic to get an answer. Nothing is sent to Anthropic unless you opt in.</string>
+
+    <string name="privacy_control_title">Export or delete everything</string>
+    <string name="privacy_control_body">You can export all your data from this phone as a file, or delete it all. Deleting removes the local database and the key that protects it. It does not change anything in Google or Health Connect.</string>
+    <string name="privacy_control_button">Export or delete data</string>
+</resources>

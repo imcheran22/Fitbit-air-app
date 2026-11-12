@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="licences_title">Licences</string>
+    <string name="licences_intro">Apex is built on open-source software and two open fonts. Thank you to the people who maintain them.</string>
+
+    <string name="licences_section_libraries">Libraries</string>
+    <string name="licences_section_fonts">Fonts</string>
+    <string name="licences_section_texts">Licence texts</string>
+
+    <string name="licences_name_apache">Apache License 2.0</string>
+    <string name="licences_name_bsd">BSD-style (SQLCipher Community Edition licence)</string>
+    <string name="licences_name_ofl">SIL Open Font License 1.1</string>
+    <string name="licences_entry_description">%1$s, licence: %2$s</string>
+
+    <string name="licences_lib_androidx_core">AndroidX Core</string>
+    <string name="licences_lib_androidx_activity">AndroidX Activity</string>
+    <string name="licences_lib_androidx_lifecycle">AndroidX Lifecycle</string>
+    <string name="licences_lib_androidx_navigation">AndroidX Navigation</string>
+    <string name="licences_lib_compose">Jetpack Compose</string>
+    <string name="licences_lib_room">AndroidX Room</string>
+    <string name="licences_lib_work">AndroidX WorkManager</string>
+    <string name="licences_lib_datastore">AndroidX DataStore</string>
+    <string name="licences_lib_healthconnect">Health Connect client</string>
+    <string name="licences_lib_browser">AndroidX Browser</string>
+    <string name="licences_lib_splashscreen">AndroidX Core SplashScreen</string>
+    <string name="licences_lib_kotlin">Kotlin</string>
+    <string name="licences_lib_coroutines">kotlinx.coroutines</string>
+    <string name="licences_lib_serialization">kotlinx.serialization</string>
+    <string name="licences_lib_okhttp">OkHttp</string>
+    <string name="licences_lib_anthropic">Anthropic Java SDK</string>
+    <string name="licences_lib_sqlcipher">SQLCipher Community Edition</string>
+    <string name="licences_font_barlow">Barlow</string>
+    <string name="licences_font_figtree">Figtree</string>
+
+    <string name="licences_copyright_barlow">Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)</string>
+    <string name="licences_copyright_figtree">Copyright 2022 The Figtree Project Authors (https://github.com/erikdkennedy/figtree)</string>
+
+    <string name="licences_text_apache_title">Apache License 2.0</string>
+    <string name="licences_text_ofl_title">SIL Open Font License 1.1</string>
+    <string name="licences_text_bsd_title">SQLCipher Community Edition licence</string>
+    <string name="licences_text_bsd_body">SQLCipher Community Edition is provided by Zetetic LLC under a BSD-style licence. Its full text is published at https://www.zetetic.net/sqlcipher/license/.</string>
+    <string name="licences_text_show">Show text</string>
+    <string name="licences_text_hide">Hide text</string>
+    <string name="licences_text_toggle_description">%1$s. %2$s</string>
+    <string name="licences_text_unavailable">The licence text could not be loaded.</string>
+</resources>

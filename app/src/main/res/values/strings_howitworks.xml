@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="howitworks_title">How Apex works</string>
+    <string name="howitworks_intro">Apex calculates its own scores from your own data. They are not Whoop, Oura, Garmin or Fitbit scores, and they are not medical measurements. Nothing here diagnoses or treats anything.</string>
+    <string name="howitworks_missing_note">When a reading is missing, Apex shows it as missing. It never fills the gap with a guess or a population average.</string>
+
+    <string name="howitworks_recovery_title">Recovery</string>
+    <string name="howitworks_recovery_p1">Recovery is a score from 0 to 100 that compares how your body looks this morning with your own usual range.</string>
+    <string name="howitworks_recovery_p2">Heart rate variability counts most (40 percent), then resting heart rate (25 percent) and sleep (25 percent). Breathing rate and skin temperature (5 percent each) only take points away when they drift well above your usual. If you log a fatigue rating, or your recent training load is available, they join in with a small weight.</string>
+    <string name="howitworks_recovery_p3">If a sensor is missing, its weight is shared out among the others, so the score still spans 0 to 100. It needs at least heart rate variability or resting heart rate. Without either, Apex shows that Recovery is calibrating or unavailable.</string>
+    <string name="howitworks_recovery_p4">A score of 67 or more is labelled Peak, 34 to 66 Moderate and 0 to 33 Restorative. These labels describe your load, not your health.</string>
+
+    <string name="howitworks_strain_title">Strain</string>
+    <string name="howitworks_strain_p1">Strain is a derived cardio strain on a 0 to 21 scale. It adds up how much of your day your heart spent working well above rest.</string>
+    <string name="howitworks_strain_p2">For each minute, Apex measures where your heart rate sits between your resting rate and your maximum, and weights harder minutes more heavily (the Banister training impulse). Minutes in the easiest part of the range are ignored so a day of sitting and walking does not count as training.</string>
+    <string name="howitworks_strain_p3">The total is put on a curve that rises quickly at first and flattens at the top, so the last points are hard to earn. Today\'s strain is provisional until the day ends.</string>
+
+    <string name="howitworks_sleep_title">Sleep</string>
+    <string name="howitworks_sleep_p1">The sleep score runs from 0 to 100. It combines four parts: how long you slept compared with your sleep need (40 percent), the share of deep and REM sleep (25 percent), efficiency, which is time asleep over time in bed (20 percent), and how regular your bedtime and wake time are (15 percent).</string>
+    <string name="howitworks_sleep_p2">Sleep need starts from about 7 hours 45 minutes, or from your own recent nights once there are enough, and adds a little after hard days and a little to repay sleep debt, to a maximum of 10 hours. If a part cannot be worked out, for example when no sleep stages were recorded, it is left out and the rest are scaled up.</string>
+
+    <string name="howitworks_load_title">Training load</string>
+    <string name="howitworks_load_p1">Training load builds on the same daily heart-rate load that drives Strain. Acute load is a 7-day moving average and chronic load is a 28-day one. Their ratio shows whether this week is lighter or heavier than what you are used to.</string>
+    <string name="howitworks_load_p2">A ratio of 0.80 to 1.30 is shown as the sweet spot, below 0.80 as under usual load, 1.31 to 1.49 as overreaching caution, and 1.50 and above as high fatigue risk. Research on how these bands relate to injury is mixed, so treat them as load-management guidance and not a prediction.</string>
+    <string name="howitworks_load_p3">The ratio needs enough history, and Apex adds a caveat when history is short, your usual load is very low, or many days are missing. A day with no heart rate data counts as unknown, not as zero.</string>
+
+    <string name="howitworks_baselines_title">Baselines and calibration</string>
+    <string name="howitworks_baselines_p1">Your baseline for a metric is the average of the 30 days before the day being scored. The day itself is left out, so a reading is never compared with an average it helped to form.</string>
+    <string name="howitworks_baselines_p2">Your normal range is the baseline plus or minus one standard deviation. Heart rate variability is averaged on a log scale because it changes in proportions, so its normal range is a little wider above than below.</string>
+    <string name="howitworks_baselines_p3">Apex needs at least 7 valid days before it trusts a baseline. Until then the metric is calibrating and the scores that depend on it stay locked, rather than falling back to population norms.</string>
+
+    <string name="howitworks_vo2_title">VO2 max</string>
+    <string name="howitworks_vo2_p1">When your wearable reports a VO2 max, Apex shows that value and names the source.</string>
+    <string name="howitworks_vo2_p2">Only when the wearable has not reported one, Apex can estimate it from the ratio of your maximum to your resting heart rate. That estimate is always labelled Estimated. It was studied in trained men, so it is better for following a trend than as an exact number.</string>
+
+    <string name="howitworks_maxhr_title">Max HR</string>
+    <string name="howitworks_maxhr_p1">If you enter a maximum heart rate in your profile, Apex uses it.</string>
+    <string name="howitworks_maxhr_p2">Otherwise it uses the higher of two values: an age-based estimate (208 minus 0.7 times your age, labelled Estimated) and the highest one-minute average your wearable has recorded. Heart rate zones are set at 50, 60, 70, 80 and 90 percent of this maximum.</string>
+
+    <string name="howitworks_version_title">Formula set</string>
+    <string name="howitworks_version_label">Algorithm version</string>
+    <string name="howitworks_version_source">Source: Apex formulas</string>
+    <string name="howitworks_version_note">Every calculation is listed with its constants in docs/FORMULAS.md.</string>
+</resources>

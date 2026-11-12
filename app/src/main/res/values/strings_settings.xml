@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme_label">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_units_label">Units</string>
+    <string name="settings_units_metric">Metric</string>
+    <string name="settings_units_imperial">Imperial</string>
+    <string name="settings_clock24h_title">24-hour clock</string>
+    <string name="settings_clock24h_subtitle">Show times such as 17:30 instead of 5:30 PM.</string>
+    <string name="settings_choice_selected">%1$s, selected</string>
+    <string name="settings_choice_not_selected">%1$s, not selected</string>
+
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_notifications_title">Notifications</string>
+    <string name="settings_notifications_subtitle">Alerts are written from your own numbers and never diagnose anything.</string>
+    <string name="settings_notifications_denied">Notifications are blocked for Apex in system settings, so alerts stay off. Allow them there, then turn this on again.</string>
+    <string name="settings_notify_recovery_title">Recovery alert</string>
+    <string name="settings_notify_recovery_subtitle">A morning note when your Recovery score is ready.</string>
+    <string name="settings_notify_fatigue_title">Fatigue alert</string>
+    <string name="settings_notify_fatigue_subtitle">When your own signals point to building fatigue.</string>
+    <string name="settings_notify_stale_title">Stale data alert</string>
+    <string name="settings_notify_stale_subtitle">When nothing new has arrived for a while.</string>
+    <string name="settings_quiet_start_title">Quiet hours start</string>
+    <string name="settings_quiet_end_title">Quiet hours end</string>
+    <string name="settings_quiet_subtitle">Alerts are held back during quiet hours.</string>
+
+    <string name="settings_time_sheet_start">Quiet hours start</string>
+    <string name="settings_time_sheet_end">Quiet hours end</string>
+    <string name="settings_time_hour_up">Increase hour</string>
+    <string name="settings_time_hour_down">Decrease hour</string>
+    <string name="settings_time_minute_up">Increase minutes</string>
+    <string name="settings_time_minute_down">Decrease minutes</string>
+    <string name="settings_time_hours_label">Hour</string>
+    <string name="settings_time_minutes_label">Minutes</string>
+    <string name="settings_time_selected">Selected time %1$s</string>
+    <string name="settings_time_save">Set time</string>
+
+    <string name="settings_section_data">Data and sync</string>
+    <string name="settings_sync_title">Background sync</string>
+    <string name="settings_sync_subtitle">Reads new data from your sources about every 30 minutes when the phone allows it. Timing is not guaranteed.</string>
+    <string name="settings_takeout_title">Takeout reminder</string>
+    <string name="settings_takeout_subtitle">Remind me to import a new Google Takeout archive.</string>
+    <string name="settings_takeout_off">Off</string>
+    <plurals name="settings_takeout_every_days">
+        <item quantity="one">Every %1$d day</item>
+        <item quantity="other">Every %1$d days</item>
+    </plurals>
+    <string name="settings_takeout_sheet_title">Takeout reminder</string>
+
+    <string name="settings_section_google">Google account</string>
+    <string name="settings_client_id_label">Google client ID</string>
+    <string name="settings_client_id_placeholder">Paste a client ID</string>
+    <string name="settings_client_id_support">The client ID must match the redirect scheme compiled into this app. If it does not, Google cannot return you to Apex after you sign in, and the app has to be rebuilt with the ID in local.properties (see docs/SETUP.md). The ID is not a secret.</string>
+    <string name="settings_client_id_save">Save client ID</string>
+    <string name="settings_client_id_saved">Saved</string>
+    <string name="settings_client_id_mismatch">This client ID needs the redirect scheme %2$s, but this build uses %1$s. Rebuild the app with this ID in local.properties.</string>
+
+    <string name="settings_section_coach">Ask Apex</string>
+    <string name="settings_coach_title">AI coach</string>
+    <string name="settings_coach_subtitle">Uses your own Anthropic API key. Sends the summary shown before each question.</string>
+    <string name="settings_coach_key_title">Anthropic API key</string>
+    <string name="settings_coach_key_subtitle">Stored encrypted on this phone.</string>
+
+    <string name="settings_section_demo">Demo mode</string>
+    <string name="settings_demo_title">Demo mode</string>
+    <string name="settings_demo_on">On</string>
+    <string name="settings_demo_off">Off</string>
+    <string name="settings_demo_body_on">You are looking at synthetic data kept in a separate store. Your real data is untouched.</string>
+    <string name="settings_demo_body_off">Apex is showing your own data.</string>
+    <string name="settings_demo_turn_off">Turn off demo mode</string>
+    <string name="settings_demo_confirm_title">Turn off demo mode?</string>
+    <string name="settings_demo_confirm_body">The synthetic demo data is discarded. Your own data is not affected.</string>
+    <string name="settings_demo_confirm_action">Turn off and discard</string>
+
+    <string name="settings_section_about">About</string>
+    <string name="settings_about_how">How Apex works</string>
+    <string name="settings_about_privacy">How Apex uses your data</string>
+    <string name="settings_about_licences">Licences</string>
+</resources>
