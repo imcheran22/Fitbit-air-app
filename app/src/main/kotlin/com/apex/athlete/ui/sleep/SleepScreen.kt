@@ -52,7 +52,7 @@ import com.apex.athlete.core.ui.shell.DetailShell
 import com.apex.athlete.core.ui.shell.InfoCard
 import com.apex.athlete.core.ui.shell.InfoParagraph
 import com.apex.athlete.core.ui.shell.SectionShell
-import com.apex.athlete.core.ui.state.MetricProvenance
+import com.apex.athlete.core.ui.components.MetricProvenance
 import com.apex.athlete.core.ui.state.MetricReason
 import com.apex.athlete.core.ui.state.MetricState
 import com.apex.athlete.core.ui.state.MetricStateView
@@ -171,9 +171,9 @@ fun SleepScreen(
 
 @StringRes
 private fun statusWord(status: ContributorStatus): Int = when (status) {
-    ContributorStatus.Poor -> R.string.status_poor
-    ContributorStatus.Sufficient -> R.string.status_sufficient
-    ContributorStatus.Optimal -> R.string.status_optimal
+    ContributorStatus.Poor -> com.apex.athlete.core.ui.R.string.status_poor
+    ContributorStatus.Sufficient -> com.apex.athlete.core.ui.R.string.status_sufficient
+    ContributorStatus.Optimal -> com.apex.athlete.core.ui.R.string.status_optimal
 }
 
 /** The Poor / Sufficient / Optimal dashes under the hero dial, with the active word so colour is not the only carrier. */

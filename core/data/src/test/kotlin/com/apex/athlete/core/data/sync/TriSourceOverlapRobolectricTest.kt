@@ -99,9 +99,11 @@ class TriSourceOverlapRobolectricTest {
     fun syncingTwiceGivesIdenticalState(): Unit = runBlocking {
         val o = orchestrator(FixtureReplaySource(SyncSource.GOOGLE_HEALTH_API, listOf(googleBatch())))
         val first = o.sync(store)
-        assertTrue(first.anySuccess)
+        assertTrue(first.anySuccess, "first sync succeeds")
         val a = snapshot()
-        assertTrue(db.workoutDao().all().isNotEmpty() && db.intradayHeartRateDao().count() == 5)
+        assertTrue(db.workoutDao().all().isNotEmpty(), "the workout is stored")
+        // Five readings one second apart fall into one UTC minute: HealthIngestor stores one bucket.
+        assertEquals(1, db.intradayHeartRateDao().count(), "heart rate is stored as one minute bucket")
         o.sync(store)
         assertEquals(a, snapshot())
     }

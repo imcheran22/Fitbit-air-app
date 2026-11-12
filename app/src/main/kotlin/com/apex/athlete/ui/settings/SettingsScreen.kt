@@ -565,6 +565,7 @@ private fun TimeSheet(
 ) {
     var minute by rememberSaveable { mutableIntStateOf(initialMinute) }
     val shown = formatMinuteOfDay(minute, clock24h)
+    val shownSpoken = shownDescription(shown)
     ApexSheet(onDismiss = onDismiss, title = title) {
         Text(
             shown,
@@ -572,7 +573,7 @@ private fun TimeSheet(
             color = ApexTheme.colors.foreground,
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { contentDescription = shownDescription(shown) },
+                .semantics { contentDescription = shownSpoken },
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ApexSpacing.lg)) {
             Stepper(
