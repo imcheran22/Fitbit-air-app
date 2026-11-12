@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="overview_wordmark">Apex</string>
+
+    <!-- Header -->
+    <string name="overview_profile_description">Profile and settings</string>
+    <string name="overview_previous_day">Previous day</string>
+    <string name="overview_next_day">Next day</string>
+    <string name="overview_sync_unknown">--</string>
+    <string name="overview_sync_never">Never</string>
+    <string name="overview_sync_demo">Demo</string>
+    <string name="overview_sync_description">%1$s. Opens data sources.</string>
+    <string name="overview_sync_unknown_description">Sync status is loading</string>
+    <string name="overview_sync_demo_description">Demo data, nothing to sync</string>
+
+    <!-- Dials -->
+    <string name="overview_dial_sleep">Sleep</string>
+    <string name="overview_dial_recovery">Recovery</string>
+    <string name="overview_dial_strain">Strain</string>
+
+    <!-- Stale banner -->
+    <string name="overview_stale_title">Your data is out of date</string>
+    <string name="overview_stale_body">The newest reading arrived %1$s. Sync to catch up.</string>
+    <string name="overview_stale_action">Open data sources</string>
+
+    <!-- First run -->
+    <string name="overview_empty_title">No data yet</string>
+    <string name="overview_empty_body">Connect Google Health or import a Google Takeout archive. Apex shows nothing until it has real readings, and never fills gaps with guesses.</string>
+    <string name="overview_empty_connect">Open data sources</string>
+    <string name="overview_empty_import">Import Takeout</string>
+
+    <!-- Heart rate card -->
+    <string name="overview_hr_title">Heart rate</string>
+    <string name="overview_hr_stale">Stale</string>
+    <string name="overview_hr_last_30">Last 30 min</string>
+    <string name="overview_hr_card_description">Heart rate. Opens the day view.</string>
+
+    <!-- Health monitor card -->
+    <string name="overview_monitor_title">Health monitor</string>
+    <string name="overview_monitor_all_in_range">All %1$d metrics within your range</string>
+    <string name="overview_monitor_some_outside">%1$d of %2$d metrics outside your range</string>
+    <string name="overview_monitor_average_label">your usual value</string>
+    <string name="overview_monitor_footnote">Compared with your own recent range.</string>
+    <string name="overview_metric_hrv">Heart rate variability</string>
+    <string name="overview_metric_rhr">Resting heart rate</string>
+    <string name="overview_metric_resp">Respiratory rate</string>
+    <string name="overview_metric_spo2">Blood oxygen</string>
+    <string name="overview_metric_skin">Skin temperature</string>
+    <string name="overview_metric_generic">Metric</string>
+
+    <!-- Strain target card -->
+    <string name="overview_target_title">Strain target</string>
+    <string name="overview_target_calibrating">Your target appears once Recovery has finished calibrating.</string>
+    <string name="overview_target_unavailable">There is no target today because Recovery has no score yet.</string>
+    <string name="overview_target_source">Calculated from today\'s Recovery</string>
+
+    <!-- Coach card -->
+    <string name="overview_coach_link">See the full briefing</string>
+
+    <!-- Out-of-range alert -->
+    <plurals name="overview_alert_title">
+        <item quantity="one">%1$d reading outside your usual range</item>
+        <item quantity="other">%1$d readings outside your usual range</item>
+    </plurals>
+    <string name="overview_alert_above">%1$s is above your usual range.</string>
+    <string name="overview_alert_below">%1$s is below your usual range.</string>
+    <string name="overview_alert_note">This is an observation, not a diagnosis. It often follows hard training, short sleep or alcohol.</string>
+    <string name="overview_alert_action">View trend</string>
+    <string name="overview_alert_description">%1$s. Opens the trend.</string>
+</resources>
