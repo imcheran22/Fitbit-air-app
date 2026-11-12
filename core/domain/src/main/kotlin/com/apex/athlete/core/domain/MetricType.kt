@@ -44,6 +44,14 @@ enum class MetricType(
     HEART_RATE_MAX("hr_max", MetricCategory.CARDIOVASCULAR, "bpm"),
     VO2_MAX("vo2_max", MetricCategory.CARDIOVASCULAR, "ml/kg/min", Polarity.HIGHER_IS_BETTER),
 
+    /**
+     * Frequency-domain HRV of one five-minute window during sleep (Takeout "Heart Rate Variability
+     * Details" `low_frequency` / `high_frequency`). Stored as raw samples only; the unit is
+     * UNVERIFIED (reported as ms²) and no score uses them yet.
+     */
+    HRV_LOW_FREQUENCY("hrv_lf", MetricCategory.CARDIOVASCULAR, "ms²"),
+    HRV_HIGH_FREQUENCY("hrv_hf", MetricCategory.CARDIOVASCULAR, "ms²"),
+
     // --- Respiratory ----------------------------------------------------------------------
     SPO2_AVG("spo2_avg", MetricCategory.RESPIRATORY, "%", Polarity.HIGHER_IS_BETTER),
     SPO2_LOWER_BOUND("spo2_low", MetricCategory.RESPIRATORY, "%", Polarity.HIGHER_IS_BETTER),
