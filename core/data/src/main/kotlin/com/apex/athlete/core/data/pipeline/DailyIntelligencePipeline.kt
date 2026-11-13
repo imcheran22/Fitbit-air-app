@@ -8,7 +8,10 @@ import com.apex.athlete.core.analytics.baseline.DailyValue
 import com.apex.athlete.core.analytics.fitness.CardioFitness
 import com.apex.athlete.core.analytics.fitness.MaxHeartRate
 import com.apex.athlete.core.analytics.fitness.MaxHeartRateEstimate
+import com.apex.athlete.core.analytics.fitness.RestingHeartRateSeries
+import com.apex.athlete.core.analytics.fitness.RestingHeartRateSource
 import com.apex.athlete.core.analytics.load.DailyLoad
+import com.apex.athlete.core.analytics.load.DailyLoadPolicy
 import com.apex.athlete.core.analytics.load.TrainingLoadEngine
 import com.apex.athlete.core.analytics.load.TrainingLoadResult
 import com.apex.athlete.core.analytics.recovery.FatigueAssessment
@@ -21,8 +24,10 @@ import com.apex.athlete.core.analytics.sleep.NightBalance
 import com.apex.athlete.core.analytics.sleep.SleepNeed
 import com.apex.athlete.core.analytics.sleep.SleepNeedCalculator
 import com.apex.athlete.core.analytics.sleep.SleepNightInput
+import com.apex.athlete.core.analytics.sleep.SleepRegularityIndex
 import com.apex.athlete.core.analytics.sleep.SleepScoreEngine
 import com.apex.athlete.core.analytics.sleep.SleepScoreResult
+import com.apex.athlete.core.analytics.sleep.SleepSpan
 import com.apex.athlete.core.analytics.sleep.SleepTiming
 import com.apex.athlete.core.analytics.strain.CardioProfile
 import com.apex.athlete.core.analytics.strain.HeartRateSample
@@ -115,7 +120,8 @@ class DailyIntelligencePipeline(
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) {
     private val recoveryEngine = RecoveryEngine()
-    private val sleepEngine = SleepScoreEngine()
+    // One definition of consistency in the stored series: the Sleep Regularity Index, never the old spread rule.
+    private val sleepEngine = SleepScoreEngine(SleepScoreEngine.Config(useTimingSpreadForConsistency = false))
     private val needCalculator = SleepNeedCalculator()
     private val loadEngine = TrainingLoadEngine()
 
@@ -134,6 +140,21 @@ class DailyIntelligencePipeline(
             done++
             onProgress(done, total)
         }
+        return done
+    }
+
+    /**
+     * Recomputes history after a formula change. Derived rows carry the [ANALYTICS_ALGORITHM_VERSION]
+     * they were computed with; when any is older, every day from the oldest stale one to today is
+     * replayed, and derived rows still older afterwards (values no current formula produces) are
+     * removed. Observed rows have no version and are never touched. Returns the number of days
+     * replayed (0 when nothing is stale), and is safe to interrupt: a later start finds the rest stale.
+     */
+    suspend fun recomputeIfStale(onProgress: suspend (done: Int, total: Int) -> Unit = { _, _ -> }): Int {
+        val dao = db.dailyBiometricSummaryDao()
+        val from = dao.firstStaleDerivedDay(ANALYTICS_ALGORITHM_VERSION) ?: return 0
+        val done = replay(from, today(), onProgress)
+        dao.deleteStaleDerived(ANALYTICS_ALGORITHM_VERSION)
         return done
     }
 
@@ -162,6 +183,9 @@ class DailyIntelligencePipeline(
         // --- Sleep sessions -------------------------------------------------------------------
         val sessions = db.sleepDao().mainSleepsBetween(day - SLEEP_HISTORY_DAYS, day).distinctBy { it.epochDay }
         val night = sessions.firstOrNull { it.epochDay == day }
+        val allSessions = db.sleepDao().sessionsBetween(day - SLEEP_HISTORY_DAYS, day)
+        val napMinutesByDay: Map<Long, Double> = allSessions.filter { !it.isMainSleep }
+            .groupBy { it.epochDay }.mapValues { (_, v) -> v.sumOf { it.minutesAsleep }.toDouble() }
 
         if (persist) deriveNightlyObservations(day, night)
 
@@ -173,29 +197,42 @@ class DailyIntelligencePipeline(
 
         // --- Autonomic and respiratory markers ------------------------------------------------
         val hrv = analyzeMetric(MetricType.HRV_RMSSD, BaselineSpecs.HRV)
-        val rhrSeries = series(MetricType.RESTING_HEART_RATE)
-        val rhrMetric = if (rhrSeries.any { it.epochDay == day } || rhrSeries.size >= series(MetricType.SLEEPING_HEART_RATE).size) {
-            MetricType.RESTING_HEART_RATE
-        } else MetricType.SLEEPING_HEART_RATE
+        // One series for the whole baseline window (B10): the one with more readings in the 30 days
+        // before the day, not whichever has a reading today. SLEEPING_HEART_RATE rows may be observed
+        // (vendor) or derived; the reconciler keeps one row per day and the observed one wins.
+        val rhrMetric = when (RestingHeartRateSource.choose(series(MetricType.RESTING_HEART_RATE), series(MetricType.SLEEPING_HEART_RATE), day)) {
+            RestingHeartRateSeries.RESTING -> MetricType.RESTING_HEART_RATE
+            RestingHeartRateSeries.SLEEPING -> MetricType.SLEEPING_HEART_RATE
+        }
         val rhr = analyzeMetric(rhrMetric, BaselineSpecs.RESTING_HEART_RATE)
         val resp = analyzeMetric(MetricType.RESPIRATORY_RATE, BaselineSpecs.RESPIRATORY_RATE)
         val skin = analyzeMetric(MetricType.SKIN_TEMP_DEVIATION, BaselineSpecs.SKIN_TEMPERATURE_DEVIATION)
         val spo2 = analyzeMetric(MetricType.SPO2_AVG, BaselineSpecs.SPO2)
 
+        // --- Strain history (days the band was worn long enough, DailyLoadPolicy) ------------------
+        val strainEngine = StrainEngine(StrainEngine.Config(zoneMethod = user.zoneMethod))
+        val strainByDay: Map<Long, Double> = series(MetricType.DAILY_TRIMP)
+            .distinctBy { it.epochDay }
+            .associate { it.epochDay to strainEngine.strainFromTrimp(it.value) }
+
         // --- Sleep need and score -------------------------------------------------------------
         val earlier = sessions.filter { it.epochDay < day }
         val durations = earlier.map { it.minutesAsleep.toDouble() }
         val baseNeed = needCalculator.baseNeed(durations).first
+        /** z of a day's strain against the athlete's own last 30 recorded strain days before it. */
+        fun strainZ(strainDay: Long, strainValue: Double?): Double? =
+            needCalculator.strainZ(strainValue, (strainDay - STRAIN_Z_DAYS until strainDay).mapNotNull { strainByDay[it] })
         fun balances(asOf: Long, pool: List<SleepSessionEntity>) = pool
             .filter { it.epochDay in (asOf - 7) until asOf }
             .map {
                 NightBalance(
                     epochDay = it.epochDay,
-                    needMinutes = baseNeed + needCalculator.strainSurcharge(valueOn(MetricType.STRAIN_SCORE, it.epochDay - 1)),
+                    needMinutes = baseNeed + needCalculator.strainSurcharge(strainZ(it.epochDay - 1, strainByDay[it.epochDay - 1]), baseNeed),
                     asleepMinutes = it.minutesAsleep.toDouble(),
+                    napMinutes = napMinutesByDay[it.epochDay] ?: 0.0,
                 )
             }
-        val needLastNight = needCalculator.need(durations, valueOn(MetricType.STRAIN_SCORE, day - 1), balances(day, earlier), day)
+        val needLastNight = needCalculator.need(durations, strainZ(day - 1, strainByDay[day - 1]), balances(day, earlier), day)
 
         val sleepResult = night?.let { n ->
             val timings = sessions.filter { it.epochDay in (day - 6)..day }.map(::timingOf)
@@ -205,6 +242,7 @@ class DailyIntelligencePipeline(
                 val base = BaselineEngine.baseline(restorativeHistory, day, BaselineSpecs.RESTORATIVE_SLEEP_FRACTION)
                 BaselineEngine.zScore(((n.minutesDeep ?: 0) + (n.minutesRem ?: 0)).toDouble() / n.minutesAsleep, base)
             } else null
+            val regularity = regularityOf(day, sessions, allSessions)
             sleepEngine.evaluate(
                 night = SleepNightInput(
                     asleepMinutes = n.minutesAsleep.toDouble(),
@@ -218,20 +256,27 @@ class DailyIntelligencePipeline(
                 needMinutes = needLastNight.totalMinutes,
                 recentTimings = timings,
                 restorativeZ = restorativeZ,
+                regularityIndex = regularity.index,
             )
         }
 
         // --- Strain ---------------------------------------------------------------------------
-        val restingForLoad = rhr.current ?: rhr.baseline.center ?: dailyDao.latest(rhrMetric, day)?.value
+        // TRIMP is measured from the resting-HR baseline, so a morning that is 8 bpm above usual does
+        // not change every minute of the day (B10). Today's reading only stands in without a baseline.
+        val restingForLoad = RestingHeartRateSource.loadAnchor(rhr.baseline.center, rhr.current, dailyDao.latest(rhrMetric, day)?.value)
         val age = user.ageOn(date.year)
-        val observedPeak = hrDao.peakMinuteAverageBetween(dayEnd - PEAK_LOOKBACK_MS, dayEnd)
+        // Robust observed maximum (B5): the 99.5th percentile of active minutes over 180 days, never one glitch.
+        val peakSince = dayEnd - PEAK_LOOKBACK_MS
+        val activePeakMinutes = hrDao.countMinutesBetween(peakSince, dayEnd, MaxHeartRate.MIN_PEAK_SAMPLE_BPM, MaxHeartRate.MAX_PEAK_SAMPLE_BPM)
+        val observedPeak = MaxHeartRate.robustPeakOffset(activePeakMinutes)?.let {
+            hrDao.minuteAverageAtRank(peakSince, dayEnd, MaxHeartRate.MIN_PEAK_SAMPLE_BPM, MaxHeartRate.MAX_PEAK_SAMPLE_BPM, it)
+        }
         val maxHr = MaxHeartRate.resolve(age, observedPeak, user.maxHeartRateOverride?.toDouble())
         val cardio = if (restingForLoad != null && maxHr != null && maxHr.bpm > restingForLoad) {
             CardioProfile(restingForLoad, maxHr.bpm, user.sex, maxHr.provenance)
         } else null
 
         val hrRows = hrDao.range(dayStart, dayEnd)
-        val strainEngine = StrainEngine(StrainEngine.Config(zoneMethod = user.zoneMethod))
         val strain = if (cardio != null && hrRows.isNotEmpty()) {
             strainEngine.evaluate(hrRows.map { HeartRateSample(it.avgBpm, 1.0) }, cardio)
         } else null
@@ -256,9 +301,13 @@ class DailyIntelligencePipeline(
         }
 
         // --- Training load --------------------------------------------------------------------
-        val loadHistory = series(MetricType.DAILY_TRIMP).filter { it.epochDay < day }.map { DailyLoad(it.epochDay, it.value) } +
-            DailyLoad(day, strain?.trimp)
-        val load = loadEngine.analyze(loadHistory, day)
+        // Earlier days are the stored loads (only days worn >= 600 minutes were stored). The day itself
+        // is a null entry while it is today, and when it was worn too little (B2, B3).
+        val earlierLoads = series(MetricType.DAILY_TRIMP).filter { it.epochDay < day }.map { DailyLoad(it.epochDay, it.value) }
+        val thisDayLoad = strain?.let { DailyLoadPolicy.historyEntry(day, today(), it.trimp, it.recordedMinutes) } ?: DailyLoad(day, null)
+        val load = loadEngine.analyze(earlierLoads + thisDayLoad, day)
+        // Yesterday's ratio for this morning's recovery, and only when it carries no caveat (B6).
+        val yesterdayRatio = loadEngine.analyze(earlierLoads, day - 1).reliableUncoupledRatio
 
         // --- Recovery -------------------------------------------------------------------------
         val subjectiveFatigue = valueOn(MetricType.SUBJECTIVE_FATIGUE, day)?.toInt()
@@ -272,7 +321,7 @@ class DailyIntelligencePipeline(
                 skinTemperatureZ = skin.zScore,
                 subjectiveFatigue = subjectiveFatigue,
                 // Yesterday's ratio: this morning's readiness must not depend on today's training.
-                acuteChronicRatio = valueOn(MetricType.ACWR_UNCOUPLED, day - 1),
+                acuteChronicRatio = yesterdayRatio,
                 autonomicBaselineCalibrating = calibrating,
                 calibrationDaysRemaining = listOf(hrv, rhr).filter { it.current != null && !it.baseline.isEstablished }
                     .minOfOrNull { it.baseline.daysUntilEstablished },
@@ -280,13 +329,15 @@ class DailyIntelligencePipeline(
         )
 
         val targetCalculator = StrainTargetCalculator(strainEngine)
-        val target = recovery.score?.let(targetCalculator::targetFor)
-        val remaining = if (target != null && cardio != null) targetCalculator.remaining(strain?.trimp ?: 0.0, target, cardio) else null
+        val personalBase = targetCalculator.personalBase(((day - TARGET_BASE_DAYS) until day).map { strainByDay[it] })
+        val target = recovery.score?.let { targetCalculator.targetFor(it, personalBase) }
+        // No heart-rate data means nothing is "left" (B11): it must not read as a full window.
+        val remaining = if (target != null && cardio != null && strain != null) targetCalculator.remaining(strain.trimp, target, cardio) else null
 
         val nightsForTonight = if (night != null) earlier + night else earlier
         val needTonight = needCalculator.need(
             nightsForTonight.map { it.minutesAsleep.toDouble() },
-            strain?.strain,
+            strainZ(day, strain?.strain),
             balances(day + 1, nightsForTonight),
             day + 1,
         )
@@ -387,7 +438,7 @@ class DailyIntelligencePipeline(
                 ?.firstOrNull { it.component == com.apex.athlete.core.analytics.sleep.SleepComponent.CONSISTENCY }?.subScore,
             MetricType.STRAIN_SCORE to a.strain?.strain,
             MetricType.STRAIN_TARGET to a.strainTarget?.center,
-            MetricType.DAILY_TRIMP to a.strain?.trimp,
+            MetricType.DAILY_TRIMP to a.strain?.let { DailyLoadPolicy.storedTrimp(it.trimp, it.recordedMinutes) },
             MetricType.ACUTE_LOAD to a.load.acuteLoad,
             MetricType.CHRONIC_LOAD to a.load.chronicLoad,
             MetricType.ACWR_COUPLED to a.load.acwrCoupled,
@@ -415,6 +466,22 @@ class DailyIntelligencePipeline(
             updatedAtEpochMillis = now,
         )
 
+    /**
+     * Sleep Regularity Index of the 7 windows (local noon to noon) before the end of [day]'s night.
+     * A window is covered when a main sleep ended on the civil day after it starts; naps count as sleep.
+     */
+    private fun regularityOf(day: Long, mainSleeps: List<SleepSessionEntity>, all: List<SleepSessionEntity>) =
+        SleepRegularityIndex.compute(
+            spans = all.filter { it.epochDay in (day - 7)..day }.map {
+                SleepSpan(
+                    Math.floorDiv(it.startEpochMillis + it.startZoneOffsetSeconds * 1000L, 60_000L),
+                    Math.floorDiv(it.endEpochMillis + it.endZoneOffsetSeconds * 1000L, 60_000L),
+                )
+            },
+            firstWindowDay = day - 7,
+            covered = (0 until 7).map { i -> mainSleeps.any { it.epochDay == day - 6 + i } },
+        )
+
     /** Bed and wake time as local clock minutes, using the UTC offset recorded with the session. */
     private fun timingOf(s: SleepSessionEntity): SleepTiming {
         fun minuteOfDay(epochMillis: Long, offsetSeconds: Int): Double {
@@ -428,8 +495,11 @@ class DailyIntelligencePipeline(
     }
 
     companion object {
-        /** Days of daily values loaded for baselines and load averages (30-day baseline + 28-day load + margin). */
-        const val HISTORY_DAYS = 60L
+        /** Days of daily values loaded: 66 for the weekly HRV baseline (60 nights before the week), plus margin. */
+        const val HISTORY_DAYS = 70L
+        /** Prior strain days behind the sleep-need z-score, and the days of the personal strain-target base. */
+        const val STRAIN_Z_DAYS = 30L
+        const val TARGET_BASE_DAYS = 14L
         const val SLEEP_HISTORY_DAYS = 30L
         const val PEAK_LOOKBACK_MS = 180L * 24 * 60 * 60 * 1000
         const val VO2_MAX_AGE_DAYS = 30

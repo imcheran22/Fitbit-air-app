@@ -82,11 +82,35 @@ interface IntradayHeartRateDao {
         zone5: Double,
     ): ZoneMinutesRow
 
-    /** Highest one-minute average on record since [sinceMillis]; a robust observed peak heart rate. */
+    /**
+     * Number of one-minute averages in a half-open range that lie between [minBpm] and [maxBpm]:
+     * the sample behind the robust observed maximum (see `MaxHeartRate.robustPeakOffset`).
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM intraday_heart_rate
+        WHERE timestampEpochMillis >= :fromMillis AND timestampEpochMillis < :toMillis
+          AND avgBpm >= :minBpm AND avgBpm <= :maxBpm
+        """,
+    )
+    suspend fun countMinutesBetween(fromMillis: Long, toMillis: Long, minBpm: Double, maxBpm: Double): Int
+
+    /** The one-minute average with [offset] higher minutes above it (0 = the highest), within the same sample as [countMinutesBetween]. */
+    @Query(
+        """
+        SELECT avgBpm FROM intraday_heart_rate
+        WHERE timestampEpochMillis >= :fromMillis AND timestampEpochMillis < :toMillis
+          AND avgBpm >= :minBpm AND avgBpm <= :maxBpm
+        ORDER BY avgBpm DESC LIMIT 1 OFFSET :offset
+        """,
+    )
+    suspend fun minuteAverageAtRank(fromMillis: Long, toMillis: Long, minBpm: Double, maxBpm: Double, offset: Int): Double?
+
+    /** Highest single one-minute average since [sinceMillis]. One optical glitch sets it, so it is not a maximum heart rate. */
     @Query("SELECT MAX(avgBpm) FROM intraday_heart_rate WHERE timestampEpochMillis >= :sinceMillis")
     suspend fun peakMinuteAverage(sinceMillis: Long): Double?
 
-    /** Highest one-minute average inside a half-open time range. */
+    /** Highest single one-minute average inside a half-open time range (not robust: see [minuteAverageAtRank]). */
     @Query("SELECT MAX(avgBpm) FROM intraday_heart_rate WHERE timestampEpochMillis >= :fromMillis AND timestampEpochMillis < :toMillis")
     suspend fun peakMinuteAverageBetween(fromMillis: Long, toMillis: Long): Double?
 

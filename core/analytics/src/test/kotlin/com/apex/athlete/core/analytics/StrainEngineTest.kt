@@ -111,12 +111,14 @@ class StrainEngineTest {
     @Test
     fun `strain target scales with recovery and converts the remainder into minutes`() {
         val calc = StrainTargetCalculator(engine)
-        assertEquals(12.0, calc.targetFor(50.0).center, eps)
-        assertEquals(6.0, calc.targetFor(0.0).center, eps)
-        assertEquals(18.0, calc.targetFor(100.0).center, eps)
-        assertEquals(19.0, calc.targetFor(140.0).high, eps)
+        // Version 3: personal base 12 (version 2 used the fixed scale 6 + 12R, which gave 12 / 6 / 18).
+        // center = 12 * (1 + 0.6 * (R - 50) / 100): 12 at R 50, 8.4 at R 0, 15.6 at R 100.
+        assertEquals(12.0, calc.targetFor(50.0, 12.0)!!.center, eps)
+        assertEquals(8.4, calc.targetFor(0.0, 12.0)!!.center, eps)
+        assertEquals(15.6, calc.targetFor(100.0, 12.0)!!.center, eps)
+        assertEquals(16.6, calc.targetFor(140.0, 12.0)!!.high, eps) // recovery limited to 100
 
-        val target = calc.targetFor(50.0)
+        val target = calc.targetFor(50.0, 12.0)!!
         val remaining = calc.remaining(currentTrimp = 30.0, target = target, profile = male)
         assertEquals(engine.trimpFromStrain(13.0) - 30.0, remaining.trimpRemaining, 1e-6)
         assertEquals(13.0 - engine.strainFromTrimp(30.0), remaining.strainRemaining, 1e-6)
@@ -198,7 +200,7 @@ class StrainEngineTest {
     fun `remaining minutes use the engine's zone method and reserve floor`() {
         val hrrEngine = StrainEngine(StrainEngine.Config(zoneMethod = ZoneMethod.HEART_RATE_RESERVE))
         val calc = StrainTargetCalculator(hrrEngine)
-        val target = calc.targetFor(50.0)
+        val target = calc.targetFor(50.0, 12.0)!!
         val r = calc.remaining(currentTrimp = 30.0, target = target, profile = male)
         // Karvonen zone 5 for 60/180 runs 168..180, midpoint 174 bpm (v1 used 171, the %HRmax zone).
         assertEquals(r.trimpRemaining / Trimp.perMinute(174.0, male), r.minutesByZone.getValue(HeartRateZone.ZONE_5), 1e-9)

@@ -90,6 +90,14 @@ class ApexStores(
         real ?: bind(openReal(appContext), isDemo = false).also { store ->
             // Touch the file now so a damaged database or a lost key fails here, not mid-screen.
             store.db.syncWatermarkDao().forSource(SyncSource.HEALTH_CONNECT)
+            // A formula change leaves older derived rows behind; recompute them before anyone reads the
+            // store. A failure keeps the app usable and is retried at the next start (rows stay stale).
+            try {
+                store.pipeline.recomputeIfStale()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
             real = store
         }
     }

@@ -5,11 +5,18 @@ import kotlin.math.exp
 import kotlin.math.roundToInt
 
 /**
- * Inputs to the recovery score. Each can be absent; the engine re-weights around whatever exists.
+ * Inputs to the recovery score. Each can be absent.
  *
- * @property nominalWeight weight used when every input of the default set is present. The five
- *   default inputs sum to 1.0. Optional inputs add their weight on top and the total is
- *   renormalised, so entering a fatigue rating never inflates the score beyond 100.
+ * Two kinds of input (formula version 3):
+ * - **Weighted** (HRV, resting heart rate, sleep, the optional fatigue rating): the score is their
+ *   weighted mean, re-weighted around whichever are present.
+ * - **Penalty-only** ([isPenaltyOnly]: breathing rate, skin temperature, workload ratio): they
+ *   never enter the mean. Each present one subtracts `nominalWeight * (100 - subScore)` points,
+ *   so a sensor that did not sync, or one that reads normal, changes nothing.
+ *
+ * @property nominalWeight weight of the input. For weighted inputs the weights of the present ones
+ *   are renormalised to sum to 1; for penalty-only inputs it is the largest number of points per
+ *   cent of sub-score shortfall (so 0.05 means at most 5 points).
  * @property neutralSubScore sub-score that represents "nothing notable"; contributions are
  *   reported relative to it so the user sees what helped and what hurt.
  */
@@ -17,14 +24,15 @@ enum class RecoveryComponent(
     val nominalWeight: Double,
     val neutralSubScore: Double,
     val isOptional: Boolean,
+    val isPenaltyOnly: Boolean = false,
 ) {
     HRV(0.40, 50.0, false),
     RESTING_HEART_RATE(0.25, 50.0, false),
     SLEEP(0.25, 75.0, false),
-    RESPIRATORY_RATE(0.05, 100.0, false),
-    SKIN_TEMPERATURE(0.05, 100.0, false),
+    RESPIRATORY_RATE(0.05, 100.0, false, isPenaltyOnly = true),
+    SKIN_TEMPERATURE(0.05, 100.0, false, isPenaltyOnly = true),
     SUBJECTIVE_FATIGUE(0.10, 50.0, true),
-    TRAINING_LOAD(0.05, 100.0, true),
+    TRAINING_LOAD(0.05, 100.0, true, isPenaltyOnly = true),
 }
 
 /**
@@ -73,11 +81,21 @@ data class RecoveryContribution(
     /** 0..100, null when the input was not available. */
     val subScore: Double?,
     val nominalWeight: Double,
-    /** Weight after redistributing the weights of missing inputs; 0 when unavailable. */
+    /**
+     * Weight in the weighted mean after redistributing the weights of missing inputs. Always 0 for
+     * penalty-only inputs and for unavailable ones.
+     */
     val effectiveWeight: Double,
-    /** effectiveWeight × subScore: this input's share of the final score, in points. */
+    /**
+     * This input's share of the final score, in points: `effectiveWeight × subScore` for weighted
+     * inputs, `−nominalWeight × (100 − subScore)` for penalty-only ones. Before the 0..100 clamp
+     * the points of all inputs add up to the score.
+     */
     val points: Double,
-    /** effectiveWeight × (subScore − neutral). Positive helped the score, negative lowered it. */
+    /**
+     * Positive helped the score, negative lowered it: `effectiveWeight × (subScore − neutral)` for
+     * weighted inputs; for penalty-only inputs the same as [points].
+     */
     val impact: Double,
 )
 
@@ -100,13 +118,18 @@ data class RecoveryResult(
 )
 
 /**
- * Daily recovery score (0–100).
+ * Daily recovery score (0–100), formula version 3.
  *
- *   score = Σ wᵢ' · Sᵢ   over the available inputs,   wᵢ' = wᵢ / Σ wⱼ (available)
+ *   score = Σ wᵢ' · Sᵢ  −  Σ wₖ · (100 − Sₖ)
+ *           weighted inputs i (HRV, resting HR, sleep, fatigue rating), wᵢ' = wᵢ / Σ wⱼ (present)
+ *           penalty-only inputs k (breathing rate, skin temperature, workload ratio), if present
  *
- * Because the weights of missing inputs are redistributed in proportion to the remaining ones,
- * the score always spans the full 0–100 range no matter which sensors exist. At least one
- * autonomic marker (HRV or resting heart rate) is required; sleep alone is not a recovery score.
+ * Because the weights of missing weighted inputs are redistributed in proportion to the remaining
+ * ones, the score spans the full 0–100 range no matter which of them exist. A penalty-only input
+ * is never part of that mean (version 2 put it in with a neutral 100, so a sensor that did not
+ * sync lowered the score by pulling the other weights up; B1 in docs/review/METRICS_ALIGNMENT.md).
+ * At least one autonomic marker (HRV or resting heart rate) is required; sleep alone is not a
+ * recovery score.
  *
  * Evidence: the inputs follow published practice (ln RMSSD against a personal baseline, Plews
  * et al. 2013; resting heart rate against a personal baseline, Buchheit 2014), but the weights,
@@ -167,19 +190,35 @@ class RecoveryEngine(private val config: Config = Config()) {
             )
         }
 
-        val weightSum = RecoveryComponent.entries.filter { subScores[it] != null }.sumOf { it.nominalWeight }
+        // Weighted mean over the inputs that are present; penalty-only inputs stay out of it.
+        val weightSum = RecoveryComponent.entries
+            .filter { !it.isPenaltyOnly && subScores[it] != null }
+            .sumOf { it.nominalWeight }
         val contributions = RecoveryComponent.entries.map { component ->
             val s = subScores[component] ?: return@map unavailable(component)
-            val w = component.nominalWeight / weightSum
-            RecoveryContribution(
-                component = component,
-                available = true,
-                subScore = s,
-                nominalWeight = component.nominalWeight,
-                effectiveWeight = w,
-                points = w * s,
-                impact = w * (s - component.neutralSubScore),
-            )
+            if (component.isPenaltyOnly) {
+                val points = -component.nominalWeight * (100.0 - s)
+                RecoveryContribution(
+                    component = component,
+                    available = true,
+                    subScore = s,
+                    nominalWeight = component.nominalWeight,
+                    effectiveWeight = 0.0,
+                    points = points,
+                    impact = points,
+                )
+            } else {
+                val w = component.nominalWeight / weightSum
+                RecoveryContribution(
+                    component = component,
+                    available = true,
+                    subScore = s,
+                    nominalWeight = component.nominalWeight,
+                    effectiveWeight = w,
+                    points = w * s,
+                    impact = w * (s - component.neutralSubScore),
+                )
+            }
         }
 
         val score = contributions.sumOf { it.points }.coerceIn(0.0, 100.0)

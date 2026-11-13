@@ -56,6 +56,8 @@ data class MetricIntelligence(
     val consecutiveDaysOutsideNormal: Int,
     /** Coefficient of variation of the last 7 days' readings (SD / mean). */
     val coefficientOfVariation7: Double?,
+    /** Weekly status of the ln-scale metric (HRV) against a baseline that ends before the week; null for other metrics. */
+    val weeklyStatus: WeeklyHrvStatus? = null,
 )
 
 object MetricTrendAnalyzer {
@@ -116,6 +118,7 @@ object MetricTrendAnalyzer {
             trend = trend(last7, baseline, spec),
             consecutiveDaysOutsideNormal = consecutiveOutside(byDay, asOfDay, baseline),
             coefficientOfVariation7 = cv7,
+            weeklyStatus = if (spec.transform == ValueTransform.NATURAL_LOG) WeeklyHrvStatusAnalyzer.analyze(history, asOfDay) else null,
         )
     }
 

@@ -36,7 +36,7 @@ data class LoadPoint(val epochDay: Long, val trimp: Double?, val acute: Double?,
  * @property acuteLoad ATL: 7-day EWMA of daily TRIMP ("fatigue"), normalised weights.
  * @property chronicLoad CTL: 28-day EWMA of daily TRIMP ("fitness"), normalised weights.
  * @property acwrCoupled ATL / CTL. The acute week is part of the chronic average, which pulls
- *   the ratio towards 1 and understates spikes.
+ *   the ratio towards 1 and understates spikes. Needs 14 recorded days in the last 28.
  * @property acwrUncoupled mean of the last 7 days / mean of the 21 days before them.
  * @property workloadZone zone of the uncoupled ratio (falls back to the coupled one).
  * @property monotony Foster: mean daily load / SD of daily load over the last 7 days (needs 6 recorded days).
@@ -67,7 +67,24 @@ data class TrainingLoadResult(
     val validDaysLast28: Int,
     val series: List<LoadPoint>,
     val provenance: DataProvenance = DataProvenance.MATHEMATICALLY_DERIVED,
-)
+    /** Share of the last 42 days with an active recorded load, as `min(1, active / 28)`. */
+    val loadDensity: Double = 0.0,
+    /** How recently the athlete trained, from the recorded days before [asOfDay]; see [TrainingLoadEngine.Config]. */
+    val loadRecency: Double = 0.0,
+    /** `min(loadDensity, loadRecency)`: how much the ratios can be trusted at all. */
+    val loadConfidence: Double = 0.0,
+    /**
+     * True when [loadConfidence] is below [TrainingLoadEngine.Config.minLoadConfidence]: the ratios
+     * and the zone are withheld (null) because the recorded days are too few or too old.
+     */
+    val isCalibrating: Boolean = false,
+) {
+    /**
+     * The uncoupled ratio only when it carries no caveat: a ratio flagged as unreliable (short
+     * history, low chronic load, sparse data) must not feed another score.
+     */
+    val reliableUncoupledRatio: Double? get() = acwrUncoupled?.takeIf { caveats.isEmpty() }
+}
 
 /**
  * Acute/chronic training load, workload ratios and Foster's monotony from daily TRIMP.
@@ -96,12 +113,33 @@ class TrainingLoadEngine(private val config: Config = Config()) {
         val highRisk: Double = 1.50,
         /** Monotony is capped here when the daily loads are (almost) identical. */
         val maxMonotony: Double = 10.0,
+        /**
+         * Confidence gate (formula version 3; the form, constants and the 0.35 line are those of the
+         * Bevel study, strain-load.md, adapted to recorded days: a *calibration* choice, not validated).
+         * A recorded day with a load above [activeDayTrimp] is "active".
+         */
+        val activeDayTrimp: Double = 5.0,
+        /** Active days in the last [densityWindowDays] that give a density of 1. */
+        val fullDensityActiveDays: Int = 28,
+        val densityWindowDays: Int = 42,
+        /** Days before the as-of day that count towards recency (yesterday is 0 days ago, so 0..15). */
+        val recencyDays: Int = 16,
+        /** Weight lost per day since the training day: 1, 0.9375, 0.875, ... */
+        val recencyDecayPerDay: Double = 0.0625,
+        /** Sum of the recency weights that gives a recency of 1 (the sum is multiplied by 1 / this). */
+        val recencyFullWeight: Double = 4.0,
+        /** Below this confidence the ratios and the zone are not shown. */
+        val minLoadConfidence: Double = 0.35,
     )
 
     fun analyze(history: List<DailyLoad>, asOfDay: Long): TrainingLoadResult {
         // A null or non-finite TRIMP is "no data" for the day; it must not become a rest day or a NaN.
-        val byDay = history.filter { it.epochDay <= asOfDay && it.trimp != null && it.trimp.isFinite() }
-            .associateBy({ it.epochDay }, { it.trimp!!.coerceAtLeast(0.0) })
+        // One value per day: the first valid entry listed wins, as in BaselineEngine and the trend analyzer.
+        val byDay = LinkedHashMap<Long, Double>()
+        for (d in history) {
+            val t = d.trimp
+            if (d.epochDay <= asOfDay && t != null && t.isFinite()) byDay.putIfAbsent(d.epochDay, t.coerceAtLeast(0.0))
+        }
         val firstDay = byDay.keys.minOrNull()
 
         if (firstDay == null) {
@@ -141,10 +179,26 @@ class TrainingLoadEngine(private val config: Config = Config()) {
         if (ctl != null && ctl < config.lowChronicLoad) caveats += LoadCaveat.LOW_CHRONIC_LOAD
         if (last28.size < minOf(daysOfHistory, config.chronicSpanDays) * 0.7) caveats += LoadCaveat.SPARSE_DATA
 
-        val ratiosAllowed = daysOfHistory >= config.minDaysForRatio
-        val coupled = if (ratiosAllowed && atl != null && ctl != null && ctl > 0) atl / ctl else null
+        // Confidence: enough active recorded days (density) and recent enough (recency).
+        val activeDays = ((asOfDay - config.densityWindowDays + 1)..asOfDay)
+            .count { d -> (byDay[d] ?: 0.0) > config.activeDayTrimp }
+        val density = minOf(1.0, activeDays.toDouble() / config.fullDensityActiveDays)
+        var recencySum = 0.0
+        for (ago in 0 until config.recencyDays) {
+            val load = byDay[asOfDay - 1 - ago] ?: continue
+            if (load > config.activeDayTrimp) recencySum += 1.0 - config.recencyDecayPerDay * ago
+        }
+        val recency = minOf(1.0, recencySum / config.recencyFullWeight)
+        val confidence = minOf(density, recency)
+        val calibrating = confidence < config.minLoadConfidence
+
+        // A coupled ratio from a handful of recorded days over a long span is not a ratio (B4):
+        // it needs as many recorded days as the uncoupled chronic window.
+        val ratiosAllowed = daysOfHistory >= config.minDaysForRatio && last28.size >= config.minValidChronicDays
+        val coupled = if (!calibrating && ratiosAllowed && atl != null && ctl != null && ctl > 0) atl / ctl else null
 
         val uncoupled = if (
+            !calibrating &&
             daysOfHistory >= config.chronicSpanDays &&
             last7.size >= config.minValidAcuteDays &&
             chronic21.size >= config.minValidChronicDays
@@ -209,6 +263,10 @@ class TrainingLoadEngine(private val config: Config = Config()) {
             daysOfHistory = daysOfHistory,
             validDaysLast28 = last28.size,
             series = series,
+            loadDensity = density,
+            loadRecency = recency,
+            loadConfidence = confidence,
+            isCalibrating = calibrating,
         )
     }
 
@@ -218,4 +276,31 @@ class TrainingLoadEngine(private val config: Config = Config()) {
         ratio < config.highRisk -> WorkloadZone.OVERREACHING
         else -> WorkloadZone.HIGH_RISK
     }
+}
+
+/**
+ * Which days enter the load history (formula version 3; B2 and B3 in docs/review/METRICS_ALIGNMENT.md).
+ *
+ * Daily TRIMP sums the heart-rate minutes the band delivered. A day with only a few hours of data
+ * is not a day of low training, it is a day the band was off or not yet synced, so:
+ *
+ * - a finished day needs at least [MIN_WEAR_MINUTES] recorded minutes to count as a load at all,
+ *   otherwise it is missing (null), exactly like a day with no data;
+ * - today is still accumulating, so it never enters the load history (its lower-bound strain is
+ *   still shown elsewhere).
+ *
+ * [MIN_WEAR_MINUTES] (10 hours of the 24) is a *calibration* choice with no published source.
+ */
+object DailyLoadPolicy {
+    const val MIN_WEAR_MINUTES: Double = 600.0
+
+    /** The TRIMP to store as the day's recorded load, or null when the band was worn too little (or not at all). */
+    fun storedTrimp(trimp: Double?, recordedMinutes: Double?): Double? {
+        if (trimp == null || !trimp.isFinite() || recordedMinutes == null || !recordedMinutes.isFinite()) return null
+        return trimp.takeIf { recordedMinutes >= MIN_WEAR_MINUTES }
+    }
+
+    /** The entry to hand to [TrainingLoadEngine]; today and any later day is always a null load. */
+    fun historyEntry(epochDay: Long, todayEpochDay: Long, trimp: Double?, recordedMinutes: Double?): DailyLoad =
+        DailyLoad(epochDay, if (epochDay >= todayEpochDay) null else storedTrimp(trimp, recordedMinutes))
 }

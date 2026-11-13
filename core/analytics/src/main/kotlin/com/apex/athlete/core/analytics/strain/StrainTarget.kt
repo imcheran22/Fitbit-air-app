@@ -1,5 +1,8 @@
 package com.apex.athlete.core.analytics.strain
 
+import com.apex.athlete.core.analytics.stats.Ewma
+import com.apex.athlete.core.analytics.stats.MissingValuePolicy
+
 /**
  * The day's recommended strain window, derived from the morning recovery score.
  *
@@ -22,25 +25,48 @@ data class RemainingCapacity(
 )
 
 /**
- *   center = 6 + 12 · (recovery / 100)        window = center ± 1
+ * Formula version 3: the target is built from the athlete's own recent strain, not from a fixed
+ * scale.
  *
- * so a recovery of 0 % points to a strain of 6 (active recovery), 50 % to 12, 100 % to 18.
- * The mapping is an Apex calibration choice with no validated source; it is guidance only.
+ *   base   = EWMA (alpha 0.25, normalised weights) of the recorded strain of the last 14 days,
+ *            missing days skipped (at least 5 recorded days, otherwise no target)
+ *   center = base * (1 + 0.6 * (recovery - 50) / 100),   window = center +/- 1,   limited to 0-21
+ *
+ * so a steady base of 10 gives a centre of 7 at recovery 0, 10 at 50 and 13 at 100. The form
+ * (14-day fold with alpha 0.25 and a +-30 % recovery scale) is that of the Bevel study
+ * (strain-load.md, "Target Strain"), which is not peer reviewed; Apex skips missing days where the
+ * study counts them as zero. The window width and the minimum are *calibration*. Guidance only,
+ * not a prescription. Version 2 used `6 + 12 * recovery / 100`, a fixed scale that is not
+ * personal and amounts to a population norm.
  */
 class StrainTargetCalculator(
     private val engine: StrainEngine = StrainEngine(),
     private val config: Config = Config(),
 ) {
     data class Config(
-        val centerAtZeroRecovery: Double = 6.0,
-        val centerAtFullRecovery: Double = 18.0,
+        val baseWindowDays: Int = 14,
+        val baseSpan: Int = 7, // alpha = 2 / (7 + 1) = 0.25
+        val minRecordedDays: Int = 5,
+        val recoveryScalePerPoint: Double = 0.006, // 0.6 per 100 recovery points
         val halfWidth: Double = 1.0,
         val maxStrain: Double = 21.0,
     )
 
-    fun targetFor(recoveryScore: Double): StrainTarget {
-        val r = recoveryScore.coerceIn(0.0, 100.0) / 100.0
-        val center = config.centerAtZeroRecovery + (config.centerAtFullRecovery - config.centerAtZeroRecovery) * r
+    /**
+     * Personal strain base from the last [Config.baseWindowDays] calendar days, oldest first, null for
+     * a day without a recorded strain. Null when fewer than [Config.minRecordedDays] are recorded.
+     */
+    fun personalBase(recentStrains: List<Double?>): Double? {
+        val window = recentStrains.takeLast(config.baseWindowDays).map { it?.takeIf(Double::isFinite) }
+        if (window.count { it != null } < config.minRecordedDays) return null
+        return Ewma.normalizedSeries(window, config.baseSpan, MissingValuePolicy.CARRY_FORWARD).last()
+    }
+
+    /** Null without a personal base: a target is never filled in from a population default. */
+    fun targetFor(recoveryScore: Double, personalBase: Double?): StrainTarget? {
+        if (personalBase == null || !personalBase.isFinite()) return null
+        val r = recoveryScore.coerceIn(0.0, 100.0)
+        val center = (personalBase * (1.0 + config.recoveryScalePerPoint * (r - 50.0))).coerceIn(0.0, config.maxStrain)
         return StrainTarget(
             center = center,
             low = (center - config.halfWidth).coerceIn(0.0, config.maxStrain),

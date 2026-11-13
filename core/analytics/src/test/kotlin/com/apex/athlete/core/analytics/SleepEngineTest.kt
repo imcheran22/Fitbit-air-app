@@ -35,39 +35,45 @@ class SleepEngineTest {
     }
 
     @Test
-    fun `strain above ten adds three minutes per point`() {
-        assertEquals(0.0, need.strainSurcharge(null), eps)
-        assertEquals(0.0, need.strainSurcharge(9.0), eps)
-        assertEquals(12.0, need.strainSurcharge(14.0), eps)
+    fun `strain adds two percent of the base per SD above the personal mean`() {
+        // Version 2 added 3 minutes per strain point above 10 (12 minutes at strain 14).
+        assertEquals(0.0, need.strainSurcharge(null, 465.0), eps)
+        assertEquals(0.0, need.strainSurcharge(-0.5, 465.0), eps)
+        assertEquals(9.3, need.strainSurcharge(1.0, 465.0), eps)
+        assertEquals(18.6, need.strainSurcharge(2.0, 465.0), eps)
     }
 
     @Test
     fun `debt sums the trailing seven nights and never goes negative`() {
         val short = (93L..99L).map { NightBalance(it, needMinutes = 465.0, asleepMinutes = 405.0) }
-        assertEquals(420.0, need.accumulatedDebt(short, asOfDay = 100), eps)
+        assertEquals(420.0, need.accumulatedDebt(short, asOfDay = 100)!!, eps)
         // A night on the evaluated day or older than the window does not count.
         val extra = short + NightBalance(100, 465.0, 0.0) + NightBalance(92, 465.0, 0.0)
-        assertEquals(420.0, need.accumulatedDebt(extra, asOfDay = 100), eps)
+        assertEquals(420.0, need.accumulatedDebt(extra, asOfDay = 100)!!, eps)
 
         val long = (93L..99L).map { NightBalance(it, 465.0, 600.0) }
-        assertEquals(0.0, need.accumulatedDebt(long, asOfDay = 100), eps)
+        assertEquals(0.0, need.accumulatedDebt(long, asOfDay = 100)!!, eps)
 
         // One long night repays at most 60 minutes of the other nights' shortfall.
-        val mixed = listOf(NightBalance(98, 465.0, 345.0), NightBalance(99, 465.0, 700.0))
-        assertEquals(60.0, need.accumulatedDebt(mixed, asOfDay = 100), eps)
+        // (Four recorded nights are needed in version 3; two level nights were added to the original pair.)
+        val mixed = listOf(NightBalance(96, 465.0, 465.0), NightBalance(97, 465.0, 465.0), NightBalance(98, 465.0, 345.0), NightBalance(99, 465.0, 700.0))
+        assertEquals(60.0, need.accumulatedDebt(mixed, asOfDay = 100)!!, eps)
     }
 
     @Test
     fun `total need adds surcharges and caps the debt repayment at ninety minutes`() {
         val short = (93L..99L).map { NightBalance(it, 465.0, 405.0) }
-        val n = need.need(emptyList(), precedingDayStrain = 14.0, priorNights = short, asOfDay = 100)
+        // Strain z of 1 on the 465 minute base adds 9.3 minutes (version 2: 12 minutes for strain 14).
+        val n = need.need(emptyList(), precedingDayStrainZ = 1.0, priorNights = short, asOfDay = 100)
         assertEquals(465.0, n.baseMinutes, eps)
-        assertEquals(12.0, n.strainSurchargeMinutes, eps)
-        assertEquals(420.0, n.accumulatedDebtMinutes, eps)
+        assertEquals(9.3, n.strainSurchargeMinutes, eps)
+        assertEquals(420.0, n.accumulatedDebtMinutes!!, eps)
         assertEquals(90.0, n.debtSurchargeMinutes, eps)
-        assertEquals(567.0, n.totalMinutes, eps)
+        assertEquals(564.3, n.totalMinutes, eps)
 
-        val small = need.need(emptyList(), null, listOf(NightBalance(99, 465.0, 425.0)), 100)
+        // Three level nights and one 40 minutes short: debt 40, surcharge 20 (one lone night gives no debt in version 3).
+        val smallNights = (96L..98L).map { NightBalance(it, 465.0, 465.0) } + NightBalance(99, 465.0, 425.0)
+        val small = need.need(emptyList(), null, smallNights, 100)
         assertEquals(20.0, small.debtSurchargeMinutes, eps)
         assertEquals(485.0, small.totalMinutes, eps)
     }
@@ -189,9 +195,10 @@ class SleepEngineTest {
 
     @Test
     fun `non finite nights and strain are skipped by the need model`() {
-        val nights = listOf(NightBalance(98, 465.0, Double.NaN), NightBalance(99, 465.0, 405.0))
-        assertEquals(60.0, need.accumulatedDebt(nights, asOfDay = 100), eps)
-        assertEquals(0.0, need.strainSurcharge(Double.NaN), eps)
+        // The NaN night is not recorded; the other four are (version 3 needs four recorded nights).
+        val nights = listOf(NightBalance(95, 465.0, Double.NaN)) + (96L..98L).map { NightBalance(it, 465.0, 465.0) } + NightBalance(99, 465.0, 405.0)
+        assertEquals(60.0, need.accumulatedDebt(nights, asOfDay = 100)!!, eps)
+        assertEquals(0.0, need.strainSurcharge(Double.NaN, 465.0), eps)
         val n = need.need(emptyList(), Double.NaN, nights, 100)
         assertEquals(465.0 + 30.0, n.totalMinutes, eps)
     }

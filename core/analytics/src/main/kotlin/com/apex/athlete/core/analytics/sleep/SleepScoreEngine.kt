@@ -61,6 +61,8 @@ data class SleepScoreResult(
     val wakeStdDevMinutes: Double?,
     val sufficientForRecovery: Boolean,
     val provenance: DataProvenance = DataProvenance.MATHEMATICALLY_DERIVED,
+    /** Sleep Regularity Index (-100..100) that scored the consistency component, when one was given. */
+    val regularityIndex: Double? = null,
 )
 
 /**
@@ -70,7 +72,8 @@ data class SleepScoreResult(
  *   25 %  restorative   share of deep + REM against the 38–50 % benchmark, nudged by how the
  *                       night compares with the user's own usual share
  *   20 %  efficiency    asleep / in bed, minus a penalty for long awakenings
- *   15 %  consistency   week-long spread of bedtime and wake time
+ *   15 %  consistency   Sleep Regularity Index of the last week (formula version 3), limited to 0..100;
+ *                       without an index, the older week-long spread of bedtime and wake time
  *
  * A component that cannot be computed (no stage data, fewer than three nights of timing) drops
  * out and the remaining weights are scaled up proportionally.
@@ -103,6 +106,12 @@ class SleepScoreEngine(private val config: Config = Config()) {
         val consistencyZeroMinutes: Double = 150.0,
         val minNightsForConsistency: Int = 3,
         val sufficiencyFraction: Double = 0.90,
+        /**
+         * When true (default for direct callers), a missing regularity index falls back to scoring the
+         * spread of bed and wake times. The pipeline switches it off so one stored series never mixes
+         * two definitions of consistency; the spread is still reported for display.
+         */
+        val useTimingSpreadForConsistency: Boolean = true,
     )
 
     /**
@@ -111,12 +120,15 @@ class SleepScoreEngine(private val config: Config = Config()) {
      * @param recentTimings bed/wake times of the trailing 7 nights, including last night.
      * @param restorativeZ z-score of last night's deep + REM share against the personal baseline;
      *   null while that baseline is calibrating.
+     * @param regularityIndex Sleep Regularity Index of the trailing week ([SleepRegularityIndex]);
+     *   when given it scores the consistency component.
      */
     fun evaluate(
         night: SleepNightInput,
         needMinutes: Double,
         recentTimings: List<SleepTiming> = emptyList(),
         restorativeZ: Double? = null,
+        regularityIndex: Double? = null,
     ): SleepScoreResult {
         require(needMinutes > 0 && needMinutes.isFinite()) { "needMinutes must be finite and > 0" }
         require(night.asleepMinutes.isFinite()) { "asleepMinutes must be finite; pass no night instead of an unknown one" }
@@ -150,7 +162,12 @@ class SleepScoreEngine(private val config: Config = Config()) {
             onsetSd = null
             wakeSd = null
         }
-        val consistency = if (onsetSd != null && wakeSd != null) consistencySubScore((onsetSd + wakeSd) / 2) else null
+        val index = regularityIndex?.takeIf { it.isFinite() }
+        val consistency = when {
+            index != null -> SleepRegularityIndex.subScore(index)
+            config.useTimingSpreadForConsistency && onsetSd != null && wakeSd != null -> consistencySubScore((onsetSd + wakeSd) / 2)
+            else -> null
+        }
 
         val subScores = mapOf(
             SleepComponent.DURATION to duration,
@@ -180,6 +197,7 @@ class SleepScoreEngine(private val config: Config = Config()) {
             efficiencyPercent = efficiencyPercent,
             onsetStdDevMinutes = onsetSd,
             wakeStdDevMinutes = wakeSd,
+            regularityIndex = index,
             sufficientForRecovery = asleep >= config.sufficiencyFraction * needMinutes,
         )
     }

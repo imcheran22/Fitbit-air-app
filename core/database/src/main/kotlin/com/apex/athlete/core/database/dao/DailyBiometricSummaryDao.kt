@@ -116,6 +116,14 @@ abstract class DailyBiometricSummaryDao {
     @Query("DELETE FROM daily_biometric_summary WHERE provenance = :provenance")
     abstract suspend fun deleteByProvenance(provenance: DataProvenance): Int
 
+    /** Oldest day holding a derived value computed with a formula version older than [version]; null when none is stale. */
+    @Query("SELECT MIN(epochDay) FROM daily_biometric_summary WHERE algorithmVersion IS NOT NULL AND algorithmVersion < :version")
+    abstract suspend fun firstStaleDerivedDay(version: Int): Long?
+
+    /** Removes derived values computed with a formula version older than [version]; observed values carry no version and stay. */
+    @Query("DELETE FROM daily_biometric_summary WHERE algorithmVersion IS NOT NULL AND algorithmVersion < :version")
+    abstract suspend fun deleteStaleDerived(version: Int): Int
+
     /** Removes one metric's value for one day (a derived score whose inputs disappeared). */
     @Query("DELETE FROM daily_biometric_summary WHERE metricType = :metric AND epochDay = :epochDay")
     abstract suspend fun delete(metric: MetricType, epochDay: Long): Int

@@ -29,8 +29,9 @@ class RecoveryEngineTest {
             RecoveryInputs(hrvZ = 0.0, restingHeartRateZ = 0.0, sleepScore = 80.0, respiratoryRateZ = 0.0, skinTemperatureZ = 0.0),
         )
         assertEquals(RecoveryStatus.SCORED, r.status)
-        // 0.40·50 + 0.25·50 + 0.25·80 + 0.05·100 + 0.05·100
-        assertEquals(62.5, r.score!!, eps)
+        // Version 3: weighted mean of HRV, RHR and sleep only; breathing and temperature at baseline
+        // subtract nothing. (0.40·50 + 0.25·50 + 0.25·80) / 0.90 = 52.5 / 0.90. Version 2 gave 62.5.
+        assertEquals(52.5 / 0.90, r.score!!, eps)
         assertEquals(RecoveryCategory.MODERATE, r.category)
         assertEquals(TrainingRecommendation.TRAIN_MODERATE, r.recommendation)
         assertEquals(DataProvenance.MATHEMATICALLY_DERIVED, r.provenance)
@@ -38,14 +39,15 @@ class RecoveryEngineTest {
     }
 
     @Test
-    fun `missing skin temperature redistributes its weight instead of capping the score`() {
+    fun `missing skin temperature is reported as missing and does not change the score`() {
         val r = engine.evaluate(
             RecoveryInputs(hrvZ = 0.0, restingHeartRateZ = 0.0, sleepScore = 80.0, respiratoryRateZ = 0.0),
         )
         assertEquals(listOf(RecoveryComponent.SKIN_TEMPERATURE), r.missingComponents)
         assertEquals(1.0, r.contributions.sumOf { it.effectiveWeight }, eps)
-        assertEquals(0.40 / 0.95, r.contributions.first { it.component == RecoveryComponent.HRV }.effectiveWeight, eps)
-        assertEquals((20.0 + 12.5 + 20.0 + 5.0) / 0.95, r.score!!, eps)
+        // The weighted mean is over HRV, RHR and sleep only (version 2 shared 0.05 more across them).
+        assertEquals(0.40 / 0.90, r.contributions.first { it.component == RecoveryComponent.HRV }.effectiveWeight, eps)
+        assertEquals(52.5 / 0.90, r.score!!, eps)
 
         // With every remaining input at its best the score still approaches 100.
         val best = engine.evaluate(
@@ -115,7 +117,9 @@ class RecoveryEngineTest {
         val base = RecoveryInputs(hrvZ = 0.0, restingHeartRateZ = 0.0, sleepScore = 80.0, respiratoryRateZ = 0.0, skinTemperatureZ = 0.0)
         val tired = engine.evaluate(base.copy(subjectiveFatigue = 9))
         assertEquals(1.0, tired.contributions.sumOf { it.effectiveWeight }, eps)
-        assertEquals((62.5 + 0.10 * (100.0 / 9.0)) / 1.10, tired.score!!, eps)
+        // Version 3: (0.40·50 + 0.25·50 + 0.25·80 + 0.10·(100/9)) / 1.00. Version 2 added the two
+        // neutral penalty-only sensors to the mean and divided by 1.10.
+        assertEquals(52.5 + 0.10 * (100.0 / 9.0), tired.score!!, eps)
         assertTrue(tired.score!! < engine.evaluate(base).score!!)
     }
 
@@ -160,8 +164,9 @@ class RecoveryEngineTest {
             listOf(RecoveryComponent.HRV, RecoveryComponent.SLEEP, RecoveryComponent.RESPIRATORY_RATE),
             r.missingComponents,
         )
-        // RHR at baseline (50, weight 0.25) and skin temperature (100, weight 0.05), renormalised.
-        assertEquals((0.25 * 50.0 + 0.05 * 100.0) / 0.30, r.score!!, eps)
+        // Only RHR at baseline (50) is left in the weighted mean; skin temperature at z 0 subtracts
+        // nothing. (Version 2 mixed in the neutral 100 of the temperature: 58.3.)
+        assertEquals(50.0, r.score!!, eps)
 
         val none = engine.evaluate(RecoveryInputs(hrvZ = Double.NaN, restingHeartRateZ = Double.NEGATIVE_INFINITY, sleepScore = 80.0))
         assertEquals(RecoveryStatus.UNAVAILABLE, none.status)
