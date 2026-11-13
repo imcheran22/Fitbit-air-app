@@ -9,7 +9,9 @@ import kotlinx.serialization.json.Json
  * Layout (top-level object, keys in this order):
  * `format`, `schemaVersion`, `appVersion`, `algorithmVersion`, `exportedAtEpochMillis`, `exportedAt`,
  * `provenanceLegend`, then the arrays `daily`, `heartRateMinutes`, `samples`, `sleepSessions`,
- * `workouts`, and last `counts`. Every row carries its `provenance` (the stable storage key of
+ * `workouts`, then (real store only) the local logging tables of [ExtrasTable] (`behaviourDefs`, `behaviourEntries`,
+ * `quickLogs`, `goals`, `foodLogs`, `bloodPressure`, `breatheSessions`, `coachThreads`, `coachMessages`), and last
+ * `counts`. Every row carries its `provenance` (the stable storage key of
  * [com.apex.athlete.core.domain.DataProvenance]); that key is also the source of the row.
  *
  * The file holds readings only. No tokens, keys, client ids or settings are ever written.
@@ -152,7 +154,12 @@ data class ExportCounts(
     val workouts: Long = 0,
     /** Rows left out because a value was not a finite number. */
     val skipped: Long = 0,
+    /** Rows per [ExtrasTable] (key = [ExtrasTable.jsonKey]); empty when the file or store has none of the local logging tables. */
+    val extras: Map<String, Long> = emptyMap(),
 ) {
+    /** Rows of the local logging tables (behaviours, quick log, goals, food, blood pressure, breathing, coach chats). */
+    val extraRows: Long get() = extras.values.sum()
+
     val totalRows: Long get() = daily + heartRateMinutes + samples + sleepSessions + workouts
 }
 

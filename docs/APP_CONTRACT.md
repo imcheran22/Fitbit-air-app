@@ -124,3 +124,24 @@ lastSyncMillis, lastAlertDay, googleClientId`.
 Loading, empty, partial, calibrating, stale, offline and error states; process-death safety; "how this is calculated" matching `docs/FORMULAS.md`;
 provenance beside every number. The Demo banner is drawn by the host; screens do not draw it. Demo data never leaves the demo store: do not offer
 export or Takeout import while `demoMode` is on.
+
+## 7. LocalExtras (schema v4, local-only features)
+
+`com.apex.athlete.core.data.extras.LocalExtras(stores: ApexStores)`: build once next to `AthleteRepository`
+(`val localExtras = LocalExtras(stores)`). Reads are Flows of the active store (real or Demo; the demo store has no rows, built-in
+behaviours are listed with no values; emits the empty value while the store opens). Every write runs under `stores.writeMutex`, throws
+`DemoWriteRefusedException` in Demo mode (hide the controls instead), `IllegalStateException` when no store is ready, and
+`IllegalArgumentException` for invalid input (nothing is written). Entries are `USER_REPORTED` unless stated.
+
+| Property | API |
+|---|---|
+| `behaviours` | `observeBehaviours(includeArchived = false): Flow<List<Behaviour>>` (built-in factors ids `journal_alcohol`, `journal_late_caffeine`, `journal_late_meal`, `journal_stressful_day`, `journal_travel` plus `custom:<uuid>`), `observeDay(epochDay, includeArchived = false): Flow<List<BehaviourValue>>` (`value` null = not logged), `observeEntries(fromDay, toDay): Flow<List<BehaviourDayEntry>>`, `suspend setValue(epochDay, behaviourId, value: Double?)` (yes/no 0.0 or 1.0, scale whole 0.0 to 4.0, null removes), `suspend add(name, kind, iconKey): String`, `rename(id, name)`, `setArchived(id, archived)`, `reorder(orderedIds)` (pass every id) |
+| `quickLog` | `observeDay(day)`, `observeRecent(limit = 50)`, `observeWaterMl(day): Flow<Double?>`, `suspend add(kind, epochMillis = now, numericValue, label, text): String`, `addWater(ml, epochMillis)`, `update(entry)`, `delete(id)`. Text over `ExtrasLimits.MAX_NOTE_CHARS` (500) is rejected, never cut: cap the input field |
+| `goals` | `observeAll()`, `suspend get(id)`, `add(kind, target, enabled = true, reminderEnabled = false): String`, `update(id, target?, enabled?, reminderEnabled?)`, `delete(id)` (CRUD only; progress comes later) |
+| `food` | `observeDay(day)`, `observeRecent(limit)`, `suspend add(mealKind, name, epochMillis, kcal?, proteinG?, carbsG?, fatG?, fibreG?, source = MANUAL, id? = null): String`, `update(entry)`, `delete(id)`. Provenance follows the source; unknown nutrients stay null |
+| `bloodPressure` | `observeRecent(limit)`, `observeDays(fromDay, toDay)`, `suspend add(systolic, diastolic, pulse?, epochMillis, source = MANUAL, id? = null): String` (40-300 / 20-200, diastolic below systolic, pulse 25-240), `update(entry)`, `delete(id)` |
+| `breathe` | `observeRecent(limit)`, `observeDay(day)`, `suspend add(startMillis, plannedSeconds, completedSeconds, patternKey, avgHeartRate? = null): String`, `delete(id)` |
+| `coachChats` | `observeThreads()`, `observeMessages(threadId)`, `suspend createThread(title, topic = GENERAL): String`, `renameThread`, `deleteThread` (cascade), `appendUserMessage(threadId, text)`, `appendCoachMessage(threadId, text, fromModel, unverifiedNumerals = emptyList())` (`fromModel` true = `AI_INTERPRETED`, false = `MATHEMATICALLY_DERIVED`) |
+
+Export, import and "Delete all my data" cover all nine tables (no screen change needed): the JSON and CSV exports gain the extras tables, the
+import report gains `extrasWritten` and quarantine reasons `UNKNOWN_KIND` and `NOT_STORED`, and deletion removes the database file.

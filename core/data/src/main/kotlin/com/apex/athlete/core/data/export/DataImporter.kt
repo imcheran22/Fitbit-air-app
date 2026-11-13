@@ -32,6 +32,12 @@ interface ImportTarget {
     /** Recomputes derived values from [fromDay] to today, oldest first. Returns the number of days. */
     suspend fun replayFrom(fromDay: Long): Int
 
+    /**
+     * Writes rows of the local logging tables (behaviours, quick log, goals, food, blood pressure, breathing, coach chats)
+     * under the same write mutex. A target without these tables drops everything and says so.
+     */
+    suspend fun importExtras(batch: ExtrasBatch): ExtrasImportResult = ExtrasImportResult(written = 0, dropped = batch.size.toLong())
+
     /** Tells screens to refresh. */
     fun notifyChanged()
 }
@@ -59,6 +65,8 @@ data class ImportReport(
     val replayedDays: Int,
     /** The counts the file itself declared at its end (null if it was cut off before them). */
     val declaredCounts: ExportCounts?,
+    /** Rows of the local logging tables that were written (the rest of those read are in [quarantined]). */
+    val extrasWritten: Long = 0,
 ) {
     val quarantinedTotal: Long get() = quarantined.values.sum()
     val skippedDerived: Long get() = quarantined[QuarantineReason.DERIVED_VALUE_SKIPPED] ?: 0
@@ -97,6 +105,9 @@ class DataImporter(
         var status = ImportStatus.COMPLETED
         var buffered = 0
         var total = 0L
+        val extrasBuffer = ExtrasAccumulator()
+        val extrasRead = LinkedHashMap<String, Long>()
+        var extrasWritten = 0L
 
         val daily = HashMap<DataProvenance, MutableList<DailyObservation>>()
         val hr = HashMap<DataProvenance, MutableList<HeartRatePoint>>()
@@ -115,7 +126,23 @@ class DataImporter(
                 ingested += target.ingest(batch)
             }
             daily.clear(); hr.clear(); samples.clear(); sleeps.clear(); workouts.clear()
+            if (extrasBuffer.size > 0) {
+                val result = target.importExtras(extrasBuffer.drain())
+                extrasWritten += result.written
+                if (result.dropped > 0) quarantine[QuarantineReason.NOT_STORED] = (quarantine[QuarantineReason.NOT_STORED] ?: 0) + result.dropped
+            }
             buffered = 0
+        }
+
+        suspend fun takeExtra(table: ExtrasTable, raw: String) {
+            total++
+            extrasRead[table.jsonKey] = (extrasRead[table.jsonKey] ?: 0) + 1
+            when (val m = ExtrasImportMapping.map(table, raw, json)) {
+                is ExtrasMapped.Rejected -> reject(m.reason)
+                is ExtrasMapped.Ok -> { extrasBuffer.add(m.entity); buffered++ }
+            }
+            if (buffered >= batchRows) flush()
+            if (total % 5_000 == 0L) onProgress(total)
         }
 
         suspend fun <R, T> take(raw: String, ser: kotlinx.serialization.KSerializer<R>, map: (R) -> Mapped<T>, add: (DataProvenance, T) -> Unit, bump: () -> Unit) {
@@ -142,7 +169,8 @@ class DataImporter(
                     }
                     is ScanToken.Element -> {
                         val table = ExportTable.entries.firstOrNull { it.jsonKey == token.key && it != ExportTable.SLEEP_STAGES }
-                            ?: continue // an array this version does not know: skip it
+                        val extrasTable = if (table == null) ExtrasTable.fromJsonKey(token.key) else null
+                        if (table == null && extrasTable == null) continue // an array this version does not know: skip it
                         // The header must have come first; without it this is some other JSON file.
                         if (!formatOk || version == null) {
                             return@withContext emptyReport(ImportStatus.NOT_AN_EXPORT, version)
@@ -150,7 +178,12 @@ class DataImporter(
                         if (version!! > ExportFormat.SCHEMA_VERSION) {
                             return@withContext emptyReport(ImportStatus.NEWER_VERSION, version)
                         }
+                        if (extrasTable != null) {
+                            takeExtra(extrasTable, token.raw)
+                            continue
+                        }
                         when (table) {
+                            null -> Unit
                             ExportTable.DAILY -> take(token.raw, DailyRow.serializer(), ImportMapping::daily, { p, v -> daily.getOrPut(p) { ArrayList() } += v }) { read.daily++ }
                             ExportTable.HEART_RATE -> take(token.raw, HeartRateMinuteRow.serializer(), ImportMapping::heartRate, { p, v -> hr.getOrPut(p) { ArrayList() } += v }) { read.hr++ }
                             ExportTable.SAMPLES -> take(token.raw, SampleRow.serializer(), ImportMapping::sample, { p, v -> samples.getOrPut(p) { ArrayList() } += v }) { read.samples++ }
@@ -172,17 +205,18 @@ class DataImporter(
         flush()
         val earliest = target.earliestAffectedDay()
         val replayed = if (earliest != null) target.replayFrom(earliest) else 0
-        if (earliest != null) target.notifyChanged()
+        if (earliest != null || extrasWritten > 0) target.notifyChanged()
         onProgress(total)
 
         ImportReport(
             status = status,
             fileSchemaVersion = version,
-            rowsRead = ExportCounts(read.daily, read.hr, read.samples, read.sleeps, 0, read.workouts),
+            rowsRead = ExportCounts(read.daily, read.hr, read.samples, read.sleeps, 0, read.workouts, extras = extrasRead),
             ingested = ingested,
             quarantined = quarantine,
             replayedDays = replayed,
             declaredCounts = declared,
+            extrasWritten = extrasWritten,
         )
     }
 

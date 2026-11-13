@@ -28,6 +28,9 @@ internal interface ExportSink {
     fun sleep(table: ExportTable, rows: List<SleepRow>)
     fun workouts(rows: List<WorkoutRow>)
     fun endTable(table: ExportTable)
+    fun beginExtras(table: ExtrasTable)
+    fun extras(table: ExtrasTable, rows: List<ExtraRow>)
+    fun endExtras(table: ExtrasTable)
     fun finish(counts: ExportCounts)
 }
 
@@ -70,6 +73,27 @@ internal class JsonExportSink(out: OutputStream) : ExportSink {
 
     override fun endTable(table: ExportTable) = w.write("]")
 
+    override fun beginExtras(table: ExtrasTable) {
+        w.write(",\"${table.jsonKey}\":[")
+        firstInTable = true
+    }
+
+    override fun extras(table: ExtrasTable, rows: List<ExtraRow>) = rows.forEach { sep(); w.write(encodeExtra(it)) }
+
+    private fun encodeExtra(row: ExtraRow): String = when (row) {
+        is BehaviourDefRow -> j.encodeToString(BehaviourDefRow.serializer(), row)
+        is BehaviourEntryRow -> j.encodeToString(BehaviourEntryRow.serializer(), row)
+        is QuickLogRow -> j.encodeToString(QuickLogRow.serializer(), row)
+        is GoalRow -> j.encodeToString(GoalRow.serializer(), row)
+        is FoodLogRow -> j.encodeToString(FoodLogRow.serializer(), row)
+        is BloodPressureRow -> j.encodeToString(BloodPressureRow.serializer(), row)
+        is BreatheSessionRow -> j.encodeToString(BreatheSessionRow.serializer(), row)
+        is CoachThreadRow -> j.encodeToString(CoachThreadRow.serializer(), row)
+        is CoachMessageRow -> j.encodeToString(CoachMessageRow.serializer(), row)
+    }
+
+    override fun endExtras(table: ExtrasTable) = w.write("]")
+
     override fun finish(counts: ExportCounts) {
         w.write(",\"${ExportFormat.KEY_COUNTS}\":")
         w.write(j.encodeToString(ExportCounts.serializer(), counts))
@@ -108,6 +132,18 @@ internal class CsvZipExportSink(out: OutputStream) : ExportSink {
         zip.closeEntry()
     }
 
+    override fun beginExtras(table: ExtrasTable) {
+        zip.putNextEntry(ZipEntry(table.csvFile))
+        w.write(CsvFormat.headerLine(table))
+    }
+
+    override fun extras(table: ExtrasTable, rows: List<ExtraRow>) = rows.forEach { w.write(CsvFormat.extraRow(it)) }
+
+    override fun endExtras(table: ExtrasTable) {
+        w.flush()
+        zip.closeEntry()
+    }
+
     override fun finish(counts: ExportCounts) {
         val i = checkNotNull(info)
         zip.putNextEntry(ZipEntry("export_info.csv"))
@@ -123,6 +159,9 @@ internal class CsvZipExportSink(out: OutputStream) : ExportSink {
         w.write(CsvFormat.line("rows_sleep_sessions", counts.sleepSessions.toString()))
         w.write(CsvFormat.line("rows_sleep_stages", counts.sleepStages.toString()))
         w.write(CsvFormat.line("rows_workouts", counts.workouts.toString()))
+        for (t in ExtrasTable.entries) {
+            if (t.jsonKey in counts.extras) w.write(CsvFormat.line("rows_" + t.csvFile.removeSuffix(".csv"), counts.extras.getValue(t.jsonKey).toString()))
+        }
         for (p in DataProvenance.entries) w.write(CsvFormat.line("provenance_" + p.storageKey, CsvFormat.text(p.badge)))
         w.flush()
         zip.closeEntry()

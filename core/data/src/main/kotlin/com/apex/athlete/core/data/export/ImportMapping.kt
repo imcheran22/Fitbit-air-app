@@ -18,6 +18,12 @@ enum class QuarantineReason {
     INVALID_VALUE,
     INVALID_TIME,
     DERIVED_VALUE_SKIPPED,
+
+    /** A row of the local logging tables whose kind, source or role is not one this version knows. */
+    UNKNOWN_KIND,
+
+    /** A valid row the store could not take: a chat message whose thread is not in the store (nor earlier in the file). */
+    NOT_STORED,
 }
 
 internal sealed interface Mapped<out T> {

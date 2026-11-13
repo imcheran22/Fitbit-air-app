@@ -68,6 +68,23 @@ class RoomExportDataSource(
         for (chunk in db.workoutDao().all().chunked(CHUNK)) emit(chunk.map { it.toRow() })
     }
 
+    override val includesExtras: Boolean get() = true
+
+    override suspend fun extras(table: ExtrasTable, emit: suspend (List<ExtraRow>) -> Unit) {
+        val rows: List<ExtraRow> = when (table) {
+            ExtrasTable.BEHAVIOUR_DEFS -> db.behaviourDao().defs().map { it.toRow() }
+            ExtrasTable.BEHAVIOUR_ENTRIES -> db.behaviourDao().allEntries().map { it.toRow() }
+            ExtrasTable.QUICK_LOGS -> db.quickLogDao().all().map { it.toRow() }
+            ExtrasTable.GOALS -> db.goalDao().all().map { it.toRow() }
+            ExtrasTable.FOOD_LOGS -> db.foodLogDao().all().map { it.toRow() }
+            ExtrasTable.BLOOD_PRESSURE -> db.bloodPressureDao().all().map { it.toRow() }
+            ExtrasTable.BREATHE_SESSIONS -> db.breatheSessionDao().all().map { it.toRow() }
+            ExtrasTable.COACH_THREADS -> db.coachChatDao().allThreads().map { it.toRow() }
+            ExtrasTable.COACH_MESSAGES -> db.coachChatDao().allMessages().map { it.toRow() }
+        }
+        for (chunk in rows.chunked(CHUNK)) emit(chunk)
+    }
+
     private fun DailyBiometricSummaryEntity.toRow() = DailyRow(
         metric = metricType.storageKey, epochDay = epochDay, value = value, provenance = provenance.storageKey,
         resolutionSeconds = sourceResolutionSeconds, sampleCount = sampleCount, algorithmVersion = algorithmVersion,

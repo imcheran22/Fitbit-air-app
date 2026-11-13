@@ -83,7 +83,21 @@ class DataExporter(
         }
         sink.endTable(ExportTable.WORKOUTS)
 
-        val counts = ExportCounts(daily, hr, samples, sleeps, stages, workouts, skipped)
+        val extras = LinkedHashMap<String, Long>()
+        if (source.includesExtras) {
+            for (table in ExtrasTable.entries) {
+                var rowsWritten = 0L
+                sink.beginExtras(table)
+                source.extras(table) { rows ->
+                    val ok = rows.filterNot { it.hasNonFiniteNumber() }
+                    skipped += rows.size - ok.size; rowsWritten += ok.size; sink.extras(table, ok)
+                }
+                sink.endExtras(table)
+                extras[table.jsonKey] = rowsWritten
+            }
+        }
+
+        val counts = ExportCounts(daily, hr, samples, sleeps, stages, workouts, skipped, extras)
         sink.finish(counts)
         counts
     }

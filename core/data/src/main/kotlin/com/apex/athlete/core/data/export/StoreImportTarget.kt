@@ -1,5 +1,6 @@
 package com.apex.athlete.core.data.export
 
+import androidx.room.withTransaction
 import com.apex.athlete.core.data.ingest.HealthIngestor
 import com.apex.athlete.core.data.model.HealthBatch
 import com.apex.athlete.core.data.model.IngestCounts
@@ -23,6 +24,32 @@ class StoreImportTarget(
 
     override suspend fun ingest(batch: HealthBatch): IngestCounts =
         writeMutex.withLock { store.ingestor.ingest(batch, session) }
+
+    /**
+     * Writes the local logging rows in one transaction under the write mutex: definitions, entries, then threads before
+     * messages. A message whose thread is neither in the store nor in this batch is dropped (counted), never written
+     * without its parent. Rows are upserted by id, so importing the same file twice leaves the same rows.
+     */
+    override suspend fun importExtras(batch: ExtrasBatch): ExtrasImportResult {
+        if (batch.size == 0) return ExtrasImportResult(0, 0)
+        return writeMutex.withLock {
+            store.db.withTransaction {
+                val db = store.db
+                db.behaviourDao().upsertDefs(batch.behaviourDefs)
+                db.behaviourDao().upsertEntries(batch.behaviourEntries)
+                db.quickLogDao().upsertAll(batch.quickLogs)
+                db.goalDao().upsertAll(batch.goals)
+                db.foodLogDao().upsertAll(batch.foodLogs)
+                db.bloodPressureDao().upsertAll(batch.bloodPressure)
+                db.breatheSessionDao().upsertAll(batch.breatheSessions)
+                db.coachChatDao().upsertThreads(batch.coachThreads)
+                val threadIds = db.coachChatDao().threadIds().toHashSet()
+                val (messages, orphans) = batch.coachMessages.partition { it.threadId in threadIds }
+                db.coachChatDao().upsertMessages(messages)
+                ExtrasImportResult(written = (batch.size - orphans.size).toLong(), dropped = orphans.size.toLong())
+            }
+        }
+    }
 
     override fun earliestAffectedDay(): Long? = session.earliestAffectedDay
 

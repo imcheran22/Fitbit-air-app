@@ -37,6 +37,9 @@ data class DeletionReport(val outcomes: List<DeletionOutcome>) {
  * those in Health Connect and in their Google account. Signing out revokes Apex's own access
  * grant at Google, which is not a deletion of data.
  *
+ * The real store is one database file, so [DeletionStep.RESET_REAL_STORE] removes every table with it, including the local
+ * logging tables of schema v4 (behaviours, quick log, goals, food, blood pressure, breathing, coach chats).
+ *
  * Ordered, and **every step runs even if an earlier one throws**; each step's outcome is reported.
  * The order matters: background work is stopped first so no sync re-creates data while it is being
  * removed; the network step has a time limit so being offline cannot stall the rest; the local

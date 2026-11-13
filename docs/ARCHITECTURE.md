@@ -113,6 +113,28 @@ stored only wrapped by a hardware-backed Android Keystore key.
 | `sleep_stage_segment` | (sessionId, startEpochMillis) | Hypnogram segments, deleted with their session |
 | `workout` | id | Exercise sessions plus the load this app computes for them |
 | `sync_watermark` | (source, stream) | How far each stream of each source has been ingested |
+| `takeout_file_mark` | (category, fileKey) | Per-file watermarks of the Takeout archive import (schema v3) |
+
+Schema v4 adds nine **local-only** tables for the logging and coaching features. None is ever synced to a network
+service; they are part of the encrypted file, of the JSON/CSV export (`behaviourDefs`, `behaviourEntries`, `quickLogs`,
+`goals`, `foodLogs`, `bloodPressure`, `breatheSessions`, `coachThreads`, `coachMessages`), of the importer (rows with
+an unknown kind, a refused provenance or an invalid value are quarantined by reason) and are removed with the database
+file by "Delete all my data". Access goes through `LocalExtras` (`core/data/.../extras/`, see `APP_CONTRACT.md`).
+
+| Table | Key | Index | Purpose |
+|---|---|---|---|
+| `behaviour_def` | id | sortOrder | Custom behaviours (YES_NO or SCALE_0_4). A row whose id is a built-in factor id (`journal_alcohol`, ...) is only an override of its name, order or archived flag: the five built-in journal factors keep their values in `daily_biometric_summary` |
+| `behaviour_entry` | (epochDay, behaviourId) | epochDay, behaviourId | One value of a custom behaviour per civil day. Always `USER_REPORTED`, no free text |
+| `quick_log` | id | epochMillis | WATER_ML, MOOD, SYMPTOM, NOTE entries; `numericValue`, `label`, `text` (at most 500 characters) are nullable |
+| `goal` | id | createdAtEpochMillis | DAILY_STEPS, DAILY_SLEEP_MINUTES, WEEKLY_ACTIVE_MINUTES, WEEKLY_AZM, WEEKLY_RECOVERED_DAYS targets; progress is computed elsewhere, never stored |
+| `food_log` | id | epochMillis | Meals; kcal and macros nullable (missing stays missing); `source` MANUAL / AI_ESTIMATE / HEALTH_CONNECT with the matching provenance (`USER_REPORTED` / `AI_INTERPRETED` / `IMPORTED_HEALTH_CONNECT`) |
+| `blood_pressure_reading` | id | epochMillis | Systolic and diastolic in mmHg, pulse nullable, source MANUAL / HEALTH_CONNECT with provenance |
+| `breathe_session` | id | startMillis | Planned and completed seconds, pattern key, average heart rate only when measured |
+| `coach_thread` | id | updatedAtEpochMillis | Conversation (topic GENERAL / RECOVERY / SLEEP / WORKOUT / ACTIVITY) |
+| `coach_message` | id | threadId (foreign key, cascade delete), createdAtMillis | USER messages are `USER_REPORTED`; COACH replies are `AI_INTERPRETED` (a model) or `MATHEMATICALLY_DERIVED` (the rules); `unverifiedNumerals` is a comma list or null |
+
+Enums of these tables are stored by stable storage key (`entity/ExtrasKinds.kt`), like the domain enums. Migration 3 to 4
+is a Room `AutoMigration` (new tables only); `ApexDatabaseMigrationTest` upgrades real v1, v2 and v3 files.
 
 The daily table is "tall" (a row per metric per day) rather than one wide row per day. A day's
 values come from different places, and a tall row gives each value exactly one truthful
