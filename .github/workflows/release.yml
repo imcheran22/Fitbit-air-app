@@ -145,10 +145,20 @@ jobs:
             --v4-signing-enabled false \
             --out "dist/$APK_NAME" "$RUNNER_TEMP/work/aligned.apk"
           rm -f dist/*.idsig
-          CERTS="$("$BT/apksigner" verify --verbose --print-certs "dist/$APK_NAME")"
+          CERTS="$("$BT/apksigner" verify --verbose --print-certs "dist/$APK_NAME" 2>&1)"
           printf '%s\n' "$CERTS" | grep -E "^Verifies|Verified using" || { echo "::error::The signed APK does not verify"; exit 1; }
-          SHA256_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer[^:]*certificate SHA-256 digest: //p' | head -1)"
-          SHA1_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer[^:]*certificate SHA-1 digest: //p' | head -1)"
+          # Fingerprints of the certificate the APK was just signed with, taken from the key itself (DER bytes hashed),
+          # so they do not depend on apksigner's output wording. Certificates are public; no secret is printed.
+          CERT_DER="$RUNNER_TEMP/work/cert.der"
+          keytool -exportcert -noprompt -keystore "$KS_FILE" -storepass "$KS_PASS" -alias "$KS_ALIAS" -file "$CERT_DER" >/dev/null
+          SHA256_HEX="$(sha256sum "$CERT_DER" | cut -d' ' -f1)"
+          SHA1_HEX="$(sha1sum "$CERT_DER" | cut -d' ' -f1)"
+          rm -f "$CERT_DER"
+          # Cross-check against what apksigner reports for the APK, when its output carries a digest line.
+          APK_SHA256="$(printf '%s\n' "$CERTS" | sed -n 's/^.*certificate SHA-256 digest: //p' | head -1)"
+          if [ -n "$APK_SHA256" ] && [ "$APK_SHA256" != "$SHA256_HEX" ]; then
+            echo "::error::The APK certificate differs from the signing key's certificate"; exit 1
+          fi
           [ -n "$SHA256_HEX" ] && [ -n "$SHA1_HEX" ] || { echo "::error::Could not read the signing certificate"; exit 1; }
           colon() { printf '%s' "$1" | tr 'a-f' 'A-F' | sed 's/../&:/g; s/:$//'; }
           SHA1="$(colon "$SHA1_HEX")"; SHA256="$(colon "$SHA256_HEX")"
