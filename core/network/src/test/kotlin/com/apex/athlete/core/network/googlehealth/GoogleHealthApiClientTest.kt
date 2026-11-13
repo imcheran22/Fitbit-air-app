@@ -549,6 +549,16 @@ class GoogleHealthApiClientTest {
     }
 
     @Test
+    fun pairedDevices403IsAPermissionErrorAndA404IsNoData() {
+        stack.dispatcher.handler = { MockResponse().setResponseCode(403) }
+        val r = run { stack.client.listPairedDevices() }
+        assertIs<ApiResult.Failure>(r)
+        assertIs<GoogleHealthError.PermissionDenied>(r.error)
+        stack.dispatcher.handler = { MockResponse().setResponseCode(404) }
+        assertEquals(ApiResult.NoData, run { stack.client.listPairedDevices() })
+    }
+
+    @Test
     fun noDevicesIsNoData() {
         stack.dispatcher.handler = { json("{}") }
         assertEquals(ApiResult.NoData, run { stack.client.listPairedDevices() })
@@ -574,6 +584,6 @@ class GoogleHealthApiClientTest {
     @Test
     fun tokenStoreStateCarriesGrantedScopesForTheClient() {
         stack.store.save(StoredTokens("a", "r", stack.clock.nowMillis() + 3_600_000, GoogleHealthAuthConfig.READ_SCOPES.toSet(), stack.oauth.clientId))
-        assertEquals(3, (stack.store.currentState() as AuthState.SignedIn).grantedScopes.size)
+        assertEquals(GoogleHealthAuthConfig.READ_SCOPES.size, (stack.store.currentState() as AuthState.SignedIn).grantedScopes.size)
     }
 }

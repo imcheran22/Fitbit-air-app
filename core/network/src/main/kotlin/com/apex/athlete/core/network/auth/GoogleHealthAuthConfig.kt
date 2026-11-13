@@ -17,14 +17,11 @@ object GoogleHealthAuthConfig {
     const val SCOPE_ACTIVITY = "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
     const val SCOPE_SLEEP = "https://www.googleapis.com/auth/googlehealth.sleep.readonly"
 
-    /**
-     * Needed only for the paired-devices list (`pairedDevices.list` requires it). No call site uses that list,
-     * so it is NOT part of [READ_SCOPES]; add it there together with the first caller.
-     */
+    /** Needed only for the paired-devices list (`pairedDevices.list`), which feeds the Fitbit Air status row. */
     const val SCOPE_SETTINGS = "https://www.googleapis.com/auth/googlehealth.settings.readonly"
 
     /** Scopes requested at sign-in. Location, ECG, IRN, profile, mindfulness etc. are deliberately omitted. */
-    val READ_SCOPES: List<String> = listOf(SCOPE_HEALTH_METRICS, SCOPE_ACTIVITY, SCOPE_SLEEP)
+    val READ_SCOPES: List<String> = listOf(SCOPE_HEALTH_METRICS, SCOPE_ACTIVITY, SCOPE_SLEEP, SCOPE_SETTINGS)
 
     const val REDIRECT_PATH = "/oauth2redirect"
     private const val CLIENT_ID_SUFFIX = ".apps.googleusercontent.com"

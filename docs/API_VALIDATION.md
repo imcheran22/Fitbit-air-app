@@ -35,8 +35,12 @@ Dated 2026-11-11. Source: `docs/api-snapshots/google-health-v4-discovery-2026-11
 - `DailyHeartRateVariability.nonRemHeartRateBeatsPerMinute` and `DailyVO2Max.estimated` are in the snapshot schemas
   (the former is on the daily HRV type, not on `sleep`). Apex stores the first as SLEEPING_HEART_RATE and labels rows
   with `estimated == true` ESTIMATED. What Google means by `estimated` for a band without GPS is unverified.
-- Scopes requested: the three data scopes only. `googlehealth.settings.readonly` is no longer requested because the
-  only call that needs it (`pairedDevices.list`) has no caller; add it back with the first caller.
+- Scopes requested: the three data scopes plus `googlehealth.settings.readonly`, which `pairedDevices.list` needs.
+  The caller is `FitbitAirStatusReader` (Data sources "Fitbit Air" row), on demand, cached in memory, not in Room.
+  Verified against the discovery document: `GET v4/{+parent}/pairedDevices`, `PairedDevice` fields `deviceVersion`,
+  `deviceType` (TRACKER | SCALE), `batteryLevel` (int32), `batteryStatus` (High | Medium | Low | Empty), `lastSyncTime`
+  (google-datetime). Unverified: that a Fitbit Air reports `deviceType=TRACKER` and a useful `deviceVersion`
+  (OPEN_POINTS G-air).
 - No quota is published in the document.
 
 ## Verified by tests only (mock server, not Google)

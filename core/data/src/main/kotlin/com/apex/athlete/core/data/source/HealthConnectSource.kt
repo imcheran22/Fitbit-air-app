@@ -27,6 +27,13 @@ import java.time.Instant
 import java.time.ZoneId
 
 /**
+ * Health Connect refused a read although the record permission is granted: the run was in the background
+ * and the background-read permission is absent or unsupported. Not a missing permission; the stream reads
+ * again when the app is open. The orchestrator records the class name, which the Data sources screen maps.
+ */
+class HealthConnectBackgroundReadException : Exception("Health Connect refused a background read")
+
+/**
  * Reads Health Connect (read-only) and converts it to [HealthBatch]es. It never writes to the
  * database and never writes anything to Health Connect.
  *
@@ -120,7 +127,15 @@ class HealthConnectSource(
             }
             pullWithChanges(spec, granted, fromMillis, toMillis, emit)
         } catch (e: SecurityException) {
-            // Permission revoked while the run was in progress.
+            // Either the permission was revoked during the run, or Health Connect refused a read made in the
+            // background (READ_HEALTH_DATA_IN_BACKGROUND absent or unsupported) while the record permission is
+            // still granted. Ask again which one it is.
+            val stillGranted = try {
+                HealthConnectPermissions.forFamily(spec.family) in data.grantedPermissions()
+            } catch (_: SecurityException) {
+                false
+            }
+            if (stillGranted) throw HealthConnectBackgroundReadException()
             throw SourcePermissionException(spec.name, "Health Connect permission revoked")
         }
     }

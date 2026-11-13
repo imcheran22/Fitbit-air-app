@@ -94,8 +94,14 @@ fun OnboardingRoute(navigator: ApexNavigator) {
     val calibration = remember { CalibrationWindows.fromEngines() }
     val currentYear = remember { LocalDate.now().year }
 
-    val healthConnectLauncher = rememberLauncherForActivityResult(HealthConnectPermissions.requestContract()) {
-        vm.refreshHealthConnect()
+    val healthConnectLauncher = rememberLauncherForActivityResult(HealthConnectPermissions.requestContract()) { granted ->
+        // New record permissions start one sync right away instead of waiting for the next scheduled run.
+        com.apex.athlete.ui.datasources.HealthConnectGrant.handle(
+            before = healthConnect?.grantedRecordPermissions.orEmpty(),
+            after = granted,
+            refresh = vm::refreshHealthConnect,
+            syncNow = { com.apex.athlete.core.data.worker.SyncScheduler.syncNow(context) },
+        )
     }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         notificationsDenied = !granted

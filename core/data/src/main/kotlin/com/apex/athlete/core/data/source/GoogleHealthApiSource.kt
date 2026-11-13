@@ -125,7 +125,19 @@ class GoogleHealthApiSource(
         Spec("body-fat", Kind.BODY, 30 * DAY, listOf(GoogleHealthDataType.BODY_FAT)),
     )
 
-    override val streams: List<SourceStream> = specs.map { it.stream }
+    /**
+     * Where the next run starts. When a run stops on a rate limit, the stream that was refused goes first the
+     * next time, and the streams that already ran go to the back, so the same last streams are not starved on
+     * every run. Kept in memory only: a new process starts from the default order.
+     */
+    @Volatile private var startIndex = 0
+
+    /** Default order, rotated to begin at the stream that was rate limited last. */
+    override val streams: List<SourceStream>
+        get() {
+            val start = startIndex
+            return (specs.drop(start) + specs.take(start)).map { it.stream }
+        }
 
     private val pointsRead = AtomicLong()
     private val clientMalformed = AtomicLong()
@@ -154,6 +166,15 @@ class GoogleHealthApiSource(
         val ready = network() as? GoogleHealthNetwork.Ready ?: throw SourceAuthExpiredException()
         val z = zone()
         val run = Run(ready.client, spec, z, GoogleHealthMapper(z), emit)
+        try {
+            runKind(run, spec, fromMillis, toMillis)
+        } catch (e: SourceRateLimitedException) {
+            startIndex = specs.indexOf(spec).coerceAtLeast(0)
+            throw e
+        }
+    }
+
+    private suspend fun runKind(run: Run, spec: Spec, fromMillis: Long, toMillis: Long) {
         when (spec.kind) {
             Kind.HEART_RATE -> run.heartRate(fromMillis, toMillis)
             Kind.SLEEP -> run.sleep(fromMillis, toMillis)

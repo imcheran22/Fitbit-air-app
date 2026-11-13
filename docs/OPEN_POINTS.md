@@ -100,3 +100,11 @@ Status: `UNVERIFIED-NEEDS-REAL-ACCOUNT`.
    from Pulse; confirm when the Fitbit/Google app stamps HRV, SpO2 and respiratory rate on an Air.
 6. **Health Connect read lead.** The 24 h look-back on heart-rate reads relies on the platform returning interval records
    by start time; confirm on the owner's Android version.
+
+## Fitbit Air device status and background reads (G-air)
+- Confirm on a real account that `pairedDevices.list` returns the Air with `deviceType=TRACKER`, a readable `deviceVersion`,
+  `batteryLevel` and `lastSyncTime`. Missing values show as "Not available". An existing sign-in needs one "Sign in again"
+  to grant `settings.readonly`; until then the row says to reconnect.
+- A Health Connect read refused in the background with the record permission granted is recorded as `FAILED` with the code
+  `HealthConnectBackgroundReadException` (the orchestrator is not owned by this change); the screen shows "reads when the app is open".
+  A distinct `SyncStatus` would need an orchestrator change.

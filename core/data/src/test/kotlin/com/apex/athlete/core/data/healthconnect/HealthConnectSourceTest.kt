@@ -29,6 +29,8 @@ private class FakeData : HealthConnectDataSource {
     val readFroms = HashMap<HcFamily, MutableList<Long>>()
     /** Throws SecurityException on the Nth readPage call (1-based). */
     var revokeAtCall: Int? = null
+    /** True: the refused read is a background refusal (the record permission stays granted); false: a real revocation. */
+    var refusalKeepsGrant = false
 
     /** What readChanges returns for a token; absent token means expired. */
     val changes = HashMap<String, HcChangesPage>()
@@ -42,7 +44,10 @@ private class FakeData : HealthConnectDataSource {
     override suspend fun readPage(family: HcFamily, fromMillis: Long, toMillis: Long, pageToken: String?): HcPage {
         readCalls++
         readFroms.getOrPut(family) { ArrayList() } += fromMillis
-        if (revokeAtCall == readCalls) throw SecurityException("revoked")
+        if (revokeAtCall == readCalls) {
+            if (!refusalKeepsGrant) granted = emptySet() // a real revocation removes the grant
+            throw SecurityException("revoked")
+        }
         val all = records[family].orEmpty()
         val start = pageToken?.toInt() ?: 0
         val end = minOf(all.size, start + pageSize)
@@ -132,6 +137,18 @@ class HealthConnectSourceTest {
         }
         assertEquals("heart-rate", e.stream)
         assertEquals(1, seen.size) // the first page had already been delivered
+    }
+
+    @Test fun `a refused read with the record permission still granted is a background refusal not a missing permission`() {
+        val d = FakeData().apply {
+            records[HcFamily.HEART_RATE] = listOf(hr(from + 1000))
+            revokeAtCall = 1
+            refusalKeepsGrant = true
+        }
+        val s = source(d)
+        assertFailsWith<com.apex.athlete.core.data.source.HealthConnectBackgroundReadException> {
+            runBlocking { s.pull(s.stream("heart-rate"), from, to) { } }
+        }
     }
 
     @Test fun `heart rate reads start a day before the window and samples are still kept to the window`() {

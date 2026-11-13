@@ -237,6 +237,25 @@ class GoogleHealthApiSourceTest {
     }
 
     @Test
+    fun aRateLimitedStreamStartsTheNextRunSoTheLastStreamsAreNotStarved() {
+        val default = source.streams.map { it.name }
+        handler = { MockResponse().setResponseCode(429).setHeader("Retry-After", "600") }
+        assertFailsWith<SourceRateLimitedException> { pull("steps", "2026-11-10T00:00:00Z", "2026-11-11T00:00:00Z") }
+        val rotated = source.streams.map { it.name }
+        assertEquals("steps", rotated.first())
+        assertEquals(default.sorted(), rotated.sorted()) // nothing dropped or duplicated
+        assertEquals(default.drop(default.indexOf("steps")) + default.take(default.indexOf("steps")), rotated) // order kept, only rotated
+        assertFailsWith<SourceRateLimitedException> { pull("weight", "2026-11-10T00:00:00Z", "2026-11-11T00:00:00Z") }
+        assertEquals("weight", source.streams.first().name)
+    }
+
+    @Test
+    fun streamsKeepTheirDefaultOrderUntilARateLimitHappens() {
+        assertEquals("heart-rate", source.streams.first().name)
+        assertEquals("body-fat", source.streams.last().name)
+    }
+
+    @Test
     fun serverErrorsAfterRetriesAreAPlainFailure() {
         handler = { MockResponse().setResponseCode(503) }
         assertFailsWith<GoogleHealthServerException> { pull("sleep", "2026-11-09T00:00:00Z", "2026-11-12T00:00:00Z") }

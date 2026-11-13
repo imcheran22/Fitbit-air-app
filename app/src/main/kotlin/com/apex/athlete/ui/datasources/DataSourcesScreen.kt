@@ -110,12 +110,23 @@ fun DataSourcesRoute(navigator: ApexNavigator) {
     val state by vm.state.collectAsStateWithLifecycle()
     val diagnostics by vm.diagnosticsUi.collectAsStateWithLifecycle()
     var openFailed by rememberSaveable { mutableStateOf(false) }
+    val airVm = apexViewModel { container, _ ->
+        FitbitAirViewModel(
+            read = { force -> container.airStatus.get(force) },
+            cached = container.airStatus::cached,
+        )
+    }
+    val air by airVm.state.collectAsStateWithLifecycle()
 
     // Settings screens in Health Connect can change what is granted, so look again on every resume.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.refreshHealthConnect() }
-
-    val permissionLauncher = rememberLauncherForActivityResult(HealthConnectPermissions.requestContract()) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         vm.refreshHealthConnect()
+        airVm.refresh()
+    }
+
+    // The dialog returns everything now granted; new record permissions start a sync straight away.
+    val permissionLauncher = rememberLauncherForActivityResult(HealthConnectPermissions.requestContract()) { granted ->
+        vm.onPermissionResult(granted) { SyncScheduler.syncNow(appContext) }
     }
 
     val actions = DataSourcesActions(
@@ -136,7 +147,7 @@ fun DataSourcesRoute(navigator: ApexNavigator) {
         onCopyReport = { text -> copyReport(context, text) },
         onShareReport = { text -> shareReport(context, text) },
     )
-    DataSourcesContent(state, actions, openFailed, diagnostics)
+    DataSourcesContent(state, actions, openFailed, diagnostics, air)
 }
 
 private fun copyReport(context: Context, text: String) {
@@ -187,6 +198,7 @@ internal fun DataSourcesContent(
     actions: DataSourcesActions,
     openFailed: Boolean,
     diagnostics: DiagnosticsUi = DiagnosticsUi(),
+    air: AirRowUi = AirRowUi(AirRowKind.LOADING),
 ) {
     Column(Modifier.fillMaxSize()) {
         DetailHeader(
@@ -207,6 +219,7 @@ internal fun DataSourcesContent(
             } else {
                 if (state.demo) DemoCard()
                 GoogleSection(state, actions)
+                AirSection(air)
                 HealthConnectSection(state, actions, openFailed)
                 SyncSection(state, actions)
                 MarksSection(state)
@@ -651,6 +664,7 @@ private fun StreamRow(row: WatermarkRow, fmt: ApexFormatter) {
             FailureKind.PERMISSION -> R.string.datasources_mark_fail_permission
             FailureKind.RATE_LIMITED -> R.string.datasources_mark_fail_rate
             FailureKind.SIGN_IN_EXPIRED -> R.string.datasources_mark_fail_sign_in
+            FailureKind.BACKGROUND_READ_UNAVAILABLE -> R.string.datasources_mark_fail_background
             else -> R.string.datasources_mark_fail_other
         },
     )
@@ -672,6 +686,44 @@ private fun StreamRow(row: WatermarkRow, fmt: ApexFormatter) {
         if (attempt != null) Text(attempt, style = ApexTheme.type.caption, color = colors.foregroundSecondary)
         if (failure != null) Text(failure, style = ApexTheme.type.caption, color = colors.warningText)
         if (streak != null) Text(streak, style = ApexTheme.type.caption, color = colors.warningText)
+    }
+}
+
+// --- Fitbit Air ------------------------------------------------------------------------------------
+
+@Composable
+private fun AirSection(air: AirRowUi) {
+    val fmt = LocalFormatter.current
+    val notAvailable = stringResource(R.string.datasources_air_not_available)
+    SectionShell(stringResource(R.string.datasources_air_section)) {
+        ApexCard(Modifier.fillMaxWidth()) {
+            when (air.kind) {
+                AirRowKind.FOUND -> {
+                    val battery = when {
+                        air.batteryPercent != null -> stringResource(R.string.datasources_air_battery_percent, air.batteryPercent)
+                        air.batteryStatus != null -> air.batteryStatus
+                        else -> notAvailable
+                    }
+                    val synced = air.lastSyncMillis?.let { fmt.relativeTime(it) } ?: notAvailable
+                    InfoRow(stringResource(R.string.datasources_air_battery_label), battery)
+                    InfoRow(stringResource(R.string.datasources_air_sync_label), synced)
+                    InfoRow(stringResource(R.string.datasources_air_model_label), air.model ?: notAvailable)
+                    Spacer8()
+                    ProvenanceLabel(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API)
+                }
+                else -> BodyText(
+                    stringResource(
+                        when (air.kind) {
+                            AirRowKind.LOADING -> R.string.datasources_air_loading
+                            AirRowKind.NO_DEVICE -> R.string.datasources_air_none
+                            AirRowKind.NOT_SIGNED_IN -> R.string.datasources_air_signed_out
+                            AirRowKind.RECONNECT -> R.string.datasources_air_reconnect
+                            else -> R.string.datasources_air_unavailable
+                        },
+                    ),
+                )
+            }
+        }
     }
 }
 

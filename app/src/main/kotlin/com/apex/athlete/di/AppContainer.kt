@@ -21,6 +21,7 @@ import com.apex.athlete.core.data.healthconnect.HealthConnectAvailability
 import com.apex.athlete.core.data.healthconnect.SdkHealthConnectDataSource
 import com.apex.athlete.core.data.repository.AthleteRepository
 import com.apex.athlete.core.data.settings.SettingsStore
+import com.apex.athlete.core.data.source.FitbitAirStatusReader
 import com.apex.athlete.core.data.source.GoogleHealthApiSource
 import com.apex.athlete.core.data.source.HealthConnectSource
 import com.apex.athlete.core.data.store.ApexStores
@@ -90,6 +91,9 @@ class AppContainer(private val app: Application) : DataGraph {
             .distinctUntilChanged()
             .map(::networkFor)
             .stateIn(appScope, SharingStarted.Eagerly, networkFor(effectiveClientId(null)))
+
+    /** Fitbit Air model, battery and last sync from Google Health `pairedDevices.list`: on demand, cached in memory only. */
+    val airStatus: FitbitAirStatusReader = FitbitAirStatusReader(network = { googleHealth.value })
 
     val auth: AuthController = AuthController(app, googleHealth, tokenStore, settings, appScope)
 

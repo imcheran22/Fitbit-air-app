@@ -26,7 +26,12 @@ private const val DAY_MILLIS = 24L * 60 * 60 * 1000
 
 enum class WatermarkHealth { NEVER, OK, PARTIAL, FAILED, PERMISSION_MISSING }
 
-enum class FailureKind { NONE, PERMISSION, RATE_LIMITED, SIGN_IN_EXPIRED, OTHER }
+enum class FailureKind {
+    NONE, PERMISSION, RATE_LIMITED, SIGN_IN_EXPIRED,
+    /** Health Connect refused a background read although the record permission is granted: reads when the app is open. */
+    BACKGROUND_READ_UNAVAILABLE,
+    OTHER,
+}
 
 /** One stream of one source. Times are epoch millis; null means "never", shown as `--` or "Never". */
 data class WatermarkRow(
@@ -43,12 +48,17 @@ data class WatermarkRow(
 
 data class SourceSection(val source: SyncSource, val rows: List<WatermarkRow>)
 
+private val BACKGROUND_READ_CODE: String =
+    com.apex.athlete.core.data.source.HealthConnectBackgroundReadException::class.java.simpleName
+
 /** The orchestrator stores short codes (or an exception class name); anything unknown is [FailureKind.OTHER]. */
 fun failureKind(code: String?): FailureKind = when (code) {
     null -> FailureKind.OTHER
     "permission", "permission_missing" -> FailureKind.PERMISSION
     "rate_limited" -> FailureKind.RATE_LIMITED
     "sign_in_expired" -> FailureKind.SIGN_IN_EXPIRED
+    // The orchestrator records the exception class name for failures it has no short code for.
+    BACKGROUND_READ_CODE -> FailureKind.BACKGROUND_READ_UNAVAILABLE
     else -> FailureKind.OTHER
 }
 
@@ -302,4 +312,27 @@ data class DiagnosticsUi(val text: String? = null, val loading: Boolean = false,
 fun googleAuthSnapshot(configured: Boolean, auth: AuthState?): GoogleAuthSnapshot = when (auth) {
     is AuthState.SignedIn -> GoogleAuthSnapshot(configured, signedIn = true, grantedScopes = auth.grantedScopes)
     else -> GoogleAuthSnapshot(configured, signedIn = false, grantedScopes = emptySet())
+}
+
+// --- Fitbit Air device status ------------------------------------------------------------------------
+
+enum class AirRowKind { LOADING, FOUND, NO_DEVICE, NOT_SIGNED_IN, RECONNECT, UNAVAILABLE }
+
+/** The "Fitbit Air" row. Null fields mean the value is not available; the screen says so, nothing is guessed. */
+data class AirRowUi(
+    val kind: AirRowKind,
+    val model: String? = null,
+    val batteryPercent: Int? = null,
+    val batteryStatus: String? = null,
+    val lastSyncMillis: Long? = null,
+)
+
+fun airRowUi(result: com.apex.athlete.core.data.source.AirStatusResult?): AirRowUi = when (result) {
+    null -> AirRowUi(AirRowKind.LOADING)
+    is com.apex.athlete.core.data.source.AirStatusResult.Found ->
+        AirRowUi(AirRowKind.FOUND, result.status.model, result.status.batteryPercent, result.status.batteryStatus, result.status.lastSyncMillis)
+    com.apex.athlete.core.data.source.AirStatusResult.NoDevice -> AirRowUi(AirRowKind.NO_DEVICE)
+    com.apex.athlete.core.data.source.AirStatusResult.NotSignedIn -> AirRowUi(AirRowKind.NOT_SIGNED_IN)
+    com.apex.athlete.core.data.source.AirStatusResult.ScopeMissing -> AirRowUi(AirRowKind.RECONNECT)
+    com.apex.athlete.core.data.source.AirStatusResult.Unavailable -> AirRowUi(AirRowKind.UNAVAILABLE)
 }

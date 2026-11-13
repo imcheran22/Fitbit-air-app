@@ -134,6 +134,7 @@
     <string name="datasources_mark_fail_permission">Missing permission</string>
     <string name="datasources_mark_fail_rate">Request budget used up</string>
     <string name="datasources_mark_fail_sign_in">Sign-in expired</string>
+    <string name="datasources_mark_fail_background">Reads when the app is open</string>
     <string name="datasources_mark_fail_other">Unknown error</string>
     <plurals name="datasources_mark_failures">
         <item quantity="one">%1$d failure in a row</item>
@@ -174,4 +175,17 @@
     <string name="datasources_diag_share">Share report</string>
     <string name="datasources_diag_refresh">Build again</string>
     <string name="datasources_diag_copied">Copied to the clipboard</string>
+
+    <!-- Fitbit Air device status (Google Health paired devices) -->
+    <string name="datasources_air_section">Fitbit Air</string>
+    <string name="datasources_air_battery_label">Battery</string>
+    <string name="datasources_air_sync_label">Last synced</string>
+    <string name="datasources_air_model_label">Model</string>
+    <string name="datasources_air_battery_percent">%1$d%%</string>
+    <string name="datasources_air_not_available">Not available</string>
+    <string name="datasources_air_loading">Checking your Fitbit Air</string>
+    <string name="datasources_air_none">Google Health lists no paired tracker.</string>
+    <string name="datasources_air_signed_out">Connect Google Health to see the battery and last sync of your Fitbit Air.</string>
+    <string name="datasources_air_reconnect">Sign in to Google Health again to allow reading the device list. Apex asks for read-only access.</string>
+    <string name="datasources_air_unavailable">The Fitbit Air status could not be read right now. It is tried again when you open this screen.</string>
 </resources>

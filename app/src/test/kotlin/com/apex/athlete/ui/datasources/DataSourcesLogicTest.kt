@@ -35,6 +35,32 @@ class DataSourcesLogicTest {
         consecutiveFailures = failures, lastAttemptEpochMillis = attempt, lastSuccessEpochMillis = success,
     )
 
+    @Test fun aBackgroundRefusedHealthConnectReadIsNotAMissingPermission() {
+        val row = watermarkRow(
+            mark(source = SyncSource.HEALTH_CONNECT, status = SyncStatus.FAILED, error = "HealthConnectBackgroundReadException", failures = 1),
+        )
+        assertEquals(FailureKind.BACKGROUND_READ_UNAVAILABLE, row.failure)
+        assertEquals(FailureKind.BACKGROUND_READ_UNAVAILABLE, failureKind(com.apex.athlete.core.data.source.HealthConnectBackgroundReadException::class.java.simpleName))
+        // A real missing permission is unchanged.
+        assertEquals(FailureKind.PERMISSION, watermarkRow(mark(status = SyncStatus.PERMISSION_MISSING)).failure)
+    }
+
+    @Test fun airRowMapsEachResultAndNeverInventsValues() {
+        assertEquals(AirRowKind.LOADING, airRowUi(null).kind)
+        assertEquals(AirRowKind.NO_DEVICE, airRowUi(com.apex.athlete.core.data.source.AirStatusResult.NoDevice).kind)
+        assertEquals(AirRowKind.NOT_SIGNED_IN, airRowUi(com.apex.athlete.core.data.source.AirStatusResult.NotSignedIn).kind)
+        assertEquals(AirRowKind.RECONNECT, airRowUi(com.apex.athlete.core.data.source.AirStatusResult.ScopeMissing).kind)
+        assertEquals(AirRowKind.UNAVAILABLE, airRowUi(com.apex.athlete.core.data.source.AirStatusResult.Unavailable).kind)
+        val found = airRowUi(
+            com.apex.athlete.core.data.source.AirStatusResult.Found(com.apex.athlete.core.data.source.FitbitAirStatus("Fitbit Air", 80, "High", 5_000L)),
+        )
+        assertEquals(AirRowKind.FOUND, found.kind)
+        assertEquals("Fitbit Air", found.model); assertEquals(80, found.batteryPercent); assertEquals(5_000L, found.lastSyncMillis)
+        val sparse = airRowUi(com.apex.athlete.core.data.source.AirStatusResult.Found(com.apex.athlete.core.data.source.FitbitAirStatus(null, null, null, null)))
+        assertEquals(AirRowKind.FOUND, sparse.kind)
+        assertNull(sparse.model); assertNull(sparse.batteryPercent); assertNull(sparse.batteryStatus); assertNull(sparse.lastSyncMillis)
+    }
+
     @Test fun neverSyncedStreamHasNoTimes() {
         val row = watermarkRow(mark(status = SyncStatus.NEVER_SYNCED, synced = 0L, attempt = null, success = null))
         assertEquals(WatermarkHealth.NEVER, row.health)

@@ -131,6 +131,12 @@ class DataSourcesViewModel(
     /** The permission list the dialog should ask for, from the last check. */
     fun permissionRequest(): Set<String> = healthConnectStatus.value?.toRequest().orEmpty()
 
+    /** The dialog returned [granted] (everything now granted): look again, and sync once if something new arrived. */
+    fun onPermissionResult(granted: Set<String>, syncNow: () -> Unit) {
+        val before = healthConnectStatus.value?.grantedRecordPermissions.orEmpty()
+        HealthConnectGrant.handle(before, granted, refresh = ::refreshHealthConnect, syncNow = syncNow)
+    }
+
     /** Called on every resume and after the permission dialog closes. */
     fun refreshHealthConnect() {
         viewModelScope.launch { healthConnectStatus.value = healthConnect.status() }
