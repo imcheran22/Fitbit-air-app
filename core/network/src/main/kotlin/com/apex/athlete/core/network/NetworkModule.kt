@@ -4,6 +4,7 @@ import com.apex.athlete.core.network.auth.AuthConfigState
 import com.apex.athlete.core.network.auth.AuthState
 import com.apex.athlete.core.network.auth.BearerTokenInterceptor
 import com.apex.athlete.core.network.auth.GoogleHealthAuthConfig
+import com.apex.athlete.core.network.auth.OAuthClientType
 import com.apex.athlete.core.network.auth.OAuthProviderConfig
 import com.apex.athlete.core.network.auth.PendingAuthorizationStore
 import com.apex.athlete.core.network.auth.PkceManager
@@ -52,8 +53,10 @@ object NetworkModule {
         clock: NetClock = NetClock.System,
         jitter: JitterSource = JitterSource.Secure,
         sleeper: Sleeper = Sleeper.Real,
+        clientType: OAuthClientType = OAuthClientType.DEFAULT,
+        applicationId: String = GoogleHealthAuthConfig.DEFAULT_APPLICATION_ID,
     ): GoogleHealthNetwork {
-        val config = when (val state = GoogleHealthAuthConfig.create(clientId)) {
+        val config = when (val state = GoogleHealthAuthConfig.create(clientId, clientType, applicationId)) {
             AuthConfigState.NotConfigured -> return GoogleHealthNetwork.NotConfigured
             is AuthConfigState.Configured -> state.config
         }

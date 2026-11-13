@@ -123,10 +123,22 @@ class RedirectParserTest {
 
 class GoogleHealthAuthConfigTest {
     @Test
-    fun redirectIsDerivedFromClientId() {
+    fun iosStyleRedirectIsTheReversedClientIdAndIsTheDefault() {
         assertEquals(
             "com.googleusercontent.apps.123456-abcdef:/oauth2redirect",
             GoogleHealthAuthConfig.redirectUri("123456-abcdef.apps.googleusercontent.com"),
+        )
+        assertEquals(
+            "com.googleusercontent.apps.123456-abcdef:/oauth2redirect",
+            GoogleHealthAuthConfig.redirectUri("123456-abcdef.apps.googleusercontent.com", OAuthClientType.IOS),
+        )
+    }
+
+    @Test
+    fun androidStyleRedirectIsThePackageName() {
+        assertEquals(
+            "com.apex.athlete:/oauth2redirect",
+            GoogleHealthAuthConfig.redirectUri("123456-abcdef.apps.googleusercontent.com", OAuthClientType.ANDROID),
         )
     }
 

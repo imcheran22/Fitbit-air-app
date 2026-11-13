@@ -31,6 +31,7 @@ import com.apex.athlete.core.data.worker.SyncScheduler
 import com.apex.athlete.core.network.GoogleHealthNetwork
 import com.apex.athlete.core.network.NetworkModule
 import com.apex.athlete.core.network.auth.EncryptedTokenStore
+import com.apex.athlete.core.network.auth.OAuthClientType
 import com.apex.athlete.ui.common.ApexFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +75,11 @@ class AppContainer(private val app: Application) : DataGraph {
     private fun networkFor(clientId: String?): GoogleHealthNetwork {
         val cached = cachedNetwork
         if (cached != null && cachedNetworkId == clientId) return cached
-        return NetworkModule.create(clientId, tokenStore, tokenStore).also {
+        return NetworkModule.create(
+            clientId, tokenStore, tokenStore,
+            clientType = OAuthClientType.parse(BuildConfig.OAUTH_CLIENT_TYPE),
+            applicationId = BuildConfig.APPLICATION_ID,
+        ).also {
             cachedNetworkId = clientId
             cachedNetwork = it
         }

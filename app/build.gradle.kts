@@ -20,23 +20,47 @@ fun configValue(propertyKey: String, envKey: String): String? =
     (localProperties.getProperty(propertyKey) ?: System.getenv(envKey))?.trim()?.takeIf { it.isNotEmpty() }
 
 /** OAuth client ID of the Google Cloud project; empty means "not configured" (see docs/SETUP.md). */
-val googleClientId: String = configValue("apex.googleClientId", "APEX_GOOGLE_CLIENT_ID").orEmpty()
+val googleClientId: String = configValue("apex.googleClientId", "APEX_GOOGLE_CLIENT_ID").orEmpty().let { raw ->
+    // A real client ID is letters, digits, dot, dash and underscore. Anything else (a stray quote from a
+    // bad paste, for example) would break the generated BuildConfig, so it counts as "not configured".
+    if (raw.isEmpty() || Regex("[A-Za-z0-9._-]+").matches(raw)) {
+        raw
+    } else {
+        logger.warn("APEX_GOOGLE_CLIENT_ID has unexpected characters and was ignored (the build has no sign-in).")
+        ""
+    }
+}
+
+/** The application ID. Also the redirect scheme of an Android-type client. Keep in step with `defaultConfig`. */
+val apexApplicationId = "com.apex.athlete"
 
 /**
- * The redirect scheme Google expects for an installed-app client, derived exactly like
- * `GoogleHealthAuthConfig.redirectScheme` in :core:network: the reversed client ID,
- * `com.googleusercontent.apps.<prefix>` for `<prefix>.apps.googleusercontent.com`. A blank or
- * malformed ID falls back to a harmless placeholder scheme so the manifest always merges.
+ * Which Google OAuth client type this build is for: `ios` (default; redirect scheme is the reversed client ID,
+ * `com.googleusercontent.apps.<id>:/oauth2redirect`) or `android` (the documented fallback; redirect scheme is the
+ * package name, `com.apex.athlete:/oauth2redirect`). Set `apex.oauthClientType` in local.properties or the
+ * environment variable `APEX_OAUTH_CLIENT_TYPE`. Anything else falls back to `ios`.
  */
-fun redirectSchemeFor(clientId: String): String {
+val oauthClientType: String =
+    if (configValue("apex.oauthClientType", "APEX_OAUTH_CLIENT_TYPE")?.lowercase() == "android") "android" else "ios"
+
+/**
+ * The redirect scheme for the manifest placeholder, computed exactly like
+ * `GoogleHealthAuthConfig.redirectScheme` in :core:network (`OAuthSchemeConsistencyTest` in :app checks they
+ * agree). `ios` (default): the reversed client ID, `com.googleusercontent.apps.<prefix>`
+ * for `<prefix>.apps.googleusercontent.com`. `android`: the application ID. A blank or malformed ID (ios) gives a harmless placeholder scheme so the
+ * manifest always merges (the runtime then reports "not configured"). Never throws.
+ */
+fun redirectSchemeFor(clientId: String, clientType: String, applicationId: String): String {
+    val placeholder = "$applicationId.oauth"
+    if (clientType == "android") return applicationId
     val suffix = ".apps.googleusercontent.com"
     val id = clientId.trim()
-    if (!id.endsWith(suffix)) return "com.apex.athlete.oauth"
+    if (!id.endsWith(suffix)) return placeholder
     val prefix = id.removeSuffix(suffix)
-    val valid = prefix.isNotEmpty() && prefix.all { it.isLetterOrDigit() || it == '-' || it == '_' }
-    return if (valid) "com.googleusercontent.apps.$prefix" else "com.apex.athlete.oauth"
+    val valid = prefix.isNotEmpty() && prefix.all { it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '-' || it == '_' }
+    return if (valid) "com.googleusercontent.apps.$prefix" else placeholder
 }
-val oauthRedirectScheme: String = redirectSchemeFor(googleClientId)
+val oauthRedirectScheme: String = redirectSchemeFor(googleClientId, oauthClientType, apexApplicationId)
 
 // --- Versioning ---------------------------------------------------------------------------------
 // versionCode = major * 10000 + minor * 100 + patch  (0.1.0 -> 100, 1.4.2 -> 10402).
@@ -50,7 +74,7 @@ android {
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.apex.athlete"
+        applicationId = apexApplicationId
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = versionMajor * 10_000 + versionMinor * 100 + versionPatch
@@ -58,6 +82,7 @@ android {
 
         buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
         buildConfigField("String", "OAUTH_REDIRECT_SCHEME", "\"$oauthRedirectScheme\"")
+        buildConfigField("String", "OAUTH_CLIENT_TYPE", "\"$oauthClientType\"")
         manifestPlaceholders["appAuthRedirectScheme"] = oauthRedirectScheme
     }
 

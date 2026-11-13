@@ -55,10 +55,10 @@
     <string name="settings_section_google">Google account</string>
     <string name="settings_client_id_label">Google client ID</string>
     <string name="settings_client_id_placeholder">Paste a client ID</string>
-    <string name="settings_client_id_support">The client ID must match the redirect scheme compiled into this app. If it does not, Google cannot return you to Apex after you sign in, and the app has to be rebuilt with the ID in local.properties (see docs/SETUP.md). The ID is not a secret.</string>
+    <string name="settings_client_id_support">The client ID must match the redirect scheme compiled into this app. If it does not, Google cannot return you to Apex after you sign in, and a new build made with this ID is needed (run the Release workflow again with it, see docs/SETUP.md). With an Android-type client the scheme is the app\'s package name, so any ID works. The ID is not a secret.</string>
     <string name="settings_client_id_save">Save client ID</string>
     <string name="settings_client_id_saved">Saved</string>
-    <string name="settings_client_id_mismatch">This client ID needs the redirect scheme %2$s, but this build uses %1$s. Rebuild the app with this ID in local.properties.</string>
+    <string name="settings_client_id_mismatch">This client ID needs the redirect scheme %2$s, but this build uses %1$s. Make a new build with this ID (run the Release workflow again with it, see docs/SETUP.md).</string>
 
     <string name="settings_section_coach">Ask Apex</string>
     <string name="settings_coach_title">AI coach</string>

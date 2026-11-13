@@ -11,6 +11,7 @@ import com.apex.athlete.core.network.auth.AuthState
 import com.apex.athlete.core.network.auth.AuthorizationOutcome
 import com.apex.athlete.core.network.auth.CustomTabsLauncher
 import com.apex.athlete.core.network.auth.GoogleHealthAuthConfig
+import com.apex.athlete.core.network.auth.OAuthClientType
 import com.apex.athlete.core.network.auth.TokenStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +40,7 @@ sealed interface SignInUiState {
     /**
      * A client ID pasted in Settings needs a different redirect scheme from the one compiled into
      * the manifest, so Google's redirect could not reach the app. The owner has to rebuild with
-     * the ID in `local.properties` (docs/SETUP.md).
+     * the ID (the Release workflow input or `local.properties`, docs/SETUP.md).
      */
     data class RedirectSchemeMismatch(val manifestScheme: String, val neededScheme: String) : SignInUiState
 
@@ -85,8 +86,13 @@ class AuthController(
             _state.value = SignInUiState.NotConfigured
             return
         }
-        val needed = GoogleHealthAuthConfig.redirectScheme(ready.config.clientId)
-        if (needed != null && !needed.equals(BuildConfig.OAUTH_REDIRECT_SCHEME, ignoreCase = true)) {
+        val needed = GoogleHealthAuthConfig.schemeNeededIfDifferent(
+            clientId = ready.config.clientId,
+            clientType = OAuthClientType.parse(BuildConfig.OAUTH_CLIENT_TYPE),
+            applicationId = BuildConfig.APPLICATION_ID,
+            manifestScheme = BuildConfig.OAUTH_REDIRECT_SCHEME,
+        )
+        if (needed != null) {
             _state.value = SignInUiState.RedirectSchemeMismatch(BuildConfig.OAUTH_REDIRECT_SCHEME, needed)
             return
         }

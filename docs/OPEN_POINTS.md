@@ -139,3 +139,35 @@ Status: logic and tests are in place; everything marked "confirm" needs real dat
    regression is not in the code. Confirm against Kaminsky 2015 Table 2 before the category is shown as more than context.
 5. **Demo steps and activity are synthetic.** The demo store now emits minute step samples and activity, body and vitals series; they exist only
    so every screen has something to show and are labelled `SYNTHETIC_DEMO`.
+
+
+## Sign-in client type and release signing (`release.yml`, `core/network/.../auth`)
+
+Status: `UNVERIFIED-NEEDS-REAL-ACCOUNT`. Added 2026-11-13 with the two-style redirect (`apex.oauthClientType`). Default: **`ios`** (D9); `android` is the fallback.
+
+What was checked online (Google's "OAuth 2.0 for Mobile & Desktop Apps" page,
+`developers.google.com/identity/protocols/oauth2/native-app`, fetched through the proxy on 2026-11-13, HTTP 200):
+- Custom URI scheme redirects are listed as `com.example.app:/path` (reverse DNS notation of a domain you control; the
+  scheme must contain a period) or `com.googleusercontent.apps.123:/path` (reverse DNS of the client ID), with an optional
+  path such as `/oauth2redirect`. Both forms are what the app now builds.
+- The same page says "Custom URI schemes are no longer supported on Android and Chrome apps" and, under errors, names
+  "Custom URI scheme is not supported on Android or Chrome apps". It does not say whether the console switch some notes
+  mention ("Enable custom URI scheme" under Advanced settings of an Android client) lifts this; that switch was not found
+  in the fetched documentation. The loopback redirect is listed as deprecated for Android, iOS and Chrome client types.
+- `client_secret` is "not applicable" to Android, iOS and Chrome clients (matches the app: no secret, PKCE only).
+- The iOS-type client with the reversed client ID is the form that page does not contradict for a custom scheme, which is why it is the default.
+
+What could NOT be verified: whether Google accepts an Android-type client with the package-name scheme for the Google
+Health scopes; whether an iOS-type client works from an Android Custom Tab; where the console puts the Advanced switch.
+
+Confirm (owner, once): follow `docs/SETUP.md` sections 4 and 5 (iOS client, `oauth_client_type=ios`). If Google rejects
+the sign-in (`redirect_uri_mismatch`, "invalid request"), follow section 6: an Android client created with the SHA-1
+from a run summary, run with `android` (and the Advanced "Enable custom URI scheme" switch if the console shows it).
+**Record here which one worked:** `ios` / `android` (date, and whether the Advanced switch was needed). If only
+`android` works, flip the defaults back: `OAuthClientType.DEFAULT`, `redirectSchemeFor` and `oauthClientType` in
+`app/build.gradle.kts`, the workflow input default and fallback, and the SETUP order (see D9).
+
+Also unconfirmed: that Android accepts an APK produced by this workflow's hand-encoded self-signed certificate
+(a plain X.509 v3 certificate with no extensions; `apksigner verify` in the run prints "Verifies"); that
+`aapt2 dump xmltree` shows the redirect scheme in the format the workflow's consistency check greps for (if the dump
+has no `android:scheme` lines the check is skipped, never failed).

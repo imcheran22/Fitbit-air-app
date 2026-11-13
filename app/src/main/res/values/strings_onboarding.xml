@@ -58,7 +58,7 @@
     <string name="onboarding_google_done">Signed in with Google.</string>
     <string name="onboarding_google_done_missing">Signed in, but some access was not granted, so some readings will be missing. You can sign in again to allow them.</string>
     <string name="onboarding_google_connected">Signed in. Readings sync from Google Health.</string>
-    <string name="onboarding_google_mismatch">The client ID you entered in Settings needs the redirect scheme %2$s, but this build uses %1$s. Add the ID to local.properties and rebuild (docs/SETUP.md).</string>
+    <string name="onboarding_google_mismatch">The client ID you entered in Settings needs the redirect scheme %2$s, but this build uses %1$s. Make a new build with this ID (run the Release workflow again with it, docs/SETUP.md).</string>
     <string name="onboarding_google_no_browser">No browser was found to open the Google sign-in page. Install or enable one and try again.</string>
     <string name="onboarding_google_denied">Sign-in was cancelled or refused. Nothing was saved.</string>
     <string name="onboarding_google_failed_network">Sign-in could not reach Google. Check your connection and try again.</string>

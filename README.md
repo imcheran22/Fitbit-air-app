@@ -7,19 +7,31 @@ calls to the data source itself.
 
 ## Status
 
-The project is delivered in seven phases. Phases 1 and 2 are in this repository.
+Work is tracked in [docs/PROGRESS.md](docs/PROGRESS.md); this table follows it. Verified by unit tests, lint and the
+GitHub Actions emulator smoke test. Nothing has been run against a real Google account or a real Fitbit Air yet
+(items marked `UNVERIFIED-*` in [docs/OPEN_POINTS.md](docs/OPEN_POINTS.md)).
 
-| Phase | Scope | State |
+| Milestone | Scope | State |
 |---|---|---|
-| 1 | Architecture, Gradle multi-module setup, encrypted Room database, DAOs | Done |
-| 2 | Sports-science analytics engine (pure Kotlin) | Done |
-| 3 | Google sign-in (OAuth 2.0 + PKCE), Google Health API client, Health Connect reader, watermark sync | Next |
-| 4 | Design system and Compose Canvas charts | Theme foundation done (tokens, type, fonts); components planned |
-| 5 | Screens and view models | Planned |
-| 6 | AI coach and smart alerts | Planned |
-| 7 | Device verification and setup guide | Planned |
+| M0 | Audit and baseline | Done |
+| M1 | Walking skeleton: Demo store through the real ingestor and pipeline | Done |
+| M2 | `:core:ui`: tokens, components, shells, Canvas charts, contrast test | Done |
+| M3 | `:core:network` and `:core:data`: Google sign-in (OAuth 2.0 + PKCE), Google Health API client, Health Connect reader, Takeout import, sync | Done |
+| M4 | `:app`: all screens in [docs/APP_CONTRACT.md](docs/APP_CONTRACT.md), manifest, `allowBackup=false` | Done |
+| M5 | Insights, alerts, rule-based coach, optional Ask Apex | Done |
+| M6 | Hardening and red team ([docs/REDTEAM.md](docs/REDTEAM.md)) | Done |
+| M7 | Docs and handoff; signed release workflow ([docs/RELEASES.md](docs/RELEASES.md)) | Mostly done |
+| Review tracks | Scoring and data-collection alignment (formula set v3, v4 wiring) | In progress |
 
-Until Phase 5 the `:app` module is an empty shell: it builds, but it has no screens to launch.
+## Get the app on your phone (no computer needed)
+
+1. Follow [docs/SETUP.md](docs/SETUP.md) once: Google Cloud client, a signing password stored as a GitHub secret,
+   then **Actions, Release APK, Run workflow** with your client ID.
+2. Download the signed APK from the **Releases** page (builds started by hand are marked Pre-release).
+   Install and update steps: [docs/RELEASES.md](docs/RELEASES.md).
+
+The workflow `.github/workflows/release.yml` signs every build with the same key, so an update installs over the old
+app and keeps its data. The older workflow `android.yml` runs on every push and only produces test builds.
 
 ## Important change from the original plan: the Fitbit Web API no longer exists
 
@@ -36,10 +48,10 @@ Details, including what is and is not available, are in [docs/ARCHITECTURE.md](d
 | `:core:domain` | Kotlin/JVM | Metric types, data provenance, source-conflict rules |
 | `:core:analytics` | Kotlin/JVM | Baselines, recovery, strain, sleep, training load, trends |
 | `:core:database` | Android library | Room entities and DAOs on SQLCipher |
-| `:core:network` | Android library | Google Health API client and OAuth (Phase 3) |
-| `:core:data` | Android library | Repositories, Health Connect, sync (Phase 3) |
-| `:core:ui` | Android library | Design system and charts (Phase 4); theme in place, see [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) |
-| `:app` | Android application | Screens and wiring (Phase 5) |
+| `:core:network` | Android library | Google Health API client and OAuth 2.0 PKCE |
+| `:core:data` | Android library | Repositories, Health Connect, Takeout import, sync |
+| `:core:ui` | Android library | Design system, components and charts, see [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) |
+| `:app` | Android application | Screens and wiring |
 
 Every formula in `:core:analytics` is written out in [docs/FORMULAS.md](docs/FORMULAS.md).
 
@@ -64,8 +76,13 @@ Android Studio installs both.
 ./gradlew testDebugUnitTest :app:assembleDebug
 ```
 
-Every push also runs these on GitHub Actions (`.github/workflows/android.yml`); the debug APK is
-attached to each run as the `apex-debug-apk` artifact.
+Every push also runs these on GitHub Actions (`.github/workflows/android.yml`). Its artifact `apex-apks` holds
+`app-debug.apk` and `app-release-unsigned.apk` (test builds: not installable as updates, no stable signature).
+The installable, signed build comes from the **Release APK** workflow and the Releases page; see
+[docs/RELEASES.md](docs/RELEASES.md).
+
+Optional build inputs (environment variable or `local.properties`): `APEX_GOOGLE_CLIENT_ID` / `apex.googleClientId`,
+and `APEX_OAUTH_CLIENT_TYPE` / `apex.oauthClientType` = `ios` (default) or `android` (fallback).
 
 ## Data integrity rules
 

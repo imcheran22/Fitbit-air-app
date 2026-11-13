@@ -50,7 +50,8 @@ OAuth PKCE S256 (RFC 7636 appendix B vector), state check, token exchange/refres
 ## Unverified: needs the real account (see OPEN_POINTS)
 1. OAuth client type and custom-scheme redirect `com.googleusercontent.apps.<prefix>:/oauth2redirect`: Google restricts
    custom URI schemes for Android-type clients (opt-in toggle) and uses them for iOS-type clients. Confirm which client
-   type the Cloud project accepts, and that no client secret is required.
+   type the Cloud project accepts, and that no client secret is required. Google's native-app page (read 2026-11-13) says custom URI schemes are no longer supported on Android clients;
+   the app supports both styles (`apex.oauthClientType`, default `ios`), see OPEN_POINTS "Sign-in client type".
 2. Which data type needs which scope (`GoogleHealthDataType.scopeCandidates` is inference, used only for wording a 403).
 3. Exact 403 body / `WWW-Authenticate` format; parsed tolerantly, scope only used if a `googlehealth.*.readonly` URL appears.
 4. Rate limits: the default 150 requests/hour budget is a cautious assumption; rate-limit header names are guesses

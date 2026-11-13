@@ -1,0 +1,314 @@
+name: Release APK
+
+# Builds a SIGNED, installable APK with Google sign-in compiled in, and publishes it on the Releases page.
+# Run it from a phone: Actions, "Release APK", "Run workflow", paste the Google client ID.
+# The owner's guide is docs/SETUP.md; the install guide is docs/RELEASES.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      google_client_id:
+        description: "Google OAuth client ID (ends in .apps.googleusercontent.com). May be left empty for a build without sign-in."
+        required: false
+        type: string
+        default: ""
+      oauth_client_type:
+        description: "OAuth client type created in Google Cloud: ios (default) or android (fallback; needs the SHA-1 from a run summary)"
+        required: false
+        type: choice
+        options:
+          - ios
+          - android
+        default: ios
+      publish_release:
+        description: "Also publish the APK on the Releases page (pre-release)"
+        required: false
+        type: boolean
+        default: true
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and sign
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    outputs:
+      publish: ${{ steps.meta.outputs.publish }}
+      tag: ${{ steps.meta.outputs.tag }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
+      apk_name: ${{ steps.sign.outputs.apk_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Inputs reach the shell only through env, never through ${{ }} inside a script.
+      - name: Resolve client ID, client type and publishing
+        id: meta
+        env:
+          INPUT_CLIENT_ID: ${{ inputs.google_client_id }}
+          VAR_CLIENT_ID: ${{ vars.APEX_GOOGLE_CLIENT_ID }}
+          INPUT_CLIENT_TYPE: ${{ inputs.oauth_client_type }}
+          VAR_CLIENT_TYPE: ${{ vars.APEX_OAUTH_CLIENT_TYPE }}
+          INPUT_PUBLISH: ${{ inputs.publish_release }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          trim() { printf '%s' "$1" | tr -d '\r\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'; }
+
+          CID="$(trim "${INPUT_CLIENT_ID:-}")"
+          [ -n "$CID" ] || CID="$(trim "${VAR_CLIENT_ID:-}")"
+          if [ -n "$CID" ] && ! printf '%s' "$CID" | grep -Eq '^[A-Za-z0-9._-]+\.apps\.googleusercontent\.com$'; then
+            echo "::error::The Google client ID does not look right. It must end in .apps.googleusercontent.com and contain no spaces. Copy it again from Google Cloud Console."
+            exit 1
+          fi
+
+          TYPE="$(trim "${INPUT_CLIENT_TYPE:-}" | tr 'A-Z' 'a-z')"
+          [ -n "$TYPE" ] || TYPE="$(trim "${VAR_CLIENT_TYPE:-}" | tr 'A-Z' 'a-z')"
+          [ -n "$TYPE" ] || TYPE=ios
+          case "$TYPE" in android|ios) ;; *) echo "::error::oauth_client_type must be android or ios"; exit 1 ;; esac
+
+          { echo "APEX_GOOGLE_CLIENT_ID=$CID"; echo "APEX_OAUTH_CLIENT_TYPE=$TYPE"; } >> "$GITHUB_ENV"
+
+          if [ "$EVENT_NAME" = "push" ]; then
+            PUBLISH=true; PRERELEASE=false; TAG="$REF_NAME"
+          else
+            if [ "${INPUT_PUBLISH:-true}" = "true" ]; then PUBLISH=true; else PUBLISH=false; fi
+            PRERELEASE=true; TAG=""
+          fi
+          { echo "publish=$PUBLISH"; echo "prerelease=$PRERELEASE"; echo "tag=$TAG"; } >> "$GITHUB_OUTPUT"
+
+      # Chooses the signing key: four secrets, else a key derived from APEX_SIGNING_PASSPHRASE, else a throwaway.
+      - name: Prepare signing key
+        env:
+          APEX_KEYSTORE_B64: ${{ secrets.APEX_KEYSTORE_B64 }}
+          APEX_KEYSTORE_PASSWORD: ${{ secrets.APEX_KEYSTORE_PASSWORD }}
+          APEX_KEY_ALIAS: ${{ secrets.APEX_KEY_ALIAS }}
+          APEX_KEY_PASSWORD: ${{ secrets.APEX_KEY_PASSWORD }}
+          APEX_SIGNING_PASSPHRASE: ${{ secrets.APEX_SIGNING_PASSPHRASE }}
+        run: bash .github/scripts/prepare-signing.sh "$RUNNER_TEMP/signing"
+
+      # Unsigned on purpose: Gradle gets no signing values. Signing happens below with apksigner.
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease --stacktrace
+
+      - name: Align and sign
+        id: sign
+        run: |
+          set -euo pipefail
+          IN="$(ls app/build/outputs/apk/release/*.apk | head -1)"
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          mkdir -p dist "$RUNNER_TEMP/work"
+
+          BADGING_ALL="$("$BT/aapt2" dump badging "$IN")"
+          BADGING="$(printf '%s\n' "$BADGING_ALL" | grep '^package:' | head -1)"
+          PKG="$(printf '%s' "$BADGING" | sed -n "s/.* name='\([^']*\)'.*/\1/p;" | head -1)"
+          VERSION_NAME="$(printf '%s' "$BADGING" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")"
+          VERSION_CODE="$(printf '%s' "$BADGING" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")"
+          [ "$PKG" = "com.apex.athlete" ] || { echo "::error::Unexpected package name in the built APK"; exit 1; }
+          APK_NAME="apex-${VERSION_NAME}-b${GITHUB_RUN_NUMBER}.apk"
+
+          # 16 KB page alignment for native libraries (build-tools 35+); fall back to 4 KB on older tools.
+          "$BT/zipalign" -f -P 16 4 "$IN" "$RUNNER_TEMP/work/aligned.apk" 2>/dev/null \
+            || "$BT/zipalign" -f -p 4 "$IN" "$RUNNER_TEMP/work/aligned.apk"
+
+          # Passwords go through the environment (env:NAME), never onto the command line.
+          export KS_PASS KEY_PASS
+          "$BT/apksigner" sign \
+            --ks "$KS_FILE" --ks-key-alias "$KS_ALIAS" \
+            --ks-pass env:KS_PASS --key-pass env:KEY_PASS \
+            --v4-signing-enabled false \
+            --out "dist/$APK_NAME" "$RUNNER_TEMP/work/aligned.apk"
+          rm -f dist/*.idsig
+          CERTS="$("$BT/apksigner" verify --verbose --print-certs "dist/$APK_NAME")"
+          printf '%s\n' "$CERTS" | grep -E "^Verifies|Verified using" || { echo "::error::The signed APK does not verify"; exit 1; }
+          SHA256_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
+          SHA1_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer #1 certificate SHA-1 digest: //p' | head -1)"
+          [ -n "$SHA256_HEX" ] && [ -n "$SHA1_HEX" ] || { echo "::error::Could not read the signing certificate"; exit 1; }
+          colon() { printf '%s' "$1" | tr 'a-f' 'A-F' | sed 's/../&:/g; s/:$//'; }
+          SHA1="$(colon "$SHA1_HEX")"; SHA256="$(colon "$SHA256_HEX")"
+
+          # The manifest scheme the APK really carries must be the one the app will ask Google to redirect to.
+          if [ "$APEX_OAUTH_CLIENT_TYPE" = "ios" ] && [ -n "$APEX_GOOGLE_CLIENT_ID" ]; then
+            SCHEME="com.googleusercontent.apps.${APEX_GOOGLE_CLIENT_ID%.apps.googleusercontent.com}"
+            REDIRECT="${SCHEME}:/oauth2redirect"
+          elif [ "$APEX_OAUTH_CLIENT_TYPE" = "ios" ]; then
+            SCHEME="$PKG.oauth"
+            REDIRECT="(none: an iOS-style build needs the client ID)"
+          else
+            SCHEME="$PKG"
+            REDIRECT="${SCHEME}:/oauth2redirect"
+          fi
+          "$BT/aapt2" dump xmltree --file AndroidManifest.xml "dist/$APK_NAME" > "$RUNNER_TEMP/work/manifest.txt" 2>/dev/null || true
+          if grep -q 'android:scheme' "$RUNNER_TEMP/work/manifest.txt" \
+             && ! grep 'android:scheme' "$RUNNER_TEMP/work/manifest.txt" | grep -qF "\"$SCHEME\""; then
+            echo "::error::The APK manifest redirect scheme does not match the expected scheme."
+            exit 1
+          fi
+
+          {
+            echo "apk_name=$APK_NAME"
+            echo "version_name=$VERSION_NAME"
+            echo "version_code=$VERSION_CODE"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "APK_NAME=$APK_NAME"; echo "VERSION_NAME=$VERSION_NAME"; echo "VERSION_CODE=$VERSION_CODE"; echo "PKG=$PKG"
+            echo "SHA1=$SHA1"; echo "SHA256=$SHA256"; echo "REDIRECT=$REDIRECT"
+          } >> "$GITHUB_ENV"
+
+      # The summary is what the owner reads on the phone. Warnings first, then the facts, then the next step.
+      - name: Write the job summary and release notes
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RELEASES_URL: ${{ github.server_url }}/${{ github.repository }}/releases
+          PUBLISH: ${{ steps.meta.outputs.publish }}
+        run: |
+          set -euo pipefail
+          S="$RUNNER_TEMP/summary.md"
+          : > "$S"
+          if [ "$SIGNING_MODE" = "throwaway" ]; then
+            {
+              echo "## WARNING: this APK uses a ONE-TIME signing key"
+              echo
+              echo "**It cannot update an earlier install of Apex (you would have to uninstall first and lose local data), and its SHA-1 is useless for an Android OAuth client.** Add the repository secret \`APEX_SIGNING_PASSPHRASE\` (docs/SETUP.md, section 5), then run this workflow again. The fingerprint below changes once and then stays the same on every later build."
+              echo
+            } >> "$S"
+          fi
+          if [ -z "$APEX_GOOGLE_CLIENT_ID" ]; then
+            {
+              echo "## WARNING: NO GOOGLE CLIENT ID in this build"
+              echo
+              echo "**Sign in with Google will say \"not configured\".** Create the Google client (docs/SETUP.md, section 4), then run this workflow again with its client ID."
+              echo
+            } >> "$S"
+          fi
+          {
+            echo "## Apex ${VERSION_NAME} (build ${GITHUB_RUN_NUMBER})"
+            echo
+            echo "| Item | Value |"
+            echo "|---|---|"
+            echo "| App version | ${VERSION_NAME} (versionCode ${VERSION_CODE}) |"
+            echo "| APK file | \`${APK_NAME}\` |"
+            echo "| Package name | \`${PKG}\` |"
+            echo "| Signing | ${SIGNING_MODE} |"
+            echo "| Signing certificate SHA-1 | \`${SHA1}\` |"
+            echo "| Signing certificate SHA-256 | \`${SHA256}\` |"
+            echo "| OAuth client type | ${APEX_OAUTH_CLIENT_TYPE} |"
+            echo "| Redirect URI in this build | \`${REDIRECT}\` |"
+            echo "| Google client ID | \`${APEX_GOOGLE_CLIENT_ID:-(none)}\` |"
+            echo
+            echo "### Next step"
+            echo
+          } >> "$S"
+          if [ "$SIGNING_MODE" = "throwaway" ]; then
+            echo "1. Add the secret \`APEX_SIGNING_PASSPHRASE\` (Settings, Secrets and variables, Actions). See docs/SETUP.md section 5. Then run this workflow again." >> "$S"
+          elif [ -z "$APEX_GOOGLE_CLIENT_ID" ]; then
+            if [ "$APEX_OAUTH_CLIENT_TYPE" = "ios" ]; then
+              echo "1. In Google Cloud Console create an **iOS** OAuth client with bundle ID \`${PKG}\` (no SHA-1 needed). Copy its client ID. 2. Run this workflow again and paste it into \`google_client_id\` (keep \`oauth_client_type\` = ios)." >> "$S"
+            else
+              echo "1. Long-press the SHA-1 above and copy it. 2. In Google Cloud Console create an **Android** OAuth client with package name \`${PKG}\` and that SHA-1. Copy the client ID it shows. 3. Run this workflow again with \`oauth_client_type\` = android and the client ID in \`google_client_id\`." >> "$S"
+            fi
+          else
+            if [ "$PUBLISH" = "true" ]; then
+              echo "1. Open [the Releases page](${RELEASES_URL}), download \`${APK_NAME}\` and install it (docs/RELEASES.md). 2. Open Apex, then Data sources, then Sign in with Google." >> "$S"
+            else
+              echo "1. Download the artifact \`apex-release-apk\` at the bottom of [this run](${RUN_URL}), unzip it and install the APK (docs/RELEASES.md). 2. Open Apex, then Data sources, then Sign in with Google." >> "$S"
+            fi
+            echo >> "$S"
+            if [ "$APEX_OAUTH_CLIENT_TYPE" = "ios" ]; then
+              echo "If Google rejects the iOS client at sign-in, use the Android fallback: create an Android-type client with the SHA-1 above and run this workflow again with \`oauth_client_type\` = android (docs/SETUP.md, section 6)." >> "$S"
+            else
+              echo "Google states custom URI schemes are not supported for Android clients. If sign-in fails with that message, create an iOS-type client and run again with \`oauth_client_type\` = ios (docs/SETUP.md, section 4)." >> "$S"
+            fi
+          fi
+          cat "$S" >> "$GITHUB_STEP_SUMMARY"
+          cp "$S" "$RUNNER_TEMP/release-notes.md"
+          {
+            echo
+            echo "Package \`${PKG}\`, signing certificate SHA-256 \`${SHA256}\`. Check this value matches the one from your earlier build before installing over an existing Apex."
+          } >> "$RUNNER_TEMP/release-notes.md"
+          mkdir -p notes
+          cp "$RUNNER_TEMP/release-notes.md" notes/release-notes.md
+
+      - name: Upload APK (30 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-release-apk
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload release notes for the publish job
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-release-notes
+          path: notes/release-notes.md
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove key material
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/signing" "$RUNNER_TEMP/work"
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    if: needs.build.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apex-release-apk
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: apex-release-notes
+          path: notes
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          APK_NAME: ${{ needs.build.outputs.apk_name }}
+          TAG_IN: ${{ needs.build.outputs.tag }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          RUN_NUMBER: ${{ github.run_number }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          VERSION="${APK_NAME#apex-}"; VERSION="${VERSION%-b*.apk}"
+          TAG="${TAG_IN:-build-${VERSION}-b${RUN_NUMBER}}"
+          TITLE="Apex ${VERSION} (build ${RUN_NUMBER})"
+          FLAGS=()
+          [ "$PRERELEASE" = "true" ] && FLAGS+=(--prerelease)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "dist/$APK_NAME" --clobber
+          else
+            gh release create "$TAG" "dist/$APK_NAME" \
+              --title "$TITLE" \
+              --notes-file notes/release-notes.md \
+              --target "$TARGET_SHA" \
+              "${FLAGS[@]}"
+          fi
+          echo "Release: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${TAG}" >> "$GITHUB_STEP_SUMMARY"
