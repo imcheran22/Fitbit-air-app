@@ -18,7 +18,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +39,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.apex.athlete.R
 import com.apex.athlete.core.ui.components.ApexButton
+import com.apex.athlete.core.ui.components.ApexButtonStyle
+import com.apex.athlete.core.ui.icons.ApexIcons
+import com.apex.athlete.ui.quicklog.QuickLogSheet
 import com.apex.athlete.core.ui.components.ApexCard
 import com.apex.athlete.core.ui.components.DatePill
 import com.apex.athlete.core.ui.components.ProvenanceLabel
@@ -79,7 +85,10 @@ fun JournalRoute(
     // null = still loading (skeleton); an empty analysis is a message, not a blank.
     val effects = remember(journal, formatter) { journal?.let { buildEffectsUi(it.effects, formatter) } }
     val today = formatter.today()
+    var quickLogOpen by rememberSaveable { mutableStateOf(false) }
+    if (quickLogOpen) QuickLogSheet(onDismiss = { quickLogOpen = false })
     JournalContent(
+        onQuickLog = { quickLogOpen = true },
         dayLabel = formatter.dayLabel(day),
         canGoNext = day.isBefore(today),
         onPrevious = { onDayChange(day.minusDays(1)) },
@@ -113,6 +122,7 @@ internal fun JournalContent(
     onFactor: (MetricType, FactorChoice) -> Unit,
     effects: EffectsUi?,
     contentPadding: PaddingValues,
+    onQuickLog: (() -> Unit)? = null,
 ) {
     val colors = ApexTheme.colors
     Column(
@@ -140,6 +150,16 @@ internal fun JournalContent(
                 previousDescription = stringResource(R.string.journal_prev_day),
                 nextDescription = stringResource(R.string.journal_next_day),
                 labelClickDescription = stringResource(R.string.journal_go_today),
+            )
+        }
+
+        if (onQuickLog != null) {
+            ApexButton(
+                text = stringResource(R.string.journal_quick_log_open),
+                onClick = onQuickLog,
+                style = ApexButtonStyle.Secondary,
+                leadingIcon = ApexIcons.Plus,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 

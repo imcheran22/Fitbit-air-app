@@ -46,7 +46,20 @@ import com.apex.athlete.core.ui.state.rememberReducedMotion
 import com.apex.athlete.di.AppContainer
 import com.apex.athlete.ui.common.PreparingDemoScreen
 import com.apex.athlete.ui.common.StoreFailedScreen
+import com.apex.athlete.ble.BleStrapConnection
+import com.apex.athlete.ble.StrapState
 import com.apex.athlete.ui.activity.ActivityDetailRoute
+import com.apex.athlete.ui.behaviours.BehavioursRoute
+import com.apex.athlete.ui.bloodpressure.BloodPressureRoute
+import com.apex.athlete.ui.breathe.BreatheRoute
+import com.apex.athlete.ui.food.FoodRoute
+import com.apex.athlete.ui.goals.GoalsRoute
+import com.apex.athlete.ui.plan.PlanRoute
+import com.apex.athlete.ui.quicklog.QuickLogRoute
+import com.apex.athlete.ui.recorder.RecorderRoute
+import com.apex.athlete.ui.reports.ReportsRoute
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.flow.runningFold
 import com.apex.athlete.ui.body.BodyRoute
 import com.apex.athlete.ui.coach.CoachRoute
 import com.apex.athlete.ui.datasources.DataSourcesRoute
@@ -113,6 +126,8 @@ fun ApexNavHost(
     openPrivacyRequest: Boolean,
     onOpenPrivacyHandled: () -> Unit,
     modifier: Modifier = Modifier,
+    openRoute: String? = null,
+    onOpenRouteHandled: () -> Unit = {},
 ) {
     val navController = rememberNavController()
     val navigator = remember(navController) { NavControllerNavigator(navController) }
@@ -147,6 +162,18 @@ fun ApexNavHost(
             navigator.openPrivacy()
             onOpenPrivacyHandled()
         }
+    }
+
+    // Widget taps: open the named route once onboarding is done, then tell the host it was handled.
+    LaunchedEffect(openRoute, settings.onboardingDone) {
+        val r = openRoute ?: return@LaunchedEffect
+        if (!settings.onboardingDone) return@LaunchedEffect
+        if (r == ApexRoutes.OVERVIEW) {
+            navController.switchTab(ApexRoutes.OVERVIEW)
+        } else {
+            navController.navigate(r) { launchSingleTop = true }
+        }
+        onOpenRouteHandled()
     }
 
     val tabs = listOf(
@@ -305,6 +332,15 @@ fun ApexNavHost(
                     composable(ApexRoutes.EXPORT_DELETE) { Detail { ExportDeleteRoute(navigator) } }
                     composable(ApexRoutes.LICENCES) { Detail { LicencesRoute(navigator) } }
                     composable(ApexRoutes.PRIVACY) { Detail { PrivacyRoute(navigator) } }
+                    composable(ApexRoutes.GOALS) { Detail { GoalsRoute(navigator::back) } }
+                    composable(ApexRoutes.REPORTS) { Detail { ReportsRoute(navigator::back) } }
+                    composable(ApexRoutes.PLAN) { Detail { PlanRoute(navigator::back) } }
+                    composable(ApexRoutes.BEHAVIOURS) { Detail { BehavioursRoute(navigator::back) } }
+                    composable(ApexRoutes.FOOD) { Detail { FoodRoute(navigator::back) } }
+                    composable(ApexRoutes.BLOOD_PRESSURE) { Detail { BloodPressureRoute(navigator::back) } }
+                    composable(ApexRoutes.QUICK_LOG) { Detail { QuickLogRoute(navigator::back) } }
+                    composable(ApexRoutes.RECORDER) { Detail { RecorderRoute(navigator::back) } }
+                    composable(ApexRoutes.BREATHE) { Detail { BreatheWithStrap(navigator::back) } }
                     composable(ApexRoutes.COACH) { Detail { CoachRoute(navigator) } }
 
                     if (BuildConfig.DEBUG) {
@@ -333,6 +369,23 @@ fun ApexNavHost(
         }
     }
 }
+
+/**
+ * Breathe, with live R-R intervals (a rolling window of the last 120) only while the strap is connected
+ * when the screen opens; otherwise null and the screen offers no spot HRV.
+ */
+@Composable
+private fun BreatheWithStrap(onBack: () -> Unit) {
+    val context = LocalContext.current.applicationContext
+    val strap = remember { BleStrapConnection.shared(context) }
+    val connected = strap.state.collectAsStateWithLifecycle().value is StrapState.Connected
+    val rr = remember(strap, connected) {
+        if (connected) strap.rrIntervalsMs.runningFold(emptyList<Int>()) { acc, v -> (acc + v).takeLast(RR_WINDOW) } else null
+    }
+    BreatheRoute(onBack, rr)
+}
+
+private const val RR_WINDOW = 120
 
 /** Full-screen detail content: applies the navigation-bar inset once (the tab bar is hidden here). */
 @Composable

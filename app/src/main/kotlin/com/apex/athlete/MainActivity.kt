@@ -38,6 +38,7 @@ import com.apex.athlete.core.ui.theme.ApexTheme
 import com.apex.athlete.core.ui.theme.ThemePreference
 import com.apex.athlete.navigation.ApexNavHost
 import com.apex.athlete.ui.common.ApexFormatter
+import com.apex.athlete.widget.WidgetDeepLink
 import com.apex.athlete.ui.common.LocalAppContainer
 import com.apex.athlete.ui.common.LocalFormatter
 import kotlinx.coroutines.flow.first
@@ -61,6 +62,7 @@ class SelectedDayViewModel(private val handle: SavedStateHandle) : ViewModel() {
 class MainActivity : ComponentActivity() {
 
     private var privacyRequest by mutableStateOf(false)
+    private var widgetRoute by mutableStateOf<String?>(null)
 
     @Volatile
     private var settingsLoaded = false
@@ -90,6 +92,7 @@ class MainActivity : ComponentActivity() {
 
         val container = (application as ApexAthleteApplication).container
         if (savedInstanceState == null && isPermissionsIntent(intent)) privacyRequest = true
+        if (savedInstanceState == null) widgetRoute = WidgetDeepLink.routeFrom(intent)
 
         lifecycleScope.launch {
             // Never hold the splash if the preferences file is unreadable.
@@ -145,6 +148,8 @@ class MainActivity : ComponentActivity() {
                             onSelectedDayChange = { dayModel.select(it, today) },
                             openPrivacyRequest = privacyRequest,
                             onOpenPrivacyHandled = { privacyRequest = false },
+                            openRoute = widgetRoute,
+                            onOpenRouteHandled = { widgetRoute = null },
                         )
                     }
                 }
@@ -156,6 +161,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         if (isPermissionsIntent(intent)) privacyRequest = true
+        WidgetDeepLink.routeFrom(intent)?.let { widgetRoute = it }
     }
 
     private fun isPermissionsIntent(intent: Intent?): Boolean =

@@ -53,6 +53,16 @@ interface ApexNavigator {
     /** One nap, by sleep session id. */
     fun openNap(id: String)
 
+    fun openGoals()
+    fun openReports()
+    fun openPlan()
+    fun openBehaviours()
+    fun openFood()
+    fun openBloodPressure()
+    fun openBreathe()
+    fun openQuickLog()
+    fun openRecorder()
+
     /** Debug builds only; a no-op in release builds. */
     fun openGallery()
 
@@ -91,6 +101,16 @@ class NavControllerNavigator(private val navController: NavController) : ApexNav
     override fun openMonitor(day: LocalDate) = go(ApexDestination.Monitor(day))
     override fun openTrends(first: MetricType?) = go(ApexDestination.Trends(first))
     override fun openNap(id: String) = go(ApexDestination.Nap(id))
+
+    override fun openGoals() = go(ApexDestination.Goals)
+    override fun openReports() = go(ApexDestination.Reports)
+    override fun openPlan() = go(ApexDestination.Plan)
+    override fun openBehaviours() = go(ApexDestination.Behaviours)
+    override fun openFood() = go(ApexDestination.Food)
+    override fun openBloodPressure() = go(ApexDestination.BloodPressure)
+    override fun openBreathe() = go(ApexDestination.Breathe)
+    override fun openQuickLog() = go(ApexDestination.QuickLog)
+    override fun openRecorder() = go(ApexDestination.Recorder)
 
     override fun openGallery() {
         if (BuildConfig.DEBUG) go(ApexDestination.Gallery)

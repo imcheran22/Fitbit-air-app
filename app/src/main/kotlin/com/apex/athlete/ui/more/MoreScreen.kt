@@ -44,6 +44,15 @@ fun MoreRoute(navigator: ApexNavigator, contentPadding: PaddingValues) {
         appVersion = BuildConfig.VERSION_NAME,
         algorithmVersion = ANALYTICS_ALGORITHM_VERSION.toString(),
         actions = MoreActions(
+            goals = navigator::openGoals,
+            plan = navigator::openPlan,
+            reports = navigator::openReports,
+            quickLog = navigator::openQuickLog,
+            behaviours = navigator::openBehaviours,
+            food = navigator::openFood,
+            bloodPressure = navigator::openBloodPressure,
+            recorder = navigator::openRecorder,
+            breathe = navigator::openBreathe,
             dataSources = navigator::openDataSources,
             takeout = navigator::openTakeoutImport,
             exportDelete = navigator::openExportDelete,
@@ -59,6 +68,15 @@ fun MoreRoute(navigator: ApexNavigator, contentPadding: PaddingValues) {
 }
 
 internal class MoreActions(
+    val goals: () -> Unit,
+    val plan: () -> Unit,
+    val reports: () -> Unit,
+    val quickLog: () -> Unit,
+    val behaviours: () -> Unit,
+    val food: () -> Unit,
+    val bloodPressure: () -> Unit,
+    val recorder: () -> Unit,
+    val breathe: () -> Unit,
     val dataSources: () -> Unit,
     val takeout: () -> Unit,
     val exportDelete: () -> Unit,
@@ -95,6 +113,57 @@ internal fun MoreContent(
             color = colors.foreground,
             modifier = Modifier.semantics { heading() },
         )
+
+        SectionShell(stringResource(R.string.more_section_plan)) {
+            ApexCard(contentPadding = PaddingValues(horizontal = ApexSpacing.lg, vertical = ApexSpacing.xs)) {
+                SettingNavRow(
+                    stringResource(R.string.more_goals), actions.goals,
+                    subtitle = stringResource(R.string.more_goals_sub), icon = ApexIcons.Check,
+                )
+                SettingNavRow(
+                    stringResource(R.string.more_plan), actions.plan,
+                    subtitle = stringResource(R.string.more_plan_sub), icon = ApexIcons.Overview,
+                )
+                SettingNavRow(
+                    stringResource(R.string.more_reports), actions.reports,
+                    subtitle = stringResource(R.string.more_reports_sub), icon = ApexIcons.Journal,
+                )
+            }
+        }
+
+        SectionShell(stringResource(R.string.more_section_log)) {
+            ApexCard(contentPadding = PaddingValues(horizontal = ApexSpacing.lg, vertical = ApexSpacing.xs)) {
+                SettingNavRow(
+                    stringResource(R.string.more_quick_log), actions.quickLog,
+                    subtitle = stringResource(R.string.more_quick_log_sub), icon = ApexIcons.Plus,
+                )
+                SettingNavRow(
+                    stringResource(R.string.more_behaviours), actions.behaviours,
+                    subtitle = stringResource(R.string.more_behaviours_sub), icon = ApexIcons.Bolt,
+                )
+                SettingNavRow(
+                    stringResource(R.string.more_food), actions.food,
+                    subtitle = stringResource(R.string.more_food_sub), icon = ApexIcons.Cloud,
+                )
+                SettingNavRow(
+                    stringResource(R.string.more_blood_pressure), actions.bloodPressure,
+                    subtitle = stringResource(R.string.more_blood_pressure_sub), icon = ApexIcons.Heart,
+                )
+            }
+        }
+
+        SectionShell(stringResource(R.string.more_section_tools)) {
+            ApexCard(contentPadding = PaddingValues(horizontal = ApexSpacing.lg, vertical = ApexSpacing.xs)) {
+                SettingNavRow(
+                    stringResource(R.string.more_recorder), actions.recorder,
+                    subtitle = stringResource(R.string.more_recorder_sub), icon = ApexIcons.Pulse,
+                )
+                SettingNavRow(
+                    stringResource(R.string.more_breathe), actions.breathe,
+                    subtitle = stringResource(R.string.more_breathe_sub), icon = ApexIcons.Wind,
+                )
+            }
+        }
 
         SectionShell(stringResource(R.string.more_section_data)) {
             ApexCard(contentPadding = PaddingValues(horizontal = ApexSpacing.lg, vertical = ApexSpacing.xs)) {
@@ -167,7 +236,7 @@ internal fun MoreContent(
     }
 }
 
-private val previewActions = MoreActions({}, {}, {}, {}, {}, {}, {}, {}, {})
+private val previewActions = MoreActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
 @Preview(name = "More dark", heightDp = 1000)
 @Composable

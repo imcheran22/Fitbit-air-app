@@ -55,7 +55,26 @@ class ApexRoutesTest {
             ApexRoutes.TREND, ApexRoutes.ACTIVITY, ApexRoutes.BODY, ApexRoutes.STRESS, ApexRoutes.ENERGY, ApexRoutes.FITNESS,
             ApexRoutes.MONITOR, ApexRoutes.TRENDS, ApexRoutes.NAP, ApexRoutes.DATA_SOURCES, ApexRoutes.TAKEOUT_IMPORT, ApexRoutes.SETTINGS,
             ApexRoutes.PROFILE, ApexRoutes.HOW_IT_WORKS, ApexRoutes.EXPORT_DELETE, ApexRoutes.LICENCES, ApexRoutes.PRIVACY, ApexRoutes.COACH,
+            ApexRoutes.GOALS, ApexRoutes.REPORTS, ApexRoutes.PLAN, ApexRoutes.BEHAVIOURS, ApexRoutes.FOOD, ApexRoutes.BLOOD_PRESSURE,
+            ApexRoutes.BREATHE, ApexRoutes.QUICK_LOG, ApexRoutes.RECORDER,
         ) + ApexRoutes.TABS
         assertEquals(routes.size, routes.toSet().size)
+    }
+
+    @Test fun theNewMoreDestinationsMatchTheirRouteConstants() {
+        val pairs = listOf(
+            ApexRoutes.GOALS to ApexDestination.Goals.route,
+            ApexRoutes.REPORTS to ApexDestination.Reports.route,
+            ApexRoutes.PLAN to ApexDestination.Plan.route,
+            ApexRoutes.BEHAVIOURS to ApexDestination.Behaviours.route,
+            ApexRoutes.FOOD to ApexDestination.Food.route,
+            ApexRoutes.BLOOD_PRESSURE to ApexDestination.BloodPressure.route,
+            ApexRoutes.BREATHE to ApexDestination.Breathe.route,
+            ApexRoutes.QUICK_LOG to ApexDestination.QuickLog.route,
+            ApexRoutes.RECORDER to ApexDestination.Recorder.route,
+        )
+        for ((constant, route) in pairs) assertEquals(constant, route)
+        assertEquals("more/goals", ApexRoutes.GOALS)
+        assertEquals("recorder", ApexRoutes.RECORDER)
     }
 }

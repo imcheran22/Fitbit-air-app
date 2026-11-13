@@ -2,6 +2,32 @@
 <resources>
     <string name="more_title">More</string>
 
+    <string name="more_section_plan">Plan and goals</string>
+    <string name="more_goals">Goals</string>
+    <string name="more_goals_sub">Targets you set and how you are tracking</string>
+    <string name="more_plan">Weekly plan</string>
+    <string name="more_plan_sub">A suggested week from your recent load and recovery</string>
+    <string name="more_reports">Reports</string>
+    <string name="more_reports_sub">Weekly and monthly summaries</string>
+
+    <string name="more_section_log">Log</string>
+    <string name="more_quick_log">Quick log</string>
+    <string name="more_quick_log_sub">Water, caffeine, mood and other quick entries</string>
+    <string name="more_behaviours">Behaviours</string>
+    <string name="more_behaviours_sub">Habits you track day to day</string>
+    <string name="more_food">Food</string>
+    <string name="more_food_sub">Meals and nutrition you enter yourself</string>
+    <string name="more_blood_pressure">Blood pressure</string>
+    <string name="more_blood_pressure_sub">Readings you enter from your own cuff</string>
+
+    <string name="more_section_tools">Tools</string>
+    <string name="more_recorder">Record a workout</string>
+    <string name="more_recorder_sub">Live heart rate and route from this phone</string>
+    <string name="more_breathe">Breathe</string>
+    <string name="more_breathe_sub">Guided breathing with an optional heart-rate-variability check</string>
+
+    <string name="journal_quick_log_open">Quick log</string>
+
     <string name="more_section_data">Data</string>
     <string name="more_data_sources">Data sources and diagnostics</string>
     <string name="more_data_sources_sub">What is connected and when it last synced</string>

@@ -171,3 +171,25 @@ Notes
 - `trend/{metric}` is extended, not replaced: its chart now selects a day on tap and offers a button that opens that day's screen (`dayTargetOf(metric)`), and a link to the overlay.
 - New read flows live in `core/data/.../repository/NapReads.kt` (`NapReads(stores)`: `naps(day)`, `nap(id)`). It is built from `container.stores` where it is used; nothing is added to `AppContainer`.
 - Shared pieces: `ui.detail` (load state, `DayLoadViewModel`, `StatBlock`, `SeriesChartCard`, `DayBanner`), `:core:ui` `DaySeriesChart` (one or two daily series, hoisted day selection) and `ChoiceRow` / `ChoiceScrollRow`.
+
+### Routes added with the local-extras screens (More rows and the recorder)
+
+Detail screens take `onBack` (the host passes `navigator::back`) and are wrapped in `Detail { }`. New navigator methods: `openGoals() openReports()
+openPlan() openBehaviours() openFood() openBloodPressure() openBreathe() openQuickLog() openRecorder()`.
+
+| Route string | Composable (package) | Reached from |
+|---|---|---|
+| `more/goals` | `GoalsRoute(onBack)` (`ui.goals`) | More, Plan and goals |
+| `more/plan` | `PlanRoute(onBack)` (`ui.plan`) | More, Plan and goals |
+| `more/reports` | `ReportsRoute(onBack)` (`ui.reports`) | More, Plan and goals |
+| `more/quick_log` | `QuickLogRoute(onBack)` (`ui.quicklog`) | More, Log; a `QuickLogSheet` button on Journal |
+| `more/behaviours` | `BehavioursRoute(onBack)` (`ui.behaviours`) | More, Log |
+| `more/food` | `FoodRoute(onBack)` (`ui.food`) | More, Log |
+| `more/blood_pressure` | `BloodPressureRoute(onBack)` (`ui.bloodpressure`) | More, Log |
+| `recorder` | `RecorderRoute(onBack)` (`ui.recorder`) | More, Tools |
+| `more/breathe` | `BreatheRoute(onBack, rrIntervals)` (`ui.breathe`) | More, Tools |
+
+Breathe receives a rolling window (last 120) of strap R-R intervals only when the strap is connected as the screen opens, else `null`.
+
+Widget deep links: `MainActivity` keeps `widgetRoute` (from `WidgetDeepLink.routeFrom`, on create and `onNewIntent`) and passes it to `ApexNavHost(openRoute, onOpenRouteHandled)`;
+once onboarding is done `overview` switches to the Overview tab and other routes are navigated to with `launchSingleTop`.

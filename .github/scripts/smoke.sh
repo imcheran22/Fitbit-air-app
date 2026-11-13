@@ -48,6 +48,15 @@ for tab in Overview Health Journal More; do
   tap_text "$tab" && check "tab-$tab" 4 || echo "tab $tab not found"
 done
 
+# More rows added for the local-extras screens: open each by its label, then go back. Labels sit below the
+# fold, so scroll the list first. A missing row only warns; a crash fails in check().
+tap_text "More" || true
+sleep 2
+for row in "Goals" "Weekly plan" "Reports" "Quick log" "Behaviours" "Food" "Blood pressure" "Record a workout" "Breathe"; do
+  adb shell input swipe 540 1600 540 700 200 || true
+  tap_text "$row" && { check "more-$row" 3; adb shell input keyevent KEYCODE_BACK; sleep 1; } || echo "more row $row not found"
+done
+
 adb shell settings put system accelerometer_rotation 0
 adb shell settings put system user_rotation 1
 check rotated 4

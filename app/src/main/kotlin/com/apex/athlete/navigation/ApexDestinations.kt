@@ -57,6 +57,18 @@ object ApexRoutes {
     const val LICENCES = "more/licences"
     const val PRIVACY = "more/privacy"
 
+    const val GOALS = "more/goals"
+    const val REPORTS = "more/reports"
+    const val PLAN = "more/plan"
+    const val BEHAVIOURS = "more/behaviours"
+    const val FOOD = "more/food"
+    const val BLOOD_PRESSURE = "more/blood_pressure"
+    const val BREATHE = "more/breathe"
+    const val QUICK_LOG = "more/quick_log"
+
+    /** Record a workout live (heart-rate strap and phone sensors). */
+    const val RECORDER = "recorder"
+
     const val COACH = "coach"
 
     /** Debug builds only. */
@@ -109,6 +121,15 @@ sealed interface ApexDestination {
     data object ExportDelete : ApexDestination { override val route = ApexRoutes.EXPORT_DELETE }
     data object Licences : ApexDestination { override val route = ApexRoutes.LICENCES }
     data object Privacy : ApexDestination { override val route = ApexRoutes.PRIVACY }
+    data object Goals : ApexDestination { override val route = ApexRoutes.GOALS }
+    data object Reports : ApexDestination { override val route = ApexRoutes.REPORTS }
+    data object Plan : ApexDestination { override val route = ApexRoutes.PLAN }
+    data object Behaviours : ApexDestination { override val route = ApexRoutes.BEHAVIOURS }
+    data object Food : ApexDestination { override val route = ApexRoutes.FOOD }
+    data object BloodPressure : ApexDestination { override val route = ApexRoutes.BLOOD_PRESSURE }
+    data object Breathe : ApexDestination { override val route = ApexRoutes.BREATHE }
+    data object QuickLog : ApexDestination { override val route = ApexRoutes.QUICK_LOG }
+    data object Recorder : ApexDestination { override val route = ApexRoutes.RECORDER }
     data object Coach : ApexDestination { override val route = ApexRoutes.COACH }
     data object Gallery : ApexDestination { override val route = ApexRoutes.GALLERY }
 }
