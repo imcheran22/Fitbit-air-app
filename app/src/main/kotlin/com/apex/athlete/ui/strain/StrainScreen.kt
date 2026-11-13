@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.apex.athlete.R
 import com.apex.athlete.core.analytics.strain.HeartRateZone
+import com.apex.athlete.core.data.repository.ActivityDayState
 import com.apex.athlete.core.data.repository.StrainLoadState
 import com.apex.athlete.core.domain.DataProvenance
 import com.apex.athlete.core.ui.charts.AcwrTrendChart
@@ -63,8 +64,10 @@ fun StrainRoute(navigator: ApexNavigator, day: LocalDate, onDayChange: (LocalDat
     val vm = apexViewModel { container, handle -> StrainViewModel(container.repository, handle) }
     LaunchedEffect(day) { vm.setDay(day.toEpochDay()) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val activity by vm.activity.collectAsStateWithLifecycle()
     StrainScreen(
         state = state,
+        activity = activity,
         day = day,
         onDayChange = onDayChange,
         onBack = { navigator.back() },
@@ -82,6 +85,7 @@ internal fun StrainScreen(
     onBack: () -> Unit,
     onOpenWorkout: (String) -> Unit,
     onAddWorkout: () -> Unit,
+    activity: ActivityDayState? = null,
 ) {
     val formatter = LocalFormatter.current
     val mapper = remember(formatter) { MetricStateMapper(formatter) }
@@ -130,7 +134,9 @@ internal fun StrainScreen(
         primary = {
             ApexCard {
                 StrainTargetBar(state = strainState, targetLow = target?.low, targetHigh = target?.high)
+                PersonalTargetRow(analysis)
             }
+            ActivitySection(activity, day, formatter)
             ZonesSection(state, mapper)
             ActivitiesSection(state, formatter, mapper, onOpenWorkout, onAddWorkout)
             LoadSection(state, mapper)
@@ -148,7 +154,7 @@ private fun ZonesSection(state: StrainLoadState?, mapper: MetricStateMapper) {
                 return@ApexCard
             }
             val analysis = state.analysis
-            val rows = remember(analysis.strain, analysis.zones) { zoneRows(analysis.strain, analysis.zones) }
+            val rows = remember(analysis.zoneMinutes, analysis.zones) { zoneRowsOf(analysis.zoneMinutes, analysis.zones) }
             if (!hasZoneData(rows)) {
                 val strainState = mapper.strain(analysis)
                 if (strainState is MetricState.Value) {
@@ -278,7 +284,19 @@ private fun LoadSection(state: StrainLoadState?, mapper: MetricStateMapper) {
                         stringResource(provenanceLabelRes(load.provenance)),
                 )
             }
-            KeyStatRow(stringResource(R.string.strain_load_ratio), mapper.workloadRatio(load))
+            val ratio = mapper.workloadRatio(state.analysis)
+            KeyStatRow(stringResource(R.string.strain_load_ratio), ratio)
+            if (ratio is MetricState.Calibrating) {
+                Text(
+                    stringResource(R.string.strain_load_calibrating_note),
+                    style = ApexTheme.type.caption,
+                    color = ApexTheme.colors.mutedForeground,
+                )
+            }
+            KeyStatRow(
+                stringResource(R.string.strain_load_confidence),
+                loadConfidenceState(state.analysis.loadConfidence, state.analysis.loadCalibrating),
+            )
             KeyStatRow(stringResource(R.string.strain_load_fitness), mapper.value(load.chronicLoad, 1, null, load.provenance))
             KeyStatRow(stringResource(R.string.strain_load_fatigue), mapper.value(load.acuteLoad, 1, null, load.provenance))
             KeyStatRow(stringResource(R.string.strain_load_balance), mapper.value(load.trainingBalance, 1, null, load.provenance))

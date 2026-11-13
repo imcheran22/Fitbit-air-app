@@ -5,7 +5,13 @@ import com.apex.athlete.core.analytics.strain.HeartRateZone
 import com.apex.athlete.core.analytics.strain.HeartRateZoneModel
 import com.apex.athlete.core.analytics.strain.StrainResult
 import com.apex.athlete.core.database.entity.WorkoutEntity
+import com.apex.athlete.core.data.repository.TrendPoint
+import com.apex.athlete.core.domain.DataProvenance
 import com.apex.athlete.core.ui.charts.ChartPoint
+import com.apex.athlete.core.ui.charts.ChartTone
+import com.apex.athlete.core.ui.charts.DailyBar
+import com.apex.athlete.core.ui.state.MetricReason
+import com.apex.athlete.core.ui.state.MetricState
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -36,8 +42,17 @@ internal data class ZoneRow(
 
 internal fun zoneRows(strain: StrainResult?, model: HeartRateZoneModel?): List<ZoneRow> {
     if (strain == null) return emptyList()
+    return zoneRowsOf(strain.minutesByZone, model)
+}
+
+/**
+ * Rows from minutes per zone (the day's `zoneMinutes`, or a workout's). A null map (no zone model or no heart rate) gives no
+ * rows. A zone absent from the map stays unknown; a present zero is a measured zero.
+ */
+internal fun zoneRowsOf(minutesByZone: Map<HeartRateZone, Double>?, model: HeartRateZoneModel?): List<ZoneRow> {
+    if (minutesByZone == null) return emptyList()
     return ZONE_DISPLAY_ORDER.map { zone ->
-        val minutes = strain.minutesByZone[zone]?.takeIf { it.isFinite() && it >= 0.0 }
+        val minutes = minutesByZone[zone]?.takeIf { it.isFinite() && it >= 0.0 }
         val seconds = minutes?.let { (it * 60.0).roundToLong() }
         when {
             model == null -> ZoneRow(zone, seconds, null, null, openEnded = false)
@@ -85,3 +100,40 @@ internal fun loadChartData(series: List<LoadPoint>, maxDays: Int = 56): LoadChar
 
 /** Workouts of the day in time order. */
 internal fun sortedWorkouts(workouts: List<WorkoutEntity>): List<WorkoutEntity> = workouts.sortedBy { it.startEpochMillis }
+
+/** Fewest recorded days before the athlete's own strain base (and so the personal target) exists. */
+internal const val MIN_PERSONAL_STRAIN_DAYS = 5
+
+/**
+ * The athlete's own usual strain, the base the target is built from. Null (fewer than [MIN_PERSONAL_STRAIN_DAYS] recorded
+ * days) is Calibrating, never Unavailable and never a number.
+ */
+internal fun personalStrainBaseState(base: Double?): MetricState =
+    if (base != null && base.isFinite()) {
+        MetricState.Value(base, 1, null, DataProvenance.MATHEMATICALLY_DERIVED)
+    } else {
+        MetricState.Calibrating(null)
+    }
+
+/** Confidence in the training load as a percentage (0..100); not finite is Unavailable. */
+internal fun loadConfidenceState(confidence: Double, calibrating: Boolean): MetricState = when {
+    !confidence.isFinite() -> MetricState.Unavailable(MetricReason.NO_DATA)
+    calibrating -> MetricState.Calibrating(null)
+    else -> MetricState.Value((confidence * 100.0).coerceIn(0.0, 100.0), 0, "%", DataProvenance.MATHEMATICALLY_DERIVED)
+}
+
+/**
+ * Bars of the steps history. A day without a reading stays an empty slot (a gap, never 0); the last day is provisional
+ * when it is still accumulating.
+ */
+internal fun stepsBars(history: List<TrendPoint>, provisional: Boolean): List<DailyBar> {
+    val lastDay = history.lastOrNull()?.epochDay
+    return history.map { p ->
+        DailyBar(
+            epochDay = p.epochDay,
+            value = p.value?.takeIf { it.isFinite() && it >= 0.0 },
+            tone = ChartTone.STRAIN,
+            provisional = provisional && p.epochDay == lastDay,
+        )
+    }
+}

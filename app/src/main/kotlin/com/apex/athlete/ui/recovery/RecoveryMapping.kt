@@ -6,10 +6,15 @@ import com.apex.athlete.core.analytics.recovery.RecoveryComponent
 import com.apex.athlete.core.analytics.recovery.RecoveryResult
 import com.apex.athlete.core.analytics.recovery.RecoveryStatus
 import com.apex.athlete.core.analytics.trend.MetricIntelligence
+import com.apex.athlete.core.analytics.trend.WeeklyHrvState
+import com.apex.athlete.core.analytics.trend.WeeklyHrvStatus
+import com.apex.athlete.core.analytics.trend.WeeklyHrvStatusAnalyzer
 import com.apex.athlete.core.data.pipeline.DayAnalysis
 import com.apex.athlete.core.data.repository.RecoveryDetailState
+import com.apex.athlete.core.domain.DataProvenance
 import com.apex.athlete.core.domain.MetricType
 import com.apex.athlete.core.ui.components.GoodDirection
+import com.apex.athlete.core.ui.state.MetricReason
 import com.apex.athlete.core.ui.state.MetricState
 import com.apex.athlete.ui.common.MetricStateMapper
 
@@ -47,6 +52,7 @@ data class RecoveryUi(
     val stats: List<RecoveryStatUi>,
     val insight: RecoveryInsight,
     val fatigue: FatigueUi,
+    val weeklyHrv: WeeklyHrvUi,
     val calibration: List<CalibrationItem>,
     val drivers: List<RecoveryDriverUi>,
 )
@@ -83,8 +89,49 @@ fun insightOf(result: RecoveryResult): RecoveryInsight = when (result.status) {
     }
 }
 
-fun fatigueOf(a: DayAnalysis): FatigueUi =
-    if (a.hrv.current == null && a.restingHeartRate.current == null) FatigueUi.NoData else FatigueUi.Assessed(a.fatigue)
+/** No autonomic signal to judge fatigue from is NoData ("not evaluable"), never "no fatigue". */
+fun fatigueOf(a: DayAnalysis): FatigueUi = fatigueUiOf(a.fatigueEvaluable, a.fatigue)
+
+fun fatigueUiOf(evaluable: Boolean, assessment: FatigueAssessment): FatigueUi =
+    if (!evaluable) FatigueUi.NoData else FatigueUi.Assessed(assessment)
+
+/** The wording of the week's HRV status; copy is chosen in the composable. */
+enum class HrvWeekLabel { Balanced, Below, MarkedlyBelow, Above }
+
+/**
+ * The weekly HRV status row. [label] is set only when the engine judged the week; [state] is then the week's average
+ * (geometric mean, ms). While the baseline fills in it is Calibrating, and without enough recent nights Unavailable.
+ */
+data class WeeklyHrvUi(
+    val label: HrvWeekLabel?,
+    val state: MetricState,
+    val rangeLow: Double?,
+    val rangeHigh: Double?,
+)
+
+fun weeklyHrvOf(status: WeeklyHrvStatus?): WeeklyHrvUi {
+    if (status == null) return WeeklyHrvUi(null, MetricState.Unavailable(MetricReason.NO_HRV_LAST_NIGHT), null, null)
+    val label = when (status.state) {
+        WeeklyHrvState.WITHIN_RANGE -> HrvWeekLabel.Balanced
+        WeeklyHrvState.ABOVE_RANGE -> HrvWeekLabel.Above
+        WeeklyHrvState.BELOW_RANGE -> HrvWeekLabel.Below
+        WeeklyHrvState.MARKEDLY_BELOW -> HrvWeekLabel.MarkedlyBelow
+        WeeklyHrvState.BASELINE_BUILDING -> {
+            val left = (WeeklyHrvStatusAnalyzer.MIN_BASELINE_NIGHTS - status.baselineNights).coerceAtLeast(0).takeIf { it > 0 }
+            return WeeklyHrvUi(null, MetricState.Calibrating(left), null, null)
+        }
+        WeeklyHrvState.NO_RECENT_NIGHTS ->
+            return WeeklyHrvUi(null, MetricState.Unavailable(MetricReason.NO_HRV_LAST_NIGHT), null, null)
+    }
+    val average = status.weekAverage?.takeIf { it.isFinite() }
+        ?: return WeeklyHrvUi(null, MetricState.Unavailable(MetricReason.NO_HRV_LAST_NIGHT), null, null)
+    return WeeklyHrvUi(
+        label = label,
+        state = MetricState.Value(average, 0, "ms", DataProvenance.MATHEMATICALLY_DERIVED),
+        rangeLow = status.rangeLow?.takeIf { it.isFinite() },
+        rangeHigh = status.rangeHigh?.takeIf { it.isFinite() },
+    )
+}
 
 /** Baselines still filling in, for the calibration card. Established baselines are left out. */
 fun calibrationOf(a: DayAnalysis): List<CalibrationItem> = listOf(
@@ -127,6 +174,7 @@ fun buildRecoveryUi(detail: RecoveryDetailState, mapper: MetricStateMapper): Rec
         stats = stats,
         insight = insightOf(a.recovery),
         fatigue = fatigueOf(a),
+        weeklyHrv = weeklyHrvOf(a.weeklyHrvStatus),
         calibration = calibrationOf(a),
         drivers = driversOf(a.recovery),
     )

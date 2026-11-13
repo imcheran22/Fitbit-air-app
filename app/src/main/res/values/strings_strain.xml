@@ -48,4 +48,16 @@
     <string name="strain_how_target">Your Strain Target is a range of one point either side of a centre set from today\'s Recovery. A Recovery of 0 percent points to 6, 50 percent to 12 and 100 percent to 18.</string>
     <string name="strain_how_load">Training load uses a 7-day and a 28-day average of daily load. Monotony is the 7-day mean divided by its spread; a high value means very similar days.</string>
     <string name="strain_how_today">Today\'s strain is provisional until the day ends.</string>
+    <!-- Activity of the day -->
+    <string name="strain_activity_title">Activity</string>
+    <string name="strain_activity_provisional">So far today. These totals keep growing until midnight.</string>
+    <string name="strain_steps_history_title">Steps, last 14 days</string>
+
+    <!-- Personal strain target -->
+    <string name="strain_personal_base">Your usual strain</string>
+    <string name="strain_personal_needs">Your personal target needs at least %1$d recorded days of strain. Until then Apex shows no target.</string>
+
+    <!-- Load ratio and confidence -->
+    <string name="strain_load_calibrating_note">Calibrating: the recorded days are too few or too old to trust a ratio yet. Apex shows no number instead of a guess.</string>
+    <string name="strain_load_confidence">Load confidence</string>
 </resources>

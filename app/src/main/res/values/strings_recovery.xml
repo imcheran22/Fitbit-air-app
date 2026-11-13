@@ -48,4 +48,14 @@
     <string name="recovery_how_p3">If an input is missing, its weight is shared among the others so the score still spans 0 to 100. Heart rate variability or resting heart rate must be present.</string>
     <string name="recovery_how_p4">67 to 100 is green, 34 to 66 yellow and 0 to 33 red. The score describes how recovered your body looks. It is not medical advice.</string>
     <string name="recovery_how_close">Close</string>
+    <!-- Weekly HRV status -->
+    <string name="recovery_hrv_week_title">Weekly HRV status</string>
+    <string name="recovery_hrv_week_balanced">Balanced</string>
+    <string name="recovery_hrv_week_below">Below your range</string>
+    <string name="recovery_hrv_week_markedly_below">Markedly below your range</string>
+    <string name="recovery_hrv_week_above">Above your range</string>
+    <string name="recovery_hrv_week_range">Your balanced range is %1$d to %2$d ms.</string>
+    <string name="recovery_hrv_week_note">The average of the last 7 nights against the 60 nights before them. It describes your own trend, not a diagnosis.</string>
+    <string name="recovery_hrv_week_calibrating">Needs at least 21 nights of HRV before the week can be judged.</string>
+    <string name="recovery_hrv_week_unavailable">Needs at least 4 nights of HRV in the last 7.</string>
 </resources>

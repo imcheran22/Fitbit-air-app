@@ -58,4 +58,22 @@
     <string name="sleep_how_p3">Restorative sleep is deep plus REM as a share of time asleep. Efficiency is time asleep over time in bed. Consistency is how closely your bed and wake times match over the last 7 days.</string>
     <string name="sleep_how_p4">A part that cannot be measured, such as stages on a night scored by movement alone, drops out and the others are scaled up. This is a summary of your sleep, not medical advice.</string>
     <string name="sleep_how_close">Close</string>
+    <!-- Sleep debt -->
+    <string name="sleep_debt_row">Sleep debt, last 7 nights</string>
+    <string name="sleep_debt_needs">Needs at least 4 recorded nights in the last week before Apex counts a debt.</string>
+
+    <!-- Regularity and heart-rate dip -->
+    <string name="sleep_patterns_title">Regularity and heart rate</string>
+    <string name="sleep_regularity_row">Sleep regularity</string>
+    <string name="sleep_regularity_note">100 means the same sleep and wake times every day, 0 is no more regular than chance, and below 0 is the opposite pattern. Calculated over the last week.</string>
+    <string name="sleep_regularity_needs">Needs at least two comparable days of sleep in the last week.</string>
+    <string name="sleep_dip_row">Sleeping heart-rate dip</string>
+    <string name="sleep_dip_dipper">Dipper</string>
+    <string name="sleep_dip_blunted">Blunted</string>
+    <string name="sleep_dip_reversed">Reversed</string>
+    <string name="sleep_dip_note">How far your heart rate falls asleep compared with the day. A fall of 10 percent or more is called a dipper. A smaller dip can follow late exercise, alcohol, heat, illness or a short night. It is context, not a diagnosis.</string>
+    <string name="sleep_dip_missing_daytime">No daytime heart rate to compare with.</string>
+    <string name="sleep_dip_missing_sleeping">No heart rate during sleep.</string>
+    <string name="sleep_dip_missing_few">Too few minutes of heart rate, day or night, to compare.</string>
+    <string name="sleep_dip_missing_generic">The heart-rate dip could not be worked out for this night.</string>
 </resources>

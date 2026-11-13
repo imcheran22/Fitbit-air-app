@@ -3,6 +3,7 @@ package com.apex.athlete.ui.strain
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.apex.athlete.core.data.repository.ActivityDayState
 import com.apex.athlete.core.data.repository.AthleteRepository
 import com.apex.athlete.core.data.repository.StrainLoadState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,6 +34,11 @@ class StrainViewModel(
 
     val state: StateFlow<StrainLoadState?> = epochDay
         .flatMapLatest { day -> repository.strainLoad(day).onStart { emit(null) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** The day's activity metrics, workouts and 14-day steps; null while loading. Cleared on a day change like [state]. */
+    val activity: StateFlow<ActivityDayState?> = epochDay
+        .flatMapLatest { day -> repository.activityDay(day).onStart { emit(null) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private companion object {

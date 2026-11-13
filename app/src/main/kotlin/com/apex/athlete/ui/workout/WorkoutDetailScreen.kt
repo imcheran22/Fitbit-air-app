@@ -1,5 +1,6 @@
 package com.apex.athlete.ui.workout
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,8 +30,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.apex.athlete.R
+import com.apex.athlete.core.analytics.strain.HeartRateRecoveryResult
+import com.apex.athlete.core.analytics.strain.HeartRateZone
+import com.apex.athlete.core.analytics.strain.HrrMissing
+import com.apex.athlete.core.data.repository.HeartRateTick
+import com.apex.athlete.core.data.repository.WorkoutDetailState as RepoWorkoutDetail
 import com.apex.athlete.core.database.entity.WorkoutEntity
 import com.apex.athlete.core.domain.DataProvenance
+import com.apex.athlete.core.ui.charts.ChartClock
+import com.apex.athlete.core.ui.charts.ChartPoint
+import com.apex.athlete.core.ui.charts.IntradayHrChart
 import com.apex.athlete.core.ui.charts.ZoneBars
 import com.apex.athlete.core.ui.charts.ZoneMinutes
 import com.apex.athlete.core.ui.components.ApexButton
@@ -60,6 +69,7 @@ import com.apex.athlete.ui.common.ApexFormatter
 import com.apex.athlete.ui.common.LocalFormatter
 import com.apex.athlete.ui.common.MetricStateMapper
 import com.apex.athlete.ui.common.apexViewModel
+import com.apex.athlete.ui.strain.zoneRowsOf
 import java.time.LocalDate
 
 @Composable
@@ -96,7 +106,7 @@ internal fun WorkoutDetailScreen(
             primary = { Skeleton(Modifier.fillMaxWidth().height(200.dp), ApexShapes.card) },
         )
         WorkoutDetailState.NotFound -> NotFound(onBack)
-        is WorkoutDetailState.Found -> FoundDetail(state.workout, deleteState, onBack, onDelete)
+        is WorkoutDetailState.Found -> FoundDetail(state.workout, state.detail, deleteState, onBack, onDelete)
     }
 }
 
@@ -140,6 +150,7 @@ private fun NotFound(onBack: () -> Unit) {
 @Composable
 private fun FoundDetail(
     w: WorkoutEntity,
+    detail: RepoWorkoutDetail?,
     deleteState: DeleteState,
     onBack: () -> Unit,
     onDelete: () -> Unit,
@@ -148,6 +159,7 @@ private fun FoundDetail(
     val mapper = remember(formatter) { MetricStateMapper(formatter) }
     var confirming by rememberSaveable { mutableStateOf(false) }
     val derived = DataProvenance.MATHEMATICALLY_DERIVED
+    val stats = remember(w, detail, formatter) { workoutStats(w, detail, formatter) }
 
     val typeRes = workoutTypeLabelRes(w.exerciseType)
     val typeLabel = if (typeRes != null) stringResource(typeRes) else humanizeType(w.exerciseType)
@@ -216,6 +228,11 @@ private fun FoundDetail(
                             mapper.value(rpe.toDouble(), 0, stringResource(R.string.workout_stat_rpe_unit), DataProvenance.USER_REPORTED),
                         )
                     }
+                    KeyStatRow(stringResource(R.string.workout_stat_calories), stats.calories)
+                    KeyStatRow(stringResource(R.string.workout_stat_distance), stats.distance)
+                    KeyStatRow(stringResource(R.string.workout_stat_steps), stats.steps)
+                    KeyStatRow(stringResource(R.string.workout_stat_azm), stats.activeZoneMinutes)
+                    KeyStatRow(stringResource(R.string.workout_stat_elevation), stats.elevation)
                     Row(
                         Modifier.fillMaxWidth().padding(top = ApexSpacing.sm),
                         horizontalArrangement = Arrangement.spacedBy(ApexSpacing.sm),
@@ -231,7 +248,36 @@ private fun FoundDetail(
                 }
             }
             SectionShell(stringResource(R.string.workout_zones_title)) {
-                ApexCard { ZonesBody(w) }
+                ApexCard { ZonesBody(w, detail) }
+            }
+            SectionShell(stringResource(R.string.workout_hrr_title)) {
+                ApexCard {
+                    KeyStatRow(stringResource(R.string.workout_hrr_60), stats.recovery60)
+                    KeyStatRow(stringResource(R.string.workout_hrr_120), stats.recovery120)
+                    Text(
+                        stringResource(R.string.workout_hrr_note),
+                        style = ApexTheme.type.caption,
+                        color = ApexTheme.colors.mutedForeground,
+                        modifier = Modifier.padding(top = ApexSpacing.sm),
+                    )
+                }
+            }
+            val ticks = detail?.heartRate.orEmpty()
+            if (ticks.any { it.bpm != null }) {
+                SectionShell(stringResource(R.string.workout_hr_title)) {
+                    ApexCard {
+                        val points = remember(ticks) { ticks.map { ChartPoint(it.epochMillis, it.bpm) } }
+                        IntradayHrChart(
+                            points = points,
+                            windowStartMillis = w.startEpochMillis,
+                            windowEndMillis = w.endEpochMillis,
+                            clock = ChartClock(use24Hour = formatter.clock24h),
+                            maxGapMillis = 3 * 60_000L,
+                            provenance = stringResource(provenanceLabelRes(w.provenance)),
+                            height = 160.dp,
+                        )
+                    }
+                }
             }
             SectionShell(stringResource(R.string.workout_how_title)) {
                 ApexCard {
@@ -288,7 +334,17 @@ private fun FoundDetail(
 }
 
 @Composable
-private fun ZonesBody(w: WorkoutEntity) {
+private fun ZonesBody(w: WorkoutEntity, detail: RepoWorkoutDetail?) {
+    val apexMinutes = detail?.zoneMinutes
+    if (hasMeasuredZoneMinutes(apexMinutes)) {
+        val zoneRows = remember(apexMinutes) { zoneRowsOf(apexMinutes, null) }
+        ZoneBars(
+            zones = zoneRows.map { ZoneMinutes(stringResource(zoneLabelRes(it.zone)), null, it.seconds) },
+            caption = stringResource(R.string.workout_zones_apex_caption),
+            provenance = stringResource(R.string.workout_zones_apex_provenance),
+        )
+        return
+    }
     val rows = remember(w) { sourceZoneSeconds(w) }
     if (rows.all { it == null }) {
         val text = if (w.provenance == DataProvenance.USER_REPORTED) {
@@ -310,6 +366,16 @@ private fun ZonesBody(w: WorkoutEntity) {
         caption = stringResource(R.string.workout_zones_caption),
         provenance = stringResource(provenanceLabelRes(w.provenance)),
     )
+}
+
+@StringRes
+private fun zoneLabelRes(zone: HeartRateZone): Int = when (zone) {
+    HeartRateZone.ZONE_5 -> R.string.strain_zone_5
+    HeartRateZone.ZONE_4 -> R.string.strain_zone_4
+    HeartRateZone.ZONE_3 -> R.string.strain_zone_3
+    HeartRateZone.ZONE_2 -> R.string.strain_zone_2
+    HeartRateZone.ZONE_1 -> R.string.strain_zone_1
+    HeartRateZone.BELOW_ZONES -> R.string.strain_zone_below
 }
 
 /** Seconds per source zone, hottest first (peak, vigorous, moderate, light). Null means the source reported nothing. */
@@ -353,6 +419,53 @@ private fun PreviewHost(dark: Boolean, content: @Composable () -> Unit) {
             Box(Modifier.background(ApexTheme.colors.background)) { content() }
         }
     }
+}
+
+private fun previewDetail(workout: WorkoutEntity, withRecovery: Boolean): RepoWorkoutDetail {
+    val start = workout.startEpochMillis
+    return RepoWorkoutDetail(
+        workout = workout,
+        isDemo = true,
+        recovery = if (withRecovery) {
+            HeartRateRecoveryResult(peakBpm = 171.0, dropAt60 = 24.0, dropAt120 = 41.0, missing = null)
+        } else {
+            HeartRateRecoveryResult(peakBpm = null, dropAt60 = null, dropAt120 = null, missing = HrrMissing.RECOVERY_MINUTES_MISSING)
+        },
+        recoveryNeedsZones = false,
+        zoneMinutes = mapOf(
+            HeartRateZone.BELOW_ZONES to 3.0,
+            HeartRateZone.ZONE_1 to 6.0,
+            HeartRateZone.ZONE_2 to 12.0,
+            HeartRateZone.ZONE_3 to 14.0,
+            HeartRateZone.ZONE_4 to 6.0,
+            HeartRateZone.ZONE_5 to 1.0,
+        ),
+        heartRate = (0 until 42).map { i ->
+            HeartRateTick(start + i * 60_000L, if (i in 20..24) null else 120.0 + i * 1.2, workout.provenance)
+        },
+    )
+}
+
+private fun previewFull(provenance: DataProvenance): WorkoutEntity = previewWorkout(provenance).copy(
+    caloriesKcal = 512.0,
+    distanceMeters = 7_240.0,
+    steps = 8_120L,
+    activeZoneMinutes = 38,
+    elevationGainMeters = 64.0,
+)
+
+@Preview(name = "Workout detail with recovery dark", heightDp = 1800)
+@Composable
+private fun DetailFullDark() = PreviewHost(true) {
+    val w = previewFull(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API)
+    WorkoutDetailScreen(WorkoutDetailState.Found(w, previewDetail(w, true)), DeleteState.Idle, {}, {})
+}
+
+@Preview(name = "Workout detail recovery missing light", heightDp = 1800)
+@Composable
+private fun DetailFullLight() = PreviewHost(false) {
+    val w = previewWorkout(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API)
+    WorkoutDetailScreen(WorkoutDetailState.Found(w, previewDetail(w, false)), DeleteState.Idle, {}, {})
 }
 
 @Preview(name = "Workout detail recorded dark", heightDp = 900)

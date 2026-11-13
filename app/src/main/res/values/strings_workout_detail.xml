@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="workout_unit_kcal">kcal</string>
+    <string name="workout_unit_bpm">bpm</string>
+
+    <!-- Reported figures -->
+    <string name="workout_stat_calories">Calories</string>
+    <string name="workout_stat_distance">Distance</string>
+    <string name="workout_stat_steps">Steps</string>
+    <string name="workout_stat_azm">Active zone minutes</string>
+    <string name="workout_stat_elevation">Elevation gain</string>
+
+    <!-- Heart-rate recovery -->
+    <string name="workout_hrr_title">Heart-rate recovery</string>
+    <string name="workout_hrr_60">Recovery at 60 s</string>
+    <string name="workout_hrr_120">Recovery at 120 s</string>
+    <string name="workout_hrr_note">How far your heart rate fell from its peak in the last minutes of the workout, one and two minutes after it ended. A personal trend, not a clinical result. Minute averages understate the true drop.</string>
+    <string name="workout_hrr_needs_zones">Needs a resting and a maximum heart rate to set your zones.</string>
+    <string name="workout_hrr_no_peak">No heart rate in the last minutes of the workout.</string>
+    <string name="workout_hrr_too_easy">The effort was too easy to measure a recovery from.</string>
+    <string name="workout_hrr_no_recovery_minutes">No heart rate in the minutes after the workout.</string>
+
+    <!-- Zones and heart rate -->
+    <string name="workout_zones_apex_caption">Minutes in your zones, from the minute heart rate during this workout.</string>
+    <string name="workout_zones_apex_provenance">Calculated by Apex from your minute heart rate.</string>
+    <string name="workout_hr_title">Heart rate</string>
+</resources>

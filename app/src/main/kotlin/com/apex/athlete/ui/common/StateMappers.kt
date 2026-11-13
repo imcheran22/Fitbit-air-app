@@ -63,18 +63,27 @@ class MetricStateMapper(private val formatter: ApexFormatter) {
         return MetricState.Value(score.scorePercent.toDouble(), 0, "%", DataProvenance.MATHEMATICALLY_DERIVED)
     }
 
-    /** Workload ratio. Shown only when the engine produced one; a short history is Calibrating, never a guess. */
-    fun workloadRatio(load: TrainingLoadResult): MetricState {
+    /**
+     * Workload ratio. Shown only when the engine produced one; a short history is Calibrating, never a guess.
+     * [calibrating] (the pipeline's `loadCalibrating`: too few or too old recorded days) always gives Calibrating,
+     * even when a ratio could be computed, and never Unavailable.
+     */
+    fun workloadRatio(load: TrainingLoadResult, calibrating: Boolean = false): MetricState {
+        if (calibrating) return MetricState.Calibrating(loadDaysLeft(load))
         val ratio = load.acwrUncoupled ?: load.acwrCoupled
         if (ratio != null && ratio.isFinite()) {
             return MetricState.Value(ratio, 2, null, load.provenance)
         }
         return if (LoadCaveat.SHORT_HISTORY in load.caveats || load.daysOfHistory < MIN_LOAD_DAYS) {
-            MetricState.Calibrating((MIN_LOAD_DAYS - load.daysOfHistory).coerceAtLeast(0).takeIf { it > 0 })
+            MetricState.Calibrating(loadDaysLeft(load))
         } else {
             MetricState.Unavailable(MetricReason.NO_DATA)
         }
     }
+
+    fun workloadRatio(a: DayAnalysis): MetricState = workloadRatio(a.load, a.loadCalibrating)
+
+    private fun loadDaysLeft(load: TrainingLoadResult): Int? = (MIN_LOAD_DAYS - load.daysOfHistory).coerceAtLeast(0).takeIf { it > 0 }
 
     fun missing(reason: MissingReason?): MetricState = when (reason) {
         MissingReason.NO_HEART_RATE_DATA -> MetricState.Unavailable(MetricReason.INSUFFICIENT_HR_DATA)

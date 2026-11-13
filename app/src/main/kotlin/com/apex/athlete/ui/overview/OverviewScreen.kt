@@ -91,6 +91,9 @@ fun OverviewRoute(
     val dashboard by vm.state.collectAsStateWithLifecycle()
     val formatter = LocalFormatter.current
     val ui = remember(dashboard, day, formatter) { buildOverviewUi(dashboard, day, formatter) }
+    val stressEnergy by vm.stressEnergy.collectAsStateWithLifecycle()
+    val activity by vm.activity.collectAsStateWithLifecycle()
+    val extras = remember(stressEnergy, activity, day, formatter) { buildOverviewExtras(stressEnergy, activity, day, formatter) }
     val today = formatter.today()
     val actions = remember(navigator, day, onDayChange, today) {
         OverviewActions(
@@ -109,7 +112,7 @@ fun OverviewRoute(
             onImport = navigator::openTakeoutImport,
         )
     }
-    OverviewContent(ui, actions, contentPadding)
+    OverviewContent(ui, actions, contentPadding, extras)
 }
 
 class OverviewActions(
@@ -141,7 +144,12 @@ private fun metricLabelRes(metric: MetricType): Int = when (metric) {
 private fun metricLabel(context: Context, metric: MetricType): String = context.getString(metricLabelRes(metric))
 
 @Composable
-internal fun OverviewContent(ui: OverviewUi, actions: OverviewActions, contentPadding: PaddingValues) {
+internal fun OverviewContent(
+    ui: OverviewUi,
+    actions: OverviewActions,
+    contentPadding: PaddingValues,
+    extras: OverviewExtrasUi = OverviewExtrasUi.Loading,
+) {
     val listState = rememberLazyListState()
     // The dials are item 0; once it has scrolled out of the list the mini rings appear in the header.
     val ringsVisible by remember { derivedStateOf { listState.firstVisibleItemIndex >= 1 } }
@@ -217,6 +225,9 @@ internal fun OverviewContent(ui: OverviewUi, actions: OverviewActions, contentPa
                 OverviewPhase.Empty -> item(key = "empty") { EmptyCard(actions) }
                 else -> {
                     item(key = "hr") { HeartRateCard(ui, actions.onHeartRate) }
+                    item(key = "stress") { StressCard(extras.stress, ui.clock) }
+                    item(key = "energy") { EnergyCard(extras.energy, ui.clock) }
+                    item(key = "activity") { ActivityRow(extras.activity, actions.onStrain) }
                     item(key = "monitor") { MonitorCard(ui, actions.onTrend) }
                     item(key = "target") { StrainTargetCard(ui, actions.onStrain) }
                     if (ui.coachHeadline != null) {
@@ -469,16 +480,21 @@ private fun previewUi(phase: OverviewPhase): OverviewUi {
 private fun OverviewPreviewBody(dark: Boolean, phase: OverviewPhase) {
     ApexTheme(if (dark) ThemePreference.DARK else ThemePreference.LIGHT) {
         Box(Modifier.background(ApexTheme.colors.background)) {
-            OverviewContent(previewUi(phase), previewActions, PaddingValues(bottom = 24.dp))
+            OverviewContent(
+                previewUi(phase),
+                previewActions,
+                PaddingValues(bottom = 24.dp),
+                if (phase == OverviewPhase.Content) previewExtras() else OverviewExtrasUi.Loading,
+            )
         }
     }
 }
 
-@Preview(name = "Overview content dark", heightDp = 1500)
+@Preview(name = "Overview content dark", heightDp = 2400)
 @Composable
 private fun OverviewContentDark() = OverviewPreviewBody(true, OverviewPhase.Content)
 
-@Preview(name = "Overview content light", heightDp = 1500)
+@Preview(name = "Overview content light", heightDp = 2400)
 @Composable
 private fun OverviewContentLight() = OverviewPreviewBody(false, OverviewPhase.Content)
 

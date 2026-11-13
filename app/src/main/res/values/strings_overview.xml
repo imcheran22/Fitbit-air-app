@@ -67,4 +67,31 @@
     <string name="overview_alert_note">This is an observation, not a diagnosis. It often follows hard training, short sleep or alcohol.</string>
     <string name="overview_alert_action">View trend</string>
     <string name="overview_alert_description">%1$s. Opens the trend.</string>
+    <!-- Stress, energy and activity cards -->
+    <string name="overview_estimate_tag">Estimate</string>
+    <string name="overview_estimate_spoken">An estimate calculated by Apex</string>
+    <string name="overview_value_missing">--</string>
+    <string name="overview_unit_min">min</string>
+    <string name="overview_stress_title">Stress</string>
+    <string name="overview_stress_unit">/ 3</string>
+    <string name="overview_stress_tier_low">Low</string>
+    <string name="overview_stress_tier_medium">Medium</string>
+    <string name="overview_stress_tier_high">High</string>
+    <string name="overview_stress_minutes_spoken">Low %1$d minutes, medium %2$d minutes, high %3$d minutes</string>
+    <string name="overview_stress_chart_desc">Stress through the day from %1$s to %2$s: low %3$d minutes, medium %4$d minutes, high %5$d minutes. Minutes without a reading are left empty.</string>
+    <string name="overview_stress_footnote">An estimate: your heart rate while still, compared with your own usual level. It is not a measure of how you feel.</string>
+    <string name="overview_stress_no_motion">No step data covers this day, so still minutes cannot be told from walking.</string>
+    <string name="overview_stress_too_few">Too few still minutes to estimate stress for this day.</string>
+    <string name="overview_energy_title">Energy</string>
+    <string name="overview_energy_unit">/ 100</string>
+    <string name="overview_energy_lowest">Lowest so far</string>
+    <string name="overview_energy_lowest_spoken">Lowest so far %1$s</string>
+    <string name="overview_energy_chart_desc">Energy bank from %1$s to %2$s: now %3$s, lowest %4$s. Stretches without a reading are left empty.</string>
+    <string name="overview_energy_footnote">A model, not a measurement: it starts from this morning\'s recovery and drains with activity and stress.</string>
+    <string name="overview_energy_no_recovery">Needs this morning\'s recovery score to start the bank.</string>
+    <string name="overview_energy_no_wake">Needs last night\'s sleep to know when you woke.</string>
+    <string name="overview_energy_needs_zones">Needs a resting and a maximum heart rate to set your zones.</string>
+    <string name="overview_energy_empty_span">Not enough of the day has passed to draw the bank.</string>
+    <string name="overview_activity_title">Activity</string>
+    <string name="overview_activity_spoken">%1$s. %2$s. Opens strain.</string>
 </resources>

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.apex.athlete.R
 import com.apex.athlete.core.domain.DataProvenance
+import com.apex.athlete.core.analytics.sleep.DipCategory
 import com.apex.athlete.core.domain.SleepStage
 import com.apex.athlete.core.ui.charts.ChartClock
 import com.apex.athlete.core.ui.charts.HypnogramSegment
@@ -47,6 +48,8 @@ import com.apex.athlete.core.ui.components.ReasonPlaceholder
 import com.apex.athlete.core.ui.components.ScoreDial
 import com.apex.athlete.core.ui.components.StatusDashes
 import com.apex.athlete.core.ui.components.provenanceLabelRes
+import com.apex.athlete.core.ui.components.ChipTone
+import com.apex.athlete.core.ui.components.Tag
 import com.apex.athlete.core.ui.icons.ApexIcons
 import com.apex.athlete.core.ui.shell.DetailShell
 import com.apex.athlete.core.ui.shell.InfoCard
@@ -149,6 +152,7 @@ fun SleepScreen(
         secondary = {
             if (ui != null) {
                 SectionShell(stringResource(R.string.sleep_need_title)) { NeedCard(ui) }
+                SectionShell(stringResource(R.string.sleep_patterns_title)) { PatternsCard(ui) }
                 SectionShell(stringResource(R.string.sleep_details_title)) { DetailsCard(ui) }
                 SectionShell(stringResource(R.string.sleep_tonight_title)) { TonightCard(ui) }
             }
@@ -338,8 +342,20 @@ private fun NeedCard(ui: SleepUi) {
     ApexCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
         KeyStatRow(stringResource(R.string.sleep_need_base), hoursState(ui.need.baseMinutes))
         KeyStatRow(stringResource(R.string.sleep_need_strain), hoursState(ui.need.strainMinutes))
-        KeyStatRow(stringResource(R.string.sleep_need_debt), hoursState(ui.need.debtMinutes))
+        KeyStatRow(
+            stringResource(R.string.sleep_need_debt),
+            if (ui.need.debtKnown) hoursState(ui.need.debtMinutes) else MetricState.Calibrating(null),
+        )
         KeyStatRow(stringResource(R.string.sleep_need_total), hoursState(ui.need.totalMinutes))
+        KeyStatRow(stringResource(R.string.sleep_debt_row), ui.debt)
+        if (ui.debt is MetricState.Calibrating) {
+            Text(
+                stringResource(R.string.sleep_debt_needs),
+                style = ApexTheme.type.caption,
+                color = ApexTheme.colors.mutedForeground,
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
+        }
         Text(
             stringResource(if (ui.need.usesDefaultBase) R.string.sleep_need_default_base else R.string.sleep_need_personal_base),
             style = ApexTheme.type.caption,
@@ -347,6 +363,52 @@ private fun NeedCard(ui: SleepUi) {
             modifier = Modifier.padding(vertical = 8.dp),
         )
     }
+}
+
+/** Sleep Regularity Index and the sleeping heart-rate dip: both describe habits and context, never a diagnosis. */
+@Composable
+private fun PatternsCard(ui: SleepUi) {
+    val colors = ApexTheme.colors
+    val dipState = if (ui.hrDip.missingReasonRes != null) {
+        MetricState.Unavailable(MetricReason.NO_DATA, stringResource(ui.hrDip.missingReasonRes))
+    } else {
+        ui.hrDip.state
+    }
+    ApexCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+        KeyStatRow(stringResource(R.string.sleep_regularity_row), ui.regularity, icon = ApexIcons.Sync)
+        Text(
+            stringResource(
+                if (ui.regularity is MetricState.Calibrating) R.string.sleep_regularity_needs else R.string.sleep_regularity_note,
+            ),
+            style = ApexTheme.type.caption,
+            color = colors.mutedForeground,
+            modifier = Modifier.padding(vertical = 4.dp),
+        )
+        KeyStatRow(stringResource(R.string.sleep_dip_row), dipState, icon = ApexIcons.Heart)
+        val category = ui.hrDip.category
+        if (category != null && dipState is MetricState.Value) {
+            Tag(stringResource(dipCategoryRes(category)), tone = dipTone(category))
+        }
+        Text(
+            stringResource(R.string.sleep_dip_note),
+            style = ApexTheme.type.caption,
+            color = colors.mutedForeground,
+            modifier = Modifier.padding(vertical = 8.dp),
+        )
+    }
+}
+
+@StringRes
+private fun dipCategoryRes(category: DipCategory): Int = when (category) {
+    DipCategory.DIPPER -> R.string.sleep_dip_dipper
+    DipCategory.BLUNTED -> R.string.sleep_dip_blunted
+    DipCategory.REVERSED -> R.string.sleep_dip_reversed
+}
+
+private fun dipTone(category: DipCategory): ChipTone = when (category) {
+    DipCategory.DIPPER -> ChipTone.OPTIMAL
+    DipCategory.BLUNTED -> ChipTone.NEUTRAL
+    DipCategory.REVERSED -> ChipTone.WARNING
 }
 
 @Composable
@@ -460,6 +522,9 @@ private fun previewUi(): SleepUi {
         usualWakeMinute = null,
         insight = SleepInsightUi(sufficient = false, deficitMinutes = 72.0, bedtimeSpreadMinutes = 70.0),
         sessionProvenance = source,
+        regularity = MetricState.Value(82.0, 0, null, derived),
+        hrDip = HrDipUi(MetricState.Value(11.4, 1, "%", derived), DipCategory.DIPPER, null),
+        debt = MetricState.Calibrating(null),
     )
 }
 

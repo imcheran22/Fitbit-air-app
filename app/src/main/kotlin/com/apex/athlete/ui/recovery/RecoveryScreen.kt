@@ -63,6 +63,7 @@ import com.apex.athlete.ui.common.LocalFormatter
 import com.apex.athlete.ui.common.MetricStateMapper
 import com.apex.athlete.ui.common.apexViewModel
 import java.time.LocalDate
+import kotlin.math.roundToInt
 
 @Composable
 fun RecoveryRoute(navigator: ApexNavigator, day: LocalDate, onDayChange: (LocalDate) -> Unit) {
@@ -140,6 +141,7 @@ fun RecoveryScreen(
             }
             StatsCard(ui, onOpenTrend)
             if (ui != null) {
+                WeeklyHrvCard(ui.weeklyHrv)
                 FatigueCard(ui.fatigue)
                 if (ui.calibration.isNotEmpty()) CalibrationCard(ui.calibration)
             }
@@ -241,6 +243,49 @@ private fun StatsCard(ui: RecoveryUi?, onOpenTrend: (MetricType) -> Unit) {
 }
 
 @Composable
+private fun WeeklyHrvCard(weekly: WeeklyHrvUi) {
+    val colors = ApexTheme.colors
+    val title = stringResource(R.string.recovery_hrv_week_title)
+    val labelText = weekly.label?.let { stringResource(hrvWeekLabelRes(it)) }
+    val rangeText = if (weekly.rangeLow != null && weekly.rangeHigh != null) {
+        stringResource(R.string.recovery_hrv_week_range, weekly.rangeLow.roundToInt(), weekly.rangeHigh.roundToInt())
+    } else {
+        null
+    }
+    ApexCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)) {
+        KeyStatRow(
+            label = title,
+            state = weekly.state,
+            icon = ApexIcons.Pulse,
+            status = null,
+        )
+        if (labelText != null && weekly.label != null) Tag(labelText, tone = hrvWeekTone(weekly.label))
+        if (rangeText != null) Text(rangeText, style = ApexTheme.type.caption, color = colors.foregroundSecondary)
+        val note = when (weekly.state) {
+            is MetricState.Calibrating -> stringResource(R.string.recovery_hrv_week_calibrating)
+            is MetricState.Unavailable -> stringResource(R.string.recovery_hrv_week_unavailable)
+            else -> stringResource(R.string.recovery_hrv_week_note)
+        }
+        Text(note, style = ApexTheme.type.caption, color = colors.mutedForeground)
+    }
+}
+
+@StringRes
+private fun hrvWeekLabelRes(label: HrvWeekLabel): Int = when (label) {
+    HrvWeekLabel.Balanced -> R.string.recovery_hrv_week_balanced
+    HrvWeekLabel.Below -> R.string.recovery_hrv_week_below
+    HrvWeekLabel.MarkedlyBelow -> R.string.recovery_hrv_week_markedly_below
+    HrvWeekLabel.Above -> R.string.recovery_hrv_week_above
+}
+
+private fun hrvWeekTone(label: HrvWeekLabel): ChipTone = when (label) {
+    HrvWeekLabel.Balanced -> ChipTone.OPTIMAL
+    HrvWeekLabel.Above -> ChipTone.INFO
+    HrvWeekLabel.Below -> ChipTone.WARNING
+    HrvWeekLabel.MarkedlyBelow -> ChipTone.ALERT
+}
+
+@Composable
 private fun FatigueCard(fatigue: FatigueUi) {
     val colors = ApexTheme.colors
     val formatter = LocalFormatter.current
@@ -334,6 +379,7 @@ private fun previewUi(): RecoveryUi = RecoveryUi(
     ),
     insight = RecoveryInsight.Raised(RecoveryComponent.HRV),
     fatigue = FatigueUi.NoData,
+    weeklyHrv = WeeklyHrvUi(HrvWeekLabel.Below, MetricState.Value(52.0, 0, "ms", DataProvenance.MATHEMATICALLY_DERIVED), 55.0, 71.0),
     calibration = listOf(CalibrationItem(MetricType.RESPIRATORY_RATE, 3, 7)),
     drivers = listOf(
         RecoveryDriverUi(RecoveryComponent.HRV, 12.0),

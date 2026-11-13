@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apex.athlete.core.data.repository.AthleteRepository
+import com.apex.athlete.core.data.repository.WorkoutDetailState as RepoWorkoutDetail
 import com.apex.athlete.core.data.store.StoreStatus
 import com.apex.athlete.core.database.entity.WorkoutEntity
 import com.apex.athlete.core.domain.DataProvenance
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 internal sealed interface WorkoutDetailState {
     data object Loading : WorkoutDetailState
     data object NotFound : WorkoutDetailState
-    data class Found(val workout: WorkoutEntity) : WorkoutDetailState
+    /** [detail] carries heart-rate recovery, zone minutes and minute heart rate; null in previews. */
+    data class Found(val workout: WorkoutEntity, val detail: RepoWorkoutDetail? = null) : WorkoutDetailState
 }
 
 internal enum class DeleteState { Idle, Deleting, Done, Failed }
@@ -37,9 +39,9 @@ internal class WorkoutDetailViewModel(
      * only "not found" once the store reports Ready.
      */
     val state: StateFlow<WorkoutDetailState> =
-        combine(repository.storeStatus, repository.workout(workoutId)) { status, workout ->
+        combine(repository.storeStatus, repository.workoutDetail(workoutId)) { status, detail ->
             when {
-                workout != null -> WorkoutDetailState.Found(workout)
+                detail != null -> WorkoutDetailState.Found(detail.workout, detail)
                 status is StoreStatus.Ready -> WorkoutDetailState.NotFound
                 else -> WorkoutDetailState.Loading
             }

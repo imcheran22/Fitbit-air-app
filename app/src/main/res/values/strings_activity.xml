@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Units used by activity figures (distance units come from common_unit_km and common_unit_mi) -->
+    <string name="activity_unit_kcal">kcal</string>
+    <string name="activity_unit_min">min</string>
+    <string name="activity_unit_m">m</string>
+    <string name="activity_unit_ft">ft</string>
+
+    <!-- Labels of the day's activity metrics -->
+    <string name="activity_steps">Steps</string>
+    <string name="activity_distance">Distance</string>
+    <string name="activity_floors">Floors</string>
+    <string name="activity_calories_total">Calories, total</string>
+    <string name="activity_calories_active">Active calories</string>
+    <string name="activity_azm">Active zone minutes</string>
+    <string name="activity_light_minutes">Lightly active</string>
+    <string name="activity_moderate_minutes">Fairly active</string>
+    <string name="activity_very_minutes">Very active</string>
+    <string name="activity_sedentary_minutes">Sedentary</string>
+    <string name="activity_calories_active_short">Active kcal</string>
+    <string name="activity_azm_short">Zone minutes</string>
+</resources>
