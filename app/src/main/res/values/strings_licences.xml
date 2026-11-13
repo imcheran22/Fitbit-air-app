@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="licences_title">Licences</string>
-    <string name="licences_intro">Apex is built on open-source software and two open fonts. Thank you to the people who maintain them.</string>
+    <string name="licences_intro">Apex is built on open-source software and two open fonts. Thank you to the people who maintain them. Some features were designed after studying the behaviour of the Pulse Mobile app (PolyForm Noncommercial License 1.0.0); none of its code, text or artwork is included.</string>
 
     <string name="licences_section_libraries">Libraries</string>
     <string name="licences_section_fonts">Fonts</string>
@@ -22,6 +22,7 @@
     <string name="licences_lib_datastore">AndroidX DataStore</string>
     <string name="licences_lib_healthconnect">Health Connect client</string>
     <string name="licences_lib_browser">AndroidX Browser</string>
+    <string name="licences_lib_glance">Jetpack Glance</string>
     <string name="licences_lib_splashscreen">AndroidX Core SplashScreen</string>
     <string name="licences_lib_kotlin">Kotlin</string>
     <string name="licences_lib_coroutines">kotlinx.coroutines</string>

@@ -35,6 +35,7 @@ internal val libraryEntries: List<LicenceEntry> = listOf(
     LicenceEntry(R.string.licences_lib_datastore, LicenceKind.APACHE_2),
     LicenceEntry(R.string.licences_lib_healthconnect, LicenceKind.APACHE_2),
     LicenceEntry(R.string.licences_lib_browser, LicenceKind.APACHE_2),
+    LicenceEntry(R.string.licences_lib_glance, LicenceKind.APACHE_2),
     LicenceEntry(R.string.licences_lib_splashscreen, LicenceKind.APACHE_2),
     LicenceEntry(R.string.licences_lib_kotlin, LicenceKind.APACHE_2),
     LicenceEntry(R.string.licences_lib_coroutines, LicenceKind.APACHE_2),
