@@ -37,9 +37,9 @@ class RoomTakeoutSink(private val store: ActiveStore, private val writeMutex: Mu
 
     override val earliestAffectedDay: Long? get() = session.earliestAffectedDay
 
-    override suspend fun archiveStepStats(fromMillis: Long, toMillis: Long): TakeoutStepStats {
-        val row = store.db.metricSampleDao().statsFrom(MetricType.STEPS, DataProvenance.IMPORTED_FILE_ARCHIVE, fromMillis, toMillis)
-        return TakeoutStepStats(row.n, row.sum ?: 0.0)
+    override suspend fun archiveBucketStats(metric: MetricType, fromMillis: Long, toMillis: Long): TakeoutBucketStats {
+        val row = store.db.metricSampleDao().statsFrom(metric, DataProvenance.IMPORTED_FILE_ARCHIVE, fromMillis, toMillis)
+        return TakeoutBucketStats(row.n, row.sum ?: 0.0)
     }
 }
 

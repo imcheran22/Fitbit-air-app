@@ -239,6 +239,7 @@ How this was checked:
 11. **Low. Window edges are not on whole minutes.** The orchestrator's `floor = end - 90 d` and `to` are not
     whole minutes, so a minute split across two windows is replaced instead of merged (`MinuteLedger` has forgotten
     it). It fixes itself on the next overlap re-read. Fix: round `floor` and window ends down to the minute.
+    Fixed: `TriSourceSyncOrchestrator` rounds `end`, `floor` and every window start and end down to the whole minute (`SyncResumePlan.floorToMinute` / `windowEnd` / `newestWindowStart`). The edge also hurt after a capped run, where a new session resumes at the watermark and has no ledger. Tests `everyWindowEdgeIsAWholeMinute...`, `aHeartRateMinuteIsNeverSplitAcrossTwoWindows` (JVM) and `aHeartRateMinuteSplitAcrossAWindowEdgeAndTwoRunsIsMergedNotReplaced` (Robolectric, CI only).
 12. **Low. A modelled VO2 max is labelled MEASURED.** `GoogleHealthMapper.kt:197-203` drops `estimated` and
     `cardioFitnessLevel`. Fitbit's cardio-fitness value for a band without GPS is a model estimate. Fix: send rows
     with `estimated == true` in a batch with ESTIMATED provenance.
@@ -254,6 +255,7 @@ How this was checked:
 14. **Low. Takeout coverage.** No route exists for calories, distance, AZM, active minutes, VO2 max or weight
     (`TakeoutEntryRouter.kt:28-51`). The Google-layout export has no route for sleep or exercise. Step day totals
     depend on minutes with zero steps being present (OPEN_POINTS T3).
+    Fixed: routes and parsers for calories, active energy, distance, AZM, minutes per level (classic JSON and Google `activity_level`), VO2 max, weight (Google `weight.csv`), and the Google-layout exercise and sleep CSVs, all with IMPORTED_FILE_ARCHIVE provenance and per-file marks (`TakeoutMoreRoutesTest`, 25 tests; 250,000-row calories file in a 40 MB heap). Day totals are generalised (`TakeoutDayTotals`); step totals no longer need zero-step minutes (silent stretches up to 16 h inside one file are zeros). Not done: classic `weight-*.json` (unit not stated), and the Google exercise and sleep column names are guesses, flagged in `API_VALIDATION.md` and OPEN_POINTS 14. Needs `:app` to name the new `TakeoutCategory` values (see report).
 
 I found no endpoint, filter, page-token, field-name, unit or time-format mismatch against the discovery document.
 

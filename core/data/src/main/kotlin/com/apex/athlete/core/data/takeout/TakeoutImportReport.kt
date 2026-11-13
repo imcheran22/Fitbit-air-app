@@ -181,6 +181,8 @@ data class TakeoutImportReport(
     val zoneRules: Map<String, ZoneRule>,
     /** Day totals of steps written from the archive's step buckets (only for days the archive covers completely). */
     val stepDayTotalsWritten: Int,
+    /** Day totals of every summed series (steps included) written from the archive's buckets. */
+    val dayTotalsWritten: Int = 0,
     /** Civil-day range of the rows read from the imported files (UTC instants mapped to the local zone); null when none. */
     val dataFirstEpochDay: Long?,
     val dataLastEpochDay: Long?,

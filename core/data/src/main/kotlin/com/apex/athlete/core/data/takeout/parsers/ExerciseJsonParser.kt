@@ -91,15 +91,18 @@ class ExerciseJsonParser(reader: Reader, private val clock: TakeoutClock) : Take
         }
     }
 
-    /** The app-wide type constant for the common activities, otherwise the name in upper snake case. */
-    private fun exerciseType(name: String): String {
+    private fun exerciseType(name: String): String = ExerciseTypes.of(name)
+}
+
+/** The app-wide type constant for the common activities, otherwise the name in upper snake case. Shared by every exercise parser. */
+internal object ExerciseTypes {
+    fun of(name: String): String {
         val key = name.lowercase().replace(Regex("[^a-z0-9]+"), " ").trim()
         KNOWN_TYPES[key]?.let { return it }
         return key.replace(' ', '_').uppercase().ifEmpty { "WORKOUT" }
     }
 
-    private companion object {
-        val KNOWN_TYPES = mapOf(
+    private val KNOWN_TYPES = mapOf(
             "run" to "RUNNING",
             "running" to "RUNNING",
             "treadmill" to "RUNNING_TREADMILL",
@@ -126,5 +129,4 @@ class ExerciseJsonParser(reader: Reader, private val clock: TakeoutClock) : Take
             "stretching" to "STRETCHING",
             "dancing" to "DANCING",
         )
-    }
 }

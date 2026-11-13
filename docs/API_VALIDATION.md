@@ -60,3 +60,28 @@ OAuth PKCE S256 (RFC 7636 appendix B vector), state check, token exchange/refres
 7. Data retention/history depth and review/verification requirements for the sensitive health scopes.
 8. Whether `heart-rate-variability` samples (RMSSD, plus LF/HF in `metadata`) exist for an Air, and their cadence.
    The `hrv-sleep` stream (HRV_SLEEP_SAMPLES) is empty until they do. Whether `google-wearables` returns only the Air.
+
+## Takeout archive routes (`core/data/.../takeout`)
+Nothing here was checked against a real archive. Names and columns come from the reference repos
+(`reference/fitbit-google-health/fitbit-analytics-main`: `discover.py`, `parsers/*.py`, `tests/make_fixtures.py`, written
+against one real Fitbit Air export; `docs/API_MAPPING.md` for the API's own units) and every row stays
+**UNVERIFIED-NEEDS-REAL-ARCHIVE** until the first real import's redacted layout report is checked. All rows are written
+with `IMPORTED_FILE_ARCHIVE` provenance. "Day total" means the importer's rule in `TakeoutDayTotals.kt`: dense series
+(steps, total calories) need every 15-minute bucket of the day; sparse series (distance, active energy, AZM, minutes per level)
+need the steps series to cover the day completely and at least one row of their own.
+
+| Data | Layout and file | Columns read (first match wins) | Stored as | Status |
+|---|---|---|---|---|
+| Calories | classic `calories-DATE.json`; Google `calories_DATE.csv` | `dateTime`/`value`; `timestamp`/`calories` | `CALORIES_TOTAL` buckets and day total | UNVERIFIED-NEEDS-REAL-ARCHIVE. Classic value assumed kcal per minute including BMR (total, not active). |
+| Active energy | Google `active_energy_burned_DATE.csv` | `timestamp`/`kilocalories` (or `kcal`) | `CALORIES_ACTIVE` buckets and day total | UNVERIFIED-NEEDS-REAL-ARCHIVE |
+| Distance | classic `distance-DATE.json`; Google `distance_DATE.csv` | `value` (centimetres per minute, from fitbit-analytics' note); `distance_millimeters`, `_centimeters`, `_meters`, `_kilometers` | `DISTANCE` (m) buckets and day total | Classic unit UNVERIFIED. A Google header without a unit (`distance`) is **not read** (schema mismatch), never guessed. |
+| Active zone minutes | classic `Active Zone Minutes - DATE.csv`; Google `active_zone_minutes_DATE.csv` | `date_time`/`timestamp`, `total_minutes` (zone column ignored) | `ACTIVE_ZONE_MINUTES` buckets and day total | UNVERIFIED-NEEDS-REAL-ARCHIVE. Whether `total_minutes` already weights cardio and peak double is unknown; it is summed as written. |
+| Minutes per level | classic `sedentary_minutes-`, `lightly_active_minutes-`, `moderately_active_minutes-`, `very_active_minutes-DATE.json`; Google `activity_level_DATE.csv` | `dateTime`/`value` (one entry per day, or per minute: both summed per day); `timestamp`/`level` (one row = one minute) | `SEDENTARY_MINUTES`, `LIGHTLY_`, `MODERATELY_`, `VERY_ACTIVE_MINUTES`: classic as daily values, Google as buckets plus day total | UNVERIFIED-NEEDS-REAL-ARCHIVE. Level labels matched by `sedentary`, `light`, `moderate`, `vigorous`/`very`. In an intraday classic file the first and last day are not stored (may be partial). |
+| VO2 max | classic `demographic_vo2_max-DATE.json` | `value.demographicVO2Max`, else `value.filteredDemographicVO2Max` | `VO2_MAX` daily value | UNVERIFIED-NEEDS-REAL-ARCHIVE (nested shape is from `discover.py`). It is Fitbit's model estimate; the archive does not say so per row, so no ESTIMATED label. No Google-layout file is known. |
+| Weight | Google `weight.csv` | `timestamp`; `weight_grams` (or `_kilograms`, `_kg`, `_pounds`, `_lbs`) | `WEIGHT` (kg) daily value, last weigh-in of the local day | UNVERIFIED-NEEDS-REAL-ARCHIVE. Classic `weight-DATE.json` is **not routed**: it is written in the account's own unit and does not state it. A bare `weight` header is not read. |
+| Exercise | Google `UserExercises_DATE.csv` (classic `exercise-N.json` existed) | `start_time`, `end_time` or `duration_*`, `exercise_id`, `exercise_type`, `calories`, `average_heart_rate`, `steps`, `distance_<unit>` | workout row `takeout:exercise:<id or start>` | **Column names are a guess**: no reference documents this file's columns. A file without a start and an end or duration is reported as a schema mismatch. |
+| Sleep | Google `UserSleepStages_DATE.csv` (classic `sleep-DATE.json` existed) | `start_time`, `end_time` or `duration_*`, `stage`, optional `sleep_id` | sleep row `takeout:sleep:<id or start>` with stages; rows grouped by id, else by a gap above one hour | **Column names and the stage-interval shape are a guess** (`discover.py` calls the file "stage-transition events"). A file without start, stage and end/duration is a schema mismatch. |
+| Steps | classic `steps-DATE.json`; Google `steps_DATE.csv` | unchanged | `STEPS` buckets and day total | Whether zero-step minutes are listed is UNVERIFIED; day totals no longer depend on it (a silent stretch up to 16 h inside one file is zero steps). |
+
+Not routed on purpose: `calories_in_heart_rate_zone_*`, `time_in_heart_rate_zone_*`, `altitude-*`, `speed_*`, `cardio_load_*`,
+GPS, sleep and readiness scores (different quantities, or no MetricType; see `discover.py`'s ignore list for the same reasons).

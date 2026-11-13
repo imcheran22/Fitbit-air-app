@@ -71,7 +71,7 @@ internal class CountingSink : TakeoutSink {
         return IngestCounts(heartRateMinutesWritten = batch.heartRate.size.toLong())
     }
 
-    override suspend fun archiveStepStats(fromMillis: Long, toMillis: Long) = TakeoutStepStats(0, 0.0)
+    override suspend fun archiveBucketStats(metric: com.apex.athlete.core.domain.MetricType, fromMillis: Long, toMillis: Long) = TakeoutBucketStats(0, 0.0)
 }
 
 /** A ZIP with [files] small daily heart-rate files (one per civil day), generated on the fly like [generatedHeartRateZip]. */
@@ -98,6 +98,32 @@ internal fun generatedManyFilesZip(files: Int, rowsPerFile: Int): TakeoutArchive
                     w.flush()
                     zip.closeEntry()
                 }
+            }
+        } catch (_: java.io.IOException) {
+        }
+    }.apply { isDaemon = true }.start()
+    input as InputStream
+}
+
+/** One calories file of [rows] minute rows (UTC offset written, one row a minute from 2024-01-01), generated on the fly. */
+internal fun generatedCaloriesZip(rows: Int): TakeoutArchivePart = TakeoutArchivePart("calories.zip") {
+    val input = PipedInputStream(64 * 1024)
+    val output = PipedOutputStream(input)
+    Thread {
+        try {
+            ZipOutputStream(output).use { zip ->
+                zip.putNextEntry(ZipEntry("Takeout/Fitbit/Global Export Data/calories-2024-01-01.json"))
+                val w = zip.bufferedWriter(Charsets.UTF_8)
+                w.write("[")
+                val base = LocalDateTime.of(2024, 1, 1, 0, 0, 0).toEpochSecond(ZoneOffset.UTC)
+                for (i in 0 until rows) {
+                    val t = LocalDateTime.ofEpochSecond(base + i * 60L, 0, ZoneOffset.UTC)
+                    if (i > 0) w.write(",")
+                    w.write("{\"dateTime\":\"%02d/%02d/%02d %02d:%02d:00\",\"value\":\"1.5\"}".format(t.monthValue, t.dayOfMonth, t.year % 100, t.hour, t.minute))
+                }
+                w.write("]")
+                w.flush()
+                zip.closeEntry()
             }
         } catch (_: java.io.IOException) {
         }

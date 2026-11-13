@@ -24,8 +24,10 @@ matched and which did not, with no personal content.
    imported heart rate with the same window from Health Connect (the overlap probe in §9.7), record the result in
    `API_VALIDATION.md`, then set `TakeoutTimeConfig.classicRules` per category. Tests cover both rules.
 3. **Steps granularity.** The classic steps file is assumed to list every minute, including zeros. If zero minutes
-   are omitted, a civil day is never "every 15-minute bucket present", so no day total is written from the archive
-   (steps stay missing rather than being guessed). Confirm: first real import, `stepDayTotalsWritten` in the report.
+   are omitted, the parser writes a silent stretch of up to 16 hours between two readings of the same file as
+   zero-step buckets, so interior days still get a total (the first and last day of a file never do, since the file
+   may start after or end before midnight; a gap of a day or more is a band that was off and stays missing). Confirm:
+   first real import, `stepDayTotalsWritten` in the report, and that no day shows a total for a day the band was off.
 4. **Heart-rate shape and confidence.** `{"dateTime","value":{"bpm","confidence"}}`, confidence 0 to 3; points with
    confidence 0 or below are dropped and counted. If the real scale differs (for example 1 to 3 with 0 absent),
    nothing breaks, but the dropped count will show it.
@@ -48,6 +50,20 @@ matched and which did not, with no personal content.
    bytes giving the same rows in the same order. If a later app version changes a parser's output for an unchanged
    file, the resume of a file interrupted across that upgrade would skip the wrong rows. Mitigation if it matters:
    force full re-import after upgrading a parser.
+
+9a. **New routes (calories, distance, active zone minutes, minutes per level, VO2 max, weight, Google exercise and
+    sleep).** File names, columns, units and day-total coverage rules are listed in `API_VALIDATION.md` (Takeout archive
+    routes). Specific to confirm on the first real archive: (a) classic `distance-*.json` is centimetres per minute;
+    (b) classic `calories-*.json` is total energy including BMR; (c) whether AZM `total_minutes` already counts cardio
+    and peak double; (d) whether the classic active-minutes files hold one entry per day or per minute; (e) the real
+    column names of `UserExercises_*.csv` and `UserSleepStages_*.csv` (guessed; a wrong guess shows up as
+    SCHEMA_MISMATCH in the report, never as wrong numbers); (f) whether a Google-layout `distance` column states a
+    unit in its header; (g) that Google-layout files carry `Z` instants, not local times. Sparse series (distance,
+    active energy, AZM, minutes per level) get a day total only on days the steps series covers completely.
+9b. **Resume trust for the new parsers** is the same as item 9: a resumed file skips the first
+    `committedRows` rows, which relies on the same bytes giving the same rows in the same order. The zero-fill of silent
+    step stretches changes the rows a steps file yields compared with the previous app version, so an interrupted steps
+    import resumed across that upgrade could skip the wrong rows: force a full re-import after upgrading.
 
 ### Things that need a device or CI (no Android SDK was available when this was written)
 

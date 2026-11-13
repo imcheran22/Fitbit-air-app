@@ -118,9 +118,9 @@ internal class MemorySink(private val zone: ZoneId = NEW_YORK) : TakeoutSink {
         return counts
     }
 
-    override suspend fun archiveStepStats(fromMillis: Long, toMillis: Long): TakeoutStepStats {
-        val hits = samples.filterKeys { it.first == MetricType.STEPS.storageKey && it.second >= fromMillis && it.second < toMillis }
-        return TakeoutStepStats(hits.size, hits.values.sum())
+    override suspend fun archiveBucketStats(metric: MetricType, fromMillis: Long, toMillis: Long): TakeoutBucketStats {
+        val hits = samples.filterKeys { it.first == metric.storageKey && it.second >= fromMillis && it.second < toMillis }
+        return TakeoutBucketStats(hits.size, hits.values.sum())
     }
 
     /** Everything stored, as comparable text, for "same state" assertions. */

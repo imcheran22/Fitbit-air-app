@@ -88,6 +88,16 @@ class TakeoutLargeEntryTest {
         assertTrue(largest <= TakeoutZipImporter.BATCH_ROWS, result)
     }
 
+    /** The bucketed day-sum series (calories here) keep a few thousand buckets, never the rows: 250,000 rows in 40 MB. */
+    @Test
+    fun aQuarterMillionRowCaloriesFileAlsoFitsInAFortyMegabyteHeap() {
+        val result = runChild(40, "calories", rows.toString())
+        // 250,000 minutes are 16,667 fifteen-minute buckets (the last one partial), each written once.
+        assertTrue("read=$rows " in result && "status=COMPLETE" in result && "rows=16667 " in result, result)
+        val largest = Regex("largest=(\\d+)").find(result)!!.groupValues[1].toInt()
+        assertTrue(largest <= TakeoutZipImporter.BATCH_ROWS, result)
+    }
+
     /** A multi-year export is thousands of daily files: nothing may be kept per file beyond a few counters. */
     @Test
     fun thousandsOfSmallFilesAlsoFitInAFortyMegabyteHeap() {

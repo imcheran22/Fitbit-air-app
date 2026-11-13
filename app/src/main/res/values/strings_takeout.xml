@@ -61,6 +61,13 @@
     <string name="takeout_cat_respiratory_rate">Breathing rate</string>
     <string name="takeout_cat_device_temperature">Device temperature</string>
     <string name="takeout_cat_computed_temperature">Skin temperature</string>
+    <string name="takeout_cat_calories">Calories</string>
+    <string name="takeout_cat_active_energy">Active calories</string>
+    <string name="takeout_cat_distance">Distance</string>
+    <string name="takeout_cat_active_zone_minutes">Active zone minutes</string>
+    <string name="takeout_cat_active_minutes">Active minutes</string>
+    <string name="takeout_cat_vo2_max">Cardio fitness (VO2 max)</string>
+    <string name="takeout_cat_weight">Weight</string>
 
     <!-- Result -->
     <string name="takeout_done">Import finished</string>

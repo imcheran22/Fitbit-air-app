@@ -12,6 +12,7 @@ import com.apex.athlete.core.data.takeout.TakeoutFormat
 import com.apex.athlete.core.data.takeout.TakeoutRoute
 import com.apex.athlete.core.data.takeout.TakeoutTimeConfig
 import com.apex.athlete.core.domain.DataProvenance
+import com.apex.athlete.core.domain.MetricType
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.Reader
@@ -148,8 +149,10 @@ object TakeoutParsers {
                 if (route.format == TakeoutFormat.JSON) StepsJsonParser(reader, clock) else StepsCsvParser(reader, clock)
             TakeoutCategory.RESTING_HEART_RATE ->
                 if (route.format == TakeoutFormat.JSON) RestingHeartRateJsonParser(reader) else DailyCsvParser(reader, DailyCsvSpecs.RESTING_HEART_RATE)
-            TakeoutCategory.SLEEP -> SleepJsonParser(reader, clock)
-            TakeoutCategory.EXERCISE -> ExerciseJsonParser(reader, clock)
+            TakeoutCategory.SLEEP ->
+                if (route.format == TakeoutFormat.JSON) SleepJsonParser(reader, clock) else GoogleSleepStagesCsvParser(reader, clock)
+            TakeoutCategory.EXERCISE ->
+                if (route.format == TakeoutFormat.JSON) ExerciseJsonParser(reader, clock) else GoogleExerciseCsvParser(reader, clock)
             TakeoutCategory.HRV_DETAILS -> HrvDetailsCsvParser(reader, clock)
             TakeoutCategory.HRV_DAILY -> DailyCsvParser(reader, DailyCsvSpecs.HRV_DAILY)
             TakeoutCategory.SPO2_MINUTE -> MinuteSpo2CsvParser(reader, clock)
@@ -157,9 +160,51 @@ object TakeoutParsers {
             TakeoutCategory.RESPIRATORY_RATE -> DailyCsvParser(reader, DailyCsvSpecs.RESPIRATORY_RATE)
             TakeoutCategory.DEVICE_TEMPERATURE -> DeviceTemperatureCsvParser(reader, clock)
             TakeoutCategory.COMPUTED_TEMPERATURE -> ComputedTemperatureCsvParser(reader)
+            TakeoutCategory.CALORIES ->
+                if (route.format == TakeoutFormat.JSON) {
+                    SumSeriesJsonParser(reader, clock, SumSeries.CALORIES_TOTAL)
+                } else {
+                    SumSeriesCsvParser(reader, clock, MetricType.CALORIES_TOTAL, SumSeries.CALORIES_TOTAL.maxPerRow, 0, listOf(SumColumn("calories")))
+                }
+            TakeoutCategory.ACTIVE_ENERGY ->
+                SumSeriesCsvParser(reader, clock, MetricType.CALORIES_ACTIVE, SumSeries.CALORIES_ACTIVE.maxPerRow, 0, listOf(SumColumn("kilocalories"), SumColumn("kcal")))
+            TakeoutCategory.DISTANCE ->
+                if (route.format == TakeoutFormat.JSON) {
+                    SumSeriesJsonParser(reader, clock, SumSeries.DISTANCE_FROM_CENTIMETRES)
+                } else {
+                    // The unit must be in the header; a bare "distance" is not read (see SumSeriesCsvParser).
+                    SumSeriesCsvParser(
+                        reader, clock, MetricType.DISTANCE, SumSeries.DISTANCE_FROM_CENTIMETRES.maxPerRow, 0,
+                        listOf(
+                            SumColumn("distance_millimeters") { it / 1_000.0 }, SumColumn("distance_centimeters") { it / 100.0 },
+                            SumColumn("distance_meters"), SumColumn("distance_kilometers") { it * 1_000.0 },
+                        ),
+                    )
+                }
+            TakeoutCategory.ACTIVE_ZONE_MINUTES ->
+                SumSeriesCsvParser(
+                    reader, clock, MetricType.ACTIVE_ZONE_MINUTES, SumSeries.ACTIVE_ZONE_MINUTES.maxPerRow, 0,
+                    listOf(SumColumn("total_minutes"), SumColumn("minutes"), SumColumn("value")),
+                )
+            TakeoutCategory.ACTIVE_MINUTES ->
+                if (route.format == TakeoutFormat.JSON) {
+                    ActiveMinutesJsonParser(reader, activeMinutesMetric(route.fileKey))
+                } else {
+                    ActivityLevelCsvParser(reader, clock)
+                }
+            TakeoutCategory.VO2_MAX -> Vo2MaxJsonParser(reader)
+            TakeoutCategory.WEIGHT -> WeightCsvParser(reader, clock)
         }
         parser.stats.clock = clock
         return parser
+    }
+
+    /** The classic active-minutes files are named for their level; the router only lets those four names through. */
+    private fun activeMinutesMetric(fileKey: String): MetricType = when {
+        fileKey.startsWith("sedentary") -> MetricType.SEDENTARY_MINUTES
+        fileKey.startsWith("lightly") -> MetricType.LIGHTLY_ACTIVE_MINUTES
+        fileKey.startsWith("moderately") -> MetricType.MODERATELY_ACTIVE_MINUTES
+        else -> MetricType.VERY_ACTIVE_MINUTES
     }
 
     /** Source rows a parser may consume in one [TakeoutEntryParser.readInto] call before handing control back. */

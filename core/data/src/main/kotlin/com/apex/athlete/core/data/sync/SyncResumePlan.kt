@@ -10,6 +10,7 @@ package com.apex.athlete.core.data.sync
  */
 internal object SyncResumePlan {
     const val FUTURE_TOLERANCE_MS = 10 * 60_000L
+    private const val MINUTE_MS = 60_000L
     private const val MARK_PREFIX = "replay-from:"
 
     /** Where to read from; [rewindTo] is the value the stored watermark must be reset to, if any. */
@@ -26,6 +27,27 @@ internal object SyncResumePlan {
         lastSyncedMillis > nowMillis + FUTURE_TOLERANCE_MS -> ReadPlan(floorMillis, floorMillis)
         !caughtUp -> ReadPlan(maxOf(floorMillis, lastSyncedMillis), null)
         else -> ReadPlan(maxOf(floorMillis, lastSyncedMillis - overlapMillis), null)
+    }
+
+    /** [epochMillis] rounded down to the start of its minute (also before 1970). */
+    fun floorToMinute(epochMillis: Long): Long = epochMillis - Math.floorMod(epochMillis, MINUTE_MS)
+
+    /**
+     * End of the window that starts at [fromMillis]: [maxWindowMillis] later, at most [endMillis], and
+     * always the start of a minute. Heart rate is stored as one-minute buckets, and a minute whose readings
+     * are delivered by two windows is first written from half its readings; the second half is then merged
+     * only if the writer still remembers the first. Whole-minute edges put every reading of a minute in
+     * one window, so there is nothing to remember. A window is at least one minute wide, so a walk always advances.
+     */
+    fun windowEnd(fromMillis: Long, endMillis: Long, maxWindowMillis: Long): Long {
+        val width = maxOf(MINUTE_MS, floorToMinute(maxWindowMillis))
+        return minOf(floorToMinute(endMillis), floorToMinute(fromMillis) + width)
+    }
+
+    /** Start of the newest window below [endMillis]: a window wide, but never before [fromMillis] (the backlog's start). */
+    fun newestWindowStart(fromMillis: Long, endMillis: Long, maxWindowMillis: Long): Long {
+        val width = maxOf(MINUTE_MS, floorToMinute(maxWindowMillis))
+        return maxOf(floorToMinute(fromMillis), floorToMinute(endMillis) - width)
     }
 
     fun encodeReplayMark(epochDay: Long): String = MARK_PREFIX + epochDay

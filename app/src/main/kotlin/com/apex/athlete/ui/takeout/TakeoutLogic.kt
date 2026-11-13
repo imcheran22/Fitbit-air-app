@@ -91,6 +91,13 @@ fun stageRes(currentType: String?): Int = when (currentType) {
         TakeoutCategory.RESPIRATORY_RATE -> R.string.takeout_cat_respiratory_rate
         TakeoutCategory.DEVICE_TEMPERATURE -> R.string.takeout_cat_device_temperature
         TakeoutCategory.COMPUTED_TEMPERATURE -> R.string.takeout_cat_computed_temperature
+        TakeoutCategory.CALORIES -> R.string.takeout_cat_calories
+        TakeoutCategory.ACTIVE_ENERGY -> R.string.takeout_cat_active_energy
+        TakeoutCategory.DISTANCE -> R.string.takeout_cat_distance
+        TakeoutCategory.ACTIVE_ZONE_MINUTES -> R.string.takeout_cat_active_zone_minutes
+        TakeoutCategory.ACTIVE_MINUTES -> R.string.takeout_cat_active_minutes
+        TakeoutCategory.VO2_MAX -> R.string.takeout_cat_vo2_max
+        TakeoutCategory.WEIGHT -> R.string.takeout_cat_weight
         null -> R.string.takeout_stage_working
     }
 }

@@ -32,6 +32,19 @@ enum class TakeoutCategory(val key: String) {
     RESPIRATORY_RATE("respiratory_rate"),
     DEVICE_TEMPERATURE("device_temperature"),
     COMPUTED_TEMPERATURE("computed_temperature"),
+
+    /** Total energy per minute (classic `calories-*.json`, Google `calories_*.csv`). */
+    CALORIES("calories"),
+
+    /** Active energy only (Google `active_energy_burned_*.csv`). */
+    ACTIVE_ENERGY("active_energy"),
+    DISTANCE("distance"),
+    ACTIVE_ZONE_MINUTES("active_zone_minutes"),
+
+    /** Minutes per activity level: the four classic `*_minutes-*.json` files and Google `activity_level_*.csv`. */
+    ACTIVE_MINUTES("active_minutes"),
+    VO2_MAX("vo2_max"),
+    WEIGHT("weight"),
     ;
 
     /** Stream name of this category's row in the sync-watermark table. */

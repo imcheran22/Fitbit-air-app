@@ -142,6 +142,40 @@ class SyncResilienceRobolectricTest {
         assertEquals(points.size, db.intradayHeartRateDao().count(), "every point once, none doubled")
     }
 
+    // --- window edges are whole minutes (DATA_FLOW_E2E item 11) -------------------------------------
+
+    @Test
+    fun aHeartRateMinuteSplitAcrossAWindowEdgeAndTwoRunsIsMergedNotReplaced(): Unit = runBlocking {
+        // The clock reads :37 into the minute. With an unrounded floor the second window starts at :37, so the
+        // readings at :10 and :50 of that minute are delivered by different windows, and a run capped at one
+        // window per stream hands the second one to a new session that has forgotten the first.
+        val unalignedNow = now + 37_000L
+        val edgeMinute = ms("2026-11-06T14:00:00Z")
+        val source = FixtureReplaySource(
+            SyncSource.GOOGLE_HEALTH_API,
+            listOf(
+                HealthBatch(
+                    DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API,
+                    heartRate = listOf(HeartRatePoint(edgeMinute + 10_000L, 60), HeartRatePoint(edgeMinute + 50_000L, 80)),
+                ),
+            ),
+            windowMillis = 2 * dayMs,
+        )
+        val config = TriSourceSyncOrchestrator.Config(backfillDays = 6, maxWindowsPerStream = 1)
+        val orchestrator = TriSourceSyncOrchestrator(listOf(source), Mutex(), { unalignedNow }, config)
+
+        orchestrator.sync(store)
+        orchestrator.sync(store)
+
+        for ((from, to) in source.pulledWindows) {
+            assertEquals(0L, from % 60_000L, "window start $from")
+            assertEquals(0L, to % 60_000L, "window end $to")
+        }
+        val bucket = db.intradayHeartRateDao().range(edgeMinute, edgeMinute + 60_000L).single()
+        assertEquals(2, bucket.sampleCount, "both readings of the minute are in its bucket")
+        assertEquals(70.0, bucket.avgBpm)
+    }
+
     // --- interrupted run owes a replay --------------------------------------------------------------
 
     private fun nights(): HealthBatch = HealthBatch(

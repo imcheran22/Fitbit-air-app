@@ -3,7 +3,7 @@ package com.apex.athlete.core.data.takeout
 import com.apex.athlete.core.data.model.DailyObservation
 import com.apex.athlete.core.data.model.HealthBatch
 import com.apex.athlete.core.data.model.IngestCounts
-import com.apex.athlete.core.data.takeout.parsers.BucketedStepsParser
+import com.apex.athlete.core.data.takeout.parsers.BucketedSumParser
 import com.apex.athlete.core.data.takeout.parsers.TakeoutParseStats
 import com.apex.athlete.core.data.takeout.parsers.TakeoutParsers
 import com.apex.athlete.core.data.takeout.parsers.TakeoutRowBuffer
@@ -18,8 +18,8 @@ import java.time.ZoneOffset
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-/** Count and sum of the archive's own step buckets in a time range. */
-data class TakeoutStepStats(val buckets: Int, val steps: Double)
+/** Count and sum of the archive's own 15-minute buckets of one metric in a time range. */
+data class TakeoutBucketStats(val buckets: Int, val sum: Double)
 
 /**
  * Where parsed rows go. Production: the reconciling `HealthIngestor` (one session per run, see
@@ -32,8 +32,8 @@ interface TakeoutSink {
     /** Earliest civil day the writes of this run changed; null while nothing changed. */
     val earliestAffectedDay: Long?
 
-    /** Step buckets the archive itself wrote (provenance archive) with an interval start in [fromMillis, toMillis). */
-    suspend fun archiveStepStats(fromMillis: Long, toMillis: Long): TakeoutStepStats
+    /** Buckets of [metric] the archive itself wrote (provenance archive) with an interval start in [fromMillis, toMillis). */
+    suspend fun archiveBucketStats(metric: MetricType, fromMillis: Long, toMillis: Long): TakeoutBucketStats
 }
 
 /** Recomputes derived scores day by day, in order, from [fromDay] through today. Returns the days recomputed. */
@@ -58,7 +58,8 @@ fun interface TakeoutReplayer {
  *    its mark says were committed are passed over, not written again; a batch that was stored
  *    just before the interruption but not yet marked is simply written twice, which the
  *    idempotent upserts make harmless. Files completed before the interruption are not read again.
- * 4. **Step day totals** for civil days whose every 15-minute bucket is now stored from the archive.
+ * 4. **Day totals** of the summed series (steps, calories, distance, ...) for civil days the archive covers
+ *    completely, see [TakeoutDayTotals].
  * 5. **Replay** derived scores in chronological order from the earliest day changed by this run or
  *    by an earlier run whose replay did not finish, then clear the pending flag.
  *
@@ -103,7 +104,7 @@ class TakeoutZipImporter(
             }
         }
 
-        val stepTotals = writeStepDayTotals(run)
+        val dayTotals = writeDayTotals(run)
 
         // Replay from the earliest day changed now or left stale by an interrupted earlier run.
         val earliest = listOfNotNull(marks.pendingReplayFromDay(), sink.earliestAffectedDay).minOrNull()
@@ -130,7 +131,8 @@ class TakeoutZipImporter(
             files = run.fileReports(plan),
             categories = run.categoryReports(plan),
             zoneRules = run.zoneRules,
-            stepDayTotalsWritten = stepTotals,
+            stepDayTotalsWritten = dayTotals.steps,
+            dayTotalsWritten = dayTotals.all,
             dataFirstEpochDay = run.firstDay,
             dataLastEpochDay = run.lastDay,
             earliestModifiedEpochDay = earliest,
@@ -219,7 +221,7 @@ class TakeoutZipImporter(
             file.rowsSkipped += done.rowCount()
             // They are part of this file's data range and of the days whose step totals are due.
             file.run.noteDays(done)
-            if (done.samples.any { it.metric == MetricType.STEPS }) file.run.noteStepDays(done)
+            file.run.noteSummedDays(done)
             if (rest.isEmpty) return
             commit(file, rest, onProgress)
         } else {
@@ -237,34 +239,54 @@ class TakeoutZipImporter(
         file.counts += counts
         if (counts.totalWritten > 0) file.wroteSomething = true
         file.run.noteDays(batch)
-        if (batch.samples.any { it.metric == MetricType.STEPS }) file.run.noteStepDays(batch)
+        file.run.noteSummedDays(batch)
         marks.upsert(file.mark(nowMillis(), sink.earliestAffectedDay))
         onProgress(file.run.progress(file))
         coroutineContext.ensureActive()
     }
 
-    // --- Step day totals ---------------------------------------------------------------------------
+    // --- Day totals --------------------------------------------------------------------------------
+
+    private class DayTotalsWritten(val all: Int, val steps: Int)
 
     /**
-     * A civil day's step total is the sum of its 15-minute buckets, written only when every bucket
-     * of that day (92, 96 or 100 on clock-change days) is stored from the archive, possibly from
-     * several files or earlier imports. A day the archive covers only in part gets no total:
-     * missing stays missing, and a partial sum is never presented as the day's steps.
+     * A civil day's total is the sum of its 15-minute buckets, written only when the archive covers the
+     * day completely, possibly from several files or earlier imports; see [TakeoutDayTotals] for what
+     * "covers" means per series. A day the archive covers only in part gets no total: missing stays
+     * missing, and a partial sum is never presented as the day's value.
      */
-    private suspend fun writeStepDayTotals(run: Run): Int {
-        if (run.stepDays.isEmpty()) return 0
+    private suspend fun writeDayTotals(run: Run): DayTotalsWritten {
+        if (run.summedDays.isEmpty()) return DayTotalsWritten(0, 0)
         val zone = time.localZone
+        val bucket = BucketedSumParser.BUCKET_MS
         val totals = ArrayList<DailyObservation>()
-        for (day in run.stepDays.sorted()) {
-            coroutineContext.ensureActive()
+        var stepTotals = 0
+        val stepsCovered = HashMap<Long, Boolean>()
+
+        /** Start, end and bucket count of the civil day; null for a zone whose day boundaries do not fall on 15-minute marks. */
+        fun bounds(day: Long): Triple<Long, Long, Int>? {
             val from = LocalDate.ofEpochDay(day).atStartOfDay(zone).toInstant().toEpochMilli()
             val to = LocalDate.ofEpochDay(day + 1).atStartOfDay(zone).toInstant().toEpochMilli()
-            val expected = ((to - from) / BucketedStepsParser.BUCKET_MS).toInt()
-            // A zone whose day boundaries do not fall on 15-minute marks cannot be summed exactly.
-            if (expected <= 0 || (to - from) % BucketedStepsParser.BUCKET_MS != 0L || Math.floorMod(from, BucketedStepsParser.BUCKET_MS) != 0L) continue
-            val stats = sink.archiveStepStats(from, to)
-            if (stats.buckets == expected) {
-                totals += DailyObservation(MetricType.STEPS, day, stats.steps, sampleCount = stats.buckets)
+            val expected = ((to - from) / bucket).toInt()
+            if (expected <= 0 || (to - from) % bucket != 0L || Math.floorMod(from, bucket) != 0L) return null
+            return Triple(from, to, expected)
+        }
+
+        for (metric in run.summedDays.keys.sortedBy { it.ordinal }) {
+            for (day in run.summedDays.getValue(metric).sorted()) {
+                coroutineContext.ensureActive()
+                val (from, to, expected) = bounds(day) ?: continue
+                val stats = sink.archiveBucketStats(metric, from, to)
+                val covered = if (metric in TakeoutDayTotals.DENSE) {
+                    stats.buckets == expected
+                } else {
+                    stats.buckets > 0 && stepsCovered.getOrPut(day) {
+                        sink.archiveBucketStats(TakeoutDayTotals.COVERAGE_REFERENCE, from, to).buckets == expected
+                    }
+                }
+                if (!covered) continue
+                totals += DailyObservation(metric, day, stats.sum, sampleCount = stats.buckets)
+                if (metric == MetricType.STEPS) stepTotals++
             }
         }
         var written = 0
@@ -272,7 +294,7 @@ class TakeoutZipImporter(
             sink.write(HealthBatch(DataProvenance.IMPORTED_FILE_ARCHIVE, daily = chunk))
             written += chunk.size
         }
-        return written
+        return DayTotalsWritten(written, stepTotals)
     }
 
     // --- Run bookkeeping ---------------------------------------------------------------------------
@@ -280,7 +302,7 @@ class TakeoutZipImporter(
     private inner class Run(val fileCount: Int, val existing: Map<Pair<TakeoutCategory, String>, TakeoutFileMark>) {
         val files = LinkedHashMap<PlannedEntry, FileProgress>()
         val zoneRules = LinkedHashMap<String, ZoneRule>()
-        val stepDays = HashSet<Long>()
+        val summedDays = HashMap<MetricType, HashSet<Long>>()
         var firstDay: Long? = null
         var lastDay: Long? = null
         var rowsCommitted = 0L
@@ -337,8 +359,11 @@ class TakeoutZipImporter(
             }
         }
 
-        fun noteStepDays(batch: HealthBatch) {
-            for (s in batch.samples) if (s.metric == MetricType.STEPS) stepDays += day(s.epochMillis)
+        /** Remembers the civil days that got buckets of a summed series, which are owed a total at the end of the run. */
+        fun noteSummedDays(batch: HealthBatch) {
+            for (s in batch.samples) {
+                if (s.metric in TakeoutDayTotals.ALL) summedDays.getOrPut(s.metric) { HashSet() } += day(s.epochMillis)
+            }
         }
 
         fun fileReports(plan: List<PlannedEntry>): List<TakeoutFileReport> {

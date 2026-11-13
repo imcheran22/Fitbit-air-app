@@ -85,11 +85,13 @@ class TriSourceSyncOrchestrator(
                 onProgress("${source.source.storageKey}:${stream.name}")
                 dao.insertIfAbsent(SyncWatermarkEntity(source.source, stream.name))
                 val mark = dao.get(source.source, stream.name)!!
-                val end = nowMillis()
+                // Whole minutes only: a window edge inside a minute would split that minute's heart-rate readings
+                // between two windows (and, after a capped run, between two sessions that cannot merge them).
+                val end = SyncResumePlan.floorToMinute(nowMillis())
                 val floor = end - config.backfillDays * DAY_MS
                 // A watermark in the future (clock was set ahead, then corrected) is stale: re-read from the floor.
                 val plan = SyncResumePlan.readPlan(mark.lastSyncedEpochMillis, end, floor, config.overlapMillis, caughtUp = mark.status == SyncStatus.SUCCESS)
-                var from = plan.fromMillis
+                var from = SyncResumePlan.floorToMinute(plan.fromMillis)
                 plan.rewindTo?.let { dao.rewindTo(source.source, stream.name, it) }
                 if (mark.lastSyncedEpochMillis <= 0L) dao.extendBackfillFloor(source.source, stream.name, floor)
 
@@ -97,7 +99,7 @@ class TriSourceSyncOrchestrator(
                 var outcome = StreamOutcome.UP_TO_DATE
                 try {
                     while (from < end && windows < config.maxWindowsPerStream) {
-                        val to = minOf(end, from + stream.maxWindowMillis)
+                        val to = SyncResumePlan.windowEnd(from, end, stream.maxWindowMillis)
                         source.pull(stream, from, to) { batch -> store.ingestor.ingest(batch, session) }
                         // The window is committed. Record the replay it owes before the watermark moves, so a
                         // kill between here and the final replay cannot leave committed days unscored.
@@ -113,7 +115,7 @@ class TriSourceSyncOrchestrator(
                         // Still behind: also read the newest window so today is on screen while the backlog
                         // walks forward. The watermark does not move (the gap before it is still owed);
                         // writes are idempotent upserts, so reading it again later is harmless.
-                        val newestFrom = maxOf(from, end - stream.maxWindowMillis)
+                        val newestFrom = SyncResumePlan.newestWindowStart(from, end, stream.maxWindowMillis)
                         source.pull(stream, newestFrom, end) { batch -> store.ingestor.ingest(batch, session) }
                         recordReplayOwed(dao, source.source, stream.name, session.earliestAffectedDay)
                     }

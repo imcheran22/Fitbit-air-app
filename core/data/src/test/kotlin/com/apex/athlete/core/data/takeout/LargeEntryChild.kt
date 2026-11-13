@@ -14,6 +14,15 @@ object LargeEntryChild {
     fun main(args: Array<String>) {
         val sink = CountingSink()
         // "file <rows> <pad>": one huge file. "many <files> <rowsPerFile>": thousands of small ones.
+        if (args[0] == "calories") {
+            val calories = runBlocking {
+                TakeoutZipImporter(sink, MemoryMarks(), TakeoutReplayer { _, _ -> 0 }, TakeoutTimeConfig(ZoneOffset.UTC), nowMillis = { NOW_MS })
+                    .import(listOf(generatedCaloriesZip(args[1].toInt())))
+            }
+            val f = calories.files.single()
+            println("RESULT rows=${sink.rows} read=${f.rowsRead} status=${f.status} largest=${sink.largestBatch} maxMb=${Runtime.getRuntime().maxMemory() / (1024 * 1024)}")
+            exitProcess(0)
+        }
         val part = if (args[0] == "many") generatedManyFilesZip(args[1].toInt(), args[2].toInt()) else generatedHeartRateZip(args[1].toInt(), args[2].toInt())
         val report = runBlocking {
             TakeoutZipImporter(sink, MemoryMarks(), TakeoutReplayer { _, _ -> 0 }, TakeoutTimeConfig(ZoneOffset.UTC), nowMillis = { NOW_MS })
