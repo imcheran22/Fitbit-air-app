@@ -28,6 +28,12 @@ on:
   push:
     tags:
       - "v*"
+    # "Run workflow" only appears for workflows on the repository's default branch, so a build can also be
+    # requested by changing .github/release-request.txt on a branch (the coordinator does this for the owner).
+    branches:
+      - "claude/**"
+    paths:
+      - ".github/release-request.txt"
 
 permissions:
   contents: read
@@ -69,6 +75,7 @@ jobs:
           INPUT_PUBLISH: ${{ inputs.publish_release }}
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
           set -euo pipefail
           trim() { printf '%s' "$1" | tr -d '\r\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'; }
@@ -87,9 +94,10 @@ jobs:
 
           { echo "APEX_GOOGLE_CLIENT_ID=$CID"; echo "APEX_OAUTH_CLIENT_TYPE=$TYPE"; } >> "$GITHUB_ENV"
 
-          if [ "$EVENT_NAME" = "push" ]; then
+          if [ "$EVENT_NAME" = "push" ] && [ "$REF_TYPE" = "tag" ]; then
             PUBLISH=true; PRERELEASE=false; TAG="$REF_NAME"
           else
+            # Manual run: the publish_release input (default true). Release-request push: always publish (pre-release).
             if [ "${INPUT_PUBLISH:-true}" = "true" ]; then PUBLISH=true; else PUBLISH=false; fi
             PRERELEASE=true; TAG=""
           fi
