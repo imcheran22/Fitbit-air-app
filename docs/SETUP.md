@@ -87,12 +87,11 @@ data. Set it up before the first build you intend to keep. You do this once.
    chat. (If you already have an Android keystore you would rather use, add the four secrets
    `APEX_KEYSTORE_B64`, `APEX_KEYSTORE_PASSWORD`, `APEX_KEY_ALIAS`, `APEX_KEY_PASSWORD` instead; they win over the
    passphrase.)
-3. Open the **Actions** tab, choose **Release APK**, tap **Run workflow**. Paste the client ID from section 4 into
-   `google_client_id`. Keep `oauth_client_type` = **ios** and `publish_release` ticked, and tap **Run workflow**. It
-   takes about 10 to 20 minutes; refresh the page to see progress.
-   Optional: so that you never have to paste the ID again, add it under **Settings**, **Secrets and variables**,
-   **Actions**, tab **Variables**, **New repository variable**, name `APEX_GOOGLE_CLIENT_ID`. Runs started from a tag
-   use that variable.
+3. Save the client ID from section 4 as a repository **variable** (it is not secret): **Settings**, **Secrets and
+   variables**, **Actions**, tab **Variables**, **New repository variable**, name `APEX_GOOGLE_CLIENT_ID`, value the
+   client ID. Then ask Claude to "build the release". (The **Run workflow** button only appears for workflows on the
+   repository's default branch, so a build is started by changing `.github/release-request.txt` on the working branch;
+   Claude does that for you.) It takes about 10 to 20 minutes.
 4. When the run is green open it and scroll to the **Summary**. It must not start with a warning about a "ONE-TIME
    signing key" (that means the secret in step 2 is missing or misspelled) or "NO GOOGLE CLIENT ID". It lists the
    redirect Apex uses (`com.googleusercontent.apps.<id>:/oauth2redirect`) and the signing certificate fingerprints.
