@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reports routes (weekly and monthly list, detail, share). Prefix: reports_. -->
+<resources>
+    <string name="reports_title">Reports</string>
+    <string name="reports_intro">A summary of each week or month from the days Apex has recorded. Days without data are left out, never counted as zero.</string>
+    <string name="reports_type_group">Report period</string>
+    <string name="reports_type_week">Weekly</string>
+    <string name="reports_type_month">Monthly</string>
+    <string name="reports_period_range">%1$s to %2$s</string>
+    <string name="reports_in_progress">In progress</string>
+    <string name="reports_sparse_tag">Sparse</string>
+    <string name="reports_item_coverage">%1$d of %2$d days with data</string>
+    <string name="reports_item_recovery">Recovery %1$s</string>
+    <string name="reports_item_sleep">Sleep %1$s</string>
+    <string name="reports_item_open">Open this report</string>
+    <string name="reports_loading_cd">Loading reports</string>
+    <string name="reports_empty">There are no reports yet. They appear once Apex has data for a week.</string>
+
+    <string name="reports_sparse_note">Fewer than half of the days have data, so these averages describe only a few days.</string>
+    <string name="reports_partial_note">This period is not over. Averages use the days so far and can still change.</string>
+
+    <string name="reports_metric_recovery">Recovery, average</string>
+    <string name="reports_metric_sleep">Sleep score, average</string>
+    <string name="reports_metric_strain">Strain, average (0 to 21)</string>
+    <string name="reports_metric_hrv">Overnight HRV, average</string>
+    <string name="reports_metric_rhr">Resting heart rate, average</string>
+    <string name="reports_recorded_days">%1$d of %2$d days recorded</string>
+    <string name="reports_change">Change from the previous period: %1$s</string>
+    <string name="reports_change_missing_current">No change shown: this period has fewer than 4 recorded days.</string>
+    <string name="reports_change_missing_previous">No change shown: the previous period has fewer than 4 recorded days.</string>
+    <string name="reports_change_missing_both">No change shown: both periods have fewer than 4 recorded days.</string>
+    <string name="reports_best_day">Best day %1$s, %2$s</string>
+    <string name="reports_worst_day">Lowest day %1$s, %2$s</string>
+    <string name="reports_source_unknown">Source unknown</string>
+
+    <string name="reports_section_summary">Summary</string>
+    <string name="reports_section_training">Training</string>
+    <string name="reports_section_goals">Goals</string>
+    <string name="reports_section_coverage">Coverage</string>
+    <string name="reports_workouts_label">Workouts logged</string>
+    <string name="reports_workout_strain_label">Average strain on workout days</string>
+    <string name="reports_workout_strain_days">%1$d workout days with a strain score</string>
+    <string name="reports_load_label">Training load at the end</string>
+    <string name="reports_load_note">Workload ratio on the last day of the period.</string>
+    <string name="reports_load_calibrating">Still calibrating on the last day.</string>
+    <string name="reports_load_not_recorded">Not recorded on the last day.</string>
+    <string name="reports_zone_detraining">Below your usual load</string>
+    <string name="reports_zone_sweet_spot">Sweet spot</string>
+    <string name="reports_zone_overreaching">Overreaching caution</string>
+    <string name="reports_zone_high_risk">High fatigue risk</string>
+
+    <string name="reports_goals_title">Goal in this period</string>
+    <string name="reports_goals_none">No goals are set. Add one in Goals to see it here.</string>
+    <string name="reports_goal_line_daily">%1$s: reached on %2$d of %3$d days (%4$d recorded)</string>
+    <string name="reports_goal_line_weekly_reached">%1$s: reached this week</string>
+    <string name="reports_goal_line_weekly_not_reached">%1$s: not reached this week</string>
+    <string name="reports_goal_line_missing">%1$s: %2$s</string>
+    <string name="reports_goal_no_data">no recorded days in this period</string>
+    <string name="reports_goal_weekly_in_month">weekly goals are not summarised for a month</string>
+
+    <string name="reports_coverage_label">Coverage</string>
+    <string name="reports_coverage_value">%1$d of %2$d days (%3$d percent)</string>
+
+    <string name="reports_share_image">Share as image</string>
+    <string name="reports_share_pdf">Share as PDF</string>
+    <string name="reports_share_image_cd">Share this report as an image</string>
+    <string name="reports_share_pdf_cd">Share this report as a PDF</string>
+    <string name="reports_share_chooser">Share report</string>
+    <string name="reports_share_title_line">Apex report</string>
+    <string name="reports_share_note">Sharing sends these health values to the app you choose. Nothing is shared until you pick one.</string>
+    <string name="reports_share_demo">Sharing is off in Demo mode.</string>
+    <string name="reports_share_failed">Could not prepare the report to share.</string>
+    <string name="reports_footer">Made by Apex from your own data. Averages are calculated from recorded days only. Not medical advice.</string>
+
+    <string name="reports_all_reports">All reports</string>
+    <string name="reports_how_title">How reports are calculated</string>
+    <string name="reports_how_p1">A week runs Monday to Sunday and a month runs from the 1st. Each average uses only the days that have a recorded value.</string>
+    <string name="reports_how_p2">The change compares with the period of the same length just before, and is shown only when both periods have at least 4 recorded days of that metric.</string>
+    <string name="reports_how_p3">Coverage is the share of days with a Recovery, Sleep or Strain value. Below half, the report is marked sparse.</string>
+    <string name="reports_how_p4">Workouts counts the ones logged in Apex. A day with no workout record is not counted as a rest day.</string>
+</resources>

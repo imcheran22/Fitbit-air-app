@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Goals route. Prefix: goals_. -->
+<resources>
+    <string name="goals_title">Goals</string>
+    <string name="goals_intro">Targets you choose yourself. Apex sets none for you and measures each one on your own recorded days.</string>
+    <string name="goals_add">Add a goal</string>
+    <string name="goals_add_cd">Add a new goal</string>
+    <string name="goals_all_added">Every kind of goal is already set. Edit one to change its target.</string>
+    <string name="goals_empty_title">No goals yet</string>
+    <string name="goals_empty_body">Add a daily or weekly target and Apex will show your progress and streak.</string>
+    <string name="goals_loading_cd">Loading goals</string>
+
+    <string name="goals_kind_daily_steps">Daily steps</string>
+    <string name="goals_kind_daily_sleep">Daily sleep</string>
+    <string name="goals_kind_weekly_active">Weekly active minutes</string>
+    <string name="goals_kind_weekly_azm">Weekly Active Zone Minutes</string>
+    <string name="goals_kind_weekly_recovered">Recovered days per week</string>
+    <string name="goals_unit_steps">steps</string>
+    <string name="goals_unit_minutes">min</string>
+    <string name="goals_unit_days">days</string>
+
+    <string name="goals_kind_note_daily_steps">Steps counted today.</string>
+    <string name="goals_kind_note_daily_sleep">Minutes asleep on the latest night.</string>
+    <string name="goals_kind_note_weekly_active">Moderate plus very active minutes, Monday to today.</string>
+    <string name="goals_kind_note_weekly_azm">Active Zone Minutes, Monday to today.</string>
+    <string name="goals_kind_note_weekly_recovered">Days this week with a Recovery score of 67 or more.</string>
+
+    <string name="goals_target_line">Target %1$s %2$s</string>
+    <string name="goals_bar_cd">%1$d percent of the target</string>
+    <string name="goals_reached">Target reached</string>
+    <string name="goals_paused_tag">Paused</string>
+    <string name="goals_paused_note">Paused goals are not measured.</string>
+    <string name="goals_missing_today">Nothing recorded today yet.</string>
+    <string name="goals_missing_week">Nothing recorded this week yet.</string>
+    <string name="goals_missing_invalid">This target is not valid. Edit it to set a new one.</string>
+    <plurals name="goals_streak_current">
+        <item quantity="one">Current streak %d day</item>
+        <item quantity="other">Current streak %d days</item>
+    </plurals>
+    <plurals name="goals_streak_best">
+        <item quantity="one">Best streak %d day</item>
+        <item quantity="other">Best streak %d days</item>
+    </plurals>
+    <string name="goals_week_recorded">%1$d of %2$d days recorded this week</string>
+    <string name="goals_week_lower_bound">Some days are not recorded, so the total could be higher.</string>
+    <string name="goals_week_needed">About %1$s %2$s a day over the %3$d days left, including today, would reach it.</string>
+
+    <string name="goals_edit">Edit</string>
+    <string name="goals_edit_cd">Edit the %1$s goal</string>
+    <string name="goals_sheet_add_title">New goal</string>
+    <string name="goals_sheet_edit_title">Edit goal</string>
+    <string name="goals_sheet_kind_group">Goal type</string>
+    <string name="goals_target_label">Target in %1$s</string>
+    <string name="goals_target_support">A whole number from 1 to %1$s.</string>
+    <string name="goals_target_error">Enter a whole number from 1 to %1$s.</string>
+    <string name="goals_save">Save</string>
+    <string name="goals_delete">Delete goal</string>
+    <string name="goals_pause">Pause goal</string>
+    <string name="goals_resume">Resume goal</string>
+    <string name="goals_delete_title">Delete this goal?</string>
+    <string name="goals_delete_body">The goal is removed. Your recorded data is not touched.</string>
+    <string name="goals_delete_keep">Keep goal</string>
+
+    <string name="goals_status_demo">Not saved in Demo mode.</string>
+    <string name="goals_status_error">Could not save this change. Try again.</string>
+
+    <string name="goals_how_title">How goals are measured</string>
+    <string name="goals_how_p1">A day counts as achieved when its recorded value reaches the target. A day with no recording is never counted as achieved and is never treated as zero.</string>
+    <string name="goals_how_p2">Today is unfinished, so a partial day is marked provisional and does not break a running streak. The streak counts consecutive achieved days ending today, or yesterday if today is not there yet.</string>
+    <string name="goals_how_p3">Weekly goals add up the recorded days from Monday to today. When a day is missing the total is a lower bound and is labelled so.</string>
+    <string name="goals_how_p4">The Recovery cut-off for a recovered day is Apex\'s own calibration choice, not a clinical limit.</string>
+</resources>

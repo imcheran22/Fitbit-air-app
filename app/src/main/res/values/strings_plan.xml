@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Weekly plan route (read-only). Prefix: plan_. -->
+<resources>
+    <string name="plan_title">Weekly plan</string>
+    <string name="plan_intro">A suggestion for the next 7 days, built from your own recent strain, today\'s recovery and your training load. It is not a prescription and not medical advice.</string>
+    <string name="plan_loading_cd">Loading the weekly plan</string>
+    <string name="plan_source_note">Calculated by Apex from your recorded strain, recovery and load. Nothing here is saved or sent anywhere.</string>
+
+    <string name="plan_band_rest">Rest</string>
+    <string name="plan_band_light">Light</string>
+    <string name="plan_band_moderate">Moderate</string>
+    <string name="plan_band_hard">Hard</string>
+    <string name="plan_band_cd">Suggested effort %1$s</string>
+    <string name="plan_strain_label">Suggested strain (0 to 21)</string>
+    <string name="plan_strain_note">The middle of the range, based on your usual strain. A guide, not a target to hit.</string>
+    <string name="plan_day_cd">%1$s. %2$s. %3$s</string>
+
+    <string name="plan_reason_rest">A planned rest day, so the harder days can do their work.</string>
+    <string name="plan_reason_light">An easy day between harder ones.</string>
+    <string name="plan_reason_moderate">A steady day around your usual effort.</string>
+    <string name="plan_reason_hard">One of at most three harder days, never two in a row.</string>
+    <string name="plan_reason_low_recovery">Your recovery is low today, so today is a rest day.</string>
+    <string name="plan_reason_high_load">Your recent load is high against your usual, so today is a rest day.</string>
+    <string name="plan_reason_elevated_load">Your recent load is elevated, so today is kept light.</string>
+    <string name="plan_reason_unavailable">Marked as a day you cannot train, so it is a rest day.</string>
+    <string name="plan_reason_hard_limit">Lowered to moderate to avoid back-to-back hard days or more than three in a week.</string>
+    <string name="plan_reason_ensure_rest">Made a rest day so the week has at least one.</string>
+
+    <string name="plan_sleep_label">Sleep target each night</string>
+    <string name="plan_unit_min">min</string>
+
+    <string name="plan_confidence_low_title">Lower confidence</string>
+    <string name="plan_low_load_calibrating">Your training load is still calibrating, so it is not used.</string>
+    <string name="plan_low_load_missing">There is no training load yet.</string>
+    <string name="plan_low_recovery_missing">There is no Recovery score for today.</string>
+    <string name="plan_low_sleep_missing">There is no sleep need yet, so no sleep target is shown.</string>
+
+    <string name="plan_no_plan_title">No plan yet</string>
+    <string name="plan_no_plan_strain_base">A plan needs at least 5 days of recorded strain in the last 14. Apex does not guess a starting point.</string>
+
+    <string name="plan_how_title">How the plan is built</string>
+    <string name="plan_how_p1">The week starts from a generic alternating pattern: two harder days, a rest day, and easier days between. This pattern is a common coaching convention, not a validated prescription.</string>
+    <string name="plan_how_p2">Today is changed by your Recovery score and training load: low recovery or a high load ratio makes it a rest day, an elevated load keeps it light. Load ratio bands are debated, so they only shorten the next day and never forbid training.</string>
+    <string name="plan_how_p3">No two harder days sit back to back, there are at most three in the week, and there is at least one rest day.</string>
+    <string name="plan_how_p4">The suggested strain is your own recent strain level scaled by the day type. The sleep target is your current sleep need on every night.</string>
+</resources>
