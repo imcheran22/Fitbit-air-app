@@ -1,6 +1,6 @@
 # Progress (cold-resume note)
 
-Last updated: 2026-11-12. Branch `claude/fitbit-air-compatible-app-ykbju8`.
+Last updated: 2026-11-13. Branch `claude/fitbit-air-compatible-app-ykbju8`.
 The build gate is GitHub Actions (`.github/workflows/android.yml`): this cloud session has no Android SDK.
 
 ## Done
@@ -15,7 +15,9 @@ The build gate is GitHub Actions (`.github/workflows/android.yml`): this cloud s
 | M6 hardening, red team | done | `docs/REDTEAM.md`; critical/high gaps fixed tests-first (D7); diagnostics report (Data sources screen) |
 | M7 docs and handoff | mostly done | `SETUP.md`, `VERIFICATION.md`, `API_VALIDATION.md`, `API_MAPPING.md`, `EVIDENCE.md`, `OPEN_POINTS.md`, `FORMULAS.md` |
 
-Room schema is v3 (`takeout_file_mark`, AutoMigration 2→3); `core/database/schemas/.../3.json` is committed.
+| M8 feature parity (owner's Pulse prompt) | done, CI green on b2e5a7c | Detail screens (activity, body, stress, energy, fitness, monitor, trends + overlay, naps); goals, reports (image/PDF share), weekly plan; behaviours, quick log, food, blood pressure, breathe + spot HRV; live recorder (health FGS) + BLE strap; 3 Glance widgets; experimental health age (off by default). Dropped by the owner: coach multi-chat, translations (D14). Excluded: ECG (D11). Deferred: cycle (D12). |
+
+Room schema is v4 (local logs, AutoMigration 3→4); `4.json` is committed.
 Sync opens on app start (15 min throttle) and right after onboarding.
 
 ## Verification state
@@ -40,6 +42,6 @@ Sync opens on app start (15 min throttle) and right after onboarding.
 - Everything marked `UNVERIFIED-NEEDS-REAL-BAND` / `...REAL-ACCOUNT`: run the diagnostics report on the phone and send it back.
 
 ## Next actions
-1. Review and commit the scoring and data-collection tracks; CI green including the smoke job.
-2. DATA_FLOW 4 (history charts, steps, trend links) and any screen/MetricType follow-ups the tracks report.
-3. Optional Opus gates (data integrity, privacy/release); README status; final report with APK paths.
+1. Release pipeline test (release-request trigger), then the owner's sign-in setup (SETUP.md) and a signed build with the client ID.
+2. Optional Opus gates (data integrity, privacy/release).
+3. Real-device checks: sign-in client type, recorder on Android 14+, strap, widgets (OPEN_POINTS).
