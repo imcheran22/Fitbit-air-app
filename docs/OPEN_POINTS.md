@@ -183,3 +183,8 @@ has no `android:scheme` lines the check is skipped, never failed).
 - **Provenance:** there is no "recorded on this phone" `DataProvenance`; workouts are saved through
   `AthleteRepository.addManualWorkout` as USER_REPORTED (needs a 1-10 effort rating, no heart-rate samples stored).
   Adding a new provenance or storing recorded heart-rate samples needs a schema decision.
+
+## Sign-in with an Android-type client (seen on the owner's phone, build 5)
+Google answers `Error 400: invalid_request — Custom URI scheme is not enabled for your Android client.` Fix in Google
+Cloud Console, no rebuild: Credentials, open the Android client, **Advanced settings**, tick **Enable custom URI
+scheme**, Save, wait a few minutes, try again. If that option is missing, use an iOS-type client instead (SETUP section 4).
