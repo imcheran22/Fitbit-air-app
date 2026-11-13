@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recorder_title">Record a workout</string>
+    <string name="recorder_intro">Times your workout on this phone. With a Bluetooth heart-rate strap it also shows live heart rate and zone; without one it records time only.</string>
+
+    <string name="recorder_start">Start</string>
+    <string name="recorder_pause">Pause</string>
+    <string name="recorder_resume">Resume</string>
+    <string name="recorder_stop">Stop</string>
+    <string name="recorder_discard">Discard</string>
+    <string name="recorder_paused">Paused</string>
+    <string name="recorder_elapsed_label">Elapsed time</string>
+    <string name="recorder_elapsed_spoken">Elapsed time %1$s</string>
+
+    <string name="recorder_hr_label">Heart rate</string>
+    <string name="recorder_hr_value">%1$d bpm</string>
+    <string name="recorder_hr_none">No heart rate</string>
+    <string name="recorder_notification_bpm">%1$d bpm</string>
+    <string name="recorder_zone">Zone %1$d of 5</string>
+    <string name="recorder_zone_rest">Below zone 1</string>
+    <string name="recorder_zone_unknown">Add your age or maximum heart rate in Profile to see zones.</string>
+    <string name="recorder_zone_note">Zones use an estimated maximum heart rate (percent of maximum).</string>
+    <string name="recorder_avg_max">Average %1$d, highest %2$d bpm</string>
+
+    <string name="recorder_strap_title">Heart-rate strap</string>
+    <string name="recorder_strap_rationale">Apex uses Bluetooth only to find and read a heart-rate strap near you. It never writes to the strap and never uses your location.</string>
+    <string name="recorder_strap_connect">Connect strap</string>
+    <string name="recorder_strap_disconnect">Disconnect strap</string>
+    <string name="recorder_strap_idle">Not connected</string>
+    <string name="recorder_strap_scanning">Searching for a strap. Wear it and moisten the contacts.</string>
+    <string name="recorder_strap_connecting">Connecting</string>
+    <string name="recorder_strap_connected">Connected</string>
+    <string name="recorder_strap_connected_named">Connected to %1$s</string>
+    <string name="recorder_strap_fail_unsupported">Strap support needs Android 12 or newer.</string>
+    <string name="recorder_strap_fail_no_bluetooth">This phone has no Bluetooth LE.</string>
+    <string name="recorder_strap_fail_off">Bluetooth is off. Turn it on and try again.</string>
+    <string name="recorder_strap_fail_permission">Bluetooth permission is needed to find the strap.</string>
+    <string name="recorder_strap_fail_not_found">No strap found. Check it is worn and not connected to another app.</string>
+    <string name="recorder_strap_fail_lost">The strap disconnected.</string>
+    <string name="recorder_strap_fail_service">This device does not offer a heart-rate service.</string>
+
+    <string name="recorder_demo_refused">Not saved in Demo mode. Recording is turned off while Demo mode is on.</string>
+
+    <string name="recorder_save_title">Save this workout</string>
+    <string name="recorder_save_summary">%1$s recorded</string>
+    <string name="recorder_save_rpe">How hard did it feel? (1 easy, 10 maximal)</string>
+    <string name="recorder_save_rpe_option">Effort %1$d of 10</string>
+    <string name="recorder_save_rpe_selected">Effort %1$d of 10, selected</string>
+    <string name="recorder_save_button">Save workout</string>
+    <string name="recorder_saving">Saving</string>
+    <string name="recorder_save_failed">The workout could not be saved. Try again.</string>
+    <string name="recorder_save_too_short">Too short to save (under 30 seconds). You can discard it.</string>
+    <string name="recorder_save_provenance">Saved as recorded on this phone (self-reported source). Strain is calculated by Apex, not from your rating.</string>
+    <string name="recorder_default_name">Recorded workout</string>
+
+    <string name="recorder_channel_name">Workout recording</string>
+    <string name="recorder_channel_description">Shows the running time and heart rate while a workout is being recorded.</string>
+    <string name="recorder_notification_title">Recording workout</string>
+</resources>

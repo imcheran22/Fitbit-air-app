@@ -171,3 +171,15 @@ Also unconfirmed: that Android accepts an APK produced by this workflow's hand-e
 (a plain X.509 v3 certificate with no extensions; `apksigner verify` in the run prints "Verifies"); that
 `aapt2 dump xmltree` shows the redirect scheme in the format the workflow's consistency check greps for (if the dump
 has no `android:scheme` lines the check is skipped, never failed).
+
+## Workout recorder and BLE heart-rate strap (unverified on device)
+- **FGS type `health` prerequisites (Android 14+):** per the platform docs the service needs one of BODY_SENSORS,
+  ACTIVITY_RECOGNITION, HIGH_SAMPLING_RATE_SENSORS or a granted Health Connect permission at start; BLE connect is not
+  on that list. The manifest declares READ_HEART_RATE, which counts once the owner has granted it. If the owner has not
+  granted any Health Connect permission, `RecorderService` catches the SecurityException and stops. Confirm on an
+  Android 14+ device without Health Connect grants; if it fails, decide whether to request ACTIVITY_RECOGNITION.
+- **Strap on a real device:** the GATT flow (scan 0x180D, notify 0x2A37) is untested against hardware; the parser is
+  unit-tested against the Bluetooth SIG layout. Strap support is Android 12+ only (below that scanning needs location).
+- **Provenance:** there is no "recorded on this phone" `DataProvenance`; workouts are saved through
+  `AthleteRepository.addManualWorkout` as USER_REPORTED (needs a 1-10 effort rating, no heart-rate samples stored).
+  Adding a new provenance or storing recorded heart-rate samples needs a schema decision.

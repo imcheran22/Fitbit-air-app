@@ -10,6 +10,20 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!--
+        Workout recorder: a foreground service of type health keeps the recording alive. Android 14+ also
+        requires one of the sensor/activity permissions or a Health Connect permission to be granted when a
+        health service starts (the READ_HEART_RATE permission below counts once granted; see docs/OPEN_POINTS.md).
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+
+    <!-- Bluetooth heart-rate strap (Android 12+). Scanning is declared never-for-location: no location access. -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+    <!--
         Health Connect: READ permissions only. Apex never writes to Health Connect. This list must stay
         identical to HealthConnectPermissions.manifestPermissions (checked by ManifestTest); without a
         matching entry here the Health Connect permission dialog fails silently.
@@ -143,6 +157,12 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/heart_rate_widget_info" />
         </receiver>
+
+        <!-- Live workout recorder (foreground service, type health). Not exported. -->
+        <service
+            android:name=".recorder.RecorderService"
+            android:exported="false"
+            android:foregroundServiceType="health" />
 
         <!-- WorkManager's foreground service, typed for the Takeout import (dataSync). -->
         <service
