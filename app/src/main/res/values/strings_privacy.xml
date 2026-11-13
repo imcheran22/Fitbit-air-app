@@ -4,7 +4,7 @@
     <string name="privacy_intro">Apex is a private dashboard for one person. This page explains what it reads, where it goes and how to remove it. It is also the page Health Connect opens when it asks how Apex uses your data.</string>
 
     <string name="privacy_local_title">Kept on this phone</string>
-    <string name="privacy_local_body">Your readings, scores and history are stored in a database on this phone, encrypted at rest with SQLCipher. The key is protected by the phone\'s hardware-backed keystore. Android backup is switched off, so the data is not copied to a cloud backup.</string>
+    <string name="privacy_local_body">Your readings, scores and history are stored in a database on this phone, encrypted at rest with SQLCipher. The key is protected by the phone\'s hardware-backed keystore. Android backup is switched off, so the data is not copied to a cloud backup. Home-screen widgets read a small file of rounded scores and your latest heart rate in this app\'s private storage; it is removed with Delete all my data and never holds demo data. Your own logs (behaviours, water, mood, symptoms, notes, goals, meals, blood pressure, breathing sessions and coach chats) are stored in the same encrypted database and are never sent anywhere.</string>
     <string name="privacy_noanalytics_title">No analytics, no crash reporting</string>
     <string name="privacy_noanalytics_body">Apex contains no analytics or crash-reporting libraries and no advertising. Health values, tokens and keys are never written to logs.</string>
 

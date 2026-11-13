@@ -32,13 +32,19 @@ import com.apex.athlete.core.network.GoogleHealthNetwork
 import com.apex.athlete.core.network.NetworkModule
 import com.apex.athlete.core.network.auth.EncryptedTokenStore
 import com.apex.athlete.core.network.auth.OAuthClientType
+import com.apex.athlete.core.data.extras.LocalExtras
 import com.apex.athlete.ui.common.ApexFormatter
+import com.apex.athlete.widget.WidgetPublisher
+import com.apex.athlete.widget.WidgetSnapshotStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -63,6 +69,9 @@ class AppContainer(private val app: Application) : DataGraph {
     override val stores: ApexStores = ApexStores(app, settings, appScope)
 
     override val repository: AthleteRepository = AthleteRepository(stores, settings)
+
+    /** The owner's own logs (behaviours, quick log, goals, food, blood pressure, breathe sessions, coach chats). */
+    val localExtras: LocalExtras = LocalExtras(stores)
 
     /** Keystore-backed OAuth token and pending-authorization storage. */
     val tokenStore: EncryptedTokenStore = EncryptedTokenStore(app)
@@ -135,6 +144,12 @@ class AppContainer(private val app: Application) : DataGraph {
         config = TriSourceSyncOrchestrator.Config(maxWindowsPerStream = 3),
     )
 
+    /**
+     * Home-screen widgets: a background publisher writes a small snapshot file (never from the demo store) and the
+     * widgets read only that file. See `com.apex.athlete.widget` and `startWidgetWiring`.
+     */
+    val widgetPublisher: WidgetPublisher = WidgetPublisher(app, repository, settings, WidgetSnapshotStore.forContext(app))
+
     /** The owner's own Anthropic API key for "Ask Apex" (Keystore-encrypted, never logged). */
     val aiKeyStore: AiKeyStore = EncryptedAiKeyStore(app)
 
@@ -171,6 +186,7 @@ class AppContainer(private val app: Application) : DataGraph {
         clearAlertRecord = {
             AlertLedgerStore(app).clear()
             TakeoutDiagnosticsStore(app).clear()
+            widgetPublisher.clear()
         },
         resetRealStore = { stores.resetRealStore() },
         discardDemoStore = { stores.discardDemo() },
@@ -197,9 +213,40 @@ class AppContainer(private val app: Application) : DataGraph {
                     AlertScheduler.schedule(app, enabled = plan.live && plan.notifications)
                 }
         }
+        startWidgetWiring()
+    }
+
+    /**
+     * Keeps the widget snapshot in step with the app. Two collectors, both on [appScope]:
+     *  - Leaving live data (Demo mode on, onboarding reset by "Delete all my data") removes the snapshot at once, so
+     *    no widget keeps showing the owner's numbers and none ever shows demo numbers.
+     *  - After every completed sync, pipeline run or import ([ApexStores.dataVersion] bumps; the sync worker also
+     *    sets `lastSyncMillis`) the snapshot is republished, debounced so a burst of writes costs one publish.
+     * The first emission also publishes once at process start. The publisher skips the work when no widget is installed.
+     */
+    @OptIn(FlowPreview::class)
+    private fun startWidgetWiring() {
+        appScope.launch {
+            settings.settings
+                .map { it.onboardingDone && !it.demoMode }
+                .distinctUntilChanged()
+                .collect { live -> if (!live) widgetPublisher.clear() }
+        }
+        appScope.launch {
+            combine(
+                stores.dataVersion,
+                settings.settings.map { it.lastSyncMillis }.distinctUntilChanged(),
+            ) { version, lastSync -> version to lastSync }
+                .debounce(WIDGET_PUBLISH_DEBOUNCE_MILLIS)
+                .collect { widgetPublisher.publish() }
+        }
     }
 
     private data class WorkPlan(val live: Boolean, val backgroundSync: Boolean, val notifications: Boolean)
+
+    private companion object {
+        const val WIDGET_PUBLISH_DEBOUNCE_MILLIS = 2_000L
+    }
 
     private fun effectiveClientId(fromSettings: String?): String? =
         fromSettings?.trim()?.takeIf { it.isNotEmpty() }

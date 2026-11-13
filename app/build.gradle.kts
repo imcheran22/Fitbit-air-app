@@ -157,6 +157,9 @@ dependencies {
     // Only for the permission request contract types handed to registerForActivityResult.
     implementation(libs.androidx.health.connect)
     implementation(libs.androidx.browser)
+    // Home-screen widgets (Jetpack Glance) and the tolerant JSON tree reader for the widget snapshot file.
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)

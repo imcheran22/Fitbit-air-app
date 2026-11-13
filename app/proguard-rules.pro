@@ -37,3 +37,10 @@
 # Health Connect client (androidx.health.connect:connect-client): protobuf-lite generated messages are
 # resolved by the library's own consumer rules; nothing extra is kept here. Compose and Navigation ship
 # consumer rules; navigation routes here are plain strings, so no route classes need keeping.
+
+# Home-screen widgets (Jetpack Glance). Glance finds an installed widget by its GlanceAppWidget class name and the
+# receivers are named in the manifest, so the names must survive minification. The refresh worker is created by
+# WorkManager from its stored class name, like the workers in :core:data. Glance's own consumer rules cover the library.
+-keepnames class com.apex.athlete.widget.** extends androidx.glance.appwidget.GlanceAppWidget
+-keep class com.apex.athlete.widget.*Receiver
+-keep class com.apex.athlete.widget.WidgetRefreshWorker { <init>(...); }

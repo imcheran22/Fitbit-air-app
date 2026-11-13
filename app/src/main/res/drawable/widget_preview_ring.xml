@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview: one ring on the app ground. Shows the shape only, no numbers. Colours are the app's own
+     launcher colours (values/colors.xml). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="110dp"
+    android:height="110dp"
+    android:viewportWidth="110"
+    android:viewportHeight="110">
+    <path
+        android:fillColor="@color/apex_ground"
+        android:pathData="M0,0h110v110h-110z" />
+    <path
+        android:pathData="M55,25 a30,30 0 1,1 0,60 a30,30 0 1,1 0,-60"
+        android:strokeAlpha="0.2"
+        android:strokeColor="@color/apex_mark"
+        android:strokeLineCap="round"
+        android:strokeWidth="9" />
+    <path
+        android:pathData="M55,25 A30,30 0 1,1 25,55"
+        android:strokeColor="@color/apex_mark_accent"
+        android:strokeLineCap="round"
+        android:strokeWidth="9" />
+</vector>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview for Today: three rings on the app ground. Shape only, no numbers. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="250dp"
+    android:height="110dp"
+    android:viewportWidth="250"
+    android:viewportHeight="110">
+    <path
+        android:fillColor="@color/apex_ground"
+        android:pathData="M0,0h250v110h-250z" />
+    <path
+        android:pathData="M45,31 a24,24 0 1,1 0,48 a24,24 0 1,1 0,-48 M125,31 a24,24 0 1,1 0,48 a24,24 0 1,1 0,-48 M205,31 a24,24 0 1,1 0,48 a24,24 0 1,1 0,-48"
+        android:strokeAlpha="0.2"
+        android:strokeColor="@color/apex_mark"
+        android:strokeLineCap="round"
+        android:strokeWidth="7" />
+    <path
+        android:pathData="M45,31 A24,24 0 1,1 21,55 M125,31 A24,24 0 0,1 149,55 M205,31 A24,24 0 1,1 181,55"
+        android:strokeColor="@color/apex_mark_accent"
+        android:strokeLineCap="round"
+        android:strokeWidth="7" />
+</vector>

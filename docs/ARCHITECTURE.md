@@ -172,3 +172,27 @@ only move forward.
 Gradle 8.14.3, Android Gradle Plugin 8.13, Kotlin 2.2.21, KSP, Room 2.8, compile SDK 36,
 minimum SDK 28 (the oldest Android version Health Connect supports). Versions are pinned in
 `gradle/libs.versions.toml`.
+
+## 5. Widgets
+
+Three Jetpack Glance home-screen widgets live in `app/.../widget/`: Recovery (small ring), Today (recovery, sleep and
+strain rings with provenance marks and the update time) and Heart rate (latest bpm and its age).
+
+- **No database in the widget.** `WidgetPublisher` computes a `WidgetSnapshot` (rounded scores, state flags, the latest
+  heart rate with its own timestamp, `updatedAtMillis`, `isDemo`) from `AthleteRepository.dashboard` through the same
+  `MetricStateMapper` as the Overview, and writes it as JSON, atomically, to `noBackupFilesDir/widget_snapshot.json`
+  (`WidgetSnapshotStore`). The widgets read only that file. Numbers and enum keys only: no text, names or journal data.
+- **Demo isolation.** Nothing is published while Demo mode is on or onboarding is unfinished, and a dashboard that says
+  it came from the demo store is dropped. In those cases the file is deleted (`WidgetPublisher.clear()`, also run by
+  "Delete all my data"), and every widget shows the neutral "Open Apex" state. A missing or corrupt file does the same.
+- **When it runs.** An app-level collector in `AppContainer.startWidgetWiring` republishes (debounced 2 s) when
+  `stores.dataVersion` or `lastSyncMillis` changes, i.e. after each sync, pipeline run or import, and once at process
+  start. It skips the work when no widget is installed. A 30-minute `WidgetRefreshWorker` only redraws from the file so
+  "12 min ago" and the six-hour heart-rate cut-off stay true; no exact alarms, no new permissions, no network.
+- **Drawing.** Glance has no canvas: rings are white alpha masks drawn with `android.graphics.Canvas` (`RingBitmaps`, the
+  app's `DialMath` geometry) and tinted with day/night colour pairs from the `:core:ui` tokens (`WidgetPalette`), so
+  they follow the system theme. Numbers are real text (system font scale applies). One spoken sentence per widget.
+- **Rules.** Scores from another local day are not shown as today's. A heart rate missing, older than six hours, from the
+  future or not positive shows "No recent reading", never a number.
+- **Taps** start `MainActivity` with `WidgetDeepLink.EXTRA_ROUTE` set to `recovery`, `overview` or `heartrate`; the host
+  validates it with `WidgetDeepLink.routeFrom(intent)` before navigating.

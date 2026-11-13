@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget picker names and descriptions -->
+    <string name="widget_recovery_name">Apex Recovery</string>
+    <string name="widget_recovery_description">Today\'s recovery as a ring.</string>
+    <string name="widget_today_name">Apex Today</string>
+    <string name="widget_today_description">Recovery, sleep score and day strain side by side.</string>
+    <string name="widget_heart_rate_name">Apex Heart rate</string>
+    <string name="widget_heart_rate_description">Your latest heart rate and how long ago it was read.</string>
+
+    <!-- Neutral state: no snapshot, or Demo mode. Shows nothing about the owner. -->
+    <string name="widget_open_apex">Open Apex</string>
+    <string name="widget_open_apex_description">Apex. Open the app to load your data.</string>
+
+    <!-- Labels -->
+    <string name="widget_label_recovery">Recovery</string>
+    <string name="widget_label_sleep">Sleep</string>
+    <string name="widget_label_strain">Strain</string>
+    <string name="widget_label_heart_rate">Heart rate</string>
+    <string name="widget_unit_bpm">bpm</string>
+
+    <!-- State vocabulary (same words as the app) -->
+    <string name="widget_calibrating">Calibrating</string>
+    <string name="widget_provisional">Provisional</string>
+    <string name="widget_reason_no_data">No data</string>
+    <string name="widget_reason_not_worn">Not worn</string>
+    <string name="widget_reason_no_hrv">No HRV last night</string>
+    <string name="widget_reason_awaiting_sleep">Waiting for sleep</string>
+    <string name="widget_reason_insufficient_hr">Not enough data</string>
+    <string name="widget_reason_not_connected">Not connected</string>
+    <string name="widget_reason_permission">Permission needed</string>
+    <string name="widget_source_unknown">Source unknown</string>
+    <string name="widget_provenance_mark_observed">● %1$s</string>
+    <string name="widget_provenance_mark_derived">○ %1$s</string>
+    <plurals name="widget_calibrating_nights">
+        <item quantity="one">%1$d night to go</item>
+        <item quantity="other">%1$d nights to go</item>
+    </plurals>
+
+    <!-- Heart rate -->
+    <string name="widget_hr_no_recent">No recent reading</string>
+    <string name="widget_age_just_now">Just now</string>
+    <string name="widget_age_minutes">%1$d min ago</string>
+    <string name="widget_age_hours">%1$d h ago</string>
+
+    <!-- Footer of the Today widget -->
+    <string name="widget_updated">Updated %1$s</string>
+
+    <!-- Spoken descriptions (TalkBack reads one sentence per widget) -->
+    <string name="widget_band_green">green</string>
+    <string name="widget_band_yellow">yellow</string>
+    <string name="widget_band_red">red</string>
+    <string name="widget_cd_recovery_value">Recovery %1$d percent, %2$s</string>
+    <string name="widget_cd_sleep_value">Sleep score %1$d percent</string>
+    <string name="widget_cd_strain_value">Strain %1$s of 21</string>
+    <string name="widget_cd_calibrating">%1$s calibrating</string>
+    <string name="widget_cd_calibrating_nights">%1$s calibrating, %2$s</string>
+    <string name="widget_cd_unavailable">%1$s unavailable, %2$s</string>
+    <string name="widget_cd_hr_value">Heart rate %1$d beats per minute, %2$s</string>
+    <string name="widget_cd_hr_none">Heart rate, no recent reading</string>
+    <string name="widget_cd_join">%1$s. %2$s</string>
+</resources>
