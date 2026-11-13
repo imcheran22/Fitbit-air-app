@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="behaviours_title">Behaviours</string>
+    <string name="behaviours_intro">Things you want to note each day. Your answers are self-reported and feed the journal analysis.</string>
+    <string name="behaviours_loading_cd">Loading behaviours</string>
+    <string name="behaviours_list_title">Your behaviours</string>
+    <string name="behaviours_builtin">Built-in</string>
+    <string name="behaviours_custom">Custom</string>
+    <string name="behaviours_hidden">Hidden</string>
+    <string name="behaviours_kind_yes_no">Yes or no</string>
+    <string name="behaviours_kind_scale">Amount, 0 to 4</string>
+    <string name="behaviours_builtin_note">Built-in behaviours cannot be deleted. Hide them instead; their logged values are kept.</string>
+    <string name="behaviours_hide">Hide</string>
+    <string name="behaviours_show">Show</string>
+    <string name="behaviours_delete">Delete</string>
+    <string name="behaviours_delete_confirm">Delete for good</string>
+    <string name="behaviours_delete_warning">Deleting %1$s also removes every value you logged for it.</string>
+    <string name="behaviours_row_cd">%1$s. %2$s, %3$s.</string>
+    <string name="behaviours_row_hidden_cd">%1$s. %2$s, %3$s. Hidden.</string>
+    <string name="behaviours_hide_cd">Hide %1$s</string>
+    <string name="behaviours_show_cd">Show %1$s</string>
+    <string name="behaviours_delete_cd">Delete %1$s</string>
+    <string name="behaviours_add_title">Add a behaviour</string>
+    <string name="behaviours_name_label">Name</string>
+    <string name="behaviours_name_hint">For example Sauna</string>
+    <string name="behaviours_name_error_empty">Enter a name.</string>
+    <string name="behaviours_name_error_too_long">Use at most %1$d characters.</string>
+    <string name="behaviours_kind_label">How to log it</string>
+    <string name="behaviours_kind_group_cd">How to log it</string>
+    <string name="behaviours_add">Add</string>
+</resources>

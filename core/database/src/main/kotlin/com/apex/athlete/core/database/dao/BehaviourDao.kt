@@ -39,6 +39,12 @@ interface BehaviourDao {
     @Query("DELETE FROM behaviour_entry WHERE epochDay = :epochDay AND behaviourId = :behaviourId")
     suspend fun deleteEntry(epochDay: Long, behaviourId: String): Int
 
+    @Query("DELETE FROM behaviour_entry WHERE behaviourId = :behaviourId")
+    suspend fun deleteEntriesOf(behaviourId: String): Int
+
+    @Query("DELETE FROM behaviour_def WHERE id = :id")
+    suspend fun deleteDef(id: String): Int
+
     @Query("SELECT * FROM behaviour_entry WHERE epochDay BETWEEN :fromDay AND :toDay ORDER BY epochDay, behaviourId")
     suspend fun entriesBetween(fromDay: Long, toDay: Long): List<BehaviourEntryEntity>
 

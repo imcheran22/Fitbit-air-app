@@ -95,6 +95,20 @@ class LocalExtrasRobolectricTest {
         assertEquals(1, h.db.behaviourDao().entryCount())
     }
 
+    @Test fun deletingACustomBehaviourRemovesItsValuesAndBuiltInsRefuse() = runBlocking {
+        val h = harness()
+        val b = h.extras.behaviours
+        val sauna = b.add("Sauna", BehaviourKind.YES_NO, "sauna")
+        b.setValue(h.today, sauna, 1.0)
+        assertEquals(1, h.db.behaviourDao().entryCount())
+        b.delete(sauna)
+        assertNull(h.db.behaviourDao().defById(sauna))
+        assertEquals(0, h.db.behaviourDao().entryCount(), "the logged values go with the behaviour")
+        assertFailsWith<IllegalArgumentException> { b.delete("journal_alcohol") }
+        assertFailsWith<IllegalArgumentException> { b.delete("not-a-behaviour") }
+        b.delete("custom:ghost") // unknown custom id: nothing to do
+    }
+
     @Test fun builtInBehavioursCanBeRenamedWithoutMovingTheirValues() = runBlocking {
         val h = harness()
         val b = h.extras.behaviours

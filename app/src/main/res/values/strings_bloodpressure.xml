@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bp_title">Blood pressure</string>
+    <string name="bp_not_diagnosis">Not a diagnosis. Categories follow the 2017 ACC/AHA adult guideline and are meant for the average of several readings. Talk to a clinician about any reading that worries you.</string>
+    <string name="bp_loading_cd">Loading blood pressure readings</string>
+
+    <string name="bp_entry_title">Add a reading</string>
+    <string name="bp_systolic">Systolic (mmHg)</string>
+    <string name="bp_diastolic">Diastolic (mmHg)</string>
+    <string name="bp_pulse">Pulse (beats per minute)</string>
+    <string name="bp_pulse_optional">Optional</string>
+    <string name="bp_error_systolic">Enter a systolic value from 40 to 300.</string>
+    <string name="bp_error_diastolic">Enter a diastolic value from 20 to 200.</string>
+    <string name="bp_error_pulse">Enter a pulse from 25 to 240, or leave it blank.</string>
+    <string name="bp_error_order">Diastolic must be lower than systolic.</string>
+    <string name="bp_save">Save reading</string>
+    <string name="bp_saving">Saving</string>
+
+    <string name="bp_average_title">Average, last 7 days</string>
+    <string name="bp_average_count">%1$d readings in the last 7 days</string>
+    <string name="bp_average_value_cd">Average %1$s over %2$d mmHg, category %3$s</string>
+    <string name="bp_average_systolic">Systolic</string>
+    <string name="bp_average_diastolic">Diastolic</string>
+    <string name="bp_average_unit">mmHg</string>
+    <string name="bp_average_need">Needs at least 3 readings in the last 7 days for an average category. You have %1$d.</string>
+    <string name="bp_reason_insufficient">Needs at least 3 readings for an average category.</string>
+    <string name="bp_reason_implausible">Outside the range this app accepts, so no category.</string>
+
+    <string name="bp_cat_normal">Normal</string>
+    <string name="bp_cat_elevated">Elevated</string>
+    <string name="bp_cat_stage1">Stage 1</string>
+    <string name="bp_cat_stage2">Stage 2</string>
+    <string name="bp_cat_crisis">Crisis range</string>
+
+    <string name="bp_history_title">History</string>
+    <string name="bp_history_empty">No readings yet.</string>
+    <string name="bp_single_tag">Single reading</string>
+    <string name="bp_single_category">%1$s, single reading</string>
+    <string name="bp_single_note">A category from one reading is only an indication.</string>
+    <string name="bp_row_value">%1$d/%2$d mmHg</string>
+    <string name="bp_row_pulse">Pulse %1$d bpm</string>
+    <string name="bp_row_cd">%1$d over %2$d millimetres of mercury, %3$s, %4$s. Source: %5$s.</string>
+    <string name="bp_row_pulse_cd">pulse %1$d beats per minute</string>
+    <string name="bp_row_no_pulse_cd">no pulse recorded</string>
+    <string name="bp_row_no_category">no category</string>
+    <string name="bp_delete">Delete</string>
+    <string name="bp_delete_cd">Delete reading %1$s</string>
+</resources>

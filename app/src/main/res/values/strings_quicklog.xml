@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared write outcomes of the log screens -->
+    <string name="extras_saved">Saved.</string>
+    <string name="extras_demo_not_saved">Not saved in Demo mode.</string>
+    <string name="extras_invalid">That entry could not be saved. Check the numbers and try again.</string>
+    <string name="extras_error">Could not save. Try again.</string>
+    <string name="extras_self_reported_note">Self-reported</string>
+
+    <string name="quicklog_title">Quick log</string>
+    <string name="quicklog_intro">Log water, mood, symptoms or a note for today. Everything stays on this phone and is marked self-reported.</string>
+    <string name="quicklog_water_title">Water</string>
+    <string name="quicklog_water_label">Amount in ml</string>
+    <string name="quicklog_water_hint">For example 250</string>
+    <string name="quicklog_water_preset">%1$d ml</string>
+    <string name="quicklog_water_preset_cd">Set water to %1$d millilitres</string>
+    <string name="quicklog_water_presets_cd">Common amounts</string>
+    <string name="quicklog_water_error">Enter a whole number of ml from 1 to 10000.</string>
+    <string name="quicklog_water_today">Water today</string>
+    <string name="quicklog_mood_title">Mood</string>
+    <string name="quicklog_mood_low">Low</string>
+    <string name="quicklog_mood_high">Great</string>
+    <string name="quicklog_mood_group_cd">Mood from 1 to 5</string>
+    <string name="quicklog_mood_option_cd">Mood %1$d of 5</string>
+    <string name="quicklog_symptoms_title">Symptoms</string>
+    <string name="quicklog_symptoms_group_cd">Symptoms, select any that apply</string>
+    <string name="quicklog_symptom_headache">Headache</string>
+    <string name="quicklog_symptom_fatigue">Tired</string>
+    <string name="quicklog_symptom_sore">Sore muscles</string>
+    <string name="quicklog_symptom_nausea">Nausea</string>
+    <string name="quicklog_symptom_cold">Cold or flu</string>
+    <string name="quicklog_symptom_dizzy">Dizzy</string>
+    <string name="quicklog_symptom_pain">Pain</string>
+    <string name="quicklog_symptom_stress">Stressed</string>
+    <string name="quicklog_note_title">Note</string>
+    <string name="quicklog_note_label">Note for today</string>
+    <string name="quicklog_note_hint">Anything worth remembering</string>
+    <string name="quicklog_note_counter">%1$d of %2$d characters</string>
+    <string name="quicklog_save">Save</string>
+    <string name="quicklog_saving">Saving</string>
+    <string name="quicklog_nothing_to_save">Choose something to log first.</string>
+    <string name="quicklog_today_title">Logged today</string>
+    <string name="quicklog_today_empty">Nothing logged today yet.</string>
+    <string name="quicklog_entry_water">Water, %1$d ml</string>
+    <string name="quicklog_entry_mood">Mood, %1$d of 5</string>
+    <string name="quicklog_entry_symptom">Symptom, %1$s</string>
+    <string name="quicklog_entry_note">Note, %1$s</string>
+    <string name="quicklog_entry_cd">%1$s, at %2$s, self-reported</string>
+    <string name="quicklog_entry_delete_cd">Delete entry: %1$s</string>
+    <string name="quicklog_entry_delete">Delete</string>
+    <string name="quicklog_close">Close</string>
+</resources>

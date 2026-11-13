@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="food_title">Food</string>
+    <string name="food_prev_day">Previous day</string>
+    <string name="food_next_day">Next day</string>
+    <string name="food_go_today">Go to today</string>
+    <string name="food_loading_cd">Loading meals</string>
+    <string name="food_add_meal">Add a meal</string>
+    <string name="food_meals_title">Meals</string>
+    <string name="food_meals_empty">No meals logged for this day.</string>
+    <string name="food_meal_breakfast">Breakfast</string>
+    <string name="food_meal_lunch">Lunch</string>
+    <string name="food_meal_dinner">Dinner</string>
+    <string name="food_meal_snack">Snack</string>
+    <string name="food_meal_kind_group_cd">Meal type</string>
+    <string name="food_not_logged">not logged</string>
+    <string name="food_meal_summary">%1$s, %2$s</string>
+    <string name="food_meal_nutrients">%1$s kcal, protein %2$s g, carbs %3$s g, fat %4$s g</string>
+    <string name="food_meal_cd">%1$s, %2$s, at %3$s. %4$s. Source: %5$s.</string>
+    <string name="food_edit">Edit</string>
+    <string name="food_delete">Delete</string>
+    <string name="food_edit_cd">Edit %1$s</string>
+    <string name="food_delete_cd">Delete %1$s</string>
+
+    <string name="food_totals_title">Daily totals</string>
+    <string name="food_total_calories">Calories</string>
+    <string name="food_total_protein">Protein</string>
+    <string name="food_total_carbs">Carbs</string>
+    <string name="food_total_fat">Fat</string>
+    <string name="food_total_fibre">Fibre</string>
+    <string name="food_unit_kcal">kcal</string>
+    <string name="food_unit_g">g</string>
+    <string name="food_total_incomplete">Some meals leave this out, so the total is at least this much.</string>
+    <string name="food_total_cd">%1$s: %2$s</string>
+
+    <string name="food_macros_title">Macro split</string>
+    <string name="food_macros_note">Shares of the energy in protein, carbs and fat (4, 4 and 9 kcal per gram). This is not the same as the calories you typed.</string>
+    <string name="food_macros_no_entries">Log a meal to see the split.</string>
+    <string name="food_macros_incomplete">Needs protein, carbs and fat on every meal.</string>
+    <string name="food_macros_no_energy">The logged macros add up to zero energy.</string>
+    <string name="food_macro_bar_cd">Macro split: protein %1$d percent, carbs %2$d percent, fat %3$d percent</string>
+    <string name="food_macro_legend">%1$s %2$d%%</string>
+
+    <string name="food_balance_title">Energy balance</string>
+    <string name="food_balance_intake">Eaten</string>
+    <string name="food_balance_burned">Burned</string>
+    <string name="food_balance_value_label">Eaten minus burned</string>
+    <string name="food_balance_surplus">More eaten than burned</string>
+    <string name="food_balance_deficit">Less eaten than burned</string>
+    <string name="food_balance_not_enough">Not enough data</string>
+    <string name="food_balance_no_entries">Log a meal with calories to see the balance.</string>
+    <string name="food_balance_intake_incomplete">Some meals have no calories, so the balance is not shown.</string>
+    <string name="food_balance_provisional">Energy burned for today is still adding up.</string>
+    <string name="food_balance_no_burn">No energy burned was measured for this day.</string>
+    <string name="food_balance_note">Energy burned is a wearable estimate and can be off by 10 percent or more. The balance is context, not a weight prediction.</string>
+    <string name="food_balance_cd">Energy balance: %1$s</string>
+
+    <string name="food_editor_add_title">Add a meal</string>
+    <string name="food_editor_edit_title">Edit meal</string>
+    <string name="food_field_name">Name</string>
+    <string name="food_field_name_hint">For example Oatmeal</string>
+    <string name="food_field_kcal">Calories (kcal)</string>
+    <string name="food_field_protein">Protein (g)</string>
+    <string name="food_field_carbs">Carbs (g)</string>
+    <string name="food_field_fat">Fat (g)</string>
+    <string name="food_field_fibre">Fibre (g)</string>
+    <string name="food_field_optional">Optional. Leave blank if you do not know.</string>
+    <string name="food_error_name">Enter a name of 1 to 100 characters.</string>
+    <string name="food_error_number">Enter a number from 0 up to %1$d, or leave it blank.</string>
+    <string name="food_save">Save</string>
+    <string name="food_saving">Saving</string>
+    <string name="food_cancel">Cancel</string>
+</resources>

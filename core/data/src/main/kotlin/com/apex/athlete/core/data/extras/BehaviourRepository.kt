@@ -1,5 +1,6 @@
 package com.apex.athlete.core.data.extras
 
+import androidx.room.withTransaction
 import com.apex.athlete.core.data.model.DailyObservation
 import com.apex.athlete.core.data.model.HealthBatch
 import com.apex.athlete.core.database.entity.BehaviourDefEntity
@@ -92,6 +93,22 @@ class BehaviourRepository internal constructor(
 
     /** Hides ([archived] = true) or shows a behaviour. Its logged values are kept. */
     suspend fun setArchived(id: String, archived: Boolean) = changeDef(id) { it.copy(archived = archived) }
+
+    /**
+     * Deletes a custom behaviour and every value logged for it. Built-in behaviours cannot be deleted (hide them
+     * instead): throws [IllegalArgumentException]. An unknown custom id is a no-op.
+     */
+    suspend fun delete(id: String) {
+        require(BehaviourCatalog.builtInMetric(id) == null) { "A built-in behaviour cannot be deleted." }
+        require(id.startsWith(BehaviourCatalog.CUSTOM_PREFIX)) { "Unknown behaviour." }
+        access.write { store ->
+            val dao = store.db.behaviourDao()
+            store.db.withTransaction {
+                dao.deleteEntriesOf(id)
+                dao.deleteDef(id)
+            }
+        }
+    }
 
     /** Applies the owner's order: [orderedIds] get sort orders 0, 1, 2 ... Pass every behaviour id, built-ins included. */
     suspend fun reorder(orderedIds: List<String>) {

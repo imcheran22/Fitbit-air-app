@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="breathe_title">Breathe</string>
+    <string name="breathe_intro">A paced-breathing timer. It sets the pace only and makes no claim about your health.</string>
+    <string name="breathe_pattern_title">Pattern</string>
+    <string name="breathe_pattern_group_cd">Breathing pattern</string>
+    <string name="breathe_pattern_box">Box</string>
+    <string name="breathe_pattern_478">4-7-8</string>
+    <string name="breathe_pattern_coherent">Coherent</string>
+    <string name="breathe_pattern_extended">Long exhale</string>
+    <string name="breathe_pattern_sigh">Double sigh</string>
+    <string name="breathe_timing_in">In %1$s s</string>
+    <string name="breathe_timing_in_again">In again %1$s s</string>
+    <string name="breathe_timing_hold">Hold %1$s s</string>
+    <string name="breathe_timing_out">Out %1$s s</string>
+    <string name="breathe_timing_cd">Each round: %1$s</string>
+    <string name="breathe_length_title">Length</string>
+    <string name="breathe_length_group_cd">Session length</string>
+    <string name="breathe_length_minutes">%1$d min</string>
+    <string name="breathe_length_minutes_cd">%1$d minutes</string>
+    <string name="breathe_start">Start</string>
+    <string name="breathe_stop">Stop and save</string>
+
+    <string name="breathe_phase_in">Breathe in</string>
+    <string name="breathe_phase_in_again">Breathe in again</string>
+    <string name="breathe_phase_hold">Hold</string>
+    <string name="breathe_phase_out">Breathe out</string>
+    <string name="breathe_guide_cd">Breathing guide, %1$s, %2$d seconds</string>
+    <string name="breathe_guide_circle_cd">Circle grows while you breathe in and shrinks while you breathe out</string>
+    <string name="breathe_remaining">%1$s left</string>
+    <string name="breathe_reduced_note">Animations are off, so the guide shows words and a countdown.</string>
+
+    <string name="breathe_done_title">Session finished</string>
+    <string name="breathe_done_saved">%1$s, %2$s of %3$s. Saved as self-reported.</string>
+    <string name="breathe_done_not_saved">%1$s, %2$s of %3$s. Not saved.</string>
+    <string name="breathe_done_too_short">Stopped before the first second, so nothing was saved.</string>
+    <string name="breathe_duration">%1$d min %2$02d s</string>
+
+    <string name="breathe_hrv_title">Spot HRV</string>
+    <string name="breathe_hrv_unavailable">Unavailable</string>
+    <string name="breathe_hrv_no_strap">Needs a heart-rate strap that sends beat-to-beat intervals. No strap is connected.</string>
+    <string name="breathe_hrv_waiting">Connected, waiting for beats.</string>
+    <string name="breathe_hrv_value_label">HRV (RMSSD)</string>
+    <string name="breathe_hrv_hr_label">Heart rate</string>
+    <string name="breathe_hrv_unit_ms">ms</string>
+    <string name="breathe_hrv_unit_bpm">bpm</string>
+    <string name="breathe_hrv_beats">Based on %1$d clean beats</string>
+    <string name="breathe_hrv_reason_few">Not enough clean beats yet. At least 30 are needed.</string>
+    <string name="breathe_hrv_reason_short">The recording is shorter than 60 seconds.</string>
+    <string name="breathe_hrv_reason_adjacent">No two clean beats in a row.</string>
+    <string name="breathe_hrv_note">A short estimate from the strap. Posture, breathing and time of day change it, so do not compare it with your overnight HRV.</string>
+
+    <string name="breathe_recent_title">Recent sessions</string>
+    <string name="breathe_recent_empty">No sessions yet.</string>
+    <string name="breathe_recent_row">%1$s, %2$s of %3$s</string>
+    <string name="breathe_recent_row_cd">%1$s, on %2$s. Self-reported.</string>
+    <string name="breathe_delete">Delete</string>
+    <string name="breathe_delete_cd">Delete session %1$s</string>
+    <string name="breathe_loading_cd">Loading sessions</string>
+</resources>
