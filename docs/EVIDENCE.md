@@ -164,3 +164,27 @@ All thresholds are Apex calibration choices. The wording is "may indicate"; no s
 1. Open each source above and confirm author, year, journal, population and quoted error. Until then every row stays "unverified".
 2. Confirm the Plews 2014 compliance finding before anyone describes the 3-reading rule as evidence-based.
 3. Decide whether the 85 % efficiency anchor and the 38-50 % restorative band should be replaced by a cited normative table (they are Apex choices today).
+
+## Pulse parity engines (goals, weekly plan, report, blood pressure, nutrition, breathing, spot HRV)
+
+Written 2026-11-13 by the sports-science reviewer. **No paper was opened in this session**; every citation below is recalled and UNVERIFIED. These engines are display-time
+arithmetic over plain inputs (no stored score, no algorithm-version bump). The Pulse repository was used for behaviour only (nothing copied; Pulse is PolyForm Noncommercial). The engines' rules are listed in `docs/FORMULAS.md`, "Pulse parity engines".
+
+| Item | Value | Source or reason | Grade |
+|---|---|---|---|
+| Recovered day = recovery >= 67 | 67 | Reuses the recovery engine's PEAK edge (Apex calibration, section 2 above) | Apex-specific choice |
+| Goal streak, achieved-when `>=`, provisional today | - | Product conventions; no study | Apex-specific choice |
+| Weekly plan template, factors (1.3 / 1.0 / 0.7 / 0.4), at most 3 HARD, no back-to-back HARD, at least 1 REST, first-day limits (recovery < 34, HIGH_RISK -> REST, OVERREACHING -> LIGHT) | see FORMULAS P2 | Alternating hard and easy days is common coaching practice (no source opened); 1.3 / 0.7 mirror `StrainTargetCalculator`; ratio-zone limits carry the Impellizzeri 2020 caveat (section Sources). No study validates this plan | Apex-specific choice; suggestion only |
+| Report: change needs >= 4 recorded days per period; SPARSE below 50 % coverage | 4 / 0.5 | Apex choices (a mean of fewer days is dominated by one value) | Apex-specific choice |
+| Blood-pressure categories | Normal < 120/80; Elevated 120-129 and < 80; Stage 1 130-139 or 80-89; Stage 2 >= 140 or >= 90; Crisis > 180 and/or > 120 | **UNVERIFIED**: Whelton PK et al. 2017 ACC/AHA/AAPA/ABC/ACPM/AGS/APhA/ASH/ASPC/NMA/PCNA Guideline for the Prevention, Detection, Evaluation, and Management of High Blood Pressure in Adults. Hypertension 2018;71(6):e13-e115 (also J Am Coll Cardiol 2018;71(19):e127-e248). Adults; defined on the average of >= 2 careful readings on >= 2 occasions. The Crisis cut-off is recalled from AHA public material, not the guideline text | published categories, citation unverified; a label, not a diagnosis |
+| Averaging needs >= 3 readings; mean rounded to whole mmHg; plausibility 50-300 / 30-200 | 3 / half-up / ranges | The guideline asks for >= 2 readings on >= 2 occasions; the rest is Apex handling of user-typed numbers | Apex-specific choice |
+| Atwater factors 4 / 4 / 9 kcal per g | 4, 4, 9 | **UNVERIFIED**: Atwater WO, Bryant AP (1900), USDA general factors; rounded averages, fibre about 2 kcal/g, alcohol 7 kcal/g not modelled; label energy can differ | reasonable heuristic |
+| Energy balance = intake - measured expenditure | - | Arithmetic; wearable expenditure error is of the order of 10 % or more (recalled, UNVERIFIED); intake logging is typically under-reported (recalled, UNVERIFIED) | context only |
+| Breathing patterns box 4-4-4-4, 4-7-8, coherent 5.5 s, extended exhale 4-6 | as named | Conventional names of the patterns. Coherent breathing at about 5.5 breaths per minute: Lehrer PM, Gevirtz R. Front Psychol 2014;5:756 (recalled, UNVERIFIED). No health effect is claimed by Apex | pacing timer |
+| Physiological sigh durations 2 s + 1 s in, 6 s out | 2 / 1 / 6 | **Calibration choice**; the existence of a double-inhale breathing pattern is described in the literature (recalled, not opened); durations were not sourced | Apex-specific choice |
+| RMSSD definition | sqrt(mean of squared successive RR differences) | Task Force of the ESC and NASPE (1996), Heart rate variability: standards of measurement. Circulation 93(5):1043-1065 (recalled, UNVERIFIED) | validated standard, citation unverified |
+| Ultra-short (about 60 s) RMSSD | needs >= 60 s and >= 30 beats | Esco MR, Flatt AA (2014), Ultra-short-term HRV in athletes. J Sports Sci Med 13:535-541 (recalled, UNVERIFIED; the 60 s floor is an Apex choice, not their number) | Apex-specific choice, loosely supported |
+| Artifact rule: RR in 300-2000 ms, > 20 % from the 5-beat median | 300 / 2000 / 5 / 20 % | Common practice in HRV tools; no validation opened | Apex-specific choice |
+
+Open verification tasks for these engines: (1) open Whelton 2018 and confirm the five category thresholds and the crisis cut-off before any wording quotes them; (2) confirm the 4/4/9 factors against a nutrition reference; (3) find a source for the sigh
+timing or keep it labelled a calibration choice in the UI; (4) decide whether the weekly template should vary with the strain base (it does not today).

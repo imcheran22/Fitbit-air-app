@@ -541,3 +541,93 @@ version 2 or version 3 reviews (unverified). The sources of section 8 are listed
 - Uth N et al. (2004). Estimation of VO2max from the ratio between HRmax and HRrest. Eur J Appl Physiol.
 - Watson NF et al. (2015). Recommended amount of sleep for a healthy adult. Sleep.
 - Williams S et al. (2017). Better way to determine the acute:chronic workload ratio? Br J Sports Med.
+
+## Pulse parity engines
+
+Seven pure-Kotlin engines that re-implement the behaviour of the Pulse Mobile feature set (goals, weekly plan, period report, blood-pressure category,
+nutrition log, breathing timer, spot HRV) from the behaviour description, not from Pulse's code. **They are display-time arithmetic over plain inputs: none
+stores a derived score, so `ANALYTICS_ALGORITHM_VERSION` is not bumped.** Every constant below is an Apex product or calibration choice unless a source is
+named; sources and their verification status are in `docs/EVIDENCE.md`, "Pulse parity engines". Every result carries a reason enum when a value is missing;
+none returns 0 for missing, and none is diagnostic. Tests: `GoalEngineTest`, `WeeklyPlanTest`, `ReportEngineTest`, `BloodPressureTest`, `NutritionTest`,
+`BreatheTest`, `SpotHrvTest` (hand-computed expectations).
+
+### P1. Goals (`goals/GoalEngine.kt`)
+
+Kinds: DAILY_STEPS, DAILY_SLEEP_MINUTES (daily); WEEKLY_ACTIVE_MINUTES, WEEKLY_AZM, WEEKLY_RECOVERED_DAYS (weekly). There is no default target.
+
+| Rule | Value | Basis |
+|---|---|---|
+| Achieved | value >= target (exactly the target counts) | convention |
+| Not recorded | a day with no value (absent, null, negative or non-finite) is "not recorded": never achieved, never 0; a recorded 0.0 is a value | missing stays missing |
+| Progress fraction | value / target, not capped; `achieved` separate | convention |
+| Provisional | today is provisional while the target is not met | convention |
+| Current streak | consecutive achieved days ending today if today is achieved, else ending yesterday; an unfinished today does not break it; a not-recorded or short day ends the run | convention |
+| Best streak | longest run of consecutive achieved days up to today | convention |
+| Weekly total | sum of recorded days from the week start (configurable weekday, default Monday) to today; `totalIsLowerBound` when a day in that span is not recorded; days after today ignored | convention |
+| Days left | from today to the week end inclusive (today can still add) | convention |
+| Pace | `remaining / daysLeftInclToday`, `remaining = max(0, target - total)`; null when nothing is recorded | convention |
+| Recovered day | recovery score >= 67 = `RecoveryEngine.Config().peakThreshold`, reused, not copied | Apex calibration choice of the recovery engine (section 2), not clinical |
+
+### P2. Weekly plan (`plan/WeeklyPlan.kt`)
+
+Input: personal strain base (nullable), today's recovery (nullable), load zone and a calibrating flag, sleep need, unavailable days. Output: 7 days with a band
+(REST, LIGHT, MODERATE, HARD), a strain centre, a sleep target, `confidence`, and `suggestionOnly = true` (always). Not a training prescription.
+
+| Rule | Value | Basis |
+|---|---|---|
+| No strain base | no plan (`STRAIN_BASE_MISSING`); no population default | missing stays missing |
+| Default template | MODERATE, HARD, LIGHT, HARD, MODERATE, LIGHT, REST | calibration choice (generic hard/easy alternation; not validated) |
+| First day, recovery < 34 | REST (`LOW_RECOVERY`) | 34 = lower edge of the MODERATE recovery band, calibration choice |
+| First day, load zone HIGH_RISK | REST; OVERREACHING: at most LIGHT; calibrating load: zone ignored | calibration choice; the workload ratio is contested (Impellizzeri 2020) so it only shortens one day |
+| Unavailable days | REST, flagged | athlete input |
+| Invariants (any template) | no two HARD in a row (later one -> MODERATE); at most 3 HARD (latest ones -> MODERATE); at least 1 REST (latest least-demanding day -> REST) | calibration choice; property-tested over all 4^7 templates |
+| Strain centre | `base x factor`, capped at 21; HARD 1.3, MODERATE 1.0, LIGHT 0.7, REST 0.4 | 1.3 and 0.7 mirror the +/-30 % recovery scale of the strain target (section 3); REST 0.4 is a calibration choice |
+| Sleep target | the supplied sleep need, every night; null if not supplied | no validated rule for extra sleep before or after hard days |
+| LOW confidence reasons | `LOAD_CALIBRATING`, `LOAD_MISSING`, `RECOVERY_MISSING`, `SLEEP_NEED_MISSING` (a set) | missing or calibrating inputs |
+
+### P3. Period report (`report/ReportEngine.kt`)
+
+| Rule | Value | Basis |
+|---|---|---|
+| Period | WEEK = 7 days from the start day; MONTH = to the day before the same date next month; previous period = the same number of days ending the day before the start | convention |
+| Means | over recorded days only, for recovery, sleep score, strain, HRV, resting HR | missing stays missing |
+| Change vs previous | mean minus previous mean, only when both periods have >= 4 recorded days of that metric; else null + `INSUFFICIENT_CURRENT/PREVIOUS/BOTH` | 4 is a calibration choice |
+| Best / worst day | recovery and sleep; ties go to the earlier day | convention |
+| Workouts | total of recorded counts (null if none recorded; 0 is a recorded 0); mean strain over days with >= 1 workout and a recorded strain | convention |
+| Load status at period end | zone recorded on the last day only, never carried forward; reason `NOT_RECORDED` or `CALIBRATING` | missing stays missing |
+| Goal achievements | daily goals: achieved days / days in period; weekly goals: 1 or 0 over the 7 days of a WEEK report; not summarised for a MONTH (`WEEKLY_GOAL_NOT_SUMMARISED_FOR_MONTH`) | convention |
+| Coverage | days with >= 1 of recovery, sleep, strain recorded / days in the period | convention |
+| SPARSE | coverage < 0.5 (exactly 0.5 is not sparse) | calibration choice |
+| In-progress period | with `asOfEpochDay`, only days up to it are used and coverage is measured against those elapsed days | avoids calling an unfinished week sparse |
+| Behaviour effects | carried in the supplied order, at most 3; they are associations from `JournalEffects`, not causes | no new statistics |
+
+### P4. Blood-pressure category (`bp/BloodPressure.kt`)
+
+Adult categories of the 2017 ACC/AHA guideline (**citation UNVERIFIED**), mmHg: NORMAL S < 120 and D < 80; ELEVATED 120 <= S < 130 and D < 80; STAGE_1 130 <= S < 140 or
+80 <= D < 90; STAGE_2 S >= 140 or D >= 90; CRISIS S > 180 and/or D > 120. One reading: the higher of the systolic and diastolic categories. Average: >= 3 valid readings (calibration
+choice; the guideline averages two or more readings on two or more occasions), mean rounded half-up to whole mmHg before classification (calibration choice). Implausible readings (S outside 50-300, D outside
+30-200, S <= D) are rejected and counted, never clamped (calibration choice, a typing-error guard). Nothing else is interpreted: no risk, no advice, no trend. A category is a label for the entered numbers,
+not a diagnosis; Apex has no blood-pressure sensor, readings are user-entered.
+
+### P5. Nutrition (`nutrition/Nutrition.kt`)
+
+| Rule | Value | Basis |
+|---|---|---|
+| Totals | per field, sum of known values (>= 0, finite); null when no entry has the field; `incomplete` when any entry lacks it (a lower bound) | missing stays missing |
+| Macro energy | protein 4, carbohydrate 4, fat 9 kcal/g; each share is of the sum of the three; needs all three macros complete | Atwater general factors (UNVERIFIED); caveat: rounded averages, fibre ~2 kcal/g, alcohol and label-specific factors are not modelled, so the sum is not the logged kcal |
+| Energy balance | intake minus measured total energy expenditure; only if entries exist AND kcal complete AND the day is not provisional AND a measured expenditure exists; else null + reason (`NO_ENTRIES`, `INTAKE_INCOMPLETE`, `DAY_PROVISIONAL`, `NO_MEASURED_EXPENDITURE`) | expenditure is a wearable estimate with a sizeable error; the balance is context, not a weight forecast |
+| Calorie target | the user's own number; none or non-positive = `TARGET_NOT_SET`; fraction not capped; remainder may be negative; lower-bound flag when kcal is incomplete | no default target (no population norm) |
+
+### P6. Breathing patterns (`breathe/BreathePattern.kt`)
+
+BOX 4-4-4-4 s; FOUR_SEVEN_EIGHT 4-7-8 s; COHERENT 5.5 s in / 5.5 s out (11 s cycle, about 5.5 breaths per minute); EXTENDED_EXHALE 4 in / 6 out; PHYSIOLOGICAL_SIGH inhale 2 s,
+second inhale 1 s, exhale 6 s (**the sigh's durations are a calibration choice**). `phaseAt(elapsedMillis)` returns phase, progress in [0, 1) and completed cycles (the start of a phase belongs to that phase);
+negative time throws. `cyclesFor(seconds)` is whole cycles, rounded down. This is a pacing timer; no claim about stress, HRV or health effects is made.
+
+### P7. Spot HRV (`breathe/SpotHrv.kt`)
+
+RMSSD = sqrt(mean of squared successive differences) of RR intervals in ms. Artifact rule: drop non-finite or outside 300..2000 ms (inclusive range kept); drop a beat that differs by more than 20 % from the median of the
+range-valid beats in the 5-beat window centred on it (itself included; exactly 20 % is kept; windows use the range-filtered values so one bad beat cannot cascade); differences only between adjacent beats that are both
+accepted. Needs >= 30 accepted beats and >= 60 s (sum of the intervals inside 300..2000 ms), else null with `TOO_FEW_BEATS` or `TOO_SHORT_RECORDING`; `NO_ADJACENT_BEATS` if no pair survives. Mean heart rate is 60000 / mean accepted RR.
+The result carries `provenanceHint = ESTIMATED`. All thresholds are calibration choices; a spot RMSSD depends on posture, breathing and time of day and must not be compared with the overnight value used by the recovery score.
+Hand-checked golden vectors: alternating 800/850 ms x 80 gives RMSSD 50.0 and 72.727 bpm; the repeating 800/820/800/860 x 20 series gives sqrt(156 400 / 79).
