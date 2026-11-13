@@ -73,7 +73,7 @@ object WidgetStateMapper {
     fun map(snapshot: WidgetSnapshot?, nowMillis: Long, zone: ZoneId): WidgetUiState {
         if (snapshot == null || snapshot.isDemo) return WidgetUiState.OpenApex
         // Scores belong to one local day. After midnight, yesterday's numbers are not shown as today's.
-        val today = LocalDate.ofInstant(Instant.ofEpochMilli(nowMillis), zone).toEpochDay()
+        val today = Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalDate().toEpochDay()
         val sameDay = today == snapshot.epochDay
         return WidgetUiState.Content(
             recovery = if (sameDay) tile(snapshot.recovery, RingKind.RECOVERY) else TileState.Unavailable(MetricReason.NO_DATA),

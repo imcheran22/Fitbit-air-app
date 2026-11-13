@@ -118,8 +118,8 @@ object GoogleHealthFilter {
             DataTypeKind.INTERVAL -> and("$f.interval.start_time >= \"${utc(from)}\"", "$f.interval.start_time < \"${utc(to)}\"")
             DataTypeKind.SLEEP_SESSION -> and("$f.interval.end_time >= \"${utc(from)}\"", "$f.interval.end_time < \"${utc(to)}\"")
             DataTypeKind.DAILY -> {
-                val start = LocalDate.ofInstant(from, zone)
-                val endInclusive = LocalDate.ofInstant(to.minusMillis(1), zone)
+                val start = from.atZone(zone).toLocalDate()
+                val endInclusive = to.minusMillis(1).atZone(zone).toLocalDate()
                 dateRange(type, start, endInclusive.plusDays(1))
             }
             DataTypeKind.SESSION -> {
@@ -142,7 +142,7 @@ object GoogleHealthFilter {
         DataTypeKind.SAMPLE -> "${type.filterField}.sample_time.physical_time >= \"${utc(from)}\""
         DataTypeKind.INTERVAL -> "${type.filterField}.interval.start_time >= \"${utc(from)}\""
         DataTypeKind.SLEEP_SESSION -> "${type.filterField}.interval.end_time >= \"${utc(from)}\""
-        DataTypeKind.DAILY -> "${type.filterField}.date >= \"${LocalDate.ofInstant(from, zone)}\""
+        DataTypeKind.DAILY -> "${type.filterField}.date >= \"${from.atZone(zone).toLocalDate()}\""
         DataTypeKind.SESSION ->
             "${type.filterField}.interval.civil_start_time >= \"${civilDateTime.format(LocalDateTime.ofInstant(from, zone).toLocalDate().minusDays(1).atStartOfDay())}\""
     }
