@@ -64,11 +64,20 @@ fun RecorderRoute(onBack: () -> Unit) {
         }
         if (missing.isEmpty()) vm.connectStrap() else permissionLauncher.launch(missing.toTypedArray())
     }
+    // Android 14+ starts a health foreground service only with a motion/sensor permission granted; activity
+    // recognition is the least sensitive one. Start either way: if it is refused the service stops and says so.
+    val activityLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { vm.start() }
+    val start = {
+        val perm = android.Manifest.permission.ACTIVITY_RECOGNITION
+        if (Build.VERSION.SDK_INT >= 29 &&
+            context.checkSelfPermission(perm) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) activityLauncher.launch(perm) else vm.start()
+    }
     RecorderScreen(
         ui = ui,
         saveState = saveState,
         onBack = onBack,
-        onStart = vm::start,
+        onStart = start,
         onPause = vm::pause,
         onResume = vm::resume,
         onStop = vm::stop,

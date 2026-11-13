@@ -176,7 +176,7 @@ has no `android:scheme` lines the check is skipped, never failed).
 - **FGS type `health` prerequisites (Android 14+):** per the platform docs the service needs one of BODY_SENSORS,
   ACTIVITY_RECOGNITION, HIGH_SAMPLING_RATE_SENSORS or a granted Health Connect permission at start; BLE connect is not
   on that list. The manifest declares READ_HEART_RATE, which counts once the owner has granted it. If the owner has not
-  granted any Health Connect permission, `RecorderService` catches the SecurityException and stops. Confirm on an
+  granted any Health Connect permission, `RecorderService` catches the SecurityException and stops. Apex now declares ACTIVITY_RECOGNITION and asks for it when a recording starts. Confirm on an
   Android 14+ device without Health Connect grants; if it fails, decide whether to request ACTIVITY_RECOGNITION.
 - **Strap on a real device:** the GATT flow (scan 0x180D, notify 0x2A37) is untested against hardware; the parser is
   unit-tested against the Bluetooth SIG layout. Strap support is Android 12+ only (below that scanning needs location).
