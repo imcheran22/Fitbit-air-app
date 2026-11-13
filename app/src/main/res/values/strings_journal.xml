@@ -37,5 +37,54 @@
     <string name="journal_save_error">The check-in could not be saved. Try again.</string>
     <string name="journal_save_hint_clear">Tap a selected number again to clear it.</string>
 
+    <!-- Factors -->
+    <string name="journal_factors_title">Daily factors</string>
+    <string name="journal_factors_intro">Log what applied to this day. Apex then looks at how your recovery and heart rate variability differed the next morning. Choose Not logged to remove an answer.</string>
+    <string name="journal_factor_alcohol">Alcohol</string>
+    <string name="journal_factor_late_caffeine">Late caffeine</string>
+    <string name="journal_factor_late_meal">Late meal</string>
+    <string name="journal_factor_stressful_day">Stressful day</string>
+    <string name="journal_factor_travel">Travel</string>
+    <string name="journal_factor_other">Factor</string>
+    <string name="journal_choice_yes">Yes</string>
+    <string name="journal_choice_no">No</string>
+    <string name="journal_choice_not_logged">Not logged</string>
+    <string name="journal_factor_option_cd">%1$s: %2$s</string>
+    <string name="journal_factor_saving">Saving</string>
+    <string name="journal_factor_saved">Saved.</string>
+    <string name="journal_factor_error">That answer could not be saved. Try again.</string>
+    <string name="journal_factors_loading_cd">Loading your factors</string>
+
+    <!-- Effects -->
+    <string name="journal_effects_title">Effects</string>
+    <string name="journal_effects_intro">Differences in the next morning\'s recovery and heart rate variability over the last 90 days, comparing days you logged a factor as yes with days you logged it as no.</string>
+    <string name="journal_effects_assoc_note">Associated with does not mean caused by. Sleep, training, meals and much else change on the same days. This is not medical advice.</string>
+    <string name="journal_effects_none_logged">Log factors for a few days to see associations. Each factor needs at least %1$d days with it and %1$d days without it, each followed by a measured recovery or heart rate variability.</string>
+    <string name="journal_effects_none_qualify">Nothing qualifies yet. Each factor needs at least %1$d days with it and %1$d days without it.</string>
+    <string name="journal_effects_no_outcomes">There is no next-morning recovery or heart rate variability to compare with yet.</string>
+    <string name="journal_effects_tests">Tests performed: %1$d. No correction is applied for running several, so some intervals will exclude zero by chance alone.</string>
+    <string name="journal_effects_tests_zero">Tests performed: 0. No factor has enough days yet.</string>
+    <string name="journal_effects_waiting_title">Not enough days yet</string>
+    <string name="journal_effects_loading_cd">Loading your associations</string>
+    <string name="journal_outcome_recovery">next-day recovery</string>
+    <string name="journal_outcome_hrv">next-day HRV</string>
+    <string name="journal_effect_recovery_lower">Associated with next-day recovery %1$s points lower</string>
+    <string name="journal_effect_recovery_higher">Associated with next-day recovery %1$s points higher</string>
+    <string name="journal_effect_hrv_lower">Associated with next-day HRV %1$s%% lower</string>
+    <string name="journal_effect_hrv_higher">Associated with next-day HRV %1$s%% higher</string>
+    <string name="journal_effect_flat_recovery">Associated with no difference in next-day recovery</string>
+    <string name="journal_effect_flat_hrv">Associated with no difference in next-day HRV</string>
+    <string name="journal_effect_interval_points">95%% interval: %1$s to %2$s points</string>
+    <string name="journal_effect_interval_percent">95%% interval: %1$s%% to %2$s%%</string>
+    <string name="journal_effect_arms">Based on %1$d days with it and %2$d days without it</string>
+    <string name="journal_effect_includes_zero">The interval includes zero, so this could be chance.</string>
+    <string name="journal_effect_excludes_zero">The interval does not include zero.</string>
+    <string name="journal_effect_spoken">%1$s. %2$s. %3$s. %4$s. %5$s Calculated from your own answers.</string>
+    <string name="journal_effect_note_title">%1$s and %2$s</string>
+    <string name="journal_need_so_far">Days so far: %1$d with it, %2$d without it.</string>
+    <string name="journal_need_more_with">More days with it needed: %1$d.</string>
+    <string name="journal_need_more_without">More days without it needed: %1$d.</string>
+    <string name="journal_need_no_variance">The outcome was identical on every day, so no interval could be computed.</string>
+
     <string name="journal_history_note">Past check-ins are used in the Recovery calculation. A list of earlier days is not shown yet.</string>
 </resources>

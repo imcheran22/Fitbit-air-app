@@ -1,5 +1,6 @@
 package com.apex.athlete.ui.health
 
+import com.apex.athlete.core.data.settings.UnitSystem
 import com.apex.athlete.core.domain.MetricType
 import com.apex.athlete.core.domain.Polarity
 import kotlin.math.abs
@@ -39,17 +40,48 @@ class MetricDisplay(val decimals: Int, val unit: String?, val convert: (Double) 
 private val identity: (Double) -> Double = { it }
 private val minutesToHours: (Double) -> Double = { it / 60.0 }
 
-fun metricDisplay(metric: MetricType, skinUnit: String, skinConvert: (Double) -> Double): MetricDisplay = when (metric) {
-    MetricType.HRV_RMSSD, MetricType.HRV_DEEP_SLEEP_RMSSD -> MetricDisplay(0, "ms", identity)
-    MetricType.RESTING_HEART_RATE, MetricType.SLEEPING_HEART_RATE -> MetricDisplay(0, "bpm", identity)
+/** The unit words for distance and weight; the screens read them from resources, tests use the defaults. */
+data class UnitLabels(val km: String = "km", val mi: String = "mi", val kg: String = "kg", val lb: String = "lb")
+
+private const val METERS_PER_MILE = 1609.344
+private const val POUNDS_PER_KG = 2.2046226218
+private const val FAHRENHEIT_PER_CELSIUS = 1.8
+
+/**
+ * [skinUnit] and [skinConvert] describe a temperature DIFFERENCE (no offset). An absolute skin temperature
+ * (SKIN_TEMP_NIGHTLY) uses the same unit word but adds the 32 degree offset when [units] is imperial.
+ * Distance is stored in metres and weight in kilograms; both follow [units].
+ */
+fun metricDisplay(
+    metric: MetricType,
+    skinUnit: String,
+    skinConvert: (Double) -> Double,
+    units: UnitSystem = UnitSystem.METRIC,
+    labels: UnitLabels = UnitLabels(),
+): MetricDisplay = when (metric) {
+    MetricType.HRV_RMSSD, MetricType.HRV_DEEP_SLEEP_RMSSD, MetricType.HRV_SLEEP_SAMPLES -> MetricDisplay(0, "ms", identity)
+    MetricType.HRV_LOW_FREQUENCY, MetricType.HRV_HIGH_FREQUENCY -> MetricDisplay(0, "ms²", identity)
+    MetricType.RESTING_HEART_RATE, MetricType.SLEEPING_HEART_RATE, MetricType.STRESS_DAY_AGGREGATE_BPM -> MetricDisplay(0, "bpm", identity)
     MetricType.RESPIRATORY_RATE -> MetricDisplay(1, "br/min", identity)
     MetricType.SPO2_AVG, MetricType.SPO2_LOWER_BOUND, MetricType.SPO2_UPPER_BOUND -> MetricDisplay(1, "%", identity)
     MetricType.SKIN_TEMP_DEVIATION -> MetricDisplay(1, skinUnit, skinConvert)
+    MetricType.SKIN_TEMP_NIGHTLY -> MetricDisplay(
+        1,
+        skinUnit,
+        if (units == UnitSystem.IMPERIAL) { c: Double -> c * FAHRENHEIT_PER_CELSIUS + 32.0 } else identity,
+    )
     MetricType.VO2_MAX -> MetricDisplay(1, "ml/kg/min", identity)
     MetricType.SLEEP_DURATION, MetricType.TIME_IN_BED -> MetricDisplay(1, "h", minutesToHours)
     MetricType.RECOVERY_SCORE, MetricType.SLEEP_SCORE -> MetricDisplay(0, "%", identity)
     MetricType.STRAIN_SCORE, MetricType.STRAIN_TARGET -> MetricDisplay(1, null, identity)
     MetricType.STEPS, MetricType.DAILY_TRIMP -> MetricDisplay(0, null, identity)
+    MetricType.DISTANCE ->
+        if (units == UnitSystem.IMPERIAL) MetricDisplay(2, labels.mi) { it / METERS_PER_MILE } else MetricDisplay(2, labels.km) { it / 1000.0 }
+    MetricType.WEIGHT ->
+        if (units == UnitSystem.IMPERIAL) MetricDisplay(1, labels.lb) { it * POUNDS_PER_KG } else MetricDisplay(1, labels.kg, identity)
+    MetricType.BODY_FAT, MetricType.HR_DIP -> MetricDisplay(1, "%", identity)
+    MetricType.BMI -> MetricDisplay(1, "kg/m²", identity)
+    MetricType.STRESS_SCORE -> MetricDisplay(1, null, identity)
     else -> MetricDisplay(0, metric.unit.takeIf { it.isNotBlank() }, identity)
 }
 

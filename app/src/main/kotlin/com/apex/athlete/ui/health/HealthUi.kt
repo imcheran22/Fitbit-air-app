@@ -63,13 +63,6 @@ data class TrendCardUi(
 )
 
 @Immutable
-data class FitnessUi(
-    val state: MetricState,
-    val method: String?,
-    val isEstimate: Boolean,
-)
-
-@Immutable
 data class HeartRateEntryUi(val state: MetricState)
 
 @Immutable
@@ -78,13 +71,35 @@ data class HealthUi(
     val trends: List<TrendCardUi>,
     val trendsStartDay: Long,
     val trendsEndDay: Long,
-    val fitness: FitnessUi,
     val heartRate: HeartRateEntryUi,
 )
 
 @StringRes
 fun metricTitleRes(metric: MetricType): Int = when (metric) {
-    MetricType.HRV_RMSSD, MetricType.HRV_DEEP_SLEEP_RMSSD -> R.string.health_metric_hrv
+    MetricType.HRV_RMSSD -> R.string.health_metric_hrv
+    MetricType.HRV_DEEP_SLEEP_RMSSD -> R.string.health_metric_hrv_deep
+    MetricType.HRV_SLEEP_SAMPLES -> R.string.health_metric_hrv_sleep_samples
+    MetricType.HRV_LOW_FREQUENCY -> R.string.health_metric_hrv_lf
+    MetricType.HRV_HIGH_FREQUENCY -> R.string.health_metric_hrv_hf
+    MetricType.SPO2_LOWER_BOUND -> R.string.health_metric_spo2_low
+    MetricType.SPO2_UPPER_BOUND -> R.string.health_metric_spo2_high
+    MetricType.SKIN_TEMP_NIGHTLY -> R.string.health_metric_skin_nightly
+    MetricType.DISTANCE -> R.string.health_metric_distance
+    MetricType.FLOORS -> R.string.health_metric_floors
+    MetricType.CALORIES_TOTAL -> R.string.health_metric_kcal_total
+    MetricType.CALORIES_ACTIVE -> R.string.health_metric_kcal_active
+    MetricType.ACTIVE_ZONE_MINUTES -> R.string.health_metric_azm
+    MetricType.LIGHTLY_ACTIVE_MINUTES -> R.string.health_metric_light_min
+    MetricType.MODERATELY_ACTIVE_MINUTES -> R.string.health_metric_moderate_min
+    MetricType.VERY_ACTIVE_MINUTES -> R.string.health_metric_very_min
+    MetricType.SEDENTARY_MINUTES -> R.string.health_metric_sedentary_min
+    MetricType.WEIGHT -> R.string.health_metric_weight
+    MetricType.BODY_FAT -> R.string.health_metric_body_fat
+    MetricType.BMI -> R.string.health_metric_bmi
+    MetricType.STRESS_SCORE -> R.string.health_metric_stress
+    MetricType.STRESS_DAY_AGGREGATE_BPM -> R.string.health_metric_stress_bpm
+    MetricType.STRESS_HIGH_MINUTES -> R.string.health_metric_stress_high
+    MetricType.HR_DIP -> R.string.health_metric_hr_dip
     MetricType.RESTING_HEART_RATE -> R.string.health_metric_rhr
     MetricType.SLEEPING_HEART_RATE -> R.string.health_metric_sleeping_hr
     MetricType.RESPIRATORY_RATE -> R.string.health_metric_resp
@@ -112,8 +127,19 @@ private fun ZSide.toChartTone(): ChartTone = when (this) {
     ZSide.NEUTRAL -> ChartTone.NEUTRAL
 }
 
-private fun displayOf(metric: MetricType, f: ApexFormatter): MetricDisplay =
-    metricDisplay(metric, f.temperatureDeltaUnit(), f::temperatureDeltaValue)
+internal fun displayOf(metric: MetricType, f: ApexFormatter): MetricDisplay =
+    metricDisplay(
+        metric,
+        f.temperatureDeltaUnit(),
+        f::temperatureDeltaValue,
+        f.units,
+        UnitLabels(
+            km = f.string(R.string.common_unit_km),
+            mi = f.string(R.string.common_unit_mi),
+            kg = f.string(R.string.common_unit_kg),
+            lb = f.string(R.string.common_unit_lb),
+        ),
+    )
 
 fun provenanceText(provenance: DataProvenance?, f: ApexFormatter): String =
     f.string(provenance?.let(::provenanceLabelRes) ?: KitR.string.provenance_unknown)
@@ -199,7 +225,6 @@ fun buildHealthUi(
     f: ApexFormatter,
 ): HealthUi {
     val a = dashboard.analysis
-    val vo2 = a.vo2Max
     val hrTick: HeartRateTick? = dashboard.latestHeartRate
     val hrState = mapper.heartRate(hrTick).let { s ->
         // The intraday store does not record which source a minute came from; only the demo store is known.
@@ -210,11 +235,6 @@ fun buildHealthUi(
         trends = trends?.let { buildTrendCards(it, f) }.orEmpty(),
         trendsStartDay = (trends?.asOfDay ?: a.epochDay) - (SPARKLINE_DAYS - 1),
         trendsEndDay = trends?.asOfDay ?: a.epochDay,
-        fitness = FitnessUi(
-            state = mapper.vo2Max(a),
-            method = vo2?.method,
-            isEstimate = vo2?.provenance == DataProvenance.ESTIMATED,
-        ),
         heartRate = HeartRateEntryUi(hrState),
     )
 }
@@ -260,7 +280,13 @@ fun buildTrendDetail(trend: MetricTrend, rangeDays: Int, endDay: Long, mapper: M
     // The headline is today's reading. When today has none, the newest reading in range is shown
     // with its date, never a made-up value.
     val headline: MetricState = run {
-        val today = mapper.intelligence(i, trend.metric, trend.provenance)
+        // Built from this file's display table (not the mapper's) so weight and distance follow the unit system.
+        val currentRaw = i.current?.takeIf { it.isFinite() }
+        val today: MetricState = if (currentRaw == null) {
+            MetricState.Unavailable()
+        } else {
+            mapper.value(display.convert(currentRaw), display.decimals, display.unit, trend.provenance)
+        }
         if (today !is MetricState.Unavailable) return@run today
         val latest = points.lastOrNull { it.y != null }
         val latestY = latest?.y

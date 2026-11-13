@@ -27,6 +27,74 @@
     <string name="health_metric_steps">Steps</string>
     <string name="health_metric_other">Metric</string>
 
+    <!-- Metric names added with the activity, body, vitals and stress streams -->
+    <string name="health_metric_hrv_deep">Deep-sleep heart rate variability</string>
+    <string name="health_metric_hrv_sleep_samples">Overnight heart rate variability (samples)</string>
+    <string name="health_metric_hrv_lf">Heart rate variability, low frequency</string>
+    <string name="health_metric_hrv_hf">Heart rate variability, high frequency</string>
+    <string name="health_metric_spo2_low">Blood oxygen, lowest</string>
+    <string name="health_metric_spo2_high">Blood oxygen, highest</string>
+    <string name="health_metric_skin_nightly">Skin temperature, nightly</string>
+    <string name="health_metric_distance">Distance</string>
+    <string name="health_metric_floors">Floors</string>
+    <string name="health_metric_kcal_total">Calories, total</string>
+    <string name="health_metric_kcal_active">Calories, active</string>
+    <string name="health_metric_azm">Active zone minutes</string>
+    <string name="health_metric_light_min">Lightly active minutes</string>
+    <string name="health_metric_moderate_min">Moderately active minutes</string>
+    <string name="health_metric_very_min">Very active minutes</string>
+    <string name="health_metric_sedentary_min">Sedentary minutes</string>
+    <string name="health_metric_weight">Weight</string>
+    <string name="health_metric_body_fat">Body fat</string>
+    <string name="health_metric_bmi">Body mass index</string>
+    <string name="health_metric_stress">Stress level</string>
+    <string name="health_metric_stress_bpm">Resting daytime heart rate</string>
+    <string name="health_metric_stress_high">High-stress minutes</string>
+    <string name="health_metric_hr_dip">Sleeping heart rate dip</string>
+
+    <!-- Body -->
+    <string name="health_section_body">Body</string>
+    <string name="health_body_caption">Your latest weigh-in and body fat, with the last 90 days. A gap means no weigh-in that day.</string>
+    <string name="health_bmi_needs_height">Add your height in Profile to see BMI</string>
+    <string name="health_bmi_needs_weight">Add a weigh-in, or your weight in Profile, to see BMI</string>
+    <string name="health_open_profile">Open Profile</string>
+    <string name="health_bmi_profile_link_cd">Open Profile to add your height</string>
+    <string name="health_trend_link_cd">See the %1$s trend</string>
+
+    <!-- Vitals -->
+    <string name="health_section_vitals">Vitals</string>
+    <string name="health_vitals_caption">Last night\'s readings. The arrow compares each one with your own usual range where Apex has one.</string>
+    <string name="health_vitals_units_note">The two frequency-band values are the average of the night\'s five-minute windows. Their unit is as the source reports it and has not been independently checked.</string>
+    <string name="health_vitals_samples">Night average of %1$d samples</string>
+
+    <!-- Cardio fitness -->
+    <string name="health_section_cardio">Cardio fitness</string>
+    <string name="health_cardio_caption">Compared with treadmill-tested adults of your age and sex. It describes a pattern in your data and is not a medical result.</string>
+    <string name="health_cardio_estimated">Estimated</string>
+    <string name="health_cardio_category">Category for your age and sex</string>
+    <string name="health_cardio_age">Fitness age</string>
+    <string name="health_cardio_cat_poor">Poor</string>
+    <string name="health_cardio_cat_fair">Fair</string>
+    <string name="health_cardio_cat_good">Good</string>
+    <string name="health_cardio_cat_excellent">Excellent</string>
+    <string name="health_cardio_cat_superior">Superior</string>
+    <string name="health_cardio_percentile_unit">percentile</string>
+    <string name="health_cardio_percentile_note">Compared with adults of your age and sex</string>
+    <string name="health_cardio_edge_low">At or below the 5th percentile, the lowest the table shows</string>
+    <string name="health_cardio_edge_high">At or above the 95th percentile, the highest the table shows</string>
+    <string name="health_cardio_age_unit">years</string>
+    <string name="health_cardio_age_or_younger">%1$d or younger</string>
+    <string name="health_cardio_age_or_older">%1$d or older</string>
+    <string name="health_cardio_age_younger">%1$d years younger than your age</string>
+    <string name="health_cardio_age_older">%1$d years older than your age</string>
+    <string name="health_cardio_age_same">The same as your age</string>
+    <string name="health_cardio_needs_age">Add your birth year in Profile to see this</string>
+    <string name="health_cardio_needs_sex">Choose your sex in Profile to see this</string>
+    <string name="health_cardio_age_range">The reference table covers ages 20 to 79</string>
+    <string name="health_cardio_invalid">The cardio fitness value could not be used</string>
+    <string name="health_cardio_no_vo2">No cardio fitness reading yet</string>
+    <string name="health_cardio_profile_link_cd">Open Profile to add your birth year or sex</string>
+
     <!-- Range status -->
     <string name="health_status_within">Within your usual range</string>
     <string name="health_status_above">Above your usual range</string>

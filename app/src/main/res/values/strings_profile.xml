@@ -11,7 +11,7 @@
     <string name="profile_birth_year">Birth year</string>
     <string name="profile_birth_year_hint">Used to estimate maximum heart rate</string>
     <string name="profile_sex">Sex</string>
-    <string name="profile_sex_hint">Only used for heart-rate calculations</string>
+    <string name="profile_sex_hint">Used for heart-rate calculations and the cardio fitness rating</string>
     <string name="profile_sex_unspecified">Not set</string>
     <string name="profile_sex_male">Male</string>
     <string name="profile_sex_female">Female</string>

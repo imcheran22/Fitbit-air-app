@@ -4,10 +4,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.apex.athlete.core.data.repository.AthleteRepository
+import com.apex.athlete.core.data.repository.BodyState
 import com.apex.athlete.core.data.repository.DailyDashboardState
+import com.apex.athlete.core.data.repository.FitnessState
 import com.apex.athlete.core.data.repository.MetricTrend
 import com.apex.athlete.core.data.repository.StrainLoadState
 import com.apex.athlete.core.data.repository.TrendIntelligenceState
+import com.apex.athlete.core.data.repository.VitalsState
 import com.apex.athlete.core.data.store.StoreStatus
 import com.apex.athlete.core.domain.MetricType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +42,21 @@ class HealthViewModel(repository: AthleteRepository, initialDay: Long) : ViewMod
 
     val trends: StateFlow<TrendIntelligenceState?> = day
         .flatMapLatest { d -> flow<TrendIntelligenceState?> { emit(null); emitAll(repository.trends(d, SPARKLINE_DAYS)) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+
+    /** Weight, body fat and BMI of the selected day; null while loading. */
+    val body: StateFlow<BodyState?> = day
+        .flatMapLatest { d -> flow<BodyState?> { emit(null); emitAll(repository.body(d)) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+
+    /** The night that ended on the selected day; null while loading. */
+    val vitals: StateFlow<VitalsState?> = day
+        .flatMapLatest { d -> flow<VitalsState?> { emit(null); emitAll(repository.vitals(d)) } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+
+    /** VO2 max, category and fitness age; null while loading. */
+    val fitness: StateFlow<FitnessState?> = day
+        .flatMapLatest { d -> flow<FitnessState?> { emit(null); emitAll(repository.fitness(d)) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 }
 
