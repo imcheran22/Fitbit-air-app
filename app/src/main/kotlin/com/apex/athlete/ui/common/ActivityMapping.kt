@@ -77,7 +77,7 @@ internal fun activityState(reading: MetricReading?, formatter: ApexFormatter, pr
 
 /** One activity figure ready to draw. */
 @androidx.compose.runtime.Immutable
-internal data class ActivityRowUi(val metric: MetricType, val state: MetricState)
+data class ActivityRowUi(val metric: MetricType, val state: MetricState)
 
 /**
  * The rows for [metrics] in the given order, one per metric: a metric the day has no reading for is Unavailable (never absent
