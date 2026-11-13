@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings -->
+    <string name="healthage_settings_section">Experimental</string>
+    <string name="healthage_settings_title">Health age (experimental)</string>
+    <string name="healthage_settings_subtitle">An estimate from your own recorded data, not a medical measure. Off by default.</string>
+
+    <!-- Health tab card and detail title -->
+    <string name="healthage_title">Health age (experimental)</string>
+    <string name="healthage_card_open">Open Health age details</string>
+    <string name="healthage_unit_years">years</string>
+    <string name="healthage_calendar_age">Calendar age %1$d</string>
+    <string name="healthage_delta_older">%1$s years older than your calendar age</string>
+    <string name="healthage_delta_younger">%1$s years younger than your calendar age</string>
+    <string name="healthage_delta_same">Same as your calendar age</string>
+    <string name="healthage_dir_older">Older</string>
+    <string name="healthage_dir_younger">Younger</string>
+    <string name="healthage_dir_same">No change</string>
+    <string name="healthage_tag_experimental">Experimental</string>
+    <string name="healthage_tag_demo">Demo data</string>
+    <string name="healthage_confidence_low">Low confidence</string>
+    <string name="healthage_confidence_moderate">Moderate confidence</string>
+    <string name="healthage_confidence_high">High confidence</string>
+    <string name="healthage_confidence_caption">Confidence shows how many factors contributed. It does not measure accuracy.</string>
+    <string name="healthage_capped_caption">The total is limited to 10 years either way, so the factors below can add up to more than the figure shown.</string>
+    <string name="healthage_demo_caption">Built from demo data. Nothing here is yours.</string>
+
+    <!-- Non-result states -->
+    <string name="healthage_loading_cd">Calculating the Health age estimate</string>
+    <string name="healthage_failed">The Health age could not be calculated. Nothing is shown rather than a guess.</string>
+    <string name="healthage_notenough_title">Not enough data yet</string>
+    <string name="healthage_notenough_reason">Needs a VO2 max, or at least three of: resting heart rate, sleep length, sleep regularity and daily steps, each with 14 or more recorded days.</string>
+    <string name="healthage_notenough_scored">%1$d of the 4 day-based factors have enough days so far.</string>
+    <string name="healthage_nodata_title">Needs your age</string>
+    <string name="healthage_nodata_no_age">Add your birth year in your profile. Health age is compared with your calendar age.</string>
+    <string name="healthage_nodata_age_range">Health age is only estimated for ages 18 to 100.</string>
+    <string name="healthage_open_profile">Open profile</string>
+    <string name="healthage_open_profile_cd">Open your profile to add your birth year</string>
+
+    <!-- Detail -->
+    <string name="healthage_hero_label">Estimated health age</string>
+    <string name="healthage_section_factors">What moved it</string>
+    <string name="healthage_section_withheld">Not used</string>
+    <string name="healthage_withheld_caption">These factors were left out, never guessed.</string>
+    <string name="healthage_factors_caption">Years added to or taken from your calendar age by each factor, over the last 30 days.</string>
+    <string name="healthage_factor_years">%1$s years</string>
+    <string name="healthage_factor_capped">Limited by the per-factor cap</string>
+    <plurals name="healthage_days">
+        <item quantity="one">%d day of data</item>
+        <item quantity="other">%d days of data</item>
+    </plurals>
+    <string name="healthage_disclaimer_title">Please note</string>
+
+    <!-- Off -->
+    <string name="healthage_off_title">Health age is off</string>
+    <string name="healthage_off_body">Turn it on in Settings, under Experimental, to see an estimate.</string>
+    <string name="healthage_off_action">Open Settings</string>
+    <string name="healthage_off_action_cd">Open Settings to turn on Health age</string>
+
+    <!-- Factors -->
+    <string name="healthage_factor_vo2">VO2 max</string>
+    <string name="healthage_factor_rhr">Resting heart rate</string>
+    <string name="healthage_factor_hrv">Heart rate variability</string>
+    <string name="healthage_factor_sleep">Sleep length</string>
+    <string name="healthage_factor_regularity">Sleep regularity</string>
+    <string name="healthage_factor_steps">Daily steps</string>
+    <string name="healthage_factor_bmi">Body mass index</string>
+    <string name="healthage_unit_vo2">ml/kg/min</string>
+    <string name="healthage_unit_bpm">bpm</string>
+    <string name="healthage_unit_ms">ms</string>
+    <string name="healthage_unit_hours">h per night</string>
+    <string name="healthage_unit_steps">steps</string>
+    <string name="healthage_unit_bmi">kg/m²</string>
+
+    <!-- Withheld reasons -->
+    <string name="healthage_withheld_missing">No data recorded for this.</string>
+    <string name="healthage_withheld_days">Not enough recorded days yet.</string>
+    <string name="healthage_withheld_invalid">The recorded value looked implausible, so it was ignored.</string>
+    <string name="healthage_withheld_sex">Needs your sex in your profile, because the VO2 max reference differs by sex.</string>
+    <string name="healthage_withheld_age">The VO2 max reference covers ages 20 to 79 only.</string>
+    <string name="healthage_withheld_derived">This VO2 max is calculated from your resting heart rate, which already counts, so it is not counted twice.</string>
+    <string name="healthage_withheld_norm">No validated reference exists for this, so it is shown elsewhere in the app but never scored.</string>
+
+    <!-- How this is calculated -->
+    <string name="healthage_how_p1">Your estimate starts at your calendar age and adds or subtracts years for each factor with enough recorded data: VO2 max, resting heart rate, sleep length, sleep regularity, daily steps and body mass index.</string>
+    <string name="healthage_how_p2">Each factor is compared with a reference taken from the direction of published population studies, then scaled by hand into years. Each factor is limited, and so is the total (10 years either way). Factors without enough data are left out, never filled in.</string>
+    <string name="healthage_how_p3">These studies describe groups of other people and show association, not cause. This is not validated as a way to estimate one person\'s age. Treat it as a way to see which habits to look at, not as a result.</string>
+    <string name="healthage_how_p4">Fitness age is not a separate factor: it comes from the same VO2 max, so it is never counted twice.</string>
+</resources>

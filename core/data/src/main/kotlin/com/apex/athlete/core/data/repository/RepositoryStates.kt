@@ -181,3 +181,9 @@ data class WorkoutDetailState(
     /** Minute heart rate during the workout (gaps are absent, not zero). */
     val heartRate: List<HeartRateTick>,
 )
+
+/**
+ * Sleep Regularity Index over the last [nights] windows ending on a day. [index] is null when fewer than two consecutive
+ * covered nights exist; [coveredNights] counts the nights with a recorded main sleep (the days of data behind the index).
+ */
+data class SleepRegularityWindow(val index: Double?, val coveredNights: Int)

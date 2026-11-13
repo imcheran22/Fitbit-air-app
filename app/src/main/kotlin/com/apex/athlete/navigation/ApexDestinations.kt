@@ -44,6 +44,7 @@ object ApexRoutes {
     const val ENERGY = "health/energy?d={d}"
     const val FITNESS = "health/fitness?d={d}"
     const val MONITOR = "health/monitor?d={d}"
+    const val HEALTH_AGE = "health/age"
     const val TRENDS = "trends?a={a}"
     const val NAP = "sleep/nap?id={id}"
 
@@ -112,6 +113,9 @@ sealed interface ApexDestination {
 
     /** [id] is a sleep session id (it may contain ':' or '/'), so it travels URL-encoded as a query argument. */
     data class Nap(val id: String) : ApexDestination { override val route get() = "sleep/nap?id=${Uri.encode(id)}" }
+
+    /** Experimental health age (DECISIONS D13); shows a "turn it on in Settings" message while the switch is off. */
+    data object HealthAge : ApexDestination { override val route = ApexRoutes.HEALTH_AGE }
 
     data object DataSources : ApexDestination { override val route = ApexRoutes.DATA_SOURCES }
     data object TakeoutImport : ApexDestination { override val route = ApexRoutes.TAKEOUT_IMPORT }

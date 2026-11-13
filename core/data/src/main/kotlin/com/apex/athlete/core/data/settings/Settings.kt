@@ -54,6 +54,8 @@ data class AppSettings(
     val lastSyncMillis: Long? = null,
     val lastAlertDay: Long? = null,
     val googleClientId: String? = null,
+    /** Experimental "Health age" (DECISIONS D13): off until the owner switches it on in Settings. */
+    val healthAgeEnabled: Boolean = false,
 )
 
 private val Context.apexDataStore: DataStore<Preferences> by preferencesDataStore(name = "apex_settings")
@@ -113,6 +115,7 @@ class SettingsStore(context: Context) {
             p.setOrRemove(LAST_SYNC, s.lastSyncMillis)
             p.setOrRemove(LAST_ALERT_DAY, s.lastAlertDay)
             p.setOrRemove(GOOGLE_CLIENT_ID, s.googleClientId)
+            p[HEALTH_AGE] = s.healthAgeEnabled
         }
     }
 
@@ -140,6 +143,7 @@ class SettingsStore(context: Context) {
         lastSyncMillis = p[LAST_SYNC],
         lastAlertDay = p[LAST_ALERT_DAY],
         googleClientId = p[GOOGLE_CLIENT_ID]?.takeIf { it.isNotBlank() },
+        healthAgeEnabled = p[HEALTH_AGE] ?: false,
     )
 
     private inline fun <reified E : Enum<E>> enumOr(name: String?, fallback: E): E =
@@ -174,5 +178,6 @@ class SettingsStore(context: Context) {
         val LAST_SYNC = longPreferencesKey("last_sync")
         val LAST_ALERT_DAY = longPreferencesKey("last_alert_day")
         val GOOGLE_CLIENT_ID = stringPreferencesKey("google_client_id")
+        val HEALTH_AGE = booleanPreferencesKey("health_age_enabled")
     }
 }

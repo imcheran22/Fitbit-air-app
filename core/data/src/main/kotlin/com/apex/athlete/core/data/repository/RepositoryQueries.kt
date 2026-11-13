@@ -1,5 +1,7 @@
 package com.apex.athlete.core.data.repository
 
+import com.apex.athlete.core.analytics.sleep.SleepRegularityIndex
+import com.apex.athlete.core.analytics.sleep.SleepSpan
 import com.apex.athlete.core.analytics.strain.HeartRateZone
 import com.apex.athlete.core.data.pipeline.BodyMassIndex
 import com.apex.athlete.core.data.pipeline.JournalDay
@@ -129,6 +131,26 @@ internal object RepositoryQueries {
             fitnessAge = a.fitnessAge,
             vo2History = history(store, MetricType.VO2_MAX, day, VO2_HISTORY_DAYS),
         )
+    }
+
+    /**
+     * Sleep Regularity Index over the [nights] windows (local noon to noon) before the end of [day]'s night; the same rule as the
+     * pipeline's 7-night index (naps count as sleep, a window without a recorded main sleep is skipped, never counted as awake).
+     */
+    suspend fun sleepRegularity(store: ActiveStore, day: Long, nights: Int): SleepRegularityWindow {
+        val sessions = store.db.sleepDao().sessionsBetween(day - nights, day)
+        val covered = (0 until nights).map { i -> sessions.any { it.isMainSleep && it.epochDay == day - nights + 1 + i } }
+        val result = SleepRegularityIndex.compute(
+            spans = sessions.map {
+                SleepSpan(
+                    Math.floorDiv(it.startEpochMillis + it.startZoneOffsetSeconds * 1000L, 60_000L),
+                    Math.floorDiv(it.endEpochMillis + it.endZoneOffsetSeconds * 1000L, 60_000L),
+                )
+            },
+            firstWindowDay = day - nights,
+            covered = covered,
+        )
+        return SleepRegularityWindow(result.index, covered.count { it })
     }
 
     suspend fun workoutDetail(store: ActiveStore, id: String): WorkoutDetailState? {

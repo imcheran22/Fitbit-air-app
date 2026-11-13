@@ -271,6 +271,10 @@ class AthleteRepository(
     fun fitness(day: Long): Flow<FitnessState?> = observe { RepositoryQueries.fitness(it, day) }
 
     /** One workout with its reported fields, heart-rate recovery, zone minutes and minute heart rate. */
+    /** Sleep Regularity Index over the last [nights] nights ending on [day] (used by the experimental Health age). */
+    fun sleepRegularity(day: Long, nights: Int = 30): Flow<SleepRegularityWindow?> =
+        observe { RepositoryQueries.sleepRegularity(it, day, nights) }
+
     fun workoutDetail(id: String): Flow<WorkoutDetailState?> = observe { RepositoryQueries.workoutDetail(it, id) }
 
     fun recentWorkouts(limit: Int = 30): Flow<List<WorkoutEntity>> = stores.status.flatMapLatest { status ->

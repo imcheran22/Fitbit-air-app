@@ -59,6 +59,10 @@ import com.apex.athlete.navigation.ApexNavigator
 import com.apex.athlete.ui.common.LocalFormatter
 import com.apex.athlete.ui.common.MetricStateMapper
 import com.apex.athlete.ui.common.apexViewModel
+import com.apex.athlete.ui.healthage.HealthAgeCard
+import com.apex.athlete.ui.healthage.HealthAgeUi
+import com.apex.athlete.ui.healthage.rememberHealthAgeUi
+import com.apex.athlete.ui.healthage.showsOnHealthTab
 import java.time.LocalDate
 
 /** The Health tab: monitor, trends, fitness and the heart rate entry (DESIGN_SYSTEM section 4, Health). */
@@ -88,8 +92,11 @@ fun HealthRoute(
     val bodyUi = remember(body, formatter) { body?.let { buildBodyUi(it, formatter) } }
     val vitalsUi = remember(vitals, trends, formatter) { vitals?.let { buildVitalsUi(it, trends, formatter) } }
     val cardioUi = remember(fitness, formatter) { fitness?.let { buildCardioUi(it, formatter) } }
+    val healthAge = rememberHealthAgeUi("healthage.card")
     HealthScreen(
         ui = ui,
+        healthAge = healthAge,
+        onOpenHealthAge = navigator::openHealthAge,
         body = bodyUi,
         vitals = vitalsUi,
         cardio = cardioUi,
@@ -136,6 +143,8 @@ internal fun HealthScreen(
     onOpenMonitor: () -> Unit,
     onOpenTrends: () -> Unit,
     contentPadding: PaddingValues,
+    healthAge: HealthAgeUi? = null,
+    onOpenHealthAge: () -> Unit = {},
 ) {
     Column(
         Modifier
@@ -170,6 +179,7 @@ internal fun HealthScreen(
         VitalsSection(vitals, onOpenTrend)
         CardioSection(cardio, onOpenVo2 = { onOpenTrend(MetricType.VO2_MAX) }, onOpenProfile = onOpenProfile, onOpenFitness = onOpenFitness)
         HeartRateSection(ui?.heartRate, onOpenHeartRate)
+        if (healthAge != null && healthAge.showsOnHealthTab()) HealthAgeCard(healthAge, onOpenHealthAge)
     }
 }
 

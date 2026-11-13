@@ -68,6 +68,7 @@ import com.apex.athlete.ui.energy.EnergyRoute
 import com.apex.athlete.ui.exportdelete.ExportDeleteRoute
 import com.apex.athlete.ui.fitness.FitnessRoute
 import com.apex.athlete.ui.health.HealthRoute
+import com.apex.athlete.ui.healthage.HealthAgeRoute
 import com.apex.athlete.ui.health.HeartRateDayRoute
 import com.apex.athlete.ui.health.TrendDetailRoute
 import com.apex.athlete.ui.howitworks.HowItWorksRoute
@@ -324,6 +325,7 @@ fun ApexNavHost(
                             Detail { NapDetailRoute(navigator, id) }
                         }
                     }
+                    composable(ApexRoutes.HEALTH_AGE) { Detail { HealthAgeRoute(navigator) } }
                     composable(ApexRoutes.DATA_SOURCES) { Detail { DataSourcesRoute(navigator) } }
                     composable(ApexRoutes.TAKEOUT_IMPORT) { Detail { TakeoutImportRoute(navigator) } }
                     composable(ApexRoutes.SETTINGS) { Detail { SettingsRoute(navigator) } }

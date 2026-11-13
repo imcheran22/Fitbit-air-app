@@ -169,7 +169,7 @@ internal fun QuickLogContent(
         ) {
             Symptom.entries.forEach { s ->
                 val label = stringResource(s.label)
-                ToggleChip(label, s.key in draft.symptoms, label) { onSymptom(s.key, it) }
+                ToggleChip(label, s.key in draft.symptoms, label, onToggle = { onSymptom(s.key, it) })
             }
         }
 

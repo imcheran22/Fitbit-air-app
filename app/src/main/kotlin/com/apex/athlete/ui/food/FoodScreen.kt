@@ -3,6 +3,7 @@ package com.apex.athlete.ui.food
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -262,12 +263,10 @@ private fun MacroCard(state: FoodDayUi) {
 @Composable
 private fun Legend(text: String, swatch: Color, modifier: Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(ApexSpacing.xs), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.height(10.dp).width(10.dp).background(swatch))
+        Box(Modifier.size(10.dp).background(swatch))
         Text(text, style = ApexTheme.type.caption, color = ApexTheme.colors.foregroundSecondary)
     }
 }
-
-private fun Modifier.width(10.dp): Modifier = this.then(Modifier.androidxWidth())
 
 /** Three shares (0 to 1, summing to 1) as one bar. Gaps never occur: the shares fill the width. */
 @Composable

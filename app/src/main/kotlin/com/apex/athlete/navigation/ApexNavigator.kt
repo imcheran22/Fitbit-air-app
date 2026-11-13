@@ -47,6 +47,9 @@ interface ApexNavigator {
     /** Every vital with its 30 day baseline band. */
     fun openMonitor(day: LocalDate)
 
+    /** Experimental health age (only offered while its Settings switch is on). */
+    fun openHealthAge()
+
     /** The trends browser and two-metric overlay; [first] preselects the first overlay metric. */
     fun openTrends(first: MetricType? = null)
 
@@ -99,6 +102,7 @@ class NavControllerNavigator(private val navController: NavController) : ApexNav
     override fun openEnergy(day: LocalDate) = go(ApexDestination.Energy(day))
     override fun openFitness(day: LocalDate) = go(ApexDestination.Fitness(day))
     override fun openMonitor(day: LocalDate) = go(ApexDestination.Monitor(day))
+    override fun openHealthAge() = go(ApexDestination.HealthAge)
     override fun openTrends(first: MetricType?) = go(ApexDestination.Trends(first))
     override fun openNap(id: String) = go(ApexDestination.Nap(id))
 

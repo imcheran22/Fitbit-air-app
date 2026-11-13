@@ -62,6 +62,8 @@ class SettingsViewModel(
         onBackgroundSyncChanged(enabled)
     }
 
+    fun setHealthAgeEnabled(on: Boolean) = edit { it.copy(healthAgeEnabled = on) }
+
     fun setTakeoutNudgeDays(days: Int) = edit { it.copy(takeoutNudgeDays = days) }
 
     fun saveClientId(raw: String) {

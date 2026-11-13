@@ -84,6 +84,7 @@ internal class SettingsActions(
     val onTakeoutDays: (Int) -> Unit = {},
     val onSaveClientId: (String) -> Unit = {},
     val onAiCoach: (Boolean) -> Unit = {},
+    val onHealthAge: (Boolean) -> Unit = {},
     val onEditAiKey: (() -> Unit)? = null,
     val onTurnOffDemo: () -> Unit = {},
     val onOpenHowItWorks: () -> Unit = {},
@@ -139,6 +140,7 @@ fun SettingsRoute(navigator: ApexNavigator) {
         onTakeoutDays = vm::setTakeoutNudgeDays,
         onSaveClientId = vm::saveClientId,
         onAiCoach = vm::setAiCoachEnabled,
+        onHealthAge = vm::setHealthAgeEnabled,
         // The key is entered on the Coach screen (it owns the key store UI).
         onEditAiKey = navigator::openCoach,
         onTurnOffDemo = vm::turnOffDemo,
@@ -204,6 +206,7 @@ internal fun SettingsContent(
             DataSection(settings, actions, onPickTakeout = { sheet = SHEET_TAKEOUT })
             GoogleSection(settings, signIn, actions)
             CoachSection(settings, actions)
+            ExperimentalSection(settings, actions)
             DemoSection(settings, onTurnOff = { sheet = SHEET_DEMO })
             AboutSection(actions)
             Spacer(Modifier.height(ApexSpacing.xl))
@@ -388,6 +391,20 @@ private fun GoogleSection(settings: AppSettings, signIn: SignInUiState, actions:
                 },
                 enabled = changed,
                 modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExperimentalSection(settings: AppSettings, actions: SettingsActions) {
+    SectionShell(stringResource(R.string.healthage_settings_section)) {
+        ApexCard {
+            SettingToggleRow(
+                title = stringResource(R.string.healthage_settings_title),
+                subtitle = stringResource(R.string.healthage_settings_subtitle),
+                checked = settings.healthAgeEnabled,
+                onCheckedChange = actions.onHealthAge,
             )
         }
     }
