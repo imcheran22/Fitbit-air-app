@@ -631,3 +631,31 @@ range-valid beats in the 5-beat window centred on it (itself included; exactly 2
 accepted. Needs >= 30 accepted beats and >= 60 s (sum of the intervals inside 300..2000 ms), else null with `TOO_FEW_BEATS` or `TOO_SHORT_RECORDING`; `NO_ADJACENT_BEATS` if no pair survives. Mean heart rate is 60000 / mean accepted RR.
 The result carries `provenanceHint = ESTIMATED`. All thresholds are calibration choices; a spot RMSSD depends on posture, breathing and time of day and must not be compared with the overnight value used by the recovery score.
 Hand-checked golden vectors: alternating 800/850 ms x 80 gives RMSSD 50.0 and 72.727 bpm; the repeating 800/820/800/860 x 20 series gives sqrt(156 400 / 79).
+
+## Experimental: health age (`healthage/HealthAge.kt`), D13
+
+**Experimental, off by default in the app (DECISIONS D13). Estimated, not a medical measure, never diagnostic.** Display-time arithmetic over plain inputs; nothing is stored, so
+`ANALYTICS_ALGORITHM_VERSION` is not bumped. Test: `HealthAgeTest` (hand-computed vectors, caps, gate, no double counting). **Every constant below is a calibration choice**: its direction and rough size
+are anchored on a published population association (listed in `docs/EVIDENCE.md`, "Health age", none opened in full, all UNVERIFIED), converted to years with a Gompertz mortality-rate doubling time of about 8 years
+(`years = ln(HR) / ln 2 * 8`; a 9 % higher hazard is about 1 year), then rounded and often damped by hand because the associations are observational and none was validated for estimating one person's age.
+Google Research's coachable-health-age (CKM) blog publishes no formula; it is design inspiration only and nothing from it is implemented.
+
+`estimatedAge = chronologicalAge + clamp(sum of capped factor years, -10, +10)`. Positive = older than calendar age. Result: `NoData` (age missing, or outside 18..100), `NotEnoughData`
+(gate not met, with reasons and the withheld list) or `Estimate` (estimated age, delta, per-factor years with direction and cap flag, withheld factors with reasons, confidence, provenance `ESTIMATED`).
+
+| Factor (input) | Years | Cap (years) | Min days |
+|---|---|---|---|
+| VO2 max (ml/kg/min), through `FitnessAge` | `0.25 * (fitnessAge - chronologicalAge)`; needs sex and age 20..79 | +/-5 | 1 (point value) |
+| Resting HR baseline (bpm, 30..120) | `(bpm - 65) / 10 * 1.0` | +/-3 | 14 |
+| Sleep duration (mean main-sleep minutes, 120..960) | 0 in 7..9 h; below 7 h `0.65 * (7 - h)`, cap 2; above 9 h `1.0 * (h - 9)`, cap 3 | 0..+3 | 14 |
+| Sleep Regularity Index (-100..100) | `(75 - SRI) / 10 * 1.0` | +/-2.5 | 14 |
+| Daily steps (mean, > 0 and <= 100,000) | below 7,000: `0.75 * (7000 - s) / 1000`; above: `-0.5 * (s - 7000) / 1000` | -1.5..+3 | 14 |
+| BMI (kg/m2, 12..70) | `0.5 * (bmi - 25)` above 25, else 0 (underweight side not modelled) | 0..+4 | 1 (point value) |
+| HRV (RMSSD) | **never scored**: no validated age/sex norm in the codebase; always listed as withheld `NO_VALIDATED_NORM` | - | - |
+
+Rules. (1) VO2 max is converted with the existing `FitnessAge` and there is no separate fitness-age factor, so fitness evidence is counted once; the 0.25 weight is calibration (a FRIEND male median falls about
+1.3 MET per decade, about 7.6 years per MET, whereas a recalled 13 % lower mortality per MET is about 1.6 years: ratio about 0.2). (2) A VO2 max flagged `vo2MaxDerivedFromRestingHr` (the Uth ratio fallback)
+is withheld `DERIVED_FROM_RESTING_HR` so resting HR is not counted twice. (3) A factor that is missing, has too few days, is non-finite or implausible is withheld with a reason; it is never imputed, clamped
+into range or replaced by a norm. (4) Gate: a usable VO2 max, OR at least 3 of the 4 day-series factors (resting HR, sleep duration, sleep regularity, steps) with >= 14 days; BMI alone does not unlock the estimate.
+(5) Confidence from coverage only, of the 6 scorable factors: 5-6 HIGH, 4 MODERATE, 1-3 LOW (it describes how much data went in, not how accurate the age is). (6) Required wording: "estimated", "may indicate", "not a medical measure"; no
+health claim, no diagnosis. Active minutes are not an input (steps only).
