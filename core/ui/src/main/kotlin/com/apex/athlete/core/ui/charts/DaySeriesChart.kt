@@ -195,7 +195,7 @@ fun DaySeriesChart(
     val rangeDays = (x1 - x0 + 1).toInt()
     val description = buildString {
         append(title)
-        append('. ')
+        append(". ")
         for ((series, window, stats) in listOfNotNull(
             Triple(primary, windowP, statsP),
             if (secondary != null && windowS != null && statsS != null) Triple(secondary, windowS, statsS) else null,
