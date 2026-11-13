@@ -1,2 +1,2 @@
 Changing this file on a claude/ branch starts the "Release APK" workflow (signed APK on the Releases page).
-request: 1 (pipeline test, no client ID)
+request: 2 (pipeline test, no client ID)

@@ -147,8 +147,8 @@ jobs:
           rm -f dist/*.idsig
           CERTS="$("$BT/apksigner" verify --verbose --print-certs "dist/$APK_NAME")"
           printf '%s\n' "$CERTS" | grep -E "^Verifies|Verified using" || { echo "::error::The signed APK does not verify"; exit 1; }
-          SHA256_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
-          SHA1_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer #1 certificate SHA-1 digest: //p' | head -1)"
+          SHA256_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer[^:]*certificate SHA-256 digest: //p' | head -1)"
+          SHA1_HEX="$(printf '%s\n' "$CERTS" | sed -n 's/^Signer[^:]*certificate SHA-1 digest: //p' | head -1)"
           [ -n "$SHA256_HEX" ] && [ -n "$SHA1_HEX" ] || { echo "::error::Could not read the signing certificate"; exit 1; }
           colon() { printf '%s' "$1" | tr 'a-f' 'A-F' | sed 's/../&:/g; s/:$//'; }
           SHA1="$(colon "$SHA1_HEX")"; SHA256="$(colon "$SHA256_HEX")"
