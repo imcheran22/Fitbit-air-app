@@ -46,17 +46,23 @@ import com.apex.athlete.core.ui.state.rememberReducedMotion
 import com.apex.athlete.di.AppContainer
 import com.apex.athlete.ui.common.PreparingDemoScreen
 import com.apex.athlete.ui.common.StoreFailedScreen
+import com.apex.athlete.ui.activity.ActivityDetailRoute
+import com.apex.athlete.ui.body.BodyRoute
 import com.apex.athlete.ui.coach.CoachRoute
 import com.apex.athlete.ui.datasources.DataSourcesRoute
 import com.apex.athlete.ui.debug.GalleryScreen
+import com.apex.athlete.ui.energy.EnergyRoute
 import com.apex.athlete.ui.exportdelete.ExportDeleteRoute
+import com.apex.athlete.ui.fitness.FitnessRoute
 import com.apex.athlete.ui.health.HealthRoute
 import com.apex.athlete.ui.health.HeartRateDayRoute
 import com.apex.athlete.ui.health.TrendDetailRoute
 import com.apex.athlete.ui.howitworks.HowItWorksRoute
 import com.apex.athlete.ui.journal.JournalRoute
 import com.apex.athlete.ui.licences.LicencesRoute
+import com.apex.athlete.ui.monitor.MonitorRoute
 import com.apex.athlete.ui.more.MoreRoute
+import com.apex.athlete.ui.nap.NapDetailRoute
 import com.apex.athlete.ui.onboarding.OnboardingRoute
 import com.apex.athlete.ui.overview.OverviewRoute
 import com.apex.athlete.ui.privacy.PrivacyRoute
@@ -65,7 +71,9 @@ import com.apex.athlete.ui.recovery.RecoveryRoute
 import com.apex.athlete.ui.settings.SettingsRoute
 import com.apex.athlete.ui.sleep.SleepRoute
 import com.apex.athlete.ui.strain.StrainRoute
+import com.apex.athlete.ui.stress.StressRoute
 import com.apex.athlete.ui.takeout.TakeoutImportRoute
+import com.apex.athlete.ui.trends.TrendsBrowserRoute
 import com.apex.athlete.ui.workout.AddWorkoutRoute
 import com.apex.athlete.ui.workout.WorkoutDetailRoute
 import kotlinx.coroutines.launch
@@ -211,6 +219,24 @@ fun ApexNavHost(
                     composable(ApexRoutes.ADD_WORKOUT, arguments = dayArguments) { entry ->
                         DayDetail(entry, latestDay, latestSetDay) { day, _ -> AddWorkoutRoute(navigator, day) }
                     }
+                    composable(ApexRoutes.ACTIVITY, arguments = dayArguments) { entry ->
+                        DayDetail(entry, latestDay, latestSetDay) { day, change -> ActivityDetailRoute(navigator, day, change) }
+                    }
+                    composable(ApexRoutes.BODY, arguments = dayArguments) { entry ->
+                        DayDetail(entry, latestDay, latestSetDay) { day, change -> BodyRoute(navigator, day, change) }
+                    }
+                    composable(ApexRoutes.STRESS, arguments = dayArguments) { entry ->
+                        DayDetail(entry, latestDay, latestSetDay) { day, change -> StressRoute(navigator, day, change) }
+                    }
+                    composable(ApexRoutes.ENERGY, arguments = dayArguments) { entry ->
+                        DayDetail(entry, latestDay, latestSetDay) { day, change -> EnergyRoute(navigator, day, change) }
+                    }
+                    composable(ApexRoutes.FITNESS, arguments = dayArguments) { entry ->
+                        DayDetail(entry, latestDay, latestSetDay) { day, change -> FitnessRoute(navigator, day, change) }
+                    }
+                    composable(ApexRoutes.MONITOR, arguments = dayArguments) { entry ->
+                        DayDetail(entry, latestDay, latestSetDay) { day, change -> MonitorRoute(navigator, day, change) }
+                    }
 
                     // --- Other details ---
                     composable(
@@ -239,6 +265,36 @@ fun ApexNavHost(
                             LaunchedEffect(Unit) { navigator.back() }
                         } else {
                             Detail { TrendDetailRoute(navigator, metric) }
+                        }
+                    }
+                    composable(
+                        ApexRoutes.TRENDS,
+                        arguments = listOf(
+                            navArgument(ApexRoutes.ARG_FIRST) {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            },
+                        ),
+                    ) { entry ->
+                        val first = entry.firstMetricArgument()
+                        Detail { TrendsBrowserRoute(navigator, first) }
+                    }
+                    composable(
+                        ApexRoutes.NAP,
+                        arguments = listOf(
+                            navArgument(ApexRoutes.ARG_ID) {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            },
+                        ),
+                    ) { entry ->
+                        val id = entry.idArgument()
+                        if (id == null) {
+                            LaunchedEffect(Unit) { navigator.back() }
+                        } else {
+                            Detail { NapDetailRoute(navigator, id) }
                         }
                     }
                     composable(ApexRoutes.DATA_SOURCES) { Detail { DataSourcesRoute(navigator) } }

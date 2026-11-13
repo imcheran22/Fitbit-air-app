@@ -29,6 +29,30 @@ interface ApexNavigator {
     /** Heart rate for one day (opened from the Overview heart-rate card and the Health tab). */
     fun openHeartRateDay(day: LocalDate)
 
+    /** Activity totals and a 7, 30 or 90 day history. */
+    fun openActivity(day: LocalDate)
+
+    /** Weight, body fat and BMI with a 7 to 180 day history. */
+    fun openBody(day: LocalDate)
+
+    /** The day's stress strip and summary (an estimate). */
+    fun openStress(day: LocalDate)
+
+    /** The day's energy bank curve (a model, not a measurement). */
+    fun openEnergy(day: LocalDate)
+
+    /** VO2 max, category, fitness age and the VO2 trend. */
+    fun openFitness(day: LocalDate)
+
+    /** Every vital with its 30 day baseline band. */
+    fun openMonitor(day: LocalDate)
+
+    /** The trends browser and two-metric overlay; [first] preselects the first overlay metric. */
+    fun openTrends(first: MetricType? = null)
+
+    /** One nap, by sleep session id. */
+    fun openNap(id: String)
+
     /** Debug builds only; a no-op in release builds. */
     fun openGallery()
 
@@ -59,6 +83,14 @@ class NavControllerNavigator(private val navController: NavController) : ApexNav
     override fun openLicences() = go(ApexDestination.Licences)
     override fun openPrivacy() = go(ApexDestination.Privacy)
     override fun openHeartRateDay(day: LocalDate) = go(ApexDestination.HeartRateDay(day))
+    override fun openActivity(day: LocalDate) = go(ApexDestination.Activity(day))
+    override fun openBody(day: LocalDate) = go(ApexDestination.Body(day))
+    override fun openStress(day: LocalDate) = go(ApexDestination.Stress(day))
+    override fun openEnergy(day: LocalDate) = go(ApexDestination.Energy(day))
+    override fun openFitness(day: LocalDate) = go(ApexDestination.Fitness(day))
+    override fun openMonitor(day: LocalDate) = go(ApexDestination.Monitor(day))
+    override fun openTrends(first: MetricType?) = go(ApexDestination.Trends(first))
+    override fun openNap(id: String) = go(ApexDestination.Nap(id))
 
     override fun openGallery() {
         if (BuildConfig.DEBUG) go(ApexDestination.Gallery)

@@ -15,6 +15,9 @@ object ApexRoutes {
     const val ARG_ID = "id"
     const val ARG_METRIC = "metric"
 
+    /** The first metric preselected on the trends browser (a metric storage key). */
+    const val ARG_FIRST = "a"
+
     /** Nested graph that holds the tabs and every detail screen. */
     const val MAIN = "main"
     const val ONBOARDING = "onboarding"
@@ -33,6 +36,16 @@ object ApexRoutes {
     const val WORKOUT = "workout?id={id}"
     const val ADD_WORKOUT = "workout/add?d={d}"
     const val TREND = "trend/{metric}"
+
+    // Health detail routes (docs/APP_CONTRACT.md section 7)
+    const val ACTIVITY = "activity?d={d}"
+    const val BODY = "body?d={d}"
+    const val STRESS = "health/stress?d={d}"
+    const val ENERGY = "health/energy?d={d}"
+    const val FITNESS = "health/fitness?d={d}"
+    const val MONITOR = "health/monitor?d={d}"
+    const val TRENDS = "trends?a={a}"
+    const val NAP = "sleep/nap?id={id}"
 
     // More
     const val DATA_SOURCES = "more/data"
@@ -73,6 +86,21 @@ sealed interface ApexDestination {
 
     data class Trend(val metric: MetricType) : ApexDestination { override val route get() = "trend/${metric.storageKey}" }
 
+    data class Activity(val day: LocalDate) : ApexDestination { override val route get() = "activity?d=$day" }
+    data class Body(val day: LocalDate) : ApexDestination { override val route get() = "body?d=$day" }
+    data class Stress(val day: LocalDate) : ApexDestination { override val route get() = "health/stress?d=$day" }
+    data class Energy(val day: LocalDate) : ApexDestination { override val route get() = "health/energy?d=$day" }
+    data class Fitness(val day: LocalDate) : ApexDestination { override val route get() = "health/fitness?d=$day" }
+    data class Monitor(val day: LocalDate) : ApexDestination { override val route get() = "health/monitor?d=$day" }
+
+    /** The trends browser and overlay; [first] preselects the first overlay metric. */
+    data class Trends(val first: MetricType? = null) : ApexDestination {
+        override val route get() = if (first == null) "trends" else "trends?a=${first.storageKey}"
+    }
+
+    /** [id] is a sleep session id (it may contain ':' or '/'), so it travels URL-encoded as a query argument. */
+    data class Nap(val id: String) : ApexDestination { override val route get() = "sleep/nap?id=${Uri.encode(id)}" }
+
     data object DataSources : ApexDestination { override val route = ApexRoutes.DATA_SOURCES }
     data object TakeoutImport : ApexDestination { override val route = ApexRoutes.TAKEOUT_IMPORT }
     data object Settings : ApexDestination { override val route = ApexRoutes.SETTINGS }
@@ -92,6 +120,10 @@ fun NavBackStackEntry.dayArgument(fallback: LocalDate): LocalDate =
 /** The metric named by the `metric` argument, or null when the key is unknown. */
 fun NavBackStackEntry.metricArgument(): MetricType? =
     arguments?.getString(ApexRoutes.ARG_METRIC)?.let { key -> MetricType.entries.firstOrNull { it.storageKey == key } }
+
+/** The metric named by the `a` argument of the trends browser, or null when absent or unknown. */
+fun NavBackStackEntry.firstMetricArgument(): MetricType? =
+    arguments?.getString(ApexRoutes.ARG_FIRST)?.let { key -> MetricType.entries.firstOrNull { it.storageKey == key } }
 
 /** The workout id argument (already URL-decoded by Navigation), or null. */
 fun NavBackStackEntry.idArgument(): String? = arguments?.getString(ApexRoutes.ARG_ID)?.takeIf { it.isNotEmpty() }

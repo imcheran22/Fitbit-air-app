@@ -101,6 +101,10 @@ fun HealthRoute(
         onOpenTrend = navigator::openTrend,
         onOpenHeartRate = { navigator.openHeartRateDay(day) },
         onOpenProfile = navigator::openProfile,
+        onOpenFitness = { navigator.openFitness(day) },
+        onOpenBody = { navigator.openBody(day) },
+        onOpenMonitor = { navigator.openMonitor(day) },
+        onOpenTrends = { navigator.openTrends() },
         contentPadding = contentPadding,
     )
 }
@@ -127,6 +131,10 @@ internal fun HealthScreen(
     onOpenTrend: (MetricType) -> Unit,
     onOpenHeartRate: () -> Unit,
     onOpenProfile: () -> Unit,
+    onOpenFitness: () -> Unit,
+    onOpenBody: () -> Unit,
+    onOpenMonitor: () -> Unit,
+    onOpenTrends: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     Column(
@@ -156,11 +164,11 @@ internal fun HealthScreen(
                 labelClickDescription = stringResource(R.string.health_hr_go_today),
             )
         }
-        MonitorSection(ui, onOpenTrend)
-        TrendsSection(ui, onOpenTrend)
-        BodySection(body, onOpenTrend, onOpenProfile)
+        MonitorSection(ui, onOpenTrend, onOpenMonitor)
+        TrendsSection(ui, onOpenTrend, onOpenTrends)
+        BodySection(body, onOpenTrend, onOpenProfile, onOpenBody)
         VitalsSection(vitals, onOpenTrend)
-        CardioSection(cardio, onOpenVo2 = { onOpenTrend(MetricType.VO2_MAX) }, onOpenProfile = onOpenProfile)
+        CardioSection(cardio, onOpenVo2 = { onOpenTrend(MetricType.VO2_MAX) }, onOpenProfile = onOpenProfile, onOpenFitness = onOpenFitness)
         HeartRateSection(ui?.heartRate, onOpenHeartRate)
     }
 }
@@ -171,7 +179,7 @@ private fun Caption(text: String) {
 }
 
 @Composable
-private fun MonitorSection(ui: HealthUi?, onOpenTrend: (MetricType) -> Unit) {
+private fun MonitorSection(ui: HealthUi?, onOpenTrend: (MetricType) -> Unit, onOpenMonitor: () -> Unit) {
     SectionShell(stringResource(R.string.health_section_monitor)) {
         Caption(stringResource(R.string.health_monitor_caption))
         ApexCard(contentPadding = PaddingValues(horizontal = ApexSpacing.cardPadding, vertical = ApexSpacing.sm)) {
@@ -192,12 +200,17 @@ private fun MonitorSection(ui: HealthUi?, onOpenTrend: (MetricType) -> Unit) {
                     )
                 }
             }
+            LinkRow(
+                text = stringResource(R.string.detail_link_monitor),
+                description = stringResource(R.string.detail_link_monitor_cd),
+                onClick = onOpenMonitor,
+            )
         }
     }
 }
 
 @Composable
-private fun TrendsSection(ui: HealthUi?, onOpenTrend: (MetricType) -> Unit) {
+private fun TrendsSection(ui: HealthUi?, onOpenTrend: (MetricType) -> Unit, onOpenTrends: () -> Unit) {
     SectionShell(stringResource(R.string.health_section_trends)) {
         Caption(stringResource(R.string.health_trends_caption))
         when {
@@ -228,6 +241,13 @@ private fun TrendsSection(ui: HealthUi?, onOpenTrend: (MetricType) -> Unit) {
                 )
             }
         }
+        ApexCard {
+            LinkRow(
+                text = stringResource(R.string.detail_link_trends),
+                description = stringResource(R.string.detail_link_trends_cd),
+                onClick = onOpenTrends,
+            )
+        }
     }
 }
 
@@ -257,7 +277,7 @@ private fun LinkRow(text: String, description: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun BodySection(body: BodyUi?, onOpenTrend: (MetricType) -> Unit, onOpenProfile: () -> Unit) {
+private fun BodySection(body: BodyUi?, onOpenTrend: (MetricType) -> Unit, onOpenProfile: () -> Unit, onOpenBody: () -> Unit) {
     SectionShell(stringResource(R.string.health_section_body)) {
         Caption(stringResource(R.string.health_body_caption))
         if (body == null) {
@@ -266,6 +286,13 @@ private fun BodySection(body: BodyUi?, onOpenTrend: (MetricType) -> Unit, onOpen
             BodyMetricCard(body.weight, body, showProfileLink = false, onOpenTrend, onOpenProfile)
             BodyMetricCard(body.bodyFat, body, showProfileLink = false, onOpenTrend, onOpenProfile)
             BodyMetricCard(body.bmi, body, showProfileLink = body.bmiNeedsHeight, onOpenTrend, onOpenProfile)
+        }
+        ApexCard {
+            LinkRow(
+                text = stringResource(R.string.detail_link_body),
+                description = stringResource(R.string.detail_link_body_cd),
+                onClick = onOpenBody,
+            )
         }
     }
 }
@@ -371,7 +398,7 @@ private fun CardioLine(line: CardioLineUi, extras: List<String> = emptyList()) {
 }
 
 @Composable
-private fun CardioSection(cardio: CardioUi?, onOpenVo2: () -> Unit, onOpenProfile: () -> Unit) {
+private fun CardioSection(cardio: CardioUi?, onOpenVo2: () -> Unit, onOpenProfile: () -> Unit, onOpenFitness: () -> Unit) {
     SectionShell(stringResource(R.string.health_section_cardio)) {
         Caption(stringResource(R.string.health_cardio_caption))
         if (cardio == null) {
@@ -400,6 +427,11 @@ private fun CardioSection(cardio: CardioUi?, onOpenVo2: () -> Unit, onOpenProfil
                     text = stringResource(R.string.health_fitness_action),
                     description = stringResource(R.string.health_trend_link_cd, stringResource(R.string.health_metric_vo2)),
                     onClick = onOpenVo2,
+                )
+                LinkRow(
+                    text = stringResource(R.string.detail_link_fitness),
+                    description = stringResource(R.string.detail_link_fitness_cd),
+                    onClick = onOpenFitness,
                 )
               }
             }
@@ -530,17 +562,17 @@ private fun previewCardio(missing: Boolean): CardioUi {
 @HealthThemePreviews
 @Composable
 private fun HealthScreenPreview() = HealthPreviewFrame {
-    HealthScreen(previewUi(), previewBody(needsHeight = false), previewVitals(), previewCardio(missing = false), "Today", false, {}, {}, {}, {}, {}, {}, PaddingValues(0.dp))
+    HealthScreen(previewUi(), previewBody(needsHeight = false), previewVitals(), previewCardio(missing = false), "Today", false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, PaddingValues(0.dp))
 }
 
 @HealthThemePreviews
 @Composable
 private fun HealthScreenNeedsProfilePreview() = HealthPreviewFrame {
-    HealthScreen(previewUi(), previewBody(needsHeight = true), previewVitals(), previewCardio(missing = true), "Today", false, {}, {}, {}, {}, {}, {}, PaddingValues(0.dp))
+    HealthScreen(previewUi(), previewBody(needsHeight = true), previewVitals(), previewCardio(missing = true), "Today", false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, PaddingValues(0.dp))
 }
 
 @HealthThemePreviews
 @Composable
 private fun HealthScreenLoadingPreview() = HealthPreviewFrame {
-    HealthScreen(null, null, null, null, "Today", false, {}, {}, {}, {}, {}, {}, PaddingValues(0.dp))
+    HealthScreen(null, null, null, null, "Today", false, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, PaddingValues(0.dp))
 }

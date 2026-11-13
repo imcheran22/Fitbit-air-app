@@ -145,3 +145,29 @@ behaviours are listed with no values; emits the empty value while the store open
 
 Export, import and "Delete all my data" cover all nine tables (no screen change needed): the JSON and CSV exports gain the extras tables, the
 import report gains `extrasWritten` and quarantine reasons `UNKNOWN_KIND` and `NOT_STORED`, and deletion removes the database file.
+
+## 8. Health detail routes (activity, body, stress, energy, fitness, monitor, trends, naps)
+
+Added after the first screen pass. Every route below is reachable in two taps or fewer, is built from the kit with tokens only, keeps its UI
+state (range, chosen figure, selected day) in `SavedStateHandle` or `rememberSaveable`, and works in Demo mode (it reads the active store through
+`AthleteRepository`, never a DAO). Day routes use the host's `DayDetail` wrapper, so they take `(navigator, day, onDayChange)` like section 2.
+`d` is `yyyy-MM-dd`; absent or unreadable means the selected day. New navigator methods: `openActivity(day) openBody(day) openStress(day)
+openEnergy(day) openFitness(day) openMonitor(day) openTrends(first: MetricType? = null) openNap(id)`.
+
+| Route string | Composable (package) | Reached from | What it shows | Day nav |
+|---|---|---|---|---|
+| `activity?d={d}` | `ActivityDetailRoute(navigator, day, onDayChange)` (`ui.activity`) | `ApexNavigator.openActivity`; a tapped chart point on the trends overlay | Steps, calories (total, active), distance, floors, active zone minutes, active minutes by level, sedentary time; 7/30/90 day history of any figure | date pill; a tapped chart day opens that day |
+| `body?d={d}` | `BodyRoute(navigator, day, onDayChange)` (`ui.body`) | Health tab, Body section ("Body details"); overlay | Weight, body fat, BMI (BMI needs a height: link to Profile), 7/30/90/180 day history; empty state names Takeout import as the only source of body data (no link in Demo mode) | date pill; tapped chart day |
+| `health/stress?d={d}` | `StressRoute(navigator, day, onDayChange)` (`ui.stress`) | Overview Stress card; Energy screen link | Minute strip, level, minutes low/medium/high, calibrating or missing reason, calm-heart-rate baseline, 14 day history, "how this is estimated"; always tagged Estimate | date pill; tapped history day |
+| `health/energy?d={d}` | `EnergyRoute(navigator, day, onDayChange)` (`ui.energy`) | Overview Energy card; Stress screen link | Energy curve, now/lowest/start, what drained and charged it (basal, activity, stress, calm rest, nap), unscored minutes, missing reason; always tagged Estimate | date pill |
+| `health/fitness?d={d}` | `FitnessRoute(navigator, day, onDayChange)` (`ui.fitness`) | Health tab, Cardio fitness section | VO2 max (Estimated tag and method when estimated), FRIEND category, fitness age, 90 day VO2 trend | date pill; tapped trend day |
+| `health/monitor?d={d}` | `MonitorRoute(navigator, day, onDayChange)` (`ui.monitor`) | Health tab, Monitor section ("See every vital") | The five monitor readings and every overnight vital, each with its 30 day band, an above/below/within flag (text, not colour only) and a link to its trend | date pill |
+| `trends?a={a}` | `TrendsBrowserRoute(navigator, first: MetricType?)` (`ui.trends`) | Health tab, Trends section ("Browse all trends"); "Compare with another figure" on every `trend/{metric}` | Every metric with data grouped by category, 7/30/90/180 day switch, overlay of two chosen figures on separate scales (no correlation is computed; the caption says so), tap a day to open it in the screen that owns the metric | none (ends today); `a` is a metric storage key preselecting the first overlay figure |
+| `sleep/nap?id={id}` | `NapDetailRoute(navigator, napId)` (`ui.nap`) | Nap list on the Sleep screen | Start, end (in the recorded offset), time in bed, asleep, awake, time to fall asleep, stages when scored, provenance; "no longer in your data" when the id is gone | none |
+
+Notes
+- `sleep/nap` takes the id as a query argument (`?id=`), URL-encoded, not as a path segment: sleep session ids contain `:` and `/` (the same reason `workout?id=` does).
+- The nap list is `NapsSectionRoute(navigator, day)` in `ui.nap`; `SleepScreen` receives it through its optional `napsSection` slot.
+- `trend/{metric}` is extended, not replaced: its chart now selects a day on tap and offers a button that opens that day's screen (`dayTargetOf(metric)`), and a link to the overlay.
+- New read flows live in `core/data/.../repository/NapReads.kt` (`NapReads(stores)`: `naps(day)`, `nap(id)`). It is built from `container.stores` where it is used; nothing is added to `AppContainer`.
+- Shared pieces: `ui.detail` (load state, `DayLoadViewModel`, `StatBlock`, `SeriesChartCard`, `DayBanner`), `:core:ui` `DaySeriesChart` (one or two daily series, hoisted day selection) and `ChoiceRow` / `ChoiceScrollRow`.

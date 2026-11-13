@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy of DaySeriesChart (one or two daily series with a selectable day). Names are prefixed apex_chart_day_series_. -->
+<resources>
+    <string name="apex_chart_day_series_none">%1$s: no reading</string>
+    <string name="apex_chart_day_series_summary">%1$s: average %2$s, latest %3$s</string>
+    <string name="apex_chart_day_series_two_scales">Each line has its own scale: %1$s on the left, %2$s on the right.</string>
+    <string name="apex_chart_day_series_legend_solid">Solid line</string>
+    <string name="apex_chart_day_series_legend_dashed">Dashed line</string>
+    <string name="apex_chart_day_series_hint">Tap a day to select it.</string>
+    <string name="apex_chart_day_series_selected_desc">Selected day %1$s.</string>
+    <string name="apex_chart_day_series_selected_none">No day selected.</string>
+</resources>

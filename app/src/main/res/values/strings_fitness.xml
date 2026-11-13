@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cardio fitness detail route (health/fitness?d=). Prefix: fitness_. Line labels and category words come from strings_health.xml. -->
+<resources>
+    <string name="fitness_section_lines">Your level</string>
+    <string name="fitness_section_trend">VO2 max over 90 days</string>
+    <string name="fitness_trend_title">VO2 max, last 90 days</string>
+    <string name="fitness_trend_empty">No VO2 max readings in the last 90 days.</string>
+    <string name="fitness_how_p1">VO2 max is how much oxygen your body can use at its hardest. Apex shows the value your band reports; without one it estimates it from your resting and maximum heart rate, and says so.</string>
+    <string name="fitness_how_p2">The category and fitness age compare that value with published norms for adults of your age and sex (FRIEND registry). That is why Apex needs your birth year and sex in Profile.</string>
+    <string name="fitness_how_p3">An estimate is good for following a trend. It is not a lab test and not a medical result.</string>
+</resources>

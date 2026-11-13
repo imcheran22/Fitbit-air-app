@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Energy bank detail route (health/energy?d=). Prefix: energy_. -->
+<resources>
+    <string name="energy_hero_label">Energy bank</string>
+    <string name="energy_unit">/ 100</string>
+    <string name="energy_lowest">Lowest so far</string>
+    <string name="energy_start">Where it started</string>
+    <string name="energy_start_note">The bank starts at your morning recovery score.</string>
+    <string name="energy_section_curve">Through the day</string>
+    <string name="energy_section_breakdown">What moved it</string>
+    <string name="energy_drained_title">Drained by</string>
+    <string name="energy_charged_title">Charged by</string>
+    <string name="energy_term_basal">Being awake</string>
+    <string name="energy_term_activity">Activity in your heart-rate zones</string>
+    <string name="energy_term_stress">High stress</string>
+    <string name="energy_term_rest">Calm, still minutes</string>
+    <string name="energy_term_nap">Naps</string>
+    <string name="energy_breakdown_note">Totals in bank points over the day so far, before the bank is held between 0 and 100.</string>
+    <plurals name="energy_unscored_note">
+        <item quantity="one">%d awake minute had no stress level, so it only drained at the basal rate.</item>
+        <item quantity="other">%d awake minutes had no stress level, so they only drained at the basal rate.</item>
+    </plurals>
+    <string name="energy_chart_desc">Energy bank from %1$s to %2$s: now %3$s, lowest %4$s. Stretches without a reading are left empty.</string>
+    <string name="energy_chart_empty">There is no energy curve for this day.</string>
+    <string name="energy_link_stress">See stress</string>
+    <string name="energy_link_stress_cd">Open stress for this day</string>
+    <string name="energy_how_p1">The energy bank is a model, not a measurement. It starts at your morning recovery score and moves minute by minute from when you woke.</string>
+    <string name="energy_how_p2">It drains a little every awake minute, more when your heart rate is in a training zone, and more again while stress is high. It charges slowly in calm, still minutes and quickly during a nap.</string>
+    <string name="energy_how_p3">The size of each step is Apex\'s own choice and is not validated. Read the shape as a hint about your day, not a number to chase.</string>
+    <string name="energy_how_p4">A minute without a heart rate adds no activity drain, and Apex does not fill it in.</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Body detail route (body?d=). Prefix: body_. Metric titles come from strings_health.xml. -->
+<resources>
+    <string name="body_section_weight">Weight</string>
+    <string name="body_section_fat">Body fat</string>
+    <string name="body_section_bmi">BMI</string>
+    <string name="body_empty_title">No body measurements yet</string>
+    <string name="body_empty_text">Health Connect delivers no body measurements, so Apex has none yet. Import a Google Takeout archive to add your weigh-ins and body fat.</string>
+    <string name="body_empty_action">Open Takeout import</string>
+    <string name="body_empty_action_cd">Open Takeout import to add your weigh-ins</string>
+    <string name="body_empty_demo">Demo mode keeps its own data, so Takeout import is off while it is on.</string>
+    <string name="body_chart_title">%1$s, last %2$d days</string>
+    <string name="body_chart_empty">No readings in this range yet.</string>
+    <string name="body_bmi_chart_note">BMI is calculated from each weigh-in and your height.</string>
+    <string name="body_how_p1">Weight and body fat are shown as delivered, with where they came from. A weight you typed in Profile is labelled self-reported and has no date.</string>
+    <string name="body_how_p2">BMI is weight divided by height squared. Apex calculates it only when it has both, and never guesses a height.</string>
+    <string name="body_how_p3">BMI is a rough ratio. It says nothing about muscle or fat.</string>
+</resources>

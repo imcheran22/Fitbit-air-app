@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Activity detail route (activity?d=). Prefix: activitydetail_. Metric labels come from strings_activity.xml. -->
+<resources>
+    <string name="activitydetail_hero_label">Steps</string>
+    <string name="activitydetail_section_totals">Totals</string>
+    <string name="activitydetail_section_minutes">Active minutes</string>
+    <string name="activitydetail_section_history">History</string>
+    <string name="activitydetail_metric_group_cd">Figure to chart</string>
+    <string name="activitydetail_sedentary_pending">Counted once the day has finished.</string>
+    <string name="activitydetail_empty">No readings for this figure yet. Your band delivers them after a sync.</string>
+    <string name="activitydetail_chart_title">%1$s, last %2$d days</string>
+    <string name="activitydetail_how_p1">Totals are for the calendar day in your time zone, as your band reports them. Apex shows them as delivered and never estimates a missing day.</string>
+    <string name="activitydetail_how_p2">Active minutes are split by how hard the movement was. Sedentary time is only known once the day has finished.</string>
+    <string name="activitydetail_how_p3">On the chart, a gap means no reading that day. Select a day, then open it to see its totals.</string>
+</resources>

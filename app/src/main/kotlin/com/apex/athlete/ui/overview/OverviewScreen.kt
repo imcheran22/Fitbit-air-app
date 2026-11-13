@@ -110,6 +110,8 @@ fun OverviewRoute(
             onCoach = navigator::openCoach,
             onDataSources = navigator::openDataSources,
             onImport = navigator::openTakeoutImport,
+            onStress = { navigator.openStress(day) },
+            onEnergy = { navigator.openEnergy(day) },
         )
     }
     OverviewContent(ui, actions, contentPadding, extras)
@@ -129,6 +131,9 @@ class OverviewActions(
     val onCoach: () -> Unit,
     val onDataSources: () -> Unit,
     val onImport: () -> Unit,
+    /** Opens the day's stress and energy bank screens. */
+    val onStress: () -> Unit = {},
+    val onEnergy: () -> Unit = {},
 )
 
 @StringRes
@@ -225,8 +230,8 @@ internal fun OverviewContent(
                 OverviewPhase.Empty -> item(key = "empty") { EmptyCard(actions) }
                 else -> {
                     item(key = "hr") { HeartRateCard(ui, actions.onHeartRate) }
-                    item(key = "stress") { StressCard(extras.stress, ui.clock) }
-                    item(key = "energy") { EnergyCard(extras.energy, ui.clock) }
+                    item(key = "stress") { StressCard(extras.stress, ui.clock, actions.onStress) }
+                    item(key = "energy") { EnergyCard(extras.energy, ui.clock, actions.onEnergy) }
                     item(key = "activity") { ActivityRow(extras.activity, actions.onStrain) }
                     item(key = "monitor") { MonitorCard(ui, actions.onTrend) }
                     item(key = "target") { StrainTargetCard(ui, actions.onStrain) }

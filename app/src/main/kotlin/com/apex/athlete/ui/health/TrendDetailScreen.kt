@@ -13,7 +13,10 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +35,8 @@ import com.apex.athlete.core.domain.MetricType
 import com.apex.athlete.core.ui.charts.ChartBand
 import com.apex.athlete.core.ui.charts.ChartPoint
 import com.apex.athlete.core.ui.charts.ChartScales
+import com.apex.athlete.core.ui.charts.DaySeries
+import com.apex.athlete.core.ui.charts.DaySeriesChart
 import com.apex.athlete.core.ui.charts.ChartTone
 import com.apex.athlete.core.ui.charts.TrendLineChart
 import com.apex.athlete.core.ui.components.ApexCard
@@ -58,6 +63,11 @@ import com.apex.athlete.navigation.ApexNavigator
 import com.apex.athlete.ui.common.LocalFormatter
 import com.apex.athlete.ui.common.MetricStateMapper
 import com.apex.athlete.ui.common.apexViewModel
+import com.apex.athlete.ui.detail.LinkRow
+import com.apex.athlete.ui.detail.SelectedDayRow
+import com.apex.athlete.ui.trends.dayTargetOf
+import com.apex.athlete.ui.trends.openDayTarget
+import java.time.LocalDate
 
 /** Trend detail: a range selector, the line with its baseline band, min, max, mean and how the baseline is made. */
 @Composable
@@ -80,6 +90,8 @@ fun TrendDetailRoute(navigator: ApexNavigator, metric: MetricType) {
         selectedRange = range,
         onSelectRange = vm::selectRange,
         onBack = navigator::back,
+        onOpenDay = { epochDay -> navigator.openDayTarget(dayTargetOf(metric), LocalDate.ofEpochDay(epochDay)) },
+        onCompare = { navigator.openTrends(metric) },
     )
 }
 
@@ -91,7 +103,13 @@ internal fun TrendDetailScreen(
     selectedRange: Int,
     onSelectRange: (Int) -> Unit,
     onBack: () -> Unit,
+    /** When set, a tap on the chart selects a day and a button opens that day's screen. */
+    onOpenDay: ((Long) -> Unit)? = null,
+    /** When set, a link offers to compare this figure with another on the trends overlay. */
+    onCompare: (() -> Unit)? = null,
 ) {
+    var selectedDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    val formatter = LocalFormatter.current
     DetailShell(
         title = title,
         onBack = onBack,
@@ -112,16 +130,39 @@ internal fun TrendDetailScreen(
                 }
                 else -> {
                     ApexCard {
-                        TrendLineChart(
-                            title = title,
-                            points = ui.points,
-                            rangeDays = ui.rangeDays,
-                            endDay = ui.endDay,
-                            baseline = ui.baseline,
-                            valueSuffix = if (ui.unit.isBlank()) "" else " ${ui.unit}",
-                            decimals = ui.decimals,
-                            provenance = ui.provenance,
-                        )
+                        if (onOpenDay != null) {
+                            DaySeriesChart(
+                                title = title,
+                                primary = DaySeries(
+                                    label = title,
+                                    points = ui.points,
+                                    valueSuffix = if (ui.unit.isBlank()) "" else " ${ui.unit}",
+                                    decimals = ui.decimals,
+                                    baseline = ui.baseline,
+                                ),
+                                startDay = ui.endDay - (ui.rangeDays - 1),
+                                endDay = ui.endDay,
+                                selectedDay = selectedDay,
+                                onSelectDay = { selectedDay = it },
+                                provenance = ui.provenance,
+                            )
+                            val inRange = selectedDay?.takeIf { it in (ui.endDay - (ui.rangeDays - 1))..ui.endDay }
+                            SelectedDayRow(
+                                dayLabel = inRange?.let { formatter.dayLabel(LocalDate.ofEpochDay(it)) },
+                                onOpen = { inRange?.let(onOpenDay) },
+                            )
+                        } else {
+                            TrendLineChart(
+                                title = title,
+                                points = ui.points,
+                                rangeDays = ui.rangeDays,
+                                endDay = ui.endDay,
+                                baseline = ui.baseline,
+                                valueSuffix = if (ui.unit.isBlank()) "" else " ${ui.unit}",
+                                decimals = ui.decimals,
+                                provenance = ui.provenance,
+                            )
+                        }
                         if (ui.baseline != null) {
                             Text(
                                 stringResource(R.string.health_trend_baseline_note),
@@ -132,6 +173,15 @@ internal fun TrendDetailScreen(
                         }
                     }
                     SummaryCard(ui)
+                    if (onCompare != null) {
+                        ApexCard {
+                            LinkRow(
+                                text = stringResource(R.string.trends_compare_action),
+                                description = stringResource(R.string.trends_compare_cd, title),
+                                onClick = onCompare,
+                            )
+                        }
+                    }
                 }
             }
         },

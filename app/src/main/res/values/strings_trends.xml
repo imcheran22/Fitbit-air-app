@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trends browser and overlay (trends?a=). Prefix: trends_. Metric titles come from strings_health.xml. -->
+<resources>
+    <string name="trends_title">All trends</string>
+    <string name="trends_hero">Browse every trend</string>
+    <string name="trends_hero_caption">Pick a figure to see its history, or lay two figures over each other.</string>
+
+    <string name="trends_group_cardio">Heart and circulation</string>
+    <string name="trends_group_respiratory">Breathing</string>
+    <string name="trends_group_temperature">Temperature</string>
+    <string name="trends_group_sleep">Sleep</string>
+    <string name="trends_group_activity">Activity</string>
+    <string name="trends_group_body">Body</string>
+    <string name="trends_group_scores">Scores and stress</string>
+    <string name="trends_group_training">Training load</string>
+    <string name="trends_group_external">Other health data</string>
+    <string name="trends_group_subjective">How you feel</string>
+
+    <string name="trends_browser_empty">No readings in this range yet. Trends appear once your data has synced or been imported.</string>
+
+    <string name="trends_section_overlay">Compare two figures</string>
+    <string name="trends_pick_first">First figure</string>
+    <string name="trends_pick_second">Second figure</string>
+    <string name="trends_pick_none">None</string>
+    <string name="trends_pick_choose">Choose</string>
+    <string name="trends_pick_cd">%1$s: %2$s. Opens the list.</string>
+    <string name="trends_pick_option_cd">Use %1$s</string>
+    <string name="trends_overlay_choose">Choose two figures to lay over each other.</string>
+    <string name="trends_overlay_title">%1$s and %2$s, last %3$d days</string>
+    <string name="trends_overlay_missing">No readings for %1$s in this range.</string>
+    <string name="trends_overlay_caption">The two lines use separate scales. Lines that move together on the chart do not show that one affects the other.</string>
+    <string name="trends_overlay_provenance">%1$s: %2$s</string>
+    <string name="trends_open_for">Open %1$s: %2$s</string>
+    <string name="trends_open_for_cd">Open the details for %1$s, for %2$s</string>
+    <string name="trends_no_selection">Tap a day on the chart to select it.</string>
+    <string name="trends_compare_action">Compare with another figure</string>
+    <string name="trends_compare_cd">Compare %1$s with another figure</string>
+</resources>

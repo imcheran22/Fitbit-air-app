@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stress detail route (health/stress?d=). Prefix: stress_. -->
+<resources>
+    <string name="stress_hero_label">Stress</string>
+    <string name="stress_unit">/ 3</string>
+    <string name="stress_unit_min">min</string>
+    <string name="stress_tier_low">Low</string>
+    <string name="stress_tier_medium">Medium</string>
+    <string name="stress_tier_high">High</string>
+    <string name="stress_section_day">Through the day</string>
+    <string name="stress_section_baseline">Your calm level</string>
+    <string name="stress_section_history">Last 14 days</string>
+    <string name="stress_minutes_label">Minutes by level</string>
+    <string name="stress_chart_desc">Stress through the day from %1$s to %2$s: low %3$d minutes, medium %4$d minutes, high %5$d minutes. Minutes without a reading are left empty.</string>
+    <string name="stress_chart_empty">There is no stress strip for this day.</string>
+    <string name="stress_baseline_label">Your usual calm heart rate</string>
+    <string name="stress_today_label">Calm heart rate on this day</string>
+    <plurals name="stress_baseline_days">
+        <item quantity="one">Built from %d recent day with enough still minutes.</item>
+        <item quantity="other">Built from %d recent days with enough still minutes.</item>
+    </plurals>
+    <string name="stress_history_title">Daily stress level, last 14 days</string>
+    <string name="stress_history_empty">No stress levels for these days yet.</string>
+    <string name="stress_link_energy">See the energy bank</string>
+    <string name="stress_link_energy_cd">Open the energy bank for this day</string>
+    <string name="stress_how_p1">This is an estimate of how elevated your heart rate was while you were still and awake, compared with your own usual calm level. It is not a measure of how you feel.</string>
+    <string name="stress_how_p2">Minutes while you were moving, in a workout or asleep are left out. A minute without a heart rate is left empty, not guessed.</string>
+    <string name="stress_how_p3">Each still minute gets a level from 0 to 3: under 1 is low, 1 to under 2 is medium, 2 or more is high. These cut-offs are Apex\'s own choices and are not validated against any clinical measure.</string>
+    <string name="stress_how_p4">Your calm level is built from your own recent days, so stress shows as calibrating until enough days exist.</string>
+</resources>

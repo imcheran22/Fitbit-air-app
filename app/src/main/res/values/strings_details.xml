@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared by the Health detail routes (activity, body, stress, energy, fitness, monitor, trends, naps). Prefix: detail_ -->
+<resources>
+    <string name="detail_prev_day">Previous day</string>
+    <string name="detail_next_day">Next day</string>
+    <string name="detail_go_today">Go to today</string>
+
+    <string name="detail_estimate_tag">Estimate</string>
+    <string name="detail_estimate_spoken">An estimate calculated by Apex</string>
+    <string name="detail_error">Apex could not read this just now. Go back and open it again.</string>
+    <string name="detail_no_selection">Tap a day on the chart to select it.</string>
+    <string name="detail_open_day">Open %1$s</string>
+    <string name="detail_how_title">How this is calculated</string>
+    <string name="detail_chart_note_gaps">A gap means nothing was recorded that day. Apex does not fill it in.</string>
+    <string name="detail_provisional_note">Today is still counting, so today\'s totals can rise.</string>
+    <string name="detail_unit_points">points</string>
+    <string name="detail_unit_bpm">bpm</string>
+
+    <!-- Links from the Health tab to the detail routes -->
+    <string name="detail_link_monitor">See every vital</string>
+    <string name="detail_link_monitor_cd">Open every vital with its 30 day range</string>
+    <string name="detail_link_trends">Browse all trends</string>
+    <string name="detail_link_trends_cd">Open the trends browser and overlay</string>
+    <string name="detail_link_body">Body details</string>
+    <string name="detail_link_body_cd">Open weight, body fat and BMI with their history</string>
+    <string name="detail_link_fitness">Cardio fitness details</string>
+    <string name="detail_link_fitness_cd">Open VO2 max, category, fitness age and the VO2 trend</string>
+    <string name="detail_link_stress_cd">Open the day\'s stress</string>
+    <string name="detail_link_energy_cd">Open the day\'s energy bank</string>
+</resources>

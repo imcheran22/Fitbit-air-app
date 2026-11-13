@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Health monitor detail route (health/monitor?d=). Prefix: monitor_. Metric titles come from strings_health.xml. -->
+<resources>
+    <string name="monitor_section_night">Last night</string>
+    <string name="monitor_section_more">More overnight readings</string>
+    <plurals name="monitor_summary_outside">
+        <item quantity="one">%d reading is outside your usual range</item>
+        <item quantity="other">%d readings are outside your usual range</item>
+    </plurals>
+    <string name="monitor_summary_inside">Every reading with a usual range is inside it</string>
+    <string name="monitor_summary_learning">Your usual ranges are still being learned</string>
+    <string name="monitor_summary_caption">Ranges come from your own last 30 days. A reading outside one is a prompt to notice how you feel, not a diagnosis.</string>
+    <string name="monitor_flag_above">Above your range</string>
+    <string name="monitor_flag_below">Below your range</string>
+    <string name="monitor_flag_inside">Within your range</string>
+    <string name="monitor_band_caption">Your 30-day range: %1$s to %2$s %3$s</string>
+    <string name="monitor_band_none">No usual range yet</string>
+    <string name="monitor_how_p1">Each reading is compared with your own range from the last 30 days: your average, plus and minus one standard deviation. Until enough nights exist, Apex shows no range and no flag.</string>
+    <string name="monitor_how_p2">The small arrow beside a value shows which side of your average it is on. Tap a reading to see its trend.</string>
+    <string name="monitor_how_p3">Some overnight readings, such as the two heart-rate-variability frequency bands, are night averages of raw samples and have no range.</string>
+</resources>

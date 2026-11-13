@@ -105,7 +105,7 @@ private fun WindowLabels(startMillis: Long, endMillis: Long, clock: ChartClock) 
 
 /** The day's stress: level, minutes per tier and the minute strip. An estimate from heart rate while still. */
 @Composable
-internal fun StressCard(ui: StressCardUi, clock: ChartClock) {
+internal fun StressCard(ui: StressCardUi, clock: ChartClock, onOpen: (() -> Unit)? = null) {
     val colors = ApexTheme.colors
     val title = stringResource(R.string.overview_stress_title)
     val tierText = ui.tier?.let { stringResource(tierRes(it)) }
@@ -122,7 +122,7 @@ internal fun StressCard(ui: StressCardUi, clock: ChartClock) {
         ui.level,
         extras = listOfNotNull(tierText, minutesSpoken, stringResource(R.string.overview_estimate_spoken)),
     )
-    ApexCard(Modifier.fillMaxWidth()) {
+    ApexCard(Modifier.fillMaxWidth(), onClick = onOpen, onClickLabel = stringResource(R.string.detail_link_stress_cd)) {
         Column(Modifier.fillMaxWidth().spoken(spoken), verticalArrangement = Arrangement.spacedBy(ApexSpacing.sm)) {
             Column(Modifier.hideFromTalkBack(), verticalArrangement = Arrangement.spacedBy(ApexSpacing.sm)) {
                 CardTitle(title)
@@ -177,12 +177,12 @@ private fun MinutesCell(label: String, state: MetricState, swatch: Color, modifi
 
 /** The energy bank now and its curve through the day. A model that starts at the morning recovery, not a measurement. */
 @Composable
-internal fun EnergyCard(ui: EnergyCardUi, clock: ChartClock) {
+internal fun EnergyCard(ui: EnergyCardUi, clock: ChartClock, onOpen: (() -> Unit)? = null) {
     val colors = ApexTheme.colors
     val title = stringResource(R.string.overview_energy_title)
     val lowest = (ui.lowest as? MetricState.Value)?.let { stringResource(R.string.overview_energy_lowest_spoken, it.numberText()) }
     val spoken = metricSpoken(title, ui.bank, extras = listOfNotNull(lowest, stringResource(R.string.overview_estimate_spoken)))
-    ApexCard(Modifier.fillMaxWidth()) {
+    ApexCard(Modifier.fillMaxWidth(), onClick = onOpen, onClickLabel = stringResource(R.string.detail_link_energy_cd)) {
         Column(Modifier.fillMaxWidth().spoken(spoken), verticalArrangement = Arrangement.spacedBy(ApexSpacing.sm)) {
             Column(Modifier.hideFromTalkBack(), verticalArrangement = Arrangement.spacedBy(ApexSpacing.sm)) {
                 CardTitle(title)

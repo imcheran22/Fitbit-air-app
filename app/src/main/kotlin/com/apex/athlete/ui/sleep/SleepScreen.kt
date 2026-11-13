@@ -67,6 +67,7 @@ import com.apex.athlete.ui.common.ApexFormatter
 import com.apex.athlete.ui.common.LocalFormatter
 import com.apex.athlete.ui.common.MetricStateMapper
 import com.apex.athlete.ui.common.apexViewModel
+import com.apex.athlete.ui.nap.NapsSectionRoute
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -87,6 +88,7 @@ fun SleepRoute(navigator: ApexNavigator, day: LocalDate, onDayChange: (LocalDate
         onBack = navigator::back,
         onPrevious = { onDayChange(day.minusDays(1)) },
         onNext = { onDayChange(day.plusDays(1)) },
+        napsSection = { NapsSectionRoute(navigator, day) },
     )
 }
 
@@ -100,6 +102,8 @@ fun SleepScreen(
     onBack: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    /** The day's naps; the route supplies it so this screen stays a pure function of [ui]. */
+    napsSection: (@Composable () -> Unit)? = null,
 ) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
     val heroState = when {
@@ -156,6 +160,7 @@ fun SleepScreen(
                 SectionShell(stringResource(R.string.sleep_details_title)) { DetailsCard(ui) }
                 SectionShell(stringResource(R.string.sleep_tonight_title)) { TonightCard(ui) }
             }
+            napsSection?.invoke()
             HowLink(onClick = { showInfo = true })
         },
     )

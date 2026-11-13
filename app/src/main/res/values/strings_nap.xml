@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Naps on the Sleep screen and the nap detail route (sleep/nap?id=). Prefix: nap_. Stage words reuse strings_sleep.xml. -->
+<resources>
+    <string name="nap_section_title">Naps</string>
+    <string name="nap_empty">No nap was recorded for this day.</string>
+    <string name="nap_time_range">%1$s to %2$s</string>
+    <string name="nap_row_cd">Nap %1$s, %2$s. %3$s. Opens the nap.</string>
+    <string name="nap_title">Nap</string>
+    <string name="nap_unit_min">min</string>
+    <string name="nap_hero_label">Time in bed</string>
+    <string name="nap_asleep">Asleep</string>
+    <string name="nap_awake">Awake</string>
+    <string name="nap_to_fall_asleep">Time to fall asleep</string>
+    <string name="nap_section_stages">Stages</string>
+    <string name="nap_stages_none">This nap has no stage scoring from its source, so no stages are shown.</string>
+    <string name="nap_not_found">This nap is no longer in your data. It may have been replaced by a newer sync.</string>
+    <string name="nap_how_p1">A nap is any sleep that is not your main sleep. Start, end and minutes are shown as your source reported them, with the source named under each figure.</string>
+    <string name="nap_how_p2">A figure the source did not report is left blank. Apex does not work it out from other numbers.</string>
+</resources>
