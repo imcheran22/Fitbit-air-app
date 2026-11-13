@@ -119,12 +119,19 @@ class ApexDatabaseTest {
         assertEquals(9000.0, dao.get(MetricType.STEPS, 100)!!.value, 1e-9)
         assertEquals(1, dao.forDay(100).size)
 
-        // A scale reading reaches the app through Health Connect and wins for body metrics.
+        // A third-party device (a blood-pressure cuff) reaches the app through Health Connect and wins there.
+        val bpApi = daily(MetricType.BLOOD_PRESSURE_SYSTOLIC, 100, 124.0, DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API)
+        val bpHc = daily(MetricType.BLOOD_PRESSURE_SYSTOLIC, 100, 121.0, DataProvenance.IMPORTED_HEALTH_CONNECT)
+        dao.reconcileAndUpsert(listOf(bpApi))
+        assertEquals(1, dao.reconcileAndUpsert(listOf(bpHc)))
+        assertEquals(DataProvenance.IMPORTED_HEALTH_CONNECT, dao.get(MetricType.BLOOD_PRESSURE_SYSTOLIC, 100)!!.provenance)
+
+        // Body metrics are read only from the Google Health API (Health Connect has no weight stream), so it wins there.
         val weightApi = daily(MetricType.WEIGHT, 100, 80.4, DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API)
         val weightHc = daily(MetricType.WEIGHT, 100, 80.1, DataProvenance.IMPORTED_HEALTH_CONNECT)
         dao.reconcileAndUpsert(listOf(weightApi))
-        assertEquals(1, dao.reconcileAndUpsert(listOf(weightHc)))
-        assertEquals(DataProvenance.IMPORTED_HEALTH_CONNECT, dao.get(MetricType.WEIGHT, 100)!!.provenance)
+        assertEquals(0, dao.reconcileAndUpsert(listOf(weightHc)))
+        assertEquals(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API, dao.get(MetricType.WEIGHT, 100)!!.provenance)
 
         // A fresher value from the same source replaces the older one.
         assertEquals(1, dao.reconcileAndUpsert(listOf(api.copy(value = 9500.0, updatedAtEpochMillis = 30))))
