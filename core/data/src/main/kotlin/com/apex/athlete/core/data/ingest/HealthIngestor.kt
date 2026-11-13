@@ -419,6 +419,15 @@ object Plausibility {
             MetricType.WEIGHT -> value in 20.0..400.0
             MetricType.BODY_FAT -> value in 1.0..75.0
             MetricType.SUBJECTIVE_FATIGUE, MetricType.SUBJECTIVE_SORENESS -> value in 1.0..10.0
+            // Journal factors are yes/no: exactly 1.0 or 0.0.
+            MetricType.JOURNAL_ALCOHOL, MetricType.JOURNAL_LATE_CAFFEINE, MetricType.JOURNAL_LATE_MEAL,
+            MetricType.JOURNAL_STRESSFUL_DAY, MetricType.JOURNAL_TRAVEL -> value == 0.0 || value == 1.0
+            MetricType.BMI -> value in 8.0..100.0
+            // Derived in formula version 4; bounds match what the engines can produce.
+            MetricType.STRESS_DAY_AGGREGATE_BPM -> value in 25.0..240.0
+            MetricType.STRESS_SCORE -> value in 0.0..3.0
+            MetricType.STRESS_LOW_MINUTES, MetricType.STRESS_MEDIUM_MINUTES, MetricType.STRESS_HIGH_MINUTES -> value in 0.0..1500.0
+            MetricType.HR_DIP -> value in -300.0..100.0
             MetricType.SLEEP_EFFICIENCY -> value in 0.0..100.0
             else -> value >= 0.0 || metric == MetricType.TRAINING_BALANCE
         }

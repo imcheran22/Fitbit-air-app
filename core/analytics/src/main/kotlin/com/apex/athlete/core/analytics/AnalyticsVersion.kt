@@ -22,5 +22,9 @@ package com.apex.athlete.core.analytics
  *   below 4 recorded nights and counts naps. Weekly HRV status against a baseline before the week.
  *   Sleep consistency is the Sleep Regularity Index. Strain target from a personal 14-day base;
  *   sleep-need strain term is a personal z.
+ * - 4: new derived outputs persisted by the pipeline (docs/FORMULAS.md, "Version 4"): motion-gated daytime
+ *   stress (day aggregate, mean level, minutes per band), sleeping heart-rate dip. Computed on read and not
+ *   stored: energy bank, post-workout heart-rate recovery, journal effects, VO2 max category, fitness age.
+ *   No existing formula changed; the bump makes older derived history replay so every day carries the new rows.
  */
-const val ANALYTICS_ALGORITHM_VERSION: Int = 3
+const val ANALYTICS_ALGORITHM_VERSION: Int = 4

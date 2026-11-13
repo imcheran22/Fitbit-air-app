@@ -5,11 +5,18 @@ import com.apex.athlete.core.analytics.baseline.BaselineEngine
 import com.apex.athlete.core.analytics.baseline.BaselineSpec
 import com.apex.athlete.core.analytics.baseline.BaselineSpecs
 import com.apex.athlete.core.analytics.baseline.DailyValue
+import com.apex.athlete.core.analytics.energy.EnergyResult
 import com.apex.athlete.core.analytics.fitness.CardioFitness
+import com.apex.athlete.core.analytics.fitness.FitnessAge
+import com.apex.athlete.core.analytics.fitness.FitnessAgeResult
 import com.apex.athlete.core.analytics.fitness.MaxHeartRate
 import com.apex.athlete.core.analytics.fitness.MaxHeartRateEstimate
 import com.apex.athlete.core.analytics.fitness.RestingHeartRateSeries
 import com.apex.athlete.core.analytics.fitness.RestingHeartRateSource
+import com.apex.athlete.core.analytics.fitness.Vo2CategoryResult
+import com.apex.athlete.core.analytics.fitness.Vo2Categories
+import com.apex.athlete.core.analytics.journal.JournalEffects
+import com.apex.athlete.core.analytics.journal.JournalEffectsReport
 import com.apex.athlete.core.analytics.load.DailyLoad
 import com.apex.athlete.core.analytics.load.DailyLoadPolicy
 import com.apex.athlete.core.analytics.load.TrainingLoadEngine
@@ -20,28 +27,40 @@ import com.apex.athlete.core.analytics.recovery.RecoveryEngine
 import com.apex.athlete.core.analytics.recovery.RecoveryInputs
 import com.apex.athlete.core.analytics.recovery.RecoveryResult
 import com.apex.athlete.core.analytics.recovery.RecoveryStatus
+import com.apex.athlete.core.analytics.sleep.DipMissing
+import com.apex.athlete.core.analytics.sleep.HeartRateDipResult
 import com.apex.athlete.core.analytics.sleep.NightBalance
 import com.apex.athlete.core.analytics.sleep.SleepNeed
 import com.apex.athlete.core.analytics.sleep.SleepNeedCalculator
 import com.apex.athlete.core.analytics.sleep.SleepNightInput
+import com.apex.athlete.core.analytics.sleep.SleepRegularity
 import com.apex.athlete.core.analytics.sleep.SleepRegularityIndex
 import com.apex.athlete.core.analytics.sleep.SleepScoreEngine
 import com.apex.athlete.core.analytics.sleep.SleepScoreResult
 import com.apex.athlete.core.analytics.sleep.SleepSpan
 import com.apex.athlete.core.analytics.sleep.SleepTiming
 import com.apex.athlete.core.analytics.strain.CardioProfile
+import com.apex.athlete.core.analytics.strain.HeartRateRecoveryResult
 import com.apex.athlete.core.analytics.strain.HeartRateSample
+import com.apex.athlete.core.analytics.strain.HeartRateZone
 import com.apex.athlete.core.analytics.strain.HeartRateZoneModel
 import com.apex.athlete.core.analytics.strain.RemainingCapacity
 import com.apex.athlete.core.analytics.strain.StrainEngine
 import com.apex.athlete.core.analytics.strain.StrainResult
 import com.apex.athlete.core.analytics.strain.StrainTarget
 import com.apex.athlete.core.analytics.strain.StrainTargetCalculator
+import com.apex.athlete.core.analytics.stress.MinuteHeartRate
+import com.apex.athlete.core.analytics.stress.MinuteStress
+import com.apex.athlete.core.analytics.stress.StressBaseline
+import com.apex.athlete.core.analytics.stress.StressConfig
+import com.apex.athlete.core.analytics.stress.StressSummary
 import com.apex.athlete.core.analytics.trend.MetricIntelligence
 import com.apex.athlete.core.analytics.trend.MetricTrendAnalyzer
+import com.apex.athlete.core.analytics.trend.WeeklyHrvStatus
 import com.apex.athlete.core.data.settings.UserProfile
 import com.apex.athlete.core.database.ApexDatabase
 import com.apex.athlete.core.database.entity.DailyBiometricSummaryEntity
+import com.apex.athlete.core.database.entity.IntradayHeartRateEntity
 import com.apex.athlete.core.database.entity.SleepSessionEntity
 import com.apex.athlete.core.database.entity.WorkoutEntity
 import com.apex.athlete.core.domain.DataProvenance
@@ -102,6 +121,38 @@ data class DayAnalysis(
     /** Provenance of each observed input that fed the scores, for the label next to the number. */
     val provenance: Map<MetricType, DataProvenance>,
     val steps: Double?,
+    // --- Added in formula version 4. Every output below is null (with a reason where one exists) when its inputs are missing. ---
+    /** Daytime stress summary (heart rate while still, against the athlete's own baseline); null with [stressMissing]. */
+    val stress: StressSummary?,
+    /** Per-minute 0..3 levels behind [stress] for the day chart; empty when [stress] is null. */
+    val stressMinuteLevels: List<MinuteStress>,
+    /** The day's resting daytime heart rate (feeds later baselines); present even while the stress baseline calibrates. */
+    val stressDayAggregateBpm: Double?,
+    val stressBaseline: StressBaseline?,
+    val stressMissing: StressMissingReason?,
+    /** Energy bank curve from the morning recovery and wake time; null with [energyMissing]. Computed on read, not stored. */
+    val energy: EnergyResult?,
+    val energyMissing: EnergyMissingReason?,
+    /** Sleeping heart-rate dip; [HeartRateDipResult.dipFraction] is null with a reason when it cannot be computed. */
+    val heartRateDip: HeartRateDipResult,
+    /** Next-day associations of journal factors over the last 90 days; null when nothing was journalled. */
+    val journalEffects: JournalEffectsReport?,
+    /** VO2 max against FRIEND norms; the result carries a missing reason (no sex, no age, no VO2 max) instead of a value. */
+    val vo2Category: Vo2CategoryResult,
+    val fitnessAge: FitnessAgeResult,
+    /** Minutes per heart-rate zone over every recorded minute of the day (including rest); null without a zone model or heart rate. */
+    val zoneMinutes: Map<HeartRateZone, Double>?,
+    /** Weekly HRV status (last 7 nights against the 60 nights before the week); null without HRV readings. */
+    val weeklyHrvStatus: WeeklyHrvStatus?,
+    /** Sleep Regularity Index of the last week; [SleepRegularity.index] is null with fewer than two usable day pairs. */
+    val sleepRegularity: SleepRegularity,
+    /** 0..1 confidence in the training load (density and recency of recorded days); [loadCalibrating] below 0.35. */
+    val loadConfidence: Double,
+    val loadCalibrating: Boolean,
+    /** False when no autonomic signal was available to judge fatigue: "not evaluable", never "no fatigue". */
+    val fatigueEvaluable: Boolean,
+    /** The athlete's own recent strain base the target is built from; null with fewer than 5 recorded days (then no target). */
+    val personalStrainBase: Double?,
     val algorithmVersion: Int = ANALYTICS_ALGORITHM_VERSION,
 )
 
@@ -234,6 +285,7 @@ class DailyIntelligencePipeline(
             }
         val needLastNight = needCalculator.need(durations, strainZ(day - 1, strainByDay[day - 1]), balances(day, earlier), day)
 
+        val regularity = regularityOf(day, sessions, allSessions)
         val sleepResult = night?.let { n ->
             val timings = sessions.filter { it.epochDay in (day - 6)..day }.map(::timingOf)
             val restorativeHistory = earlier.filter { it.hasStages && it.minutesAsleep > 0 }
@@ -242,7 +294,6 @@ class DailyIntelligencePipeline(
                 val base = BaselineEngine.baseline(restorativeHistory, day, BaselineSpecs.RESTORATIVE_SLEEP_FRACTION)
                 BaselineEngine.zScore(((n.minutesDeep ?: 0) + (n.minutesRem ?: 0)).toDouble() / n.minutesAsleep, base)
             } else null
-            val regularity = regularityOf(day, sessions, allSessions)
             sleepEngine.evaluate(
                 night = SleepNightInput(
                     asleepMinutes = n.minutesAsleep.toDouble(),
@@ -352,6 +403,46 @@ class DailyIntelligencePipeline(
             else -> null
         }
 
+        val zones = cardio?.let { HeartRateZoneModel.of(it, user.zoneMethod) }
+
+        // --- Version 4: stress, energy, heart-rate dip, journal effects, fitness category --------------------
+        val minuteHeartRate = hrRows.map { MinuteHeartRate(minuteOf(it.timestampEpochMillis), it.avgBpm) }
+        val daySleeps = db.sleepDao().overlapping(dayStart, dayEnd)
+        val dayWorkouts = db.workoutDao().overlapping(dayStart, dayEnd)
+        val stressWindow = StressConfig().baselineWindowDays.toLong()
+        val priorAggregates = dailyDao.range(MetricType.STRESS_DAY_AGGREGATE_BPM, day - stressWindow, day - 1)
+            .associate { it.epochDay to it.value }
+            .let { byDay -> ((day - stressWindow) until day).map { byDay[it] } }
+        val stepIntervals = db.metricSampleDao().range(MetricType.STEPS, dayStart - StressDay.MAX_INTERVAL_MINUTES * MINUTE_MS, dayEnd)
+            .map { StepInterval(it.timestampEpochMillis, it.endEpochMillis, it.value) }
+        val stress = StressDay.evaluate(
+            dayStartMillis = dayStart,
+            dayEndMillis = dayEnd,
+            heartRate = minuteHeartRate,
+            stepIntervals = stepIntervals,
+            excluded = (daySleeps.map { minuteSpan(it.startEpochMillis, it.endEpochMillis) } +
+                dayWorkouts.map { minuteSpan(it.startEpochMillis, it.endEpochMillis) }),
+            priorAggregates = priorAggregates,
+        )
+
+        // The curve ends at midnight, at "now" for today, or when the next main sleep starts.
+        val nextSleepStart = night?.let { n -> daySleeps.filter { it.isMainSleep && it.startEpochMillis > n.endEpochMillis }.minOfOrNull { it.startEpochMillis } }
+        val energy = EnergyDay.evaluate(
+            recovery = recovery.score,
+            wakeMillis = night?.endEpochMillis,
+            dayEndMillis = minOf(dayEnd, nextSleepStart ?: dayEnd),
+            nowMillis = nowMillis(),
+            zones = zones,
+            heartRate = minuteHeartRate,
+            stressLevels = stress.minuteLevels,
+            naps = daySleeps.filter { !it.isMainSleep }.map { minuteRangeOf(it.startEpochMillis, it.endEpochMillis) },
+        )
+
+        val dip = heartRateDipOf(day, night, sessions)
+        val journal = journalEffectsOf(day, recovery.score)
+        val vo2Category = Vo2Categories.classify(vo2?.value, age, user.sex)
+        val fitnessAge = FitnessAge.estimate(vo2?.value, age, user.sex)
+
         val analysis = DayAnalysis(
             epochDay = day,
             isProvisional = day >= today(),
@@ -372,7 +463,7 @@ class DailyIntelligencePipeline(
             remaining = remaining,
             cardioProfile = cardio,
             maxHeartRate = maxHr,
-            zones = cardio?.let { HeartRateZoneModel.of(it, user.zoneMethod) },
+            zones = zones,
             load = load,
             fatigue = fatigue,
             vo2Max = vo2,
@@ -381,10 +472,81 @@ class DailyIntelligencePipeline(
             subjectiveSoreness = valueOn(MetricType.SUBJECTIVE_SORENESS, day)?.toInt(),
             provenance = rows.filter { it.epochDay == day }.associate { it.metricType to it.provenance },
             steps = valueOn(MetricType.STEPS, day),
+            stress = stress.summary,
+            stressMinuteLevels = stress.minuteLevels,
+            stressDayAggregateBpm = stress.dayAggregateBpm,
+            stressBaseline = stress.baseline,
+            stressMissing = stress.missing,
+            energy = energy.result,
+            energyMissing = energy.missing,
+            heartRateDip = dip,
+            journalEffects = journal,
+            vo2Category = vo2Category,
+            fitnessAge = fitnessAge,
+            zoneMinutes = strain?.minutesByZone,
+            weeklyHrvStatus = hrv.weeklyStatus,
+            sleepRegularity = regularity,
+            loadConfidence = load.loadConfidence,
+            loadCalibrating = load.isCalibrating,
+            fatigueEvaluable = fatigue.evaluable,
+            personalStrainBase = personalBase,
         )
         if (persist) store(analysis)
         return analysis
     }
+
+    /**
+     * Sleeping heart-rate dip of the night that ended on [day]: the mean heart rate over the waking time that
+     * preceded it (workouts, naps and other sleep left out) against the mean over the night.
+     * The waking time runs from the previous wake time (at most 24 h before the onset) to the onset.
+     */
+    private suspend fun heartRateDipOf(day: Long, night: SleepSessionEntity?, mainSleeps: List<SleepSessionEntity>): HeartRateDipResult {
+        if (night == null) return HeartRateDipResult(null, null, DipMissing.NO_SLEEPING_HEART_RATE)
+        val previousWake = mainSleeps.filter { it.epochDay < day }.maxOfOrNull { it.endEpochMillis }
+        val from = HeartRateDipDay.daytimeStart(night.startEpochMillis, previousWake)
+        val hrDao = db.intradayHeartRateDao()
+        val excluded = db.sleepDao().overlapping(from, night.startEpochMillis).map { minuteSpan(it.startEpochMillis, it.endEpochMillis) } +
+            db.workoutDao().overlapping(from, night.startEpochMillis).map { minuteSpan(it.startEpochMillis, it.endEpochMillis) }
+        return HeartRateDipDay.evaluate(
+            daytimeHeartRate = hrDao.range(from, night.startEpochMillis).toMinutes(),
+            excluded = excluded,
+            sleepingHeartRate = hrDao.range(night.startEpochMillis, night.endEpochMillis).toMinutes(),
+        )
+    }
+
+    /**
+     * Journal factors of the 90 days ending on [day] against the next-day recovery and overnight RMSSD. The recovery of
+     * [day] itself is the one just computed (it is stored only after this returns); earlier days use their stored scores.
+     */
+    private suspend fun journalEffectsOf(day: Long, recoveryToday: Double?): JournalEffectsReport? {
+        val dao = db.dailyBiometricSummaryDao()
+        val from = day - JournalEffects.WINDOW_DAYS
+        val factorRows = JournalDay.FACTORS.associateWith { metric ->
+            dao.range(metric, from, day).associate { it.epochDay to it.value }
+        }.filterValues { it.isNotEmpty() }
+        if (factorRows.isEmpty()) return null
+        val recovery = dao.range(MetricType.RECOVERY_SCORE, day - JournalEffects.WINDOW_DAYS + 1, day - 1)
+            .associate { it.epochDay to it.value }.toMutableMap()
+        if (recoveryToday != null) recovery[day] = recoveryToday
+        val rmssd = dao.range(MetricType.HRV_RMSSD, day - JournalEffects.WINDOW_DAYS + 1, day).associate { it.epochDay to it.value }
+        return JournalDay.analyze(factorRows, recovery, rmssd, day)
+    }
+
+    /**
+     * Heart-rate recovery of one workout from the minute heart rate around its end (see [WorkoutRecovery]).
+     * Null without a zone model. Computed when the workout is opened and never stored.
+     */
+    suspend fun heartRateRecovery(workout: WorkoutEntity, zones: HeartRateZoneModel?): HeartRateRecoveryResult? {
+        if (zones == null) return null
+        val end = workout.endEpochMillis
+        val rows = db.intradayHeartRateDao().range(
+            (minuteCeil(end) - WorkoutRecovery.MINUTES_BEFORE_END) * MINUTE_MS,
+            (minuteCeil(end) + WorkoutRecovery.MINUTES_AFTER_END) * MINUTE_MS,
+        )
+        return WorkoutRecovery.compute(end, rows.toMinutes(), zones)
+    }
+
+    private fun List<IntradayHeartRateEntity>.toMinutes() = map { MinuteHeartRate(minuteOf(it.timestampEpochMillis), it.avgBpm) }
 
     /**
      * Fills in nightly values a source did not deliver as daily figures but that follow directly
@@ -446,6 +608,12 @@ class DailyIntelligencePipeline(
             MetricType.TRAINING_MONOTONY to a.load.monotony,
             MetricType.TRAINING_STRAIN_FOSTER to a.load.fosterStrain,
             MetricType.TRAINING_BALANCE to a.load.trainingBalance,
+            MetricType.STRESS_DAY_AGGREGATE_BPM to a.stressDayAggregateBpm,
+            MetricType.STRESS_SCORE to a.stress?.meanLevel,
+            MetricType.STRESS_LOW_MINUTES to a.stress?.lowMinutes?.toDouble(),
+            MetricType.STRESS_MEDIUM_MINUTES to a.stress?.mediumMinutes?.toDouble(),
+            MetricType.STRESS_HIGH_MINUTES to a.stress?.highMinutes?.toDouble(),
+            MetricType.HR_DIP to a.heartRateDip.dipFraction?.let { it * 100.0 },
         )
         val present = values.mapNotNull { (metric, value) ->
             value?.takeIf { it.isFinite() }?.let { derivedRow(metric, a.epochDay, it, now) }

@@ -109,6 +109,13 @@ enum class MetricType(
     /** 1 = no soreness, 10 = severe. */
     SUBJECTIVE_SORENESS("subj_soreness", MetricCategory.SUBJECTIVE, "1-10", Polarity.LOWER_IS_BETTER),
 
+    // --- Journal factors (typed in by the user; one yes/no per day, 1.0 = yes, 0.0 = no, no row = not logged) --
+    JOURNAL_ALCOHOL("journal_alcohol", MetricCategory.SUBJECTIVE, "yes/no"),
+    JOURNAL_LATE_CAFFEINE("journal_late_caffeine", MetricCategory.SUBJECTIVE, "yes/no"),
+    JOURNAL_LATE_MEAL("journal_late_meal", MetricCategory.SUBJECTIVE, "yes/no"),
+    JOURNAL_STRESSFUL_DAY("journal_stressful_day", MetricCategory.SUBJECTIVE, "yes/no"),
+    JOURNAL_TRAVEL("journal_travel", MetricCategory.SUBJECTIVE, "yes/no"),
+
     // --- Scores computed by the analytics engine ------------------------------------------
     RECOVERY_SCORE("recovery_score", MetricCategory.SCORE, "%", Polarity.HIGHER_IS_BETTER, isDerived = true),
     STRAIN_SCORE("strain_score", MetricCategory.SCORE, "0-21", isDerived = true),
@@ -117,6 +124,17 @@ enum class MetricType(
     SLEEP_NEED("sleep_need_min", MetricCategory.SCORE, "min", isDerived = true),
     SLEEP_DEBT("sleep_debt_min", MetricCategory.SCORE, "min", Polarity.LOWER_IS_BETTER, isDerived = true),
     SLEEP_CONSISTENCY("sleep_consistency", MetricCategory.SCORE, "%", Polarity.HIGHER_IS_BETTER, isDerived = true),
+
+    // --- Added in formula version 4 (stored as text keys, so no Room schema change) ---------------------------------
+    /** Resting daytime heart rate of the day: P10 of the waking-hour still-minute means (StressEngine). Feeds the stress baseline. */
+    STRESS_DAY_AGGREGATE_BPM("stress_day_bpm", MetricCategory.SCORE, "bpm", Polarity.LOWER_IS_BETTER, isDerived = true),
+    /** Mean of the per-minute 0..3 stress levels of the day. Heart rate while still; not a psychological measure. */
+    STRESS_SCORE("stress_score", MetricCategory.SCORE, "0-3", Polarity.LOWER_IS_BETTER, isDerived = true),
+    STRESS_LOW_MINUTES("stress_low_min", MetricCategory.SCORE, "min", Polarity.HIGHER_IS_BETTER, isDerived = true),
+    STRESS_MEDIUM_MINUTES("stress_medium_min", MetricCategory.SCORE, "min", isDerived = true),
+    STRESS_HIGH_MINUTES("stress_high_min", MetricCategory.SCORE, "min", Polarity.LOWER_IS_BETTER, isDerived = true),
+    /** Sleeping heart-rate dip: 100 x (daytime mean - sleeping mean) / daytime mean, signed (negative = sleeping HR higher). */
+    HR_DIP("hr_dip_pct", MetricCategory.SCORE, "%", isDerived = true),
 
     // --- Training load computed by the analytics engine -----------------------------------
     DAILY_TRIMP("trimp", MetricCategory.TRAINING_LOAD, "TRIMP", isDerived = true),

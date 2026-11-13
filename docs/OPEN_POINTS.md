@@ -124,3 +124,24 @@ Status: `UNVERIFIED-NEEDS-REAL-ACCOUNT`.
 - A Health Connect read refused in the background with the record permission granted is recorded as `FAILED` with the code
   `HealthConnectBackgroundReadException` (the orchestrator is not owned by this change); the screen shows "reads when the app is open".
   A distinct `SyncStatus` would need an orchestrator change.
+
+## Formula version 4 wiring: stress, energy, heart-rate dip, journal (data layer)
+
+Status: logic and tests are in place; everything marked "confirm" needs real data. No Google endpoint, field or scope was added.
+
+1. **Stress needs step intervals (sync owner).** A still minute is told from a walking one only by `metric_sample` STEPS rows
+   (an interval each, up to 60 minutes; the Takeout importer writes 15-minute buckets). The live Google Health sync folds step
+   intervals into daily totals and Health Connect steps are read as daily totals, so on a real account stress and the stress term of the
+   energy bank are `NO_MOTION_DATA` until a source also stores the step intervals as STEPS samples. Confirm: after the first
+   Takeout import, open a day inside the imported range and check that stress is scored; decide whether the sync should store
+   step intervals (Google `steps` points carry an interval; Health Connect `StepsRecord` has start and end).
+2. **Journal factors have no screen yet.** The journal tab stores only the fatigue and soreness ratings. The data layer now stores five yes/no
+   factors (`MetricType.JOURNAL_*`, written by `AthleteRepository.saveJournalFactors`) and computes the 90-day associations
+   (`journal(day)` / `DayAnalysis.journalEffects`); the factor list (`JournalDay.FACTORS`) is a design choice the owner may change.
+3. **Calibration choices without validation** (all in `docs/FORMULAS.md` section 8): stress logistic constants and 5 bpm sigma floor, energy rates,
+   the 10 % dipper threshold, zone 4 as the minimum peak for heart-rate recovery, 5 days per arm for journal effects. Confirm by reading a week of
+   the owner's own data against how the days felt; change the constants in code, bump `ANALYTICS_ALGORITHM_VERSION`.
+4. **FRIEND norms and fitness-age curve are transcriptions** from the Pulse reference and unchecked against the paper (`EVIDENCE.md`); the HUNT
+   regression is not in the code. Confirm against Kaminsky 2015 Table 2 before the category is shown as more than context.
+5. **Demo steps and activity are synthetic.** The demo store now emits minute step samples and activity, body and vitals series; they exist only
+   so every screen has something to show and are labelled `SYNTHETIC_DEMO`.

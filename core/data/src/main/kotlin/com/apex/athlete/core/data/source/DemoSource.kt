@@ -57,6 +57,10 @@ class DemoSource(
         val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
         val rnd = Random(seed)
         val plan = plan(today, rnd)
+        // Everything added after the first version (steps, activity, body, vitals) draws from its own stream, so the
+        // heart rate, sleep and autonomic series above stay exactly what they were for the same seed and clock.
+        val extra = Random(seed xor EXTRA_STREAM)
+        var weightKg = 78.6
 
         var fatigue = 0.0
         var previousSleepMinutes = 440
@@ -95,7 +99,16 @@ class DemoSource(
 
             // Minute heart rate for the civil day, up to "now".
             val hr = ArrayList<HeartRatePoint>(1440)
+            val stepSamples = ArrayList<SampleObservation>()
             var workout: WorkoutObservation? = null
+            var daySteps = 0L
+            var lightMinutes = 0
+            var moderateMinutes = 0
+            var veryMinutes = 0
+            var zoneMinutes = 0
+            var workoutSteps = 0L
+            var workoutZoneMinutes = 0
+            var elapsedMinutes = 0
             var load = 0.0
             if (!d.bandOff) {
                 val wStart = d.workoutStartMinute
@@ -108,9 +121,16 @@ class DemoSource(
                     val t = dayStart + m * MIN
                     if (t > now) break
                     val asleep = t < sleepEnd && stages.isNotEmpty()
+                    val inWorkout = d.workoutMinutes > 0 && m in wStart until wEnd
+                    var minuteSteps = 0
                     val bpm: Double = when {
                         asleep -> rhr - 1.5 + 2.5 * cos(2 * PI * (t - sleepStart) / (90.0 * MIN)) + gaussian(rnd) * 1.2
-                        d.workoutMinutes > 0 && m in wStart until wEnd -> {
+                        inWorkout -> {
+                            minuteSteps = when (d.workoutType) {
+                                "RUNNING" -> 152 + (extra.nextDouble() * 24).toInt() + (d.workoutIntensity * 12).toInt()
+                                "BIKING" -> if (extra.nextDouble() < 0.04) 6 else 0
+                                else -> if (extra.nextDouble() < 0.35) 8 + extra.nextInt(0, 25) else 0
+                            }
                             val p = (m - wStart).toDouble() / d.workoutMinutes
                             val ramp = when {
                                 p < 0.12 -> p / 0.12
@@ -126,12 +146,35 @@ class DemoSource(
                             val base = rhr + 14 + circadian + if (d.ill) 6 else 0
                             if (walkLeft > 0) {
                                 walkLeft--
+                                minuteSteps = 84 + extra.nextInt(0, 34)
                                 base + 22 + gaussian(rnd) * 4
-                            } else base + gaussian(rnd) * 2.5
+                            } else {
+                                // Now and then a few steps around the house: motion the stress gate has to see.
+                                if (extra.nextDouble() < 0.08) minuteSteps = 1 + extra.nextInt(0, 18)
+                                base + gaussian(rnd) * 2.5
+                            }
                         }
                     }
                     val v = bpm.roundToInt().coerceIn(38, 198)
                     hr += HeartRatePoint(t, v)
+                    elapsedMinutes = m + 1
+                    if (minuteSteps > 0) {
+                        stepSamples += SampleObservation(MetricType.STEPS, t, minuteSteps.toDouble(), t + MIN)
+                        daySteps += minuteSteps
+                        when {
+                            minuteSteps >= 120 -> veryMinutes++
+                            minuteSteps >= 60 -> moderateMinutes++
+                            else -> lightMinutes++
+                        }
+                        if (inWorkout) workoutSteps += minuteSteps
+                    }
+                    if (!asleep) {
+                        // Active zone minutes the way the band counts them: 1 in the fat-burn range, 2 from cardio up.
+                        val reserveShare = (v - rhr) / (HR_MAX - rhr)
+                        val azm = if (reserveShare >= 0.60) 2 else if (reserveShare >= 0.40) 1 else 0
+                        zoneMinutes += azm
+                        if (inWorkout) workoutZoneMinutes += azm
+                    }
                     if (d.workoutMinutes > 0 && m in wStart until wEnd) {
                         sum += v
                         counted++
@@ -142,7 +185,16 @@ class DemoSource(
                 }
                 if (d.workoutMinutes > 0 && counted == d.workoutMinutes) {
                     val start = dayStart + wStart * MIN
-                    val distance = if (d.workoutType == "RUNNING") d.workoutMinutes * (150.0 + 60 * d.workoutIntensity) else null
+                    val distance = when (d.workoutType) {
+                        "RUNNING" -> d.workoutMinutes * (150.0 + 60 * d.workoutIntensity)
+                        "BIKING" -> d.workoutMinutes * (380.0 + 120 * d.workoutIntensity)
+                        else -> null
+                    }
+                    val climb = when (d.workoutType) {
+                        "RUNNING" -> d.workoutMinutes * (1.6 + extra.nextDouble() * 1.4)
+                        "BIKING" -> d.workoutMinutes * (3.0 + extra.nextDouble() * 3.0)
+                        else -> null
+                    }
                     workout = WorkoutObservation(
                         id = "demo:workout:${d.date}",
                         startEpochMillis = start,
@@ -155,6 +207,9 @@ class DemoSource(
                         maxHeartRate = peak,
                         caloriesKcal = d.workoutMinutes * (6.0 + 8.0 * d.workoutIntensity),
                         distanceMeters = distance,
+                        steps = workoutSteps.takeIf { it > 0 },
+                        elevationGainMeters = climb,
+                        activeZoneMinutes = workoutZoneMinutes,
                     )
                 }
             }
@@ -171,15 +226,53 @@ class DemoSource(
                 daily += DailyObservation(MetricType.SKIN_TEMP_DEVIATION, day, round1(skin))
                 // Five-minute HRV readings across the night around the nightly value.
                 var t = sleepStart + 20 * MIN
+                val nightlyHrv = ArrayList<Double>()
                 while (t < sleepEnd - 10 * MIN) {
-                    samples += SampleObservation(MetricType.HRV_RMSSD, t, round1(hrv * exp(gaussian(rnd) * 0.18)))
+                    val reading = round1(hrv * exp(gaussian(rnd) * 0.18))
+                    samples += SampleObservation(MetricType.HRV_RMSSD, t, reading)
+                    nightlyHrv += reading
+                    // Frequency-domain power of the same five-minute window (ms squared), tied to the reading's size.
+                    val power = reading * reading
+                    samples += SampleObservation(MetricType.HRV_LOW_FREQUENCY, t, round1(power * (0.55 + extra.nextDouble() * 0.2)))
+                    samples += SampleObservation(MetricType.HRV_HIGH_FREQUENCY, t, round1(power * (0.40 + extra.nextDouble() * 0.2)))
                     t += 5 * MIN
                 }
+                // Nightly vitals beyond the headline five: skin temperature (absolute), SpO2 range, deep-sleep HRV, sleep-sample HRV.
+                daily += DailyObservation(MetricType.SKIN_TEMP_NIGHTLY, day, round1(33.6 + skin + extra.nextDouble() * 0.3))
+                daily += DailyObservation(MetricType.SPO2_LOWER_BOUND, day, round1((spo2 - 1.2 - extra.nextDouble() * 1.4).coerceAtLeast(88.0)))
+                daily += DailyObservation(MetricType.SPO2_UPPER_BOUND, day, round1((spo2 + 1.4 + extra.nextDouble() * 1.0).coerceAtMost(100.0)))
+                daily += DailyObservation(MetricType.HRV_DEEP_SLEEP_RMSSD, day, round1(hrv * (1.05 + extra.nextDouble() * 0.12)))
+                if (nightlyHrv.size >= 6) daily += DailyObservation(MetricType.HRV_SLEEP_SAMPLES, day, round1(nightlyHrv.average()), sampleCount = nightlyHrv.size)
             }
-            if (!d.bandOff && dayStart + 1439 * MIN <= now) {
-                val steps = 5200 + rnd.nextInt(0, 4200) + d.workoutMinutes * 95
-                daily += DailyObservation(MetricType.STEPS, day, steps.toDouble())
-                daily += DailyObservation(MetricType.CALORIES_TOTAL, day, 2050.0 + steps * 0.045 + d.workoutMinutes * 7.5)
+            // The first version drew the day's step count from the main stream here. The draw is kept (unused) so every
+            // later heart-rate, sleep and autonomic value stays what it was for the same seed and clock.
+            if (!d.bandOff && dayStart + 1439 * MIN <= now) rnd.nextInt(0, 4200)
+            if (!d.bandOff && elapsedMinutes > 0) {
+                // The day total is the sum of the minute samples above, so the two never disagree. Today's is partial
+                // (the band reports the running total) and the pipeline marks the day provisional.
+                val full = elapsedMinutes >= 1440
+                val share = elapsedMinutes / 1440.0
+                val workoutKcal = workout?.caloriesKcal ?: 0.0
+                daily += DailyObservation(MetricType.STEPS, day, daySteps.toDouble())
+                daily += DailyObservation(MetricType.DISTANCE, day, round1(daySteps * 0.74 + (workout?.takeIf { it.exerciseType == "BIKING" }?.distanceMeters ?: 0.0)))
+                daily += DailyObservation(MetricType.FLOORS, day, (daySteps / 1100 + extra.nextInt(0, 4)).toDouble())
+                daily += DailyObservation(MetricType.CALORIES_TOTAL, day, (2050.0 * share + daySteps * 0.045 + workoutKcal).roundToInt().toDouble())
+                daily += DailyObservation(MetricType.CALORIES_ACTIVE, day, (daySteps * 0.045 + workoutKcal).roundToInt().toDouble())
+                daily += DailyObservation(MetricType.ACTIVE_ZONE_MINUTES, day, zoneMinutes.toDouble())
+                daily += DailyObservation(MetricType.LIGHTLY_ACTIVE_MINUTES, day, lightMinutes.toDouble())
+                daily += DailyObservation(MetricType.MODERATELY_ACTIVE_MINUTES, day, moderateMinutes.toDouble())
+                daily += DailyObservation(MetricType.VERY_ACTIVE_MINUTES, day, veryMinutes.toDouble())
+                // Sedentary minutes only make sense for a finished day: awake time that was not active.
+                if (full) {
+                    val sleptMinutes = if (sleep != null) inBedMinutes else 0
+                    daily += DailyObservation(MetricType.SEDENTARY_MINUTES, day, (1440 - sleptMinutes - lightMinutes - moderateMinutes - veryMinutes).coerceAtLeast(0).toDouble())
+                }
+            }
+            // A weigh-in every fourth morning: slow drift plus scale noise; body fat from the same scale.
+            if (d.index % 4 == 0 && !d.bandOff) {
+                weightKg += (extra.nextDouble() - 0.52) * 0.18
+                daily += DailyObservation(MetricType.WEIGHT, day, round1(weightKg + (extra.nextDouble() - 0.5) * 0.4))
+                daily += DailyObservation(MetricType.BODY_FAT, day, round1(14.6 + (extra.nextDouble() - 0.5) * 0.8))
             }
             if (d.index % 3 == 0 && !d.bandOff) {
                 daily += DailyObservation(MetricType.VO2_MAX, day, round1(46.2 + d.index * 0.02))
@@ -190,7 +283,7 @@ class DemoSource(
                     provenance = DataProvenance.SYNTHETIC_DEMO,
                     heartRate = hr,
                     daily = daily,
-                    samples = samples,
+                    samples = samples + stepSamples,
                     sleeps = listOfNotNull(sleep),
                     workouts = listOfNotNull(workout),
                 ),
@@ -285,5 +378,6 @@ class DemoSource(
     private companion object {
         const val MIN = 60_000L
         const val HR_MAX = 186.0
+        const val EXTRA_STREAM = 0x5EED5EEDL
     }
 }

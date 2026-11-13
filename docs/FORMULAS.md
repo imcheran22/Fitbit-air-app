@@ -1,11 +1,12 @@
 # Formulas
 
 Every number the app computes, with the exact formula and the constants in use. All of it lives
-in `:core:analytics` and is covered by unit tests. Formula set version: **3**
+in `:core:analytics` and is covered by unit tests. Formula set version: **4**
 (`ANALYTICS_ALGORITHM_VERSION`). Sources, populations, known errors and evidence grades for every
 constant are in `docs/EVIDENCE.md`; what changed in version 2 and why is in `docs/AUDIT.md`
 ("Formula review"); what changed in version 3 and why is in `docs/DECISIONS.md` (D8) and in
-`docs/review/METRICS_ALIGNMENT.md` / `docs/review/BEVEL_ALIGNMENT.md`.
+`docs/review/METRICS_ALIGNMENT.md` / `docs/review/BEVEL_ALIGNMENT.md`; what version 4 adds is below and in
+section 8.
 
 These are this app's own calculations. They are not WHOOP, Oura, Garmin or Fitbit scores, and
 they are not medical measurements or diagnoses. Constants marked *calibration* set where typical
@@ -15,6 +16,53 @@ must stay "may indicate", never "you are ill".
 
 **Missing data stays missing.** A reading that is absent, `NaN` or infinite is treated as "no
 reading": it is skipped, never replaced by zero, an average or a population norm.
+
+## Changes in version 4
+
+No existing formula changed. Version 4 persists and exposes the engines added after version 3, so
+`ANALYTICS_ALGORITHM_VERSION` is 4: derived rows stored with an older version are replayed at the next start of the
+real store (oldest stale day to today, forward) and then carry the new rows. Replay stays deterministic: a day depends
+only on that day and earlier days, and the stress baseline reads the aggregates the replay has just stored for the
+days before it.
+
+| Output | Stored (derived daily metric) | Computed on read only |
+|---|---|---|
+| Daytime stress (8.1) | `STRESS_DAY_AGGREGATE_BPM`, `STRESS_SCORE` (mean level 0-3), `STRESS_LOW_MINUTES`, `STRESS_MEDIUM_MINUTES`, `STRESS_HIGH_MINUTES` | per-minute levels, highest 6-minute slot |
+| Sleeping heart-rate dip (8.3) | `HR_DIP` (percent, signed) | category |
+| Energy bank (8.2) | none | curve and breakdown (`DayAnalysis.energy`) |
+| Post-workout heart-rate recovery (8.4) | none | per workout, on the workout detail |
+| Journal effects (8.5) | none (the factors are stored: `JOURNAL_*`, 1.0 yes / 0.0 no, no row = not logged) | 90-day associations |
+| VO2 max category, fitness age (8.6, 8.7) | none | on read |
+| Zone minutes (8.8), weekly HRV status, Sleep Regularity Index, load confidence, `fatigue.evaluable`, personal strain base | already stored or computed in version 3 | exposed on `DayAnalysis` |
+
+BMI is `weight / height^2` on read from the latest weight and the profile height (never stored); it is null without a
+height (and without a weight). A weight without a weigh-in falls back to the profile weight, labelled user-reported.
+
+Decisions the wiring made (each a *calibration* choice unless stated; none has published validation):
+
+- **Stress needs motion data.** A still minute is told from a walking one only by step intervals (`metric_sample` STEPS, any
+  bucket length up to 60 minutes; every minute of a bucket with steps counts as motion). A day with heart rate but no step
+  interval overlapping it has stress `NO_MOTION_DATA` and no aggregate; the engine's "no steps means still" is never relied on. Workouts
+  and every sleep session or nap of the day are excluded. Live Google and Health Connect syncs deliver daily step totals, so
+  stress needs step intervals from the Takeout archive (15-minute buckets) or from a future minute-step stream.
+- **Energy runs from wake to the end of the civil day**, to "now" for the current day, or to the start of the next main sleep, from the
+  main sleep's end and the morning recovery; naps are the non-main sleeps of the day. It needs a zone model and at least 60 minutes of heart
+  rate in the span. When stress is unavailable (calibrating, no motion data) the curve still runs with the basal and activity terms and
+  reports how many minutes had no stress level.
+- **Heart-rate dip window.** Daytime = every heart-rate minute from the previous main sleep's end (at most 24 h before the onset, else 24 h
+  before) to the onset of the night, minus workouts, naps and other sleep; sleeping = the night's session. Both sides need 30 minutes.
+  Using the waking time before the night keeps the day complete, so today's dip is available in the morning.
+- **Heart-rate recovery** uses the minute rows from 3 minutes before to 2 minutes after the workout end, needs a zone model, and does not score a peak
+  below the lower bound of zone 4 (`PEAK_BELOW_MINIMUM`; Pulse also uses zone 4).
+- **Journal.** Five yes/no factors (`JournalDay.FACTORS`: alcohol, late caffeine, late meal, stressful day, travel). The factor of day d-1 is paired with
+  the recovery score and the overnight RMSSD of day d; today's recovery is the value just computed, earlier days use their stored scores.
+  At least 5 days per arm, otherwise the factor is listed as skipped.
+- **VO2 max category and fitness age** use the VO2 max the pipeline shows (the band's value, else the ESTIMATED heart-rate-ratio value) together with
+  age (profile birth year) and sex (profile). The result carries a missing reason (`SEX_UNSPECIFIED`, `NO_AGE`, `NO_VO2MAX`) instead of a value; the screen
+  labels the VO2 max by its provenance, so a category from an estimate is visibly an estimate.
+
+Persisted stress values are written for the current day as well; they are final once the day has ended and been replayed (a day's aggregate from a
+partial day can differ slightly from its final value, and the next replay corrects it).
 
 ## Changes in version 3
 
@@ -364,10 +412,116 @@ Only when the wearable has not reported a VO2 max: `15.3 * HRmax / HRrest` (Uth 
 always labelled ESTIMATED, only for HRrest 25-120 and HRmax 100-240 bpm. It was derived in trained
 men, is not adjusted for sex and is suitable for following a trend, not as an absolute value.
 
+## 8. Version 4 outputs: formulas, constants and status
+
+Source and verification notes carried over from the review that added the engines. "Calibration choice" means a value picked for usability that has no
+published validation. "UNVERIFIED" means the source was not opened in the session that wrote the engine (the session could not reach pubmed/PMC/PLOS);
+the claim comes from memory or from the Pulse reference repo. Sources actually opened: the Pulse reference code in
+`reference/design/pulse-main-cleaned/src/core/algorithms/stress.ts`, `scoring/stressBase.ts`, `algorithms/energyBank.ts`, `algorithms/fitnessLevel.ts` and
+`reference/design/pulse-mobile-main/src/core/engine/{sleep,strain}.ts` (code and comments only; no text copied). `docs/review/BEVEL_ALIGNMENT.md` section 1.6
+says neither Pulse's stress nor energy model is validated. No paper below was opened.
+
+All outputs are display context. None is diagnostic. Fatigue-style wording: "may indicate", never "you are ill". Missing data stays missing: every
+engine returns null plus a reason enum, never 0 and never a population value.
+
+### 8.1 Daytime stress (`stress/StressEngine.kt`)
+
+HR-only, per minute, against the athlete's own resting daytime level. Not a measure of psychological stress, not
+validated against any stress instrument. UI wording: "heart rate was elevated while still".
+
+1. Minute HR = mean of the readings in the minute.
+2. Motion gating: a minute is dropped if any minute within +-2 has steps > 0, or it lies in a workout or sleep/nap range.
+3. Day aggregate = P10 (type-7) of the mean still-minute HR of each waking hour (06:00-22:00 local) that has >= 15 still minutes.
+4. Baseline = mean of the last 30 prior day aggregates (>= 7 valid, else calibrating -> null); sigma = max(sample SD, 5 bpm).
+5. z = (bpm - center) / sigma; level = 3 / (1 + e^(-1.5 (z - 1.5))), range 0..3. Hand values: z=0 -> 0.286048, z=1.5 -> 1.5, z=3 -> 2.713952.
+6. Day summary: mean level, minutes with level < 1 / 1..2 / >= 2, highest 6-minute slot (slots tile from local midnight; needs >= 3 scored minutes; ties go to the earliest). Needs >= 120 scored minutes, else null.
+
+| Constant | Value | Status |
+|---|---|---|
+| logistic slope k, midpoint z0 | 1.5, 1.5 | Calibration choice. Structure from the Pulse reference (`stress.ts`), which labels both "tunable". No published validation |
+| still window | +-2 min, steps > 0 | Calibration choice (Pulse uses +-2 min, 0 steps) |
+| waking window | 06:00-22:00 | Calibration choice (Pulse `stressBase.ts`) |
+| min still minutes per hour | 15 | Calibration choice (Pulse) |
+| day aggregate percentile | P10 | Calibration choice (Pulse folds the P10 of hourly means) |
+| min baseline days / window | 7 valid / 30 | Calibration choice, same rule as Apex's other baselines |
+| sigma floor | 5 bpm | Calibration choice. Pulse divides by 1.253 x the day-to-day spread of the aggregate, which can be 1-2 bpm and would label a 3 bpm rise "medium"; the floor keeps within-hour variation of still HR from reading as stress. Not derived from data |
+| min scored minutes | 120 | Calibration choice |
+| band edges | 1 and 2 | Calibration choice |
+
+Known limits: a still minute can be raised by caffeine, heat, illness, posture, digestion or a late workout; steps
+are the only motion signal (cycling, driving, upper-body work are not seen); DST-change days shift the hour index by one after the change;
+the Air's daytime HRV appears to be absent (unverified, BEVEL_ALIGNMENT 1.6), so there is no HRV term.
+Bevel-style products blend HR percentile and HRV; this engine does not. The pipeline stores `dayAggregateBpm` per day (`STRESS_DAY_AGGREGATE_BPM`, also while calibrating) and feeds the previous 30 stored values back as the baseline.
+
+### 8.2 Energy bank (`energy/EnergyEngine.kt`)
+
+level(0) = morning recovery score (0..100; null or outside the range -> null). Per awake minute m from wake to the end of the span:
+
+- inside a nap: level += 0.25 and nothing else applies.
+- otherwise: level -= 0.04 (basal); level -= 0.08 x zone(HR) for HR in zones 1..5 (zone model supplied by the caller; none if HR missing or below zone 1);
+  level -= 0.08 if stress >= 2, level += 0.01 if stress < 1 (no stress level for that minute: nothing, counted in `unscoredStressMinutes`).
+- clamp to [0, 100] each minute.
+
+All five rates (0.04, 0.08, 0.08, 0.01, 0.25) are **calibration choices** taken from the magnitudes of the Pulse reference
+(`energyBank.ts`: k0, k1, k2, k3, k4, each marked "tunable"). Scale: 0.04 x 960 min = 38 points of basal drain over 16 h. There is no
+published validation of an energy/battery model of this kind; do not describe it as physiology. Pulse also blends sleep
+performance into the start level (0.6 recovery + 0.4 sleep); Apex starts from recovery alone because sleep is already a recovery input.
+Sleep minutes are not simulated: the curve starts at wake. Result carries a per-term breakdown (basal, activity, stress, rest charge, nap charge).
+
+### 8.3 Sleeping heart-rate dip (`sleep/HeartRateDip.kt`)
+
+dip = (daytime mean HR - sleeping mean HR) / daytime mean HR, signed. DIPPER if dip >= 0.10, BLUNTED if 0 <= dip < 0.10, REVERSED if < 0.
+Daytime mean should exclude exercise. Minute-list entry point needs >= 30 valid minutes each side (calibration choice).
+Source: the nocturnal dipping convention from ambulatory blood-pressure monitoring (>= 10 % night-time fall). Applying it
+to heart rate is by analogy: **UNVERIFIED for HR; the 10 % threshold is a calibration choice**, not a validated HR cut-off. Pulse (`sleep.ts` `hrDip`)
+uses 1 - sleeping HR / inactive-HR baseline, floored at 0, with age/sex targets of about 25-30 %; Apex follows the requested daytime-mean form and keeps the sign.
+A blunted or reversed value can follow late exercise, alcohol, heat, illness or a short night: "may indicate" at most.
+
+### 8.4 Post-workout HR recovery (`strain/HeartRateRecovery.kt`)
+
+peak = max minute-mean HR over the last 3 workout minutes (all 3 must have HR); drop60 = peak - mean HR of the first full minute after the end;
+drop120 = peak - mean HR of the second. Missing peak minute -> null; a missing recovery minute removes only that drop; optional minimum peak (e.g. zone 4) -> null below it.
+A negative value (HR rose) is returned as is. Minute-means and the minute-average "at 60 s" understate the true drop (calibration choices; direction known, size not).
+Concept: HR fall after peak exercise as a prognostic marker, Cole et al. 1999, N Engl J Med 341:1351-1357 (1-minute drop <= 12 bpm abnormal after
+treadmill testing) -- **UNVERIFIED**. Apex does not apply that cut-off (different protocol, population and sampling); values are personal-trend context only.
+Pulse (`strain.ts` `hrRecovery`) instead takes the largest drop inside any 120 s window starting at or before the active end, from raw HR and only after zone 4; not used here.
+
+### 8.5 Journal effects (`journal/JournalEffects.kt`, `journal/WelchTTest.kt`)
+
+For each binary factor: pair factor on day d-1 with outcome on day d (recovery points; ln RMSSD), outcome days in the last 90 days, drop unlogged factor days and
+unmeasured outcomes, require >= 5 per arm (calibration choices: 90 days, 5 per arm). Welch two-sided t-test, alpha = 0.05, 95 % CI:
+SE = sqrt(s1^2/n1 + s2^2/n2), t = (m1 - m2)/SE, df = Welch-Satterthwaite, CI = diff +- t(0.975, df) SE. HRV effect is reported as 100(e^d - 1) percent with the CI transformed alike.
+Student t via the regularised incomplete beta function (Press et al., Numerical Recipes, continued fraction; Lanczos log-gamma) -- UNVERIFIED reference, but pinned in
+tests against t-table critical values (df 1, 2, 5, 8, 10, 30, inf) and a numerically integrated p-value (t = 5, df = 8: 0.0010528; t = 2, df = 8: 0.080516).
+Welch 1947, Biometrika 34:28-35 -- UNVERIFIED citation (textbook method). ln(RMSSD): Plews et al. 2013 (Int J Sports Physiol Perform), Buchheit 2014 (Front Physiol) -- UNVERIFIED.
+Limits: observational and confounded; day-to-day autocorrelation breaks the independence assumption, so the interval is optimistic; no correction for the number of factors
+(`testsPerformed` is returned so the UI can caveat); with 5 per arm the interval is wide. Wording: "was associated with", never "caused". An interval that excludes 0 is not a finding to act on alone.
+
+### 8.6 VO2max category (`fitness/Vo2Category.kt`)
+
+Percentile of the athlete's VO2max in the FRIEND treadmill table for the age decade (20-29 ... 70-79) and sex, linear between the 5/10/25/50/75/90/95 columns, clamped to 5..95
+(`atTableEdge` flags a bound). Category floors at percentile 20/40/60/80: poor / fair / good / excellent / superior (calibration choice from Pulse `fitnessLevel.ts`;
+FRIEND publishes percentiles, not named categories). Age outside 20..79 or sex unspecified -> null (no row to use; no pooling).
+Source: Kaminsky LA, Arena R, Myers J. Mayo Clin Proc 2015;90(11):1515-1523, treadmill, 7,783 apparently healthy adults, RER >= 1.0 -- **UNVERIFIED**: numbers are a
+transcription from the Pulse repo, not checked against the paper. A wearable VO2max estimate usually errs by several ml/kg/min, so a category boundary is not sharp.
+
+### 8.7 Fitness age (`fitness/FitnessAge.kt`)
+
+Age at which the reference population's mean VO2max equals the athlete's (linear inversion of a strictly decreasing curve; `fitnessAge - chronologicalAge`, negative = fitter).
+**The HUNT regression coefficients (Loe et al. 2013, PLoS ONE 8(5):e64319; Nes et al.) could not be opened and are not in the code** (a remembered pair of coefficients
+failed a sanity check against the 54.4 / 43.0 ml/kg/min means of ages 20-29 quoted in a search snippet, so it was not used). The default curve is the FRIEND 50th percentile at
+decade midpoints 25..75 (UNVERIFIED transcription, a registry median of lab-tested healthy adults, higher than a general-population mean, so fitness age reads older than a HUNT-mean version would);
+`Vo2AgeCurve.linear(intercept, slopePerYear, minAge, maxAge)` takes the HUNT line once verified. No extrapolation: outside 25..75 the age is clamped and flagged (`YOUNGER_THAN_RANGE` / `OLDER_THAN_RANGE`).
+Null without VO2max, age (20..79) or sex. Several ml/kg/min of input error is several years of fitness age: show as "about".
+
+### 8.8 Time in HR zones per day
+
+Already computed: `StrainEngine.evaluate(...).minutesByZone` (all recorded minutes by `HeartRateZone`, including rest). No new engine was added; the pipeline exposes it as `DayAnalysis.zoneMinutes`.
+
 ## References
 
 Full details, populations and errors are in `docs/EVIDENCE.md`. All were recalled, none opened in the
-version 2 or version 3 reviews (unverified).
+version 2 or version 3 reviews (unverified). The sources of section 8 are listed in 8.1-8.8.
 
 - Banister EW (1991). Modeling elite athletic performance. In: Physiological Testing of Elite Athletes.
 - Edwards S (1993). The Heart Rate Monitor Book.

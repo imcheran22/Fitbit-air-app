@@ -12,6 +12,7 @@ import com.apex.athlete.core.data.model.DailyObservation
 import com.apex.athlete.core.data.model.HealthBatch
 import com.apex.athlete.core.data.model.WorkoutObservation
 import com.apex.athlete.core.data.pipeline.DayAnalysis
+import com.apex.athlete.core.data.pipeline.JournalDay
 import com.apex.athlete.core.data.settings.SettingsStore
 import com.apex.athlete.core.data.store.ActiveStore
 import com.apex.athlete.core.data.store.ApexStores
@@ -246,6 +247,32 @@ class AthleteRepository(
 
     fun workout(id: String): Flow<WorkoutEntity?> = observe { it.db.workoutDao().byId(id) }
 
+    // --- Formula version 4 and the activity, body and vitals streams -----------------------------------
+
+    /** Everything the engines say about [day], for screens that need a field no dedicated flow carries (SRI, weekly HRV status, load confidence ...). */
+    fun analysis(day: Long): Flow<DayAnalysis?> = observe { it.pipeline.analyze(day, persist = false) }
+
+    /** Steps, distance, floors, calories, active zone minutes and the activity-minute classes of [day], each with provenance or a reason. */
+    fun activityDay(day: Long): Flow<ActivityDayState?> = observe { RepositoryQueries.activityDay(it, day) }
+
+    /** Weight, body fat and BMI (derived on read; null with a reason without a height). */
+    fun body(day: Long): Flow<BodyState?> = observe { store -> RepositoryQueries.body(store, day, settings.currentProfile()) }
+
+    /** Skin temperature, SpO2 range, HRV variants and sleeping heart rate of the night that ended on [day]. */
+    fun vitals(day: Long): Flow<VitalsState?> = observe { RepositoryQueries.vitals(it, day) }
+
+    /** Daytime stress and the energy bank for [day]; each null with a reason on a band-off day. */
+    fun stressEnergy(day: Long): Flow<StressEnergyState?> = observe { RepositoryQueries.stressEnergy(it, day) }
+
+    /** The journal factors logged on [day] and the 90-day next-day associations (at least 5 days per arm). */
+    fun journal(day: Long): Flow<JournalState?> = observe { RepositoryQueries.journal(it, day) }
+
+    /** VO2 max, its FRIEND category and fitness age (null with a reason without sex or age in the profile). */
+    fun fitness(day: Long): Flow<FitnessState?> = observe { RepositoryQueries.fitness(it, day) }
+
+    /** One workout with its reported fields, heart-rate recovery, zone minutes and minute heart rate. */
+    fun workoutDetail(id: String): Flow<WorkoutDetailState?> = observe { RepositoryQueries.workoutDetail(it, id) }
+
     fun recentWorkouts(limit: Int = 30): Flow<List<WorkoutEntity>> = stores.status.flatMapLatest { status ->
         (status as? StoreStatus.Ready)?.store?.db?.workoutDao()?.observeRecent(limit) ?: flowOf(emptyList())
     }
@@ -276,6 +303,17 @@ class AthleteRepository(
         val session = store.ingestor.newSession()
         store.ingestor.ingest(HealthBatch(DataProvenance.USER_REPORTED, daily = obs), session)
         store.pipeline.replay(day, store.pipeline.today())
+    }
+
+    /**
+     * Stores the journal factors of [day]: true = yes, false = no, null = not logged (the stored value is removed). Factors
+     * outside [JournalDay.FACTORS] are ignored. Journal effects are computed on read, so nothing is replayed.
+     */
+    suspend fun saveJournalFactors(day: Long, factors: Map<MetricType, Boolean?>) = write { store ->
+        val known = factors.filterKeys { it in JournalDay.FACTORS }
+        for ((metric, value) in known) if (value == null) store.db.dailyBiometricSummaryDao().delete(metric, day)
+        val obs = known.mapNotNull { (metric, value) -> value?.let { DailyObservation(metric, day, if (it) 1.0 else 0.0) } }
+        if (obs.isNotEmpty()) store.ingestor.ingest(HealthBatch(DataProvenance.USER_REPORTED, daily = obs), store.ingestor.newSession())
     }
 
     /** Logs a workout the band did not record, with a 1-10 perceived-exertion rating. */
@@ -345,6 +383,30 @@ class AthleteRepository(
             MetricType.DAILY_TRIMP to BaselineSpecs.GENERIC,
             MetricType.VO2_MAX to BaselineSpecs.GENERIC,
             MetricType.STEPS to BaselineSpecs.GENERIC,
+            // Activity
+            MetricType.DISTANCE to BaselineSpecs.GENERIC,
+            MetricType.FLOORS to BaselineSpecs.GENERIC,
+            MetricType.CALORIES_TOTAL to BaselineSpecs.GENERIC,
+            MetricType.CALORIES_ACTIVE to BaselineSpecs.GENERIC,
+            MetricType.ACTIVE_ZONE_MINUTES to BaselineSpecs.GENERIC,
+            MetricType.LIGHTLY_ACTIVE_MINUTES to BaselineSpecs.GENERIC,
+            MetricType.MODERATELY_ACTIVE_MINUTES to BaselineSpecs.GENERIC,
+            MetricType.VERY_ACTIVE_MINUTES to BaselineSpecs.GENERIC,
+            MetricType.SEDENTARY_MINUTES to BaselineSpecs.GENERIC,
+            // Body
+            MetricType.WEIGHT to BaselineSpecs.GENERIC,
+            MetricType.BODY_FAT to BaselineSpecs.GENERIC,
+            // Vitals
+            MetricType.SKIN_TEMP_NIGHTLY to BaselineSpecs.SKIN_TEMPERATURE_DEVIATION,
+            MetricType.SPO2_LOWER_BOUND to BaselineSpecs.SPO2,
+            MetricType.SPO2_UPPER_BOUND to BaselineSpecs.SPO2,
+            MetricType.HRV_DEEP_SLEEP_RMSSD to BaselineSpecs.HRV,
+            MetricType.HRV_SLEEP_SAMPLES to BaselineSpecs.HRV,
+            // Version 4 derived
+            MetricType.STRESS_SCORE to BaselineSpecs.GENERIC,
+            MetricType.STRESS_DAY_AGGREGATE_BPM to BaselineSpecs.GENERIC,
+            MetricType.STRESS_HIGH_MINUTES to BaselineSpecs.GENERIC,
+            MetricType.HR_DIP to BaselineSpecs.GENERIC,
         )
     }
 }
