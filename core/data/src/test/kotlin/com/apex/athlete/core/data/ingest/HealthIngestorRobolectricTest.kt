@@ -235,4 +235,22 @@ class HealthIngestorRobolectricTest {
         assertEquals(false, all.getValue("part2").isMainSleep)
         assertEquals(true, all.getValue("part2").isNap)
     }
+
+    @Test
+    fun stepSamplesAreStoredIdempotentlyAndDoNotTouchTheDayTotal(): Unit = runBlocking {
+        val t0 = ms("2026-11-10T09:00:00Z")
+        val batch = HealthBatch(
+            provenance,
+            daily = listOf(DailyObservation(MetricType.STEPS, today, 350.0)),
+            samples = listOf(
+                SampleObservation(MetricType.STEPS, t0, 100.0, t0 + minute),
+                SampleObservation(MetricType.STEPS, t0 + 10 * minute, 250.0, t0 + 11 * minute),
+            ),
+        )
+        repeat(2) { ingestor.ingest(batch, ingestor.newSession()) }
+        val rows = db.metricSampleDao().range(MetricType.STEPS, t0, t0 + 60 * minute)
+        assertEquals(listOf(100.0, 250.0), rows.map { it.value })
+        assertEquals(t0 + minute, rows.first().endEpochMillis)
+        assertEquals(350.0, db.dailyBiometricSummaryDao().get(MetricType.STEPS, today)!!.value)
+    }
 }

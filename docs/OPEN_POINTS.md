@@ -129,13 +129,7 @@ Status: `UNVERIFIED-NEEDS-REAL-ACCOUNT`.
 
 Status: logic and tests are in place; everything marked "confirm" needs real data. No Google endpoint, field or scope was added.
 
-1. **Stress needs step intervals (sync owner).** A still minute is told from a walking one only by `metric_sample` STEPS rows
-   (an interval each, up to 60 minutes; the Takeout importer writes 15-minute buckets). The live Google Health sync folds step
-   intervals into daily totals and Health Connect steps are read as daily totals, so on a real account stress and the stress term of the
-   energy bank are `NO_MOTION_DATA` until a source also stores the step intervals as STEPS samples. Confirm: after the first
-   Takeout import, open a day inside the imported range and check that stress is scored; decide whether the sync should store
-   step intervals (Google `steps` points carry an interval; Health Connect `StepsRecord` has start and end).
-2. **Journal factors have no screen yet.** The journal tab stores only the fatigue and soreness ratings. The data layer now stores five yes/no
+1. **Journal factors have no screen yet.** The journal tab stores only the fatigue and soreness ratings. The data layer now stores five yes/no
    factors (`MetricType.JOURNAL_*`, written by `AthleteRepository.saveJournalFactors`) and computes the 90-day associations
    (`journal(day)` / `DayAnalysis.journalEffects`); the factor list (`JournalDay.FACTORS`) is a design choice the owner may change.
 3. **Calibration choices without validation** (all in `docs/FORMULAS.md` section 8): stress logistic constants and 5 bpm sigma floor, energy rates,

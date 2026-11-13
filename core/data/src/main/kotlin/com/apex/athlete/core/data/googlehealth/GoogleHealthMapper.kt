@@ -3,6 +3,7 @@ package com.apex.athlete.core.data.googlehealth
 import com.apex.athlete.core.data.ingest.Plausibility
 import com.apex.athlete.core.data.model.DailyObservation
 import com.apex.athlete.core.data.model.HeartRatePoint
+import com.apex.athlete.core.data.ingest.StepIntervalSamples
 import com.apex.athlete.core.data.model.SampleObservation
 import com.apex.athlete.core.data.model.SleepObservation
 import com.apex.athlete.core.data.model.SleepStageObservation
@@ -331,7 +332,7 @@ class GoogleHealthMapper(private val zone: ZoneId = ZoneId.systemDefault()) {
 
     // --- Interval day totals -----------------------------------------------------------------------
 
-    private class Entry(val metric: MetricType, val day: Long, val value: Double)
+    private class Entry(val metric: MetricType, val day: Long, val value: Double, val start: Long = 0L, val end: Long? = null)
 
     private class Collected(val entries: List<Entry>, val malformed: Int, val ignored: Int)
 
@@ -419,7 +420,8 @@ class GoogleHealthMapper(private val zone: ZoneId = ZoneId.systemDefault()) {
             }
             if (!seen.add(intervalKey(p, iv, extra))) continue
             val day = epochDay(start, offsetSeconds(start, iv?.startUtcOffset))
-            for ((metric, v) in values) entries += Entry(metric, day, v!!)
+            val end = instant(iv?.endTime)
+            for ((metric, v) in values) entries += Entry(metric, day, v!!, start, end)
         }
         return Collected(entries, malformed, ignored)
     }
@@ -436,6 +438,18 @@ class GoogleHealthMapper(private val zone: ZoneId = ZoneId.systemDefault()) {
         }
         return out to implausible
     }
+
+    /**
+     * The `steps` interval points as step samples (at most minute resolution, see [StepIntervalSamples]),
+     * for the stress engine's movement gate. Same de-duplication as [dailyTotals]; the day totals are not
+     * touched and these samples must never be summed back into STEPS.
+     */
+    fun stepSamples(points: List<DataPoint>, fromMillis: Long, toMillis: Long): List<SampleObservation> =
+        StepIntervalSamples.build(
+            collect(GoogleHealthDataType.STEPS, points).entries
+                .filter { it.start in fromMillis until toMillis }
+                .map { StepIntervalSamples.Interval(it.start, it.end, it.value) },
+        )
 
     /**
      * Day totals of an interval type for civil days [fromDay]..[toDay] (inclusive). Records of other

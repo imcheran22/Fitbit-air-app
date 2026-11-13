@@ -209,6 +209,29 @@ class HealthConnectSourceTest {
         assertEquals("new-1", runBlocking { tokens.get("heart-rate") })
     }
 
+    @Test fun `step intervals go out as samples next to unchanged day totals and one origin is used`() {
+        val d = FakeData().apply {
+            records[HcFamily.STEPS] = listOf(
+                HcIntervalRecord(HcFamily.STEPS, "o", from + 3_600_000, from + 3_660_000, 0, 0, 100.0),
+                HcIntervalRecord(HcFamily.STEPS, "o", from + 7_200_000, from + 7_210_000, 0, 0, 20.0),
+                HcIntervalRecord(HcFamily.STEPS, "o", from + 7_220_000, from + 7_230_000, 0, 0, 5.0),
+                HcIntervalRecord(HcFamily.STEPS, "other", from + 3_600_000, from + 3_660_000, 0, 0, 90.0),
+            )
+        }
+        val batches = collect(source(d), "steps")
+        val total = batches.flatMap { it.daily }.single()
+        assertEquals(MetricType.STEPS, total.metric)
+        val samples = batches.flatMap { it.samples }.sortedBy { it.epochMillis }
+        assertTrue(samples.all { it.metric == MetricType.STEPS })
+        // Whichever origin the day total chose, the samples come from that origin only and add up to it.
+        assertEquals(total.value, samples.sumOf { it.value })
+        if (total.value == 125.0) {
+            // 10 s intervals in the same minute fold into one minute sample.
+            assertEquals(listOf(100.0, 25.0), samples.map { it.value })
+            assertEquals(from + 7_260_000, samples.last().endEpochMillis)
+        }
+    }
+
     @Test fun `valid token re-reads a changed record older than the window and advances the token`() {
         val oldDay = LocalDate.parse("2026-03-03")
         val oldStart = ms("2026-03-03T09:00:00Z")

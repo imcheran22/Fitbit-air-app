@@ -65,7 +65,7 @@ data class GoogleHealthSourceStats(
  * | `sleep`, `exercise` | 14 days | pages of at most 25 |
  * | `hrv-sleep` | 7 days | reads the sleeps ending in the window, then the HRV samples of each night (band only); stored as `HRV_SLEEP_SAMPLES` |
  * | `resting-heart-rate`, `hrv`, `spo2`, `respiratory-rate`, `skin-temperature`, `vo2-max` | 30 days | one point per day |
- * | `steps`, `distance`, `floors`, `calories`, `active-zone-minutes`, `active-minutes`, `sedentary` | 7 days | read through `dataPoints:reconcile` (one merged stream), summed per civil day |
+ * | `steps`, `distance`, `floors`, `calories`, `active-zone-minutes`, `active-minutes`, `sedentary` | 7 days | read through `dataPoints:reconcile` (one merged stream), summed per civil day; `steps` also emits its intervals (<= minute resolution) as STEPS samples |
  * | `weight`, `body-fat` | 30 days | samples |
  *
  * **Intraday cap (master prompt Alert A).** At most 3 days of intraday heart rate per run is enforced
@@ -309,7 +309,9 @@ class GoogleHealthApiSource(
             val points = collectDays(type, range.first, range.second)
             val m = mapper.dailyTotals(type, points, firstDay, lastDay)
             count(m.malformed, m.implausible, m.ignored)
-            send(daily = m.items)
+            // Step intervals also go out as samples (stress movement gate); the day totals stay as they are.
+            val stepSamples = if (type == GoogleHealthDataType.STEPS) mapper.stepSamples(points, range.first, range.second) else emptyList()
+            send(daily = m.items, samples = stepSamples)
         }
 
         suspend fun calories(from: Long, to: Long) {

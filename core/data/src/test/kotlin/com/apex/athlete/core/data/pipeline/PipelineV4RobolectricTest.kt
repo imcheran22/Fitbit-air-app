@@ -139,6 +139,24 @@ class PipelineV4RobolectricTest {
         assertTrue(energy.unscoredStressMinutes > 0, "minutes without a stress level are counted, not assumed calm")
     }
 
+    @Test
+    fun liveStyleMinuteStepSamplesLiftTheNoMotionGate(): Unit = runBlocking {
+        val day = today - 3
+        val start = day * dayMs
+        db.metricSampleDao().deleteRange(MetricType.STEPS, start, start + dayMs)
+        assertEquals(StressMissingReason.NO_MOTION_DATA, pipeline.analyze(day, persist = false).stressMissing)
+
+        // What a live Google Health / Health Connect sync now delivers: sparse minute intervals plus the day total.
+        val samples = (8 * 60 until 22 * 60 step 30).map {
+            com.apex.athlete.core.data.model.SampleObservation(MetricType.STEPS, start + it * minuteMs, 90.0, start + (it + 1) * minuteMs)
+        }
+        ingestor.ingest(HealthBatch(DataProvenance.DIRECT_SENSOR_GOOGLE_HEALTH_API, samples = samples), ingestor.newSession())
+
+        val a = pipeline.analyze(day, persist = false)
+        assertTrue(a.stressMissing != StressMissingReason.NO_MOTION_DATA, "got ${a.stressMissing}")
+        assertNotNull(a.stressDayAggregateBpm)
+    }
+
     // --- Persistence --------------------------------------------------------------------------------
 
     @Test

@@ -16,7 +16,7 @@ Mapping to `MetricType` is the intended use by the data layer; the network modul
 | `daily-sleep-temperature-derivations` | daily | `nightlyTemperatureCelsius`, `baselineTemperatureCelsius`, `relativeNightlyStddev30dCelsius` | deg C | `date` | SKIN_TEMP_NIGHTLY; SKIN_TEMP_DEVIATION = nightly - baseline (computed, both inputs must be present) |
 | `sleep` | session, `interval.end_time` | `interval`, `stages[]` (AWAKE/LIGHT/DEEP/REM/ASLEEP/RESTLESS), `summary` (minutes*), `metadata.mainSleep/nap/processed` | min | stage times UTC + offsets | SLEEP_DURATION (minutesAsleep), TIME_IN_BED (minutesInSleepPeriod), SLEEP_DEEP/REM/LIGHT/AWAKE (stagesSummary), SLEEP_LATENCY (minutesToFallAsleep); efficiency derived |
 | `exercise` | session, `interval.civil_start_time` | `exerciseType`, `interval`, `activeDuration`, `metricsSummary` (kcal, distanceMillimeters, steps, avg HR, zone durations) | mm, kcal, s | UTC + offsets | workout rows; distance mm to m |
-| `steps` | interval, `interval.start_time` | `count` | steps | interval start/end | STEPS (sum; reconcile for totals) |
+| `steps` | interval, `interval.start_time` | `count` | steps | interval start/end | STEPS day total (sum; reconcile). The same points also go out as STEPS samples (start, end, count; sub-minute intervals folded into their minute, duplicates and zero counts dropped) for the stress movement gate; samples are a separate store and never summed into STEPS |
 | `distance` | interval | `millimeters` | mm | interval | DISTANCE (m) |
 | `floors` | interval | `count` | floors | interval | FLOORS |
 | `active-energy-burned` / `basal-energy-burned` | interval | `kcal` | kcal | interval | CALORIES_ACTIVE / CALORIES_TOTAL (active + basal) |
@@ -33,3 +33,11 @@ Mapping to `MetricType` is the intended use by the data layer; the network modul
 Notes: all numbers stay missing when absent (null DTO fields); provenance for every point is `dataSource.platform` /
 `recordingMethod` (map to `SyncSource` GOOGLE/FITBIT_WEB_API as appropriate). `dataSourceFamily=google-wearables`
 excludes manual entries and is sent for `heart-rate` and `heart-rate-variability` only (never for `sleep`, which does not accept it); `reconcile` returns one merged stream.
+
+## Health Connect `StepsRecord` (live)
+
+`StepsRecord` (start, end, count) feeds two separate stores. The STEPS day total is unchanged (origin chosen per civil day, never added across apps).
+The intervals of that same chosen origin are also emitted as STEPS samples at no finer than minute resolution (`StepIntervalSamples`), so the
+stress engine can tell still minutes from walking ones. Rows are keyed (metric, start), so a re-sync overwrites rather than adds. Volume is at
+most one row per active minute, the same order as stored heart-rate minutes; the sync window is 7 days. There is no retention job for
+`metric_sample` or heart rate today. Samples and totals are never summed into each other.

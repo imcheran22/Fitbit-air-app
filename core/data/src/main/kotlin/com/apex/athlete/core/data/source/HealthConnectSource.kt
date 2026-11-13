@@ -262,6 +262,10 @@ class HealthConnectSource(
                 val records = readAll(spec.family, dayStart(firstDay) - MARGIN, dayStart(lastDay + 1) + MARGIN).filterIsInstance<HcIntervalRecord>()
                 val daily = mapper.dailyTotals(records, spec.metric!!, firstDay, lastDay)
                 if (daily.isNotEmpty()) emit(batch(daily = daily))
+                if (spec.family == HcFamily.STEPS) {
+                    val stepSamples = mapper.stepSamples(records, firstDay, lastDay)
+                    if (stepSamples.isNotEmpty()) emit(batch(samples = stepSamples))
+                }
             }
             Kind.NIGHTLY -> {
                 val metric = spec.metric!!

@@ -11,6 +11,7 @@ import com.apex.athlete.core.domain.MetricType
 import com.apex.athlete.core.domain.SleepStage
 import java.time.Instant
 import java.time.ZoneId
+import com.apex.athlete.core.data.ingest.StepIntervalSamples
 import java.time.ZoneOffset
 import kotlin.math.max
 import kotlin.math.min
@@ -217,6 +218,25 @@ class HealthConnectMapper(
             if (total > 0.0) out += DailyObservation(metric, day, total, sampleCount = rows.size)
         }
         return out
+    }
+
+    /**
+     * Step intervals as samples (at most minute resolution) for the stress movement gate. Per civil day only
+     * the origin that [dailyTotals] chooses is used, so two apps' copies of the same steps never both land.
+     * Separate from the day totals; never summed back into STEPS.
+     */
+    fun stepSamples(records: List<HcIntervalRecord>, fromDay: Long, toDayInclusive: Long): List<SampleObservation> {
+        val byDay = records.asSequence()
+            .filter { it.value.isFinite() && it.value > 0.0 && it.endEpochMillis >= it.startEpochMillis }
+            .groupBy { epochDay(it.startEpochMillis, it.startOffsetSeconds) }
+            .filterKeys { it in fromDay..toDayInclusive }
+        val intervals = ArrayList<StepIntervalSamples.Interval>()
+        for ((_, list) in byDay.toSortedMap()) {
+            val perOrigin = list.groupBy { it.origin }
+            val chosen = chooseOrigin(perOrigin.mapValues { (_, v) -> v.sumOf { it.value } }) ?: continue
+            perOrigin.getValue(chosen).forEach { intervals += StepIntervalSamples.Interval(it.startEpochMillis, it.endEpochMillis, it.value) }
+        }
+        return StepIntervalSamples.build(intervals)
     }
 
     private fun chooseOrigin(totals: Map<String, Double>): String? {

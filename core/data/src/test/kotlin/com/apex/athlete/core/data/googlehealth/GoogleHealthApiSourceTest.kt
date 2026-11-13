@@ -176,6 +176,28 @@ class GoogleHealthApiSourceTest {
     }
 
     @Test
+    fun stepIntervalsAlsoGoOutAsSamplesAndTheDayTotalIsUnchanged() {
+        handler = {
+            json(
+                page(
+                    listOf(
+                        """{"dataPointName":"users/me/dataTypes/steps/dataPoints/a","steps":{"count":"100","interval":{"startTime":"2026-11-10T10:00:00Z","endTime":"2026-11-10T10:01:00Z"}}}""",
+                        """{"dataPointName":"users/me/dataTypes/steps/dataPoints/b","steps":{"count":"250","interval":{"startTime":"2026-11-10T11:00:00Z","endTime":"2026-11-10T11:01:00Z"}}}""",
+                        """{"dataPointName":"users/me/dataTypes/steps/dataPoints/b","steps":{"count":"250","interval":{"startTime":"2026-11-10T11:00:00Z","endTime":"2026-11-10T11:01:00Z"}}}""",
+                        """{"dataPointName":"users/me/dataTypes/steps/dataPoints/c","steps":{"count":"0","interval":{"startTime":"2026-11-10T12:00:00Z","endTime":"2026-11-10T12:01:00Z"}}}""",
+                    ),
+                ),
+            )
+        }
+        val batches = pull("steps", "2026-11-10T12:00:00Z", "2026-11-10T18:00:00Z")
+        assertEquals(350.0, batches.flatMap { it.daily }.single().value)
+        val samples = batches.flatMap { it.samples }.sortedBy { it.epochMillis }
+        assertEquals(listOf(100.0, 250.0), samples.map { it.value }) // duplicate point and zero count dropped
+        assertTrue(samples.all { it.metric == MetricType.STEPS && it.endEpochMillis == it.epochMillis + 60_000L })
+        assertEquals(ms("2026-11-10T10:00:00Z"), samples.first().epochMillis)
+    }
+
+    @Test
     fun malformedPointsAreCountedAndTheRestIsDelivered() {
         handler = { json(page(listOf("""{"heartRate":"oops"}""", hrPoint(Instant.parse("2026-11-10T10:00:00Z"), 70), """{"heartRate":{"beatsPerMinute":"72","sampleTime":{"physicalTime":"garbage"}}}"""))) }
         val batches = pull("heart-rate", "2026-11-10T00:00:00Z", "2026-11-11T00:00:00Z")
