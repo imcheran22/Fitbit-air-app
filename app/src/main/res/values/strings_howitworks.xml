@@ -16,8 +16,10 @@
     <string name="howitworks_strain_p3">The total is put on a curve that rises quickly at first and flattens at the top, so the last points are hard to earn. Today\'s strain is provisional until the day ends.</string>
 
     <string name="howitworks_sleep_title">Sleep</string>
-    <string name="howitworks_sleep_p1">The sleep score runs from 0 to 100. It combines four parts: how long you slept compared with your sleep need (40 percent), the share of deep and REM sleep (25 percent), efficiency, which is time asleep over time in bed (20 percent), and how regular your bedtime and wake time are (15 percent).</string>
+    <string name="howitworks_sleep_p1">The sleep score runs from 0 to 100 and combines five parts: how long you slept against your need (35 percent), how your heart rate and heart rate variability during sleep compared with your own usual (25 percent), your deep and REM sleep compared with your own usual (15 percent), efficiency (15 percent) and how regular your sleep times are (10 percent). An ordinary night lands around 75 to 85.</string>
     <string name="howitworks_sleep_p2">Sleep need starts from about 7 hours 45 minutes, or from your own recent nights once there are enough, and adds a little after hard days and a little to repay sleep debt, to a maximum of 10 hours. If a part cannot be worked out, for example when no sleep stages were recorded, it is left out and the rest are scaled up.</string>
+
+    <string name="howitworks_sleep_p3">Why Apex can differ from Google Health: Google\'s sleep score is proprietary and is not available from its API, so Apex cannot copy it. Apex\'s score is transparent, every part is shown, and it includes how your body recovered overnight.</string>
 
     <string name="howitworks_load_title">Training load</string>
     <string name="howitworks_load_p1">Training load builds on the same daily heart-rate load that drives Strain. Acute load is a 7-day moving average and chronic load is a 28-day one. Their ratio shows whether this week is lighter or heavier than what you are used to.</string>

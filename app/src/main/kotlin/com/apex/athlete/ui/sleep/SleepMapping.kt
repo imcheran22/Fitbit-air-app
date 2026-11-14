@@ -8,7 +8,13 @@ import com.apex.athlete.core.analytics.sleep.DipMissing
 import com.apex.athlete.core.analytics.sleep.HeartRateDipResult
 import com.apex.athlete.core.analytics.sleep.SleepRegularity
 import com.apex.athlete.core.analytics.sleep.SleepRegularityIndex
+import com.apex.athlete.core.analytics.sleep.SleepBand
+import com.apex.athlete.core.analytics.sleep.SleepBands
 import com.apex.athlete.core.analytics.sleep.SleepComponent
+import com.apex.athlete.core.analytics.sleep.SleepLatency
+import com.apex.athlete.core.analytics.sleep.SleepLatencyNote
+import com.apex.athlete.core.analytics.sleep.SleepScoreConfidence
+import com.apex.athlete.core.analytics.trend.MetricIntelligence
 import com.apex.athlete.core.analytics.sleep.SleepScoreResult
 import com.apex.athlete.core.data.repository.SleepDetailState
 import com.apex.athlete.core.database.entity.SleepSessionEntity
@@ -21,19 +27,40 @@ import com.apex.athlete.core.ui.state.MetricReason
 import com.apex.athlete.core.ui.state.MetricState
 import com.apex.athlete.ui.common.MetricStateMapper
 
-/** Display bands for a 0..100 sleep figure. Presentation only: the figure itself comes from the engine. */
-const val OPTIMAL_FROM_PERCENT = 85.0
-const val SUFFICIENT_FROM_PERCENT = 70.0
-
-fun statusOfPercent(percent: Double?): ContributorStatus? = when {
-    percent == null || !percent.isFinite() -> null
-    percent >= OPTIMAL_FROM_PERCENT -> ContributorStatus.Optimal
-    percent >= SUFFICIENT_FROM_PERCENT -> ContributorStatus.Sufficient
-    else -> ContributorStatus.Poor
+fun SleepBand?.toStatus(): ContributorStatus? = when (this) {
+    null -> null
+    SleepBand.POOR -> ContributorStatus.Poor
+    SleepBand.SUFFICIENT -> ContributorStatus.Sufficient
+    SleepBand.OPTIMAL -> ContributorStatus.Optimal
 }
 
 /** One row of the summary card. [status] is null when the figure is missing. */
-data class SleepRowUi(val state: MetricState, val status: ContributorStatus?)
+
+/** Which overnight signal moved the restoration part, and which way against its own usual. */
+enum class RestorationSignal { SLEEPING_HEART_RATE, HRV, BREATHING_RATE }
+
+enum class VsUsual { LOWER, SIMILAR, HIGHER }
+
+data class RestorationDriverUi(val signal: RestorationSignal, val vsUsual: VsUsual)
+
+/**
+ * One of the five score parts. [state] is the 0..100 sub-score, or `--` with the reason when the part could not be
+ * computed (never a placeholder number). [weightPercent] is the weight the part actually carried in this score.
+ */
+data class SleepPartUi(
+    val component: SleepComponent,
+    val state: MetricState,
+    val status: ContributorStatus?,
+    val weightPercent: Int?,
+    val points: Double?,
+    /** Set while the part is missing: why, so the row and the partial-score hint can say so. */
+    @StringRes val missingReasonRes: Int?,
+    /** Restoration only: what drove it. Empty when none of the three signals has a baseline yet. */
+    val drivers: List<RestorationDriverUi> = emptyList(),
+)
+
+/** Shown when the score is not HIGH confidence: how many of the five parts it rests on and which are missing. */
+data class PartialScoreUi(val availableParts: Int, val missing: List<SleepComponent>)
 
 data class StageRowUi(val stage: SleepStage, val percentOfAsleep: Double?, val minutes: Int?)
 
@@ -57,13 +84,13 @@ data class SleepInsightUi(
 data class SleepUi(
     val score: MetricState,
     val scoreStatus: ContributorStatus?,
-    val hours: SleepRowUi,
+    /** The five parts in nominal-weight order; empty while there is no score. */
+    val parts: List<SleepPartUi>,
+    val partial: PartialScoreUi?,
+    /** What the duration part was scored against (need, never below the 7 h guideline). */
     val asleepMinutes: Double?,
-    val neededMinutes: Double?,
-    val consistency: SleepRowUi,
+    val targetMinutes: Double?,
     val bedtimeSpreadMinutes: Double?,
-    val efficiency: SleepRowUi,
-    val restorative: SleepRowUi,
     val hasSession: Boolean,
     val hasStageDetail: Boolean,
     val segments: List<HypnogramSegment>,
@@ -72,6 +99,8 @@ data class SleepUi(
     val stageRows: List<StageRowUi>,
     val timeInBed: MetricState,
     val latency: MetricState,
+    /** True when the provider reported 0 minutes to fall asleep: shown with a "not measured" caption. */
+    val latencyNotMeasured: Boolean,
     val wakeBouts: MetricState,
     val need: NeedUi,
     val needTonightMinutes: Double,
@@ -85,6 +114,8 @@ data class SleepUi(
     val hrDip: HrDipUi,
     /** Net shortfall over the last 7 nights in hours; Calibrating below 4 recorded nights. */
     val debt: MetricState,
+    // TODO: show the secondary "Shortfall vs 7 h guideline" line once DayAnalysis exposes GuidelineSleepShortfall
+    //  (SleepRegularity.guidelineShortfall); it is not in the UI state yet. Personal debt above stays primary.
 )
 
 /**
@@ -138,47 +169,79 @@ fun sleepDebtState(accumulatedMinutes: Double?): MetricState =
 fun segmentsOf(stages: List<SleepStageSegmentEntity>): List<HypnogramSegment> =
     stages.map { HypnogramSegment(it.startEpochMillis, it.endEpochMillis, it.stage) }
 
-private fun SleepScoreResult.subScore(component: SleepComponent): Double? =
-    contributions.firstOrNull { it.component == component && it.available }?.subScore
+private const val SIMILAR_Z = 0.5
+
+fun vsUsualOf(z: Double): VsUsual = when {
+    z >= SIMILAR_Z -> VsUsual.HIGHER
+    z <= -SIMILAR_Z -> VsUsual.LOWER
+    else -> VsUsual.SIMILAR
+}
+
+/** The signals behind the restoration part, from the same z-scores the engine was given. Missing ones are left out. */
+fun restorationDrivers(
+    sleepingHeartRate: MetricIntelligence,
+    hrv: MetricIntelligence,
+    respiratoryRate: MetricIntelligence,
+): List<RestorationDriverUi> = listOfNotNull(
+    sleepingHeartRate.zScore?.takeIf { it.isFinite() }?.let { RestorationDriverUi(RestorationSignal.SLEEPING_HEART_RATE, vsUsualOf(it)) },
+    hrv.zScore?.takeIf { it.isFinite() }?.let { RestorationDriverUi(RestorationSignal.HRV, vsUsualOf(it)) },
+    respiratoryRate.zScore?.takeIf { it.isFinite() }?.let { RestorationDriverUi(RestorationSignal.BREATHING_RATE, vsUsualOf(it)) },
+)
+
+@StringRes
+fun missingPartReasonRes(component: SleepComponent): Int = when (component) {
+    SleepComponent.RESTORATION -> R.string.sleep_part_missing_restoration
+    SleepComponent.QUALITY -> R.string.sleep_part_missing_quality
+    SleepComponent.CONSISTENCY -> R.string.sleep_part_missing_consistency
+    SleepComponent.DURATION -> R.string.sleep_part_missing_duration
+    SleepComponent.EFFICIENCY -> R.string.sleep_part_missing_efficiency
+}
+
+/** The five parts with sub-score, weight, band and (when missing) the reason. A missing part never gets a number. */
+fun sleepParts(sleep: SleepScoreResult, drivers: List<RestorationDriverUi>): List<SleepPartUi> =
+    SleepComponent.entries.map { component ->
+        val c = sleep.contributions.firstOrNull { it.component == component }
+        val sub = c?.subScore?.takeIf { c.available && it.isFinite() }
+        if (c == null || sub == null) {
+            SleepPartUi(
+                component, MetricState.Unavailable(MetricReason.NO_DATA), null, null, null, missingPartReasonRes(component),
+            )
+        } else {
+            val band = when (component) {
+                SleepComponent.DURATION -> SleepBands.duration(sleep.asleepMinutes, sleep.durationTargetMinutes)
+                SleepComponent.RESTORATION -> SleepBands.restoration(sleep.restorationZ)
+                SleepComponent.QUALITY -> SleepBands.quality(sub)
+                SleepComponent.EFFICIENCY -> SleepBands.efficiency(sleep.efficiencyPercent)
+                SleepComponent.CONSISTENCY -> SleepBands.consistency(sub)
+            }
+            SleepPartUi(
+                component = component,
+                state = MetricState.Value(sub, 0, null, DataProvenance.MATHEMATICALLY_DERIVED),
+                status = band.toStatus(),
+                weightPercent = Math.round(c.effectiveWeight * 100.0).toInt(),
+                points = c.points,
+                missingReasonRes = null,
+                drivers = if (component == SleepComponent.RESTORATION) drivers else emptyList(),
+            )
+        }
+    }
+
+fun partialScoreOf(sleep: SleepScoreResult): PartialScoreUi? {
+    if (sleep.confidence == SleepScoreConfidence.HIGH) return null
+    val missing = sleep.contributions.filter { !it.available || it.subScore == null }.map { it.component }
+    return PartialScoreUi(SleepComponent.entries.size - missing.size, missing)
+}
 
 fun buildSleepUi(detail: SleepDetailState, mapper: MetricStateMapper): SleepUi {
     val a = detail.analysis
     val sleep = a.sleep
     val session: SleepSessionEntity? = a.sleepSession
-    val derived = DataProvenance.MATHEMATICALLY_DERIVED
     val measured = session?.provenance
 
     // One reason for every figure that needs the night: awaiting sync today, no data otherwise.
     val gone: MetricState = mapper.sleep(a).takeIf { sleep == null } ?: MetricState.Unavailable(MetricReason.NO_DATA)
-    val row = { state: MetricState, pct: Double? -> SleepRowUi(state, statusOfPercent(pct)) }
 
-    val durationPct = sleep?.subScore(SleepComponent.DURATION)
-    val hours = if (sleep != null) {
-        row(MetricState.Value(sleep.asleepMinutes / 60.0, 1, "h", measured), durationPct)
-    } else {
-        row(gone, null)
-    }
-
-    val consistencyPct = sleep?.subScore(SleepComponent.CONSISTENCY)
-    val consistency = when {
-        sleep == null -> row(gone, null)
-        consistencyPct == null -> row(MetricState.Calibrating(null), null)
-        else -> row(MetricState.Value(consistencyPct, 0, "%", derived), consistencyPct)
-    }
-
-    val efficiencyPct = sleep?.efficiencyPercent
-    val efficiency = when {
-        sleep == null -> row(gone, null)
-        efficiencyPct == null -> row(MetricState.Unavailable(MetricReason.NO_DATA), null)
-        else -> row(MetricState.Value(efficiencyPct, 0, "%", derived), efficiencyPct)
-    }
-
-    val restorativePct = sleep?.restorativeFraction?.let { it * 100.0 }
-    val restorative = when {
-        sleep == null -> row(gone, null)
-        restorativePct == null -> row(MetricState.Unavailable(MetricReason.NO_DATA), null)
-        else -> row(MetricState.Value(restorativePct, 0, "%", derived), restorativePct)
-    }
+    val parts = sleep?.let { sleepParts(it, restorationDrivers(a.sleepingHeartRate, a.hrv, a.respiratoryRate)) } ?: emptyList()
 
     val stageRows = if (session == null || sleep == null) {
         emptyList()
@@ -196,29 +259,32 @@ fun buildSleepUi(detail: SleepDetailState, mapper: MetricStateMapper): SleepUi {
         SleepInsightUi(
             sufficient = it.sufficientForRecovery,
             deficitMinutes = it.deficitMinutes,
-            bedtimeSpreadMinutes = spread.takeIf { _ -> consistency.status != null && consistency.status != ContributorStatus.Optimal },
+            bedtimeSpreadMinutes = spread.takeIf { _ ->
+                val status = parts.firstOrNull { it.component == SleepComponent.CONSISTENCY }?.status
+                status != null && status != ContributorStatus.Optimal
+            },
         )
     }
 
+    val latencyReading = session?.let { SleepLatency.reading(it.minutesToFallAsleep, it.provenance) }
     val last = a.sleepNeedLastNight
     return SleepUi(
         score = mapper.sleep(a),
-        scoreStatus = statusOfPercent(sleep?.scorePercent?.toDouble()),
-        hours = hours,
+        scoreStatus = sleep?.let { SleepBands.overall(it).toStatus() },
+        parts = parts,
+        partial = sleep?.let(::partialScoreOf),
         asleepMinutes = sleep?.asleepMinutes,
-        neededMinutes = sleep?.needMinutes,
-        consistency = consistency,
+        targetMinutes = sleep?.durationTargetMinutes,
         bedtimeSpreadMinutes = spread,
-        efficiency = efficiency,
-        restorative = restorative,
         hasSession = session != null,
         hasStageDetail = session?.hasStages == true,
         segments = segmentsOf(detail.stages),
         zoneOffsetSeconds = session?.startZoneOffsetSeconds,
         stageRows = stageRows,
         timeInBed = session?.let { mapper.value(it.minutesInBed / 60.0, 1, "h", measured) } ?: gone,
-        latency = session?.minutesToFallAsleep?.let { mapper.value(it.toDouble(), 0, "min", measured) }
+        latency = latencyReading?.let { mapper.value(it.minutes.toDouble(), 0, "min", it.provenance) }
             ?: MetricState.Unavailable(MetricReason.NO_DATA),
+        latencyNotMeasured = latencyReading?.note == SleepLatencyNote.ZERO_LIKELY_NOT_MEASURED,
         wakeBouts = session?.wakeBoutsOverThreeMinutes?.let { mapper.value(it.toDouble(), 0, null, measured) }
             ?: MetricState.Unavailable(MetricReason.NO_DATA),
         need = NeedUi(

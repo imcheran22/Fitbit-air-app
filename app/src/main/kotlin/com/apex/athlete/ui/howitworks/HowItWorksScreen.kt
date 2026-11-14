@@ -48,7 +48,7 @@ internal val explainerSections: List<ExplainerSection> = listOf(
     ),
     ExplainerSection(
         R.string.howitworks_sleep_title,
-        listOf(R.string.howitworks_sleep_p1, R.string.howitworks_sleep_p2),
+        listOf(R.string.howitworks_sleep_p1, R.string.howitworks_sleep_p2, R.string.howitworks_sleep_p3),
     ),
     ExplainerSection(
         R.string.howitworks_load_title,

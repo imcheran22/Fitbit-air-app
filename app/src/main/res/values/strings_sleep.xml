@@ -7,16 +7,6 @@
     <string name="sleep_error">Sleep could not be read from the data on this phone. Leave this screen and open it again to retry.</string>
     <string name="sleep_status_cd">Sleep performance status: %1$s</string>
 
-    <string name="sleep_row_hours">Hours vs. needed</string>
-    <string name="sleep_row_consistency">Sleep consistency</string>
-    <string name="sleep_row_efficiency">Sleep efficiency</string>
-    <string name="sleep_row_restorative">Restorative sleep</string>
-    <string name="sleep_detail_hours">%1$s of %2$s needed</string>
-    <string name="sleep_detail_consistency">Bedtime varied by about %1$s over the last week</string>
-    <string name="sleep_detail_consistency_needs">Needs at least 3 nights of timing</string>
-    <string name="sleep_detail_efficiency">Time asleep out of time in bed</string>
-    <string name="sleep_detail_restorative">Deep and REM sleep as a share of time asleep</string>
-    <string name="sleep_detail_no_stages">This night was scored without stage detail</string>
     <string name="sleep_legend_cd">Legend: Poor, Sufficient, Optimal</string>
 
     <string name="sleep_insight_sufficient">Your sleep covered at least 90 percent of what you needed.</string>
@@ -53,10 +43,11 @@
 
     <string name="sleep_how_title">How sleep is calculated</string>
     <string name="sleep_how_link">How this is calculated</string>
-    <string name="sleep_how_p1">Sleep performance blends four parts: duration against your need (40 percent), restorative stages (25), efficiency (20) and consistency (15).</string>
+    <string name="sleep_how_p1">The sleep score runs from 0 to 100 and combines five parts: how long you slept against your need (35 percent), how your heart rate and heart rate variability during sleep compared with your own usual (25 percent), your deep and REM sleep compared with your own usual (15 percent), efficiency (15 percent) and how regular your sleep times are (10 percent). An ordinary night lands around 75 to 85.</string>
     <string name="sleep_how_p2">Your need is a baseline of 7 h 45 min, or the 75th percentile of your last 30 nights once 14 exist, plus extra for yesterday\'s strain and half of your recent sleep debt, up to 10 h.</string>
     <string name="sleep_how_p3">Restorative sleep is deep plus REM as a share of time asleep. Efficiency is time asleep over time in bed. Consistency is how closely your bed and wake times match over the last 7 days.</string>
     <string name="sleep_how_p4">A part that cannot be measured, such as stages on a night scored by movement alone, drops out and the others are scaled up. This is a summary of your sleep, not medical advice.</string>
+    <string name="sleep_how_p5">Why Apex can differ from Google Health: Google\'s sleep score is proprietary and is not available from its API, so Apex cannot copy it. Apex\'s score is transparent, every part is shown, and it includes how your body recovered overnight. A short night is never labelled Optimal, whatever the other parts say.</string>
     <string name="sleep_how_close">Close</string>
     <!-- Sleep debt -->
     <string name="sleep_debt_row">Sleep debt, last 7 nights</string>
@@ -76,4 +67,41 @@
     <string name="sleep_dip_missing_sleeping">No heart rate during sleep.</string>
     <string name="sleep_dip_missing_few">Too few minutes of heart rate, day or night, to compare.</string>
     <string name="sleep_dip_missing_generic">The heart-rate dip could not be worked out for this night.</string>
+
+    <!-- Score parts -->
+    <string name="sleep_parts_title">What makes up this score</string>
+    <string name="sleep_part_duration">Duration</string>
+    <string name="sleep_part_restoration">Restoration</string>
+    <string name="sleep_part_quality">Stage quality</string>
+    <string name="sleep_part_efficiency">Efficiency</string>
+    <string name="sleep_part_consistency">Consistency</string>
+    <string name="sleep_part_weight">%1$d%% of the score</string>
+    <string name="sleep_part_line">%1$s. %2$s</string>
+    <string name="sleep_part_duration_why">%1$s asleep against a %2$s target.</string>
+    <string name="sleep_part_duration_why_unknown">How long you slept against your target.</string>
+    <string name="sleep_part_restoration_why">How calm your body was overnight compared with your own usual.</string>
+    <string name="sleep_part_quality_why">Deep and REM sleep compared with your own usual share.</string>
+    <string name="sleep_part_efficiency_why">Time asleep out of time in bed, less long awakenings.</string>
+    <string name="sleep_part_consistency_why">How regular your sleep and wake times were over the last week.</string>
+    <string name="sleep_driver_hr_lower">Sleeping heart rate lower than usual</string>
+    <string name="sleep_driver_hr_similar">Sleeping heart rate about usual</string>
+    <string name="sleep_driver_hr_higher">Sleeping heart rate higher than usual</string>
+    <string name="sleep_driver_hrv_lower">HRV lower than usual</string>
+    <string name="sleep_driver_hrv_similar">HRV about usual</string>
+    <string name="sleep_driver_hrv_higher">HRV higher than usual</string>
+    <string name="sleep_driver_br_lower">Breathing rate lower than usual</string>
+    <string name="sleep_driver_br_similar">Breathing rate about usual</string>
+    <string name="sleep_driver_br_higher">Breathing rate higher than usual</string>
+    <string name="sleep_partial_title">Partial score: based on %1$d of 5 parts</string>
+    <string name="sleep_partial_missing">%1$s: %2$s</string>
+    <string name="sleep_partial_note">Missing parts are left out, never guessed. The weight of the others is scaled up.</string>
+    <string name="sleep_part_missing_restoration">Restoration needs about 2 weeks of nights to learn your usual heart rate, HRV and breathing, plus heart-rate data for this night.</string>
+    <string name="sleep_part_missing_quality">No sleep-stage detail for this night, so deep and REM cannot be compared.</string>
+    <string name="sleep_part_missing_consistency">Consistency needs at least 3 nights of sleep timing.</string>
+    <string name="sleep_part_missing_duration">Time asleep was not recorded for this night.</string>
+    <string name="sleep_part_missing_efficiency">Time in bed was not recorded for this night.</string>
+    <string name="sleep_detail_no_stages">This night was scored without stage detail</string>
+    <string name="sleep_detail_latency_reported">Time to fall asleep (as reported)</string>
+    <string name="sleep_latency_not_measured">Not measured: the provider reported 0 minutes. Apex does not use this figure in the score.</string>
+    <string name="sleep_latency_note">Reported by the provider. Apex does not use it in the score.</string>
 </resources>

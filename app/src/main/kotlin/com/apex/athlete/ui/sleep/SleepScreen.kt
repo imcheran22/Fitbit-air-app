@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.apex.athlete.R
 import com.apex.athlete.core.domain.DataProvenance
 import com.apex.athlete.core.analytics.sleep.DipCategory
+import com.apex.athlete.core.analytics.sleep.SleepComponent
 import com.apex.athlete.core.domain.SleepStage
 import com.apex.athlete.core.ui.charts.ChartClock
 import com.apex.athlete.core.ui.charts.HypnogramSegment
@@ -150,7 +151,7 @@ fun SleepScreen(
         },
         primary = {
             if (failed) ApexCard { ReasonPlaceholder(stringResource(R.string.sleep_error), ApexIcons.Warning) }
-            SummaryCard(ui)
+            PartsCard(ui)
             if (ui != null && ui.hasSession) StagesCard(ui)
         },
         secondary = {
@@ -174,6 +175,7 @@ fun SleepScreen(
             InfoParagraph(stringResource(R.string.sleep_how_p2))
             InfoParagraph(stringResource(R.string.sleep_how_p3))
             InfoParagraph(stringResource(R.string.sleep_how_p4))
+            InfoParagraph(stringResource(R.string.sleep_how_p5))
         }
     }
 }
@@ -212,58 +214,117 @@ private fun insightText(insight: SleepInsightUi): String {
     return base + " " + stringResource(R.string.sleep_insight_consistency, formatter.duration(spread))
 }
 
+@StringRes
+private fun partNameRes(c: SleepComponent): Int = when (c) {
+    SleepComponent.DURATION -> R.string.sleep_part_duration
+    SleepComponent.RESTORATION -> R.string.sleep_part_restoration
+    SleepComponent.QUALITY -> R.string.sleep_part_quality
+    SleepComponent.EFFICIENCY -> R.string.sleep_part_efficiency
+    SleepComponent.CONSISTENCY -> R.string.sleep_part_consistency
+}
+
+private fun partIcon(c: SleepComponent) = when (c) {
+    SleepComponent.DURATION -> ApexIcons.Moon
+    SleepComponent.RESTORATION -> ApexIcons.Heart
+    SleepComponent.QUALITY -> ApexIcons.Pulse
+    SleepComponent.EFFICIENCY -> ApexIcons.Check
+    SleepComponent.CONSISTENCY -> ApexIcons.Sync
+}
+
+@StringRes
+private fun driverRes(d: RestorationDriverUi): Int = when (d.signal) {
+    RestorationSignal.SLEEPING_HEART_RATE -> when (d.vsUsual) {
+        VsUsual.LOWER -> R.string.sleep_driver_hr_lower
+        VsUsual.SIMILAR -> R.string.sleep_driver_hr_similar
+        VsUsual.HIGHER -> R.string.sleep_driver_hr_higher
+    }
+    RestorationSignal.HRV -> when (d.vsUsual) {
+        VsUsual.LOWER -> R.string.sleep_driver_hrv_lower
+        VsUsual.SIMILAR -> R.string.sleep_driver_hrv_similar
+        VsUsual.HIGHER -> R.string.sleep_driver_hrv_higher
+    }
+    RestorationSignal.BREATHING_RATE -> when (d.vsUsual) {
+        VsUsual.LOWER -> R.string.sleep_driver_br_lower
+        VsUsual.SIMILAR -> R.string.sleep_driver_br_similar
+        VsUsual.HIGHER -> R.string.sleep_driver_br_higher
+    }
+}
+
 @Composable
-private fun SummaryCard(ui: SleepUi?) {
+private fun partWhy(part: SleepPartUi, ui: SleepUi): String {
     val formatter = LocalFormatter.current
+    return when (part.component) {
+        SleepComponent.DURATION ->
+            if (ui.asleepMinutes != null && ui.targetMinutes != null) {
+                stringResource(R.string.sleep_part_duration_why, formatter.duration(ui.asleepMinutes), formatter.duration(ui.targetMinutes))
+            } else {
+                stringResource(R.string.sleep_part_duration_why_unknown)
+            }
+        SleepComponent.RESTORATION -> {
+            val base = stringResource(R.string.sleep_part_restoration_why)
+            if (part.drivers.isEmpty()) base else base + " " + part.drivers.joinToString("; ") { stringResource(driverRes(it)) } + "."
+        }
+        SleepComponent.QUALITY -> stringResource(R.string.sleep_part_quality_why)
+        SleepComponent.EFFICIENCY -> stringResource(R.string.sleep_part_efficiency_why)
+        SleepComponent.CONSISTENCY -> {
+            val base = stringResource(R.string.sleep_part_consistency_why)
+            val spread = ui.bedtimeSpreadMinutes
+            if (spread != null) base + " " + stringResource(R.string.sleep_insight_consistency, formatter.duration(spread)) else base
+        }
+    }
+}
+
+/** The five score parts as contribution rows, plus the partial-score hint when the score is not fully backed by data. */
+@Composable
+private fun PartsCard(ui: SleepUi?) {
     ApexCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)) {
         if (ui == null) {
-            listOf(R.string.sleep_row_hours, R.string.sleep_row_consistency, R.string.sleep_row_efficiency, R.string.sleep_row_restorative)
-                .forEach { ContributorRow(stringResource(it), MetricState.Loading) }
+            SleepComponent.entries.forEach { ContributorRow(stringResource(partNameRes(it)), MetricState.Loading) }
             return@ApexCard
         }
-        val hoursDetail = if (ui.hours.state is MetricState.Value && ui.asleepMinutes != null && ui.neededMinutes != null) {
-            stringResource(R.string.sleep_detail_hours, formatter.duration(ui.asleepMinutes), formatter.duration(ui.neededMinutes))
-        } else {
-            null
+        val partial = ui.partial
+        if (partial != null) PartialHint(partial)
+        ui.parts.forEach { part ->
+            val reason = part.missingReasonRes?.let { stringResource(it) }
+            val state = if (reason != null) MetricState.Unavailable(MetricReason.NO_DATA, reason) else part.state
+            val detail = if (part.weightPercent != null) {
+                stringResource(
+                    R.string.sleep_part_line,
+                    stringResource(R.string.sleep_part_weight, part.weightPercent),
+                    partWhy(part, ui),
+                )
+            } else {
+                null
+            }
+            ContributorRow(
+                label = stringResource(partNameRes(part.component)),
+                state = state,
+                icon = partIcon(part.component),
+                status = part.status,
+                points = part.points,
+                detail = detail,
+            )
         }
-        ContributorRow(
-            label = stringResource(R.string.sleep_row_hours),
-            state = ui.hours.state,
-            icon = ApexIcons.Moon,
-            status = ui.hours.status,
-            detail = hoursDetail,
-        )
-        ContributorRow(
-            label = stringResource(R.string.sleep_row_consistency),
-            state = ui.consistency.state,
-            icon = ApexIcons.Sync,
-            status = ui.consistency.status,
-            detail = when {
-                ui.consistency.state is MetricState.Value && ui.bedtimeSpreadMinutes != null ->
-                    stringResource(R.string.sleep_detail_consistency, formatter.duration(ui.bedtimeSpreadMinutes))
-                ui.consistency.state is MetricState.Calibrating -> stringResource(R.string.sleep_detail_consistency_needs)
-                else -> null
-            },
-        )
-        ContributorRow(
-            label = stringResource(R.string.sleep_row_efficiency),
-            state = ui.efficiency.state,
-            icon = ApexIcons.Check,
-            status = ui.efficiency.status,
-            detail = if (ui.efficiency.state is MetricState.Value) stringResource(R.string.sleep_detail_efficiency) else null,
-        )
-        ContributorRow(
-            label = stringResource(R.string.sleep_row_restorative),
-            state = ui.restorative.state,
-            icon = ApexIcons.Pulse,
-            status = ui.restorative.status,
-            detail = when {
-                ui.restorative.state is MetricState.Value -> stringResource(R.string.sleep_detail_restorative)
-                ui.hasSession && !ui.hasStageDetail -> stringResource(R.string.sleep_detail_no_stages)
-                else -> null
-            },
-        )
         Legend()
+    }
+}
+
+@Composable
+private fun PartialHint(partial: PartialScoreUi) {
+    val colors = ApexTheme.colors
+    val title = stringResource(R.string.sleep_partial_title, partial.availableParts)
+    val lines = partial.missing.map {
+        stringResource(R.string.sleep_partial_missing, stringResource(partNameRes(it)), stringResource(missingPartReasonRes(it)))
+    }
+    val note = stringResource(R.string.sleep_partial_note)
+    val spoken = (listOf(title) + lines + note).joinToString(". ")
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 12.dp).semantics(mergeDescendants = true) { contentDescription = spoken },
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(title, style = ApexTheme.type.statLabel, color = colors.foreground)
+        lines.forEach { Text(it, style = ApexTheme.type.caption, color = colors.mutedForeground) }
+        Text(note, style = ApexTheme.type.caption, color = colors.mutedForeground)
     }
 }
 
@@ -420,7 +481,15 @@ private fun dipTone(category: DipCategory): ChipTone = when (category) {
 private fun DetailsCard(ui: SleepUi) {
     ApexCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
         KeyStatRow(stringResource(R.string.sleep_detail_in_bed), ui.timeInBed, icon = ApexIcons.Moon)
-        KeyStatRow(stringResource(R.string.sleep_detail_latency), ui.latency, icon = ApexIcons.Hourglass)
+        KeyStatRow(stringResource(R.string.sleep_detail_latency_reported), ui.latency, icon = ApexIcons.Hourglass)
+        if (ui.latency is MetricState.Value) {
+            Text(
+                stringResource(if (ui.latencyNotMeasured) R.string.sleep_latency_not_measured else R.string.sleep_latency_note),
+                style = ApexTheme.type.caption,
+                color = ApexTheme.colors.mutedForeground,
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
+        }
         KeyStatRow(stringResource(R.string.sleep_detail_wake_bouts), ui.wakeBouts, icon = ApexIcons.Bolt)
         Text(
             stringResource(R.string.sleep_detail_wake_bouts_note),
@@ -496,13 +565,27 @@ private fun previewUi(): SleepUi {
     return SleepUi(
         score = MetricState.Value(84.0, 0, "%", derived),
         scoreStatus = ContributorStatus.Sufficient,
-        hours = SleepRowUi(MetricState.Value(7.2, 1, "h", source), ContributorStatus.Sufficient),
+        parts = listOf(
+            SleepPartUi(SleepComponent.DURATION, MetricState.Value(86.0, 0, null, derived), ContributorStatus.Poor, 35, 30.1, null),
+            SleepPartUi(
+                SleepComponent.RESTORATION, MetricState.Value(88.0, 0, null, derived), ContributorStatus.Optimal, 25, 22.0, null,
+                listOf(
+                    RestorationDriverUi(RestorationSignal.SLEEPING_HEART_RATE, VsUsual.LOWER),
+                    RestorationDriverUi(RestorationSignal.HRV, VsUsual.HIGHER),
+                    RestorationDriverUi(RestorationSignal.BREATHING_RATE, VsUsual.SIMILAR),
+                ),
+            ),
+            SleepPartUi(SleepComponent.QUALITY, MetricState.Value(80.0, 0, null, derived), ContributorStatus.Sufficient, 15, 12.0, null),
+            SleepPartUi(SleepComponent.EFFICIENCY, MetricState.Value(93.0, 0, null, derived), ContributorStatus.Optimal, 15, 14.0, null),
+            SleepPartUi(
+                SleepComponent.CONSISTENCY, MetricState.Unavailable(MetricReason.NO_DATA), null, null, null,
+                R.string.sleep_part_missing_consistency,
+            ),
+        ),
+        partial = PartialScoreUi(4, listOf(SleepComponent.CONSISTENCY)),
         asleepMinutes = 432.0,
-        neededMinutes = 504.0,
-        consistency = SleepRowUi(MetricState.Value(71.0, 0, "%", derived), ContributorStatus.Sufficient),
+        targetMinutes = 504.0,
         bedtimeSpreadMinutes = 70.0,
-        efficiency = SleepRowUi(MetricState.Value(93.0, 0, "%", derived), ContributorStatus.Optimal),
-        restorative = SleepRowUi(MetricState.Value(42.0, 0, "%", derived), ContributorStatus.Poor),
         hasSession = true,
         hasStageDetail = true,
         segments = listOf(
@@ -519,7 +602,8 @@ private fun previewUi(): SleepUi {
             StageRowUi(SleepStage.AWAKE, null, 31),
         ),
         timeInBed = MetricState.Value(7.7, 1, "h", source),
-        latency = MetricState.Value(12.0, 0, "min", source),
+        latency = MetricState.Value(0.0, 0, "min", source),
+        latencyNotMeasured = true,
         wakeBouts = MetricState.Unavailable(MetricReason.NO_DATA),
         need = NeedUi(465.0, 24.0, 15.0, 504.0, usesDefaultBase = true),
         needTonightMinutes = 500.0,
