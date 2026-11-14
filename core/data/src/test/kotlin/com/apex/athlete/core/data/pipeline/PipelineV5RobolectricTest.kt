@@ -63,7 +63,7 @@ class PipelineV5RobolectricTest {
 
     @Test
     fun restorationUsesTheNightsOwnZScoresAndRecoveryGetsTheBehaviouralScore(): Unit = runBlocking {
-        assertEquals(6, ANALYTICS_ALGORITHM_VERSION)
+        assertEquals(7, ANALYTICS_ALGORITHM_VERSION)
         val day = pipeline.today() - 1
         val a = pipeline.analyze(day, persist = false)
         val sleep = assertNotNull(a.sleep)
