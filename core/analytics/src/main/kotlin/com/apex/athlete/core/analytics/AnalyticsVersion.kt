@@ -34,5 +34,7 @@ package com.apex.athlete.core.analytics
  * - 6: research metrics persisted by the pipeline (docs/FORMULAS.md, "Version 6"): robust z of resting heart rate, HRV and
  *   breathing rate, ln-RMSSD CV7, raw Sleep Regularity Index, sleep midpoint and its 7-night SD, 7-night guideline shortfall,
  *   WASO, awakenings per hour, sleep-score confidence, sedentary bouts and peak cadence. No existing formula changed.
+ * - 7: WASO counts awake only inside staged coverage after sleep onset (unstaged gaps are unknown, not awake) and is
+ *   withheld when stage segments cover < 95 % of the session; stored WASO rows replay.
  */
-const val ANALYTICS_ALGORITHM_VERSION: Int = 6
+const val ANALYTICS_ALGORITHM_VERSION: Int = 7

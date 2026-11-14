@@ -130,6 +130,8 @@ data class SleepResearchUi(
     val shortfall: MetricState,
     /** Nights of the 7 without a sleep session; they add nothing, so the shortfall may be understated. */
     val shortfallMissingNights: Int,
+    /** Nights of the 7 that carry a sleep session and are inside the shortfall; 7 when none are missing. */
+    val shortfallValidNights: Int,
     /** Midpoint of the night as local minutes after midnight, or null. */
     val midpointMinute: Int?,
     val midpointSd: MetricState,
@@ -146,6 +148,7 @@ fun sleepResearchOf(r: ResearchInsights): SleepResearchUi {
     return SleepResearchUi(
         shortfall = derivedState(s?.clippedMinutes?.div(60.0), 1, "h"),
         shortfallMissingNights = s?.missingNights ?: 0,
+        shortfallValidNights = s?.validNights ?: 0,
         midpointMinute = r.sleepMidpointMinuteOfDay?.takeIf { it.isFinite() }
             ?.roundToInt()?.let { Math.floorMod(it, MINUTES_PER_DAY) },
         midpointSd = derivedState(sd?.sdMinutes, 0, "min"),

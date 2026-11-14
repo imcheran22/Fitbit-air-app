@@ -156,7 +156,7 @@ fun dayTargetOf(metric: MetricType): DayTarget = when (metric) {
     MetricType.RECOVERY_SCORE, MetricType.HRV_RMSSD, MetricType.RESTING_HEART_RATE, MetricType.HRV_CV7_LN,
     MetricType.HRV_ROBUST_Z, MetricType.RHR_ROBUST_Z, MetricType.RESP_RATE_ROBUST_Z -> DayTarget.RECOVERY
     MetricType.SLEEP_SCORE, MetricType.SLEEP_DURATION, MetricType.SLEEPING_HEART_RATE, MetricType.HR_DIP,
-    MetricType.SLEEP_REGULARITY_INDEX, MetricType.SLEEP_MIDPOINT, MetricType.SLEEP_MIDPOINT_SD_7D,
+    MetricType.SLEEP_REGULARITY_INDEX, MetricType.SLEEP_MIDPOINT_SD_7D,
     MetricType.GUIDELINE_SHORTFALL_CLIPPED_7D, MetricType.GUIDELINE_SHORTFALL_SIGNED_7D, MetricType.SLEEP_WASO,
     MetricType.AWAKENINGS_PER_HOUR -> DayTarget.SLEEP
     MetricType.STRAIN_SCORE, MetricType.DAILY_TRIMP -> DayTarget.STRAIN

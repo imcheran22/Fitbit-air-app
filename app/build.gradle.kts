@@ -67,7 +67,7 @@ val oauthRedirectScheme: String = redirectSchemeFor(googleClientId, oauthClientT
 // Each component stays below 100, so codes are monotonic and readable. Bump here only.
 val versionMajor = 0
 val versionMinor = 2
-val versionPatch = 0
+val versionPatch = 1
 
 android {
     namespace = "com.apex.athlete"

@@ -27,7 +27,6 @@
     <string name="health_metric_steps">Steps</string>
     <string name="health_metric_hrv_cv7">HRV stability (7 nights)</string>
     <string name="health_metric_sri">Sleep regularity</string>
-    <string name="health_metric_sleep_midpoint">Sleep midpoint</string>
     <string name="health_metric_sleep_midpoint_sd">Sleep midpoint variability</string>
     <string name="health_metric_shortfall_clipped">Shortfall vs 7 h (7 nights)</string>
     <string name="health_metric_shortfall_signed">Net sleep vs 7 h (7 nights)</string>

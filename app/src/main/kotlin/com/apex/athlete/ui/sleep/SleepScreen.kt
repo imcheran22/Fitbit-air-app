@@ -429,7 +429,11 @@ private fun NeedCard(ui: SleepUi) {
         }
         // Secondary line: shortfall against the 7 h guideline, a different figure from the personal debt above.
         KeyStatRow(
-            stringResource(R.string.sleep_shortfall_row),
+            if (ui.research.shortfallMissingNights > 0 && ui.research.shortfall is MetricState.Value) {
+                stringResource(R.string.sleep_shortfall_row_partial, ui.research.shortfallValidNights)
+            } else {
+                stringResource(R.string.sleep_shortfall_row)
+            },
             ui.research.shortfall.withReason(R.string.sleep_shortfall_missing),
         )
         ResearchNote(stringResource(R.string.sleep_shortfall_note))
@@ -647,6 +651,7 @@ private fun previewUi(): SleepUi {
         research = SleepResearchUi(
             shortfall = MetricState.Value(1.4, 1, "h", derived),
             shortfallMissingNights = 1,
+            shortfallValidNights = 6,
             midpointMinute = 3 * 60 + 20,
             midpointSd = MetricState.Value(38.0, 0, "min", derived),
             midpointSdNights = 6,

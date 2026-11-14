@@ -220,26 +220,51 @@ class SleepRegularityTest {
 
     // --------------------------------------------------------------------------- SL07
 
+    private fun full(day: Long = 1000) = listOf(MinuteSpan(day * 1440 - 60, day * 1440 + 420))
+
     @Test
-    fun `WASO is the union of awake stretches inside the period`() {
+    fun `WASO is the union of awake stretches after onset inside staged coverage`() {
         val day = 1000L * 1440
         val n = night(1000, awake = listOf(MinuteSpan(day + 120, day + 135), MinuteSpan(day + 200, day + 210)))
-        assertEquals(25.0, SleepRegularity.wasoMinutes(n, hasStageData = true)!!, eps)
+        assertEquals(25.0, SleepRegularity.wasoMinutes(n, full())!!, eps)
     }
 
     @Test
     fun `overlapping and outside awake stretches are not double counted`() {
         val day = 1000L * 1440
         val overlapping = night(1000, awake = listOf(MinuteSpan(day + 10, day + 30), MinuteSpan(day + 20, day + 40)))
-        assertEquals(30.0, SleepRegularity.wasoMinutes(overlapping, true)!!, eps)
+        assertEquals(30.0, SleepRegularity.wasoMinutes(overlapping, full())!!, eps)
         val outside = night(1000, awake = listOf(MinuteSpan(day - 300, day - 200), MinuteSpan(day + 500, day + 600)))
-        assertEquals(0.0, SleepRegularity.wasoMinutes(outside, true)!!, eps)
+        assertEquals(0.0, SleepRegularity.wasoMinutes(outside, full())!!, eps)
+    }
+
+    @Test
+    fun `awake before sleep onset is latency not WASO`() {
+        val day = 1000L * 1440
+        val n = night(1000, awake = listOf(MinuteSpan(day - 60, day - 30), MinuteSpan(day + 100, day + 110)))
+        assertEquals(10.0, SleepRegularity.wasoMinutes(n, full())!!, eps)
+    }
+
+    @Test
+    fun `a gap in the hypnogram is not counted as awake`() {
+        val day = 1000L * 1440
+        // 480 min period, staged except a 20 min hole (95.8 % covered): only the scored awake 10 min count.
+        val staged = listOf(MinuteSpan(day - 60, day + 100), MinuteSpan(day + 120, day + 420))
+        val n = night(1000, awake = listOf(MinuteSpan(day + 200, day + 210)))
+        assertEquals(10.0, SleepRegularity.wasoMinutes(n, staged)!!, eps)
+    }
+
+    @Test
+    fun `WASO is null when staged coverage is under 95 percent`() {
+        val day = 1000L * 1440
+        val staged = listOf(MinuteSpan(day - 60, day + 100), MinuteSpan(day + 140, day + 420)) // 40 min hole = 91.7 %
+        assertNull(SleepRegularity.wasoMinutes(night(1000), staged))
     }
 
     @Test
     fun `no stage data means WASO is unknown not zero`() {
-        assertNull(SleepRegularity.wasoMinutes(night(1000), hasStageData = false))
-        assertEquals(0.0, SleepRegularity.wasoMinutes(night(1000), hasStageData = true)!!, eps)
+        assertNull(SleepRegularity.wasoMinutes(night(1000), emptyList()))
+        assertEquals(0.0, SleepRegularity.wasoMinutes(night(1000), full())!!, eps)
     }
 
     @Test

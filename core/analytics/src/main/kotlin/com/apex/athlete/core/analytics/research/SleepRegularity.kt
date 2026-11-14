@@ -107,20 +107,6 @@ object SleepRegularity {
     // consistency part. The research's own SRI variant (14 windows, naps unknown, AWAKE stages removed) was removed here
     // as a duplicate; the convention differences are listed in docs/RESEARCH_GAP_MATRIX.md.
 
-    /** The sleep period with its AWAKE stretches removed. */
-    private fun asleepSpans(night: SleepNight): List<MinuteSpan> {
-        val out = ArrayList<MinuteSpan>()
-        var cursor = night.period.startMinute
-        for (a in night.awake.sortedBy { it.startMinute }) {
-            val start = a.startMinute.coerceIn(night.period.startMinute, night.period.endMinute)
-            val end = a.endMinute.coerceIn(night.period.startMinute, night.period.endMinute)
-            if (start > cursor) out += MinuteSpan(cursor, start)
-            cursor = maxOf(cursor, end)
-        }
-        if (night.period.endMinute > cursor) out += MinuteSpan(cursor, night.period.endMinute)
-        return out
-    }
-
     // ------------------------------------------------------------ SL04 / SL10 timing spread
 
     /** SL04. Midpoint of a sleep period, `start + (end − start) / 2`, as minutes after midnight. */
@@ -270,15 +256,61 @@ object SleepRegularity {
     // ----------------------------------------------------------------------- SL07 continuity
 
     /**
-     * SL07. Wake after sleep onset: minutes scored AWAKE inside the sleep period. Null when the
-     * night has no stage data, because "no awake stretches recorded" is then not "no waking".
-     * Evidence class B–C: wrist devices measure WASO less well than total sleep time.
+     * SL07. Wake after sleep onset: minutes scored AWAKE inside the staged part of the sleep period, after the first
+     * asleep stage. [staged] is every stage segment of the night (awake included); time no segment covers is unknown,
+     * not awake, so it never counts. Null when [staged] covers less than [MIN_STAGED_COVERAGE] of the period (gaps would
+     * make the figure a guess), or when no asleep stage exists (no onset). Evidence class B-C: wrist devices measure
+     * WASO less well than total sleep time.
      */
-    fun wasoMinutes(night: SleepNight, hasStageData: Boolean): Double? {
-        if (!hasStageData) return null
-        val asleep = asleepSpans(night).sumOf { it.minutes }
-        return (night.period.minutes - asleep).toDouble()
+    fun wasoMinutes(night: SleepNight, staged: List<MinuteSpan>): Double? {
+        val p = night.period
+        val coverage = merged(staged, p)
+        if (coverage.isEmpty()) return null
+        if (coverage.sumOf { it.minutes } < MIN_STAGED_COVERAGE * p.minutes) return null
+        val awake = merged(night.awake, p)
+        // Asleep = staged minus awake; onset is where the first asleep stretch starts.
+        var onset: Long? = null
+        for (c in coverage) {
+            var cursor = c.startMinute
+            for (a in awake) {
+                val s = maxOf(a.startMinute, c.startMinute)
+                val e = minOf(a.endMinute, c.endMinute)
+                if (e <= s) continue
+                if (s > cursor) { onset = cursor; break }
+                cursor = maxOf(cursor, e)
+            }
+            if (onset == null && cursor < c.endMinute) onset = cursor
+            if (onset != null) break
+        }
+        val start = onset ?: return null
+        var total = 0L
+        for (c in coverage) for (a in awake) {
+            val s = maxOf(a.startMinute, c.startMinute, start)
+            val e = minOf(a.endMinute, c.endMinute)
+            if (e > s) total += e - s
+        }
+        return total.toDouble()
     }
+
+    /** Spans clipped to [within], sorted and merged so no minute counts twice. */
+    private fun merged(spans: List<MinuteSpan>, within: MinuteSpan): List<MinuteSpan> {
+        val out = ArrayList<MinuteSpan>()
+        for (sp in spans.sortedBy { it.startMinute }) {
+            val s = sp.startMinute.coerceIn(within.startMinute, within.endMinute)
+            val e = sp.endMinute.coerceIn(within.startMinute, within.endMinute)
+            if (e <= s) continue
+            val last = out.lastOrNull()
+            if (last != null && s <= last.endMinute) {
+                if (e > last.endMinute) out[out.size - 1] = MinuteSpan(last.startMinute, e)
+            } else {
+                out += MinuteSpan(s, e)
+            }
+        }
+        return out
+    }
+
+    /** Share of the sleep period the stage segments must cover before WASO is reported. */
+    const val MIN_STAGED_COVERAGE = 0.95
 
     /**
      * SL07. Awakenings per hour of sleep, `awakenings / (minutes asleep / 60)`. Nine awakenings

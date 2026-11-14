@@ -55,7 +55,7 @@ class PipelineV6ResearchRobolectricTest {
 
     @Test
     fun researchValuesAreStoredAsDerivedRowsMatchingTheAnalysis(): Unit = runBlocking {
-        assertEquals(6, ANALYTICS_ALGORITHM_VERSION)
+        assertEquals(7, ANALYTICS_ALGORITHM_VERSION)
         val day = pipeline.today() - 1
         val a = pipeline.analyze(day, persist = false)
         val dao = db.dailyBiometricSummaryDao()
@@ -126,5 +126,23 @@ class PipelineV6ResearchRobolectricTest {
         } finally {
             empty.close()
         }
+    }
+
+    @Test
+    fun syncAgeComesFromTheSyncWatermarkNotTheRowUpdateTime(): Unit = runBlocking {
+        val today = pipeline.today()
+        val stale = com.apex.athlete.core.analytics.research.ConfidenceReason.STALE_DATA
+        // No sync recorded (the demo rows were written "now"): age is unknown, so the data counts as stale.
+        assertTrue(stale in pipeline.analyze(today, persist = false).research.dataConfidence!!.reasons)
+        // A recent successful sync clears it.
+        db.syncWatermarkDao().insertIfAbsent(
+            com.apex.athlete.core.database.entity.SyncWatermarkEntity(
+                source = com.apex.athlete.core.domain.SyncSource.HEALTH_CONNECT, stream = "steps",
+                lastSyncedEpochMillis = now, lastSuccessEpochMillis = now - 3_600_000L,
+            ),
+        )
+        assertTrue(stale !in pipeline.analyze(today, persist = false).research.dataConfidence!!.reasons)
+        // History stays unknown whatever the sync age.
+        assertTrue(stale in pipeline.analyze(today - 3, persist = false).research.dataConfidence!!.reasons)
     }
 }

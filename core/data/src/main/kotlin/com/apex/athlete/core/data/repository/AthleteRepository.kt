@@ -390,7 +390,6 @@ class AthleteRepository(
             // Research metrics (formula set 6)
             MetricType.HRV_CV7_LN to BaselineSpecs.GENERIC,
             MetricType.SLEEP_REGULARITY_INDEX to BaselineSpecs.GENERIC,
-            MetricType.SLEEP_MIDPOINT to BaselineSpecs.GENERIC,
             MetricType.SLEEP_MIDPOINT_SD_7D to BaselineSpecs.GENERIC,
             MetricType.GUIDELINE_SHORTFALL_CLIPPED_7D to BaselineSpecs.GENERIC,
             MetricType.GUIDELINE_SHORTFALL_SIGNED_7D to BaselineSpecs.GENERIC,

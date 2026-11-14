@@ -29,6 +29,7 @@
 
     <!-- Sleep -->
     <string name="sleep_shortfall_row">Shortfall vs 7 h guideline (7 nights)</string>
+    <string name="sleep_shortfall_row_partial">Shortfall vs 7 h guideline (over %1$d of 7 nights)</string>
     <string name="sleep_shortfall_missing">No sleep recorded in the last 7 nights.</string>
     <string name="sleep_shortfall_note">Only nights shorter than 7 h add up; a long night does not make up for a short one. Your personal sleep debt above stays the main figure.</string>
     <string name="sleep_shortfall_missing_nights">%1$d of the last 7 nights have no sleep recorded. They add nothing, so this may understate the shortfall.</string>

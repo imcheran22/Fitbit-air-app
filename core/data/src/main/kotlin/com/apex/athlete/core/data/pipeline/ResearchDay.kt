@@ -104,16 +104,19 @@ internal object ResearchDay {
             ((day - SHORTFALL_NIGHTS + 1)..day).mapNotNull { d -> mainSleeps.firstOrNull { it.epochDay == d }?.let(::midpointOf) },
         )
 
-    /** WASO needs scored stages: without them it is unknown, never 0. */
+    /** WASO needs scored stages covering the night (>= 95 %): without them, or with gaps, it is unknown, never 0. */
     fun waso(night: SleepSessionEntity, stages: List<SleepStageSegmentEntity>): Double? {
         val period = periodOf(night) ?: return null
-        val hasStages = night.hasStages && stages.isNotEmpty()
-        val awake = stages.filter { it.stage == SleepStage.AWAKE && it.endEpochMillis > it.startEpochMillis }.mapNotNull {
+        if (!night.hasStages) return null
+        fun span(it: SleepStageSegmentEntity): MinuteSpan? {
+            if (it.endEpochMillis <= it.startEpochMillis) return null
             val a = localMinute(it.startEpochMillis, night.startZoneOffsetSeconds)
             val b = localMinute(it.endEpochMillis, night.startZoneOffsetSeconds)
-            if (b > a) MinuteSpan(a, b) else null
+            return if (b > a) MinuteSpan(a, b) else null
         }
-        return SleepResearch.wasoMinutes(SleepNight(night.epochDay, period, awake), hasStages)
+        val staged = stages.mapNotNull(::span)
+        val awake = stages.filter { it.stage == SleepStage.AWAKE }.mapNotNull(::span)
+        return SleepResearch.wasoMinutes(SleepNight(night.epochDay, period, awake), staged)
     }
 
     fun awakeningsPerHour(night: SleepSessionEntity): Double? =

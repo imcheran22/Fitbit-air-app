@@ -73,6 +73,7 @@ class ResearchMappingTest {
         val ui = sleepResearchOf(r)
         assertEquals(1.5, assertIs<MetricState.Value>(ui.shortfall).value)
         assertEquals(1, ui.shortfallMissingNights)
+        assertEquals(6, ui.shortfallValidNights)
         assertEquals(200, ui.midpointMinute)
         assertEquals(38.0, assertIs<MetricState.Value>(ui.midpointSd).value)
         assertEquals(6, ui.midpointSdNights)

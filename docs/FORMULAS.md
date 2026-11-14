@@ -37,6 +37,10 @@ weight) at 100 and no part reflected the body's overnight state. Version 5:
 Stored sleep and recovery scores carry the old version and are replayed. Sleep need, sleep debt, the Sleep Regularity
 Index and every other engine are unchanged.
 
+## Version 7: WASO
+
+`ANALYTICS_ALGORITHM_VERSION` 7: WASO counts AWAKE only inside staged coverage after sleep onset (unstaged gaps are unknown) and is null when stages cover < 95 % of the session.
+
 ## Version 6: research metrics persisted
 
 No existing formula changed; `ANALYTICS_ALGORITHM_VERSION` is 6 so history replays and carries the new rows. All are

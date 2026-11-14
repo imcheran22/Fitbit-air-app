@@ -481,8 +481,12 @@ class DailyIntelligencePipeline(
         val dualResp = DualBaselines.respiratoryRate(series(MetricType.RESPIRATORY_RATE), day)
         val dualSleepingHr = DualBaselines.sleepingHeartRate(series(MetricType.SLEEPING_HEART_RATE), day)
         val hrvCv7 = AutonomicMetrics.cv7LnPercent(series(MetricType.HRV_RMSSD), day)
-        // Sync age is only known for the latest night; for history it is unknown, which keeps alerts off (patterns still show).
-        val hoursSinceSync = night?.takeIf { day >= today() }?.let { (nowMillis() - it.updatedAtEpochMillis) / 3_600_000.0 }
+        // Sync age comes from the real last successful sync (sync watermarks), and only for the current day; history and a
+        // never-synced store are unknown (null), which keeps alerts off. The sleep row's update time is not a sync time.
+        val hoursSinceSync = if (day >= today()) {
+            db.syncWatermarkDao().all().mapNotNull { it.lastSuccessEpochMillis }.maxOrNull()
+                ?.let { ((nowMillis() - it) / 3_600_000.0).coerceAtLeast(0.0) }
+        } else null
         val dataConfidence = DataQuality.confidence(
             ConfidenceInputs(
                 hasCurrentReading = hrv.current != null,

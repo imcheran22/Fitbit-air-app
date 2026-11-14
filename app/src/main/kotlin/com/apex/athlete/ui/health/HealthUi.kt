@@ -114,7 +114,6 @@ fun metricTitleRes(metric: MetricType): Int = when (metric) {
     MetricType.STEPS -> R.string.health_metric_steps
     MetricType.HRV_CV7_LN -> R.string.health_metric_hrv_cv7
     MetricType.SLEEP_REGULARITY_INDEX -> R.string.health_metric_sri
-    MetricType.SLEEP_MIDPOINT -> R.string.health_metric_sleep_midpoint
     MetricType.SLEEP_MIDPOINT_SD_7D -> R.string.health_metric_sleep_midpoint_sd
     MetricType.GUIDELINE_SHORTFALL_CLIPPED_7D -> R.string.health_metric_shortfall_clipped
     MetricType.GUIDELINE_SHORTFALL_SIGNED_7D -> R.string.health_metric_shortfall_signed
