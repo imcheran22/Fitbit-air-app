@@ -1,2 +1,2 @@
 Changing this file on a claude/ branch starts the "Release APK" workflow (signed APK on the Releases page).
-request: 5 (android client ID from repository variable)
+request: 6 (v0.2.0: sleep score v5, research metrics and screens)
