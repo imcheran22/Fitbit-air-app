@@ -5,6 +5,13 @@ import com.apex.athlete.core.analytics.baseline.BaselineEngine
 import com.apex.athlete.core.analytics.baseline.BaselineSpec
 import com.apex.athlete.core.analytics.baseline.BaselineSpecs
 import com.apex.athlete.core.analytics.baseline.DailyValue
+import com.apex.athlete.core.analytics.baseline.DualBaselines
+import com.apex.athlete.core.analytics.research.AutonomicMetrics
+import com.apex.athlete.core.analytics.research.ConfidenceInputs
+import com.apex.athlete.core.analytics.research.ContextTag
+import com.apex.athlete.core.analytics.research.DataQuality
+import com.apex.athlete.core.analytics.research.MultiSignal
+import com.apex.athlete.core.analytics.research.PatternContext
 import com.apex.athlete.core.analytics.energy.EnergyResult
 import com.apex.athlete.core.analytics.fitness.CardioFitness
 import com.apex.athlete.core.analytics.fitness.FitnessAge
@@ -158,6 +165,8 @@ data class DayAnalysis(
     val fatigueEvaluable: Boolean,
     /** The athlete's own recent strain base the target is built from; null with fewer than 5 recorded days (then no target). */
     val personalStrainBase: Double?,
+    /** Research metrics (formula version 6): dual baselines, HRV CV/SWC, sleep shortfall and midpoint, WASO, sedentary bouts, patterns. */
+    val research: ResearchInsights = ResearchInsights.EMPTY,
     val algorithmVersion: Int = ANALYTICS_ALGORITHM_VERSION,
 )
 
@@ -460,6 +469,68 @@ class DailyIntelligencePipeline(
             naps = daySleeps.filter { !it.isMainSleep }.map { minuteRangeOf(it.startEpochMillis, it.endEpochMillis) },
         )
 
+        // --- Version 6: research metrics (descriptive; none of them feeds a score) -----------------
+        fun tagOn(metric: MetricType) = valueOn(metric, day) == 1.0
+        val tags = buildSet {
+            if (tagOn(MetricType.JOURNAL_ALCOHOL)) add(ContextTag.ALCOHOL)
+            if (tagOn(MetricType.JOURNAL_LATE_MEAL)) add(ContextTag.LATE_MEAL)
+            if (tagOn(MetricType.JOURNAL_TRAVEL)) add(ContextTag.TRAVEL)
+        }
+        val dualHrv = DualBaselines.hrv(series(MetricType.HRV_RMSSD), day)
+        val dualRhr = DualBaselines.restingHeartRate(series(rhrMetric), day)
+        val dualResp = DualBaselines.respiratoryRate(series(MetricType.RESPIRATORY_RATE), day)
+        val dualSleepingHr = DualBaselines.sleepingHeartRate(series(MetricType.SLEEPING_HEART_RATE), day)
+        val hrvCv7 = AutonomicMetrics.cv7LnPercent(series(MetricType.HRV_RMSSD), day)
+        // Sync age is only known for the latest night; for history it is unknown, which keeps alerts off (patterns still show).
+        val hoursSinceSync = night?.takeIf { day >= today() }?.let { (nowMillis() - it.updatedAtEpochMillis) / 3_600_000.0 }
+        val dataConfidence = DataQuality.confidence(
+            ConfidenceInputs(
+                hasCurrentReading = hrv.current != null,
+                baselineValidDays = hrv.baseline.validDays,
+                hoursSinceLastSync = hoursSinceSync,
+                confounders = tags.size,
+            ),
+        )
+        // MV01 "illness-like" pattern: robust nightly z for the last two nights, weekly HRV z, the provider's skin-temperature
+        // delta. Missing inputs stay missing; the outcome can then be INSUFFICIENT_DATA.
+        val nights2 = listOf(day - 1, day)
+        val illness = MultiSignal.illnessLikePattern(
+            rhrNightlyZ = nights2.map { DualBaselines.restingHeartRate(series(rhrMetric), it).robustZ },
+            hrvWeeklyZ = hrv.weeklyStatus?.zScore,
+            hrvNightlyZ = nights2.map { DualBaselines.hrv(series(MetricType.HRV_RMSSD), it).robustZ },
+            rrNightlyZ = nights2.map { DualBaselines.respiratoryRate(series(MetricType.RESPIRATORY_RATE), it).robustZ },
+            temperatureDeltaC = skin.current,
+            context = PatternContext(confidence = dataConfidence, tags = tags),
+        )
+        val researchStages = night?.let { db.sleepDao().stagesFor(it.id) }.orEmpty()
+        val activity = ResearchDay.activity(
+            dayStartMillis = dayStart,
+            dayEndMillis = dayEnd,
+            provisional = day >= today(),
+            steps = stepIntervals,
+            heartRateMinutes = hrRows.map { minuteOf(it.timestampEpochMillis) },
+            asleep = daySleeps.map { minuteSpan(it.startEpochMillis, it.endEpochMillis) },
+        )
+        val research = ResearchInsights(
+            hrvDual = dualHrv,
+            restingHeartRateDual = dualRhr,
+            sleepingHeartRateDual = dualSleepingHr,
+            respiratoryRateDual = dualResp,
+            hrvCv7LnPercent = hrvCv7,
+            hrvSwc = ResearchDay.hrvSwc(hrv.weeklyStatus),
+            hrvPercentFromBaseline = ResearchDay.hrvPercent(hrv.weeklyStatus),
+            guidelineShortfall = ResearchDay.shortfall(day, sessions),
+            sleepMidpointMinuteOfDay = night?.let(ResearchDay::midpointOf),
+            sleepMidpointSd7 = ResearchDay.midpointSd(day, sessions),
+            wasoMinutes = night?.let { ResearchDay.waso(it, researchStages) },
+            awakeningsPerHour = night?.let(ResearchDay::awakeningsPerHour),
+            sedentary = activity.sedentary,
+            peakCadence30 = activity.peakCadence30,
+            activityMissing = activity.missing,
+            patterns = listOf(illness),
+            dataConfidence = dataConfidence,
+        )
+
         val dip = heartRateDipOf(day, night, sessions)
         val journal = journalEffectsOf(day, recovery.score)
         val vo2Category = Vo2Categories.classify(vo2?.value, age, user.sex)
@@ -513,6 +584,7 @@ class DailyIntelligencePipeline(
             loadCalibrating = load.isCalibrating,
             fatigueEvaluable = fatigue.evaluable,
             personalStrainBase = personalBase,
+            research = research,
         )
         if (persist) store(analysis)
         return analysis
@@ -637,6 +709,23 @@ class DailyIntelligencePipeline(
             MetricType.STRESS_MEDIUM_MINUTES to a.stress?.mediumMinutes?.toDouble(),
             MetricType.STRESS_HIGH_MINUTES to a.stress?.highMinutes?.toDouble(),
             MetricType.HR_DIP to a.heartRateDip.dipFraction?.let { it * 100.0 },
+            // Version 6 research values. Missing stays missing: the row is deleted, never zero-filled.
+            MetricType.RHR_ROBUST_Z to a.research.restingHeartRateDual?.robustZ,
+            MetricType.HRV_ROBUST_Z to a.research.hrvDual?.robustZ,
+            MetricType.RESP_RATE_ROBUST_Z to a.research.respiratoryRateDual?.robustZ,
+            MetricType.HRV_CV7_LN to a.research.hrvCv7LnPercent,
+            MetricType.SLEEP_REGULARITY_INDEX to a.sleepRegularity.index,
+            MetricType.SLEEP_MIDPOINT to a.research.sleepMidpointMinuteOfDay,
+            MetricType.SLEEP_MIDPOINT_SD_7D to a.research.sleepMidpointSd7?.sdMinutes,
+            MetricType.GUIDELINE_SHORTFALL_CLIPPED_7D to a.research.guidelineShortfall?.clippedMinutes,
+            MetricType.GUIDELINE_SHORTFALL_SIGNED_7D to a.research.guidelineShortfall?.signedMinutes,
+            MetricType.SLEEP_WASO to a.research.wasoMinutes,
+            MetricType.AWAKENINGS_PER_HOUR to a.research.awakeningsPerHour,
+            MetricType.SLEEP_SCORE_CONFIDENCE to a.sleep?.availableWeight,
+            MetricType.SEDENTARY_PROLONGED_BOUTS to a.research.sedentary?.bouts?.prolongedCount?.toDouble(),
+            MetricType.SEDENTARY_LONGEST_BOUT to a.research.sedentary?.bouts?.longestMinutes,
+            MetricType.SEDENTARY_BREAKS_PER_HOUR to a.research.sedentary?.breaksPerSedentaryHour,
+            MetricType.PEAK_CADENCE_30 to a.research.peakCadence30,
         )
         val present = values.mapNotNull { (metric, value) ->
             value?.takeIf { it.isFinite() }?.let { derivedRow(metric, a.epochDay, it, now) }

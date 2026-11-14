@@ -63,7 +63,7 @@ class PipelineV5RobolectricTest {
 
     @Test
     fun restorationUsesTheNightsOwnZScoresAndRecoveryGetsTheBehaviouralScore(): Unit = runBlocking {
-        assertEquals(5, ANALYTICS_ALGORITHM_VERSION)
+        assertEquals(6, ANALYTICS_ALGORITHM_VERSION)
         val day = pipeline.today() - 1
         val a = pipeline.analyze(day, persist = false)
         val sleep = assertNotNull(a.sleep)
@@ -84,10 +84,10 @@ class PipelineV5RobolectricTest {
         // Recovery's sleep input is the behavioural score, not the full score.
         val recoverySleep = a.recovery.contributions.first { it.component == RecoveryComponent.SLEEP }
         assertEquals(sleep.behaviouralScore, recoverySleep.subScore!!, 1e-9)
-        // The stored sleep score is the full score, stamped with version 5.
+        // The stored sleep score is the full score, stamped with the current version.
         val stored = assertNotNull(db.dailyBiometricSummaryDao().get(MetricType.SLEEP_SCORE, day))
         assertEquals(sleep.score, stored.value, 1e-9)
-        assertEquals(5, stored.algorithmVersion)
+        assertEquals(ANALYTICS_ALGORITHM_VERSION, stored.algorithmVersion)
     }
 
     @Test

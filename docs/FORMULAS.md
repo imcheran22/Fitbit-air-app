@@ -37,6 +37,21 @@ weight) at 100 and no part reflected the body's overnight state. Version 5:
 Stored sleep and recovery scores carry the old version and are replayed. Sleep need, sleep debt, the Sleep Regularity
 Index and every other engine are unchanged.
 
+## Version 6: research metrics persisted
+
+No existing formula changed; `ANALYTICS_ALGORITHM_VERSION` is 6 so history replays and carries the new rows. All are
+`MATHEMATICALLY_DERIVED`, descriptive, and none feeds a score. Missing inputs delete the row (never zero-filled).
+`DayAnalysis.research` (`ResearchInsights`) exposes the same values plus the dual baselines, SWC status and patterns.
+Stored: `RHR_ROBUST_Z`, `HRV_ROBUST_Z` (ln scale), `RESP_RATE_ROBUST_Z` (median/MAD z of the day, `DualBaselines`);
+`HRV_CV7_LN`; `SLEEP_REGULARITY_INDEX` (raw SRI); `SLEEP_MIDPOINT`, `SLEEP_MIDPOINT_SD_7D` (needs 5 of the last 7 main
+sleeps); `GUIDELINE_SHORTFALL_CLIPPED_7D` / `_SIGNED_7D` (last 7 main sleeps against 7 h, naps excluded, needs 5 nights);
+`SLEEP_WASO` (scored AWAKE stages only, absent without stages); `AWAKENINGS_PER_HOUR` (awakenings over 3 min per hour
+asleep); `SLEEP_SCORE_CONFIDENCE` (available weight 0..1); `SEDENTARY_PROLONGED_BOUTS`, `SEDENTARY_LONGEST_BOUT`,
+`SEDENTARY_BREAKS_PER_HOUR`, `PEAK_CADENCE_30` from one-minute step buckets of a completed day (a minute with heart rate
+but no step bucket counts as 0 steps; any bucket longer than 90 s, no step data or a day in progress makes them unavailable).
+Not stored: dual baselines, SWC, weekly percent change, MV01 pattern (the "illness-like" pattern, always "may indicate",
+alert gated by data confidence and journal tags).
+
 ## Changes in version 4
 
 No existing formula changed. Version 4 persists and exposes the engines added after version 3, so

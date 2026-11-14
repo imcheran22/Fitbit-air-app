@@ -145,6 +145,37 @@ enum class MetricType(
     TRAINING_MONOTONY("monotony", MetricCategory.TRAINING_LOAD, "ratio", isDerived = true),
     TRAINING_STRAIN_FOSTER("foster_strain", MetricCategory.TRAINING_LOAD, "AU", isDerived = true),
     TRAINING_BALANCE("training_balance", MetricCategory.TRAINING_LOAD, "TRIMP/day", isDerived = true),
+
+    // --- Added in formula version 6 (research metrics, docs/RESEARCH_GAP_MATRIX.md; text keys, no schema change) ---
+    // Robust (median/MAD) deviations from the personal baseline. Descriptive only: they never feed a score.
+    /** Robust z of the resting heart rate against its median/MAD baseline. */
+    RHR_ROBUST_Z("rhr_rz", MetricCategory.SCORE, "z", isDerived = true),
+    /** Robust z of ln RMSSD against its median/MAD baseline (ln scale). */
+    HRV_ROBUST_Z("hrv_rz", MetricCategory.SCORE, "z", isDerived = true),
+    RESP_RATE_ROBUST_Z("rr_rz", MetricCategory.SCORE, "z", isDerived = true),
+    /** Coefficient of variation of ln RMSSD over the last 7 nights, in percent. */
+    HRV_CV7_LN("hrv_cv7", MetricCategory.CARDIOVASCULAR, "%", Polarity.LOWER_IS_BETTER, isDerived = true),
+    /** Sleep Regularity Index, raw -100..100 (SLEEP_CONSISTENCY stores the clipped sub-score). */
+    SLEEP_REGULARITY_INDEX("sri", MetricCategory.SLEEP, "SRI", Polarity.HIGHER_IS_BETTER, isDerived = true),
+    /** Midpoint of the main sleep as local minutes after midnight (0..1439). */
+    SLEEP_MIDPOINT("sleep_mid", MetricCategory.SLEEP, "min", isDerived = true),
+    /** Sample SD of the sleep midpoint over the last 7 nights, minutes. */
+    SLEEP_MIDPOINT_SD_7D("sleep_mid_sd7", MetricCategory.SLEEP, "min", Polarity.LOWER_IS_BETTER, isDerived = true),
+    /** Sum over the last 7 nights of max(0, 7 h - sleep); estimated shortfall against the guideline, not "debt". */
+    GUIDELINE_SHORTFALL_CLIPPED_7D("gsf_c7", MetricCategory.SLEEP, "min", Polarity.LOWER_IS_BETTER, isDerived = true),
+    /** Sum over the last 7 nights of (7 h - sleep); negative = surplus. */
+    GUIDELINE_SHORTFALL_SIGNED_7D("gsf_s7", MetricCategory.SLEEP, "min", Polarity.LOWER_IS_BETTER, isDerived = true),
+    /** Minutes awake inside the main sleep, from the scored stages; absent without stage data. */
+    SLEEP_WASO("waso", MetricCategory.SLEEP, "min", Polarity.LOWER_IS_BETTER, isDerived = true),
+    AWAKENINGS_PER_HOUR("awak_h", MetricCategory.SLEEP, "1/h", Polarity.LOWER_IS_BETTER, isDerived = true),
+    /** Weight (0..1) of the sleep-score parts that were available; below 1 the stored score is partial. */
+    SLEEP_SCORE_CONFIDENCE("sleep_conf", MetricCategory.SLEEP, "0-1", isDerived = true),
+    /** Sedentary stretches of at least 30 minutes while awake, from minute steps. */
+    SEDENTARY_PROLONGED_BOUTS("sed_bouts", MetricCategory.ACTIVITY, "count", Polarity.LOWER_IS_BETTER, isDerived = true),
+    SEDENTARY_LONGEST_BOUT("sed_longest", MetricCategory.ACTIVITY, "min", Polarity.LOWER_IS_BETTER, isDerived = true),
+    SEDENTARY_BREAKS_PER_HOUR("sed_breaks_h", MetricCategory.ACTIVITY, "1/h", Polarity.HIGHER_IS_BETTER, isDerived = true),
+    /** Mean steps per minute of the 30 busiest minutes of the day. */
+    PEAK_CADENCE_30("peak_cad30", MetricCategory.ACTIVITY, "steps/min", Polarity.HIGHER_IS_BETTER, isDerived = true),
     ;
 
     companion object {

@@ -31,5 +31,8 @@ package com.apex.athlete.core.analytics
  *   breathing-rate penalty), stage quality 0.15 (against the personal usual), efficiency 0.15 (65/85/95 anchors),
  *   consistency 0.10 (Sleep Regularity Index); availableWeight and confidence; recovery takes the behavioural sleep
  *   score so overnight HRV / heart rate / breathing rate are not counted twice. Stored sleep and recovery scores replay.
+ * - 6: research metrics persisted by the pipeline (docs/FORMULAS.md, "Version 6"): robust z of resting heart rate, HRV and
+ *   breathing rate, ln-RMSSD CV7, raw Sleep Regularity Index, sleep midpoint and its 7-night SD, 7-night guideline shortfall,
+ *   WASO, awakenings per hour, sleep-score confidence, sedentary bouts and peak cadence. No existing formula changed.
  */
-const val ANALYTICS_ALGORITHM_VERSION: Int = 5
+const val ANALYTICS_ALGORITHM_VERSION: Int = 6
