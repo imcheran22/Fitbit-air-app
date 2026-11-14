@@ -262,7 +262,8 @@ private fun partWhy(part: SleepPartUi, ui: SleepUi): String {
             }
         SleepComponent.RESTORATION -> {
             val base = stringResource(R.string.sleep_part_restoration_why)
-            if (part.drivers.isEmpty()) base else base + " " + part.drivers.joinToString("; ") { stringResource(driverRes(it)) } + "."
+            val drivers = part.drivers.map { stringResource(driverRes(it)) }
+            if (drivers.isEmpty()) base else base + " " + drivers.joinToString("; ") + "."
         }
         SleepComponent.QUALITY -> stringResource(R.string.sleep_part_quality_why)
         SleepComponent.EFFICIENCY -> stringResource(R.string.sleep_part_efficiency_why)
