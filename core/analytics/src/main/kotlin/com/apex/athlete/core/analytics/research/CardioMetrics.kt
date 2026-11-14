@@ -3,27 +3,12 @@ package com.apex.athlete.core.analytics.research
 import com.apex.athlete.core.analytics.baseline.DailyValue
 import com.apex.athlete.core.analytics.stats.Stats
 import com.apex.athlete.core.analytics.strain.HeartRateSample
-import kotlin.math.abs
 
 /**
  * One heart-rate reading placed on a time axis in seconds. The origin depends on the use: the
  * end of the exercise for heart-rate recovery, the start of the session for drift.
  */
 data class TimedHeartRate(val seconds: Double, val bpm: Double)
-
-/**
- * CV04. Fall of heart rate after exercise stopped.
- *
- * @property hrr60 HR(end) − HR(end + 60 s), bpm.
- * @property hrr120 HR(end) − HR(end + 120 s); null when no reading exists near 120 s.
- * @property rejectedSamples readings dropped as implausible (outside 25–250 bpm).
- */
-data class HeartRateRecovery(
-    val heartRateAtEnd: Double,
-    val hrr60: Double,
-    val hrr120: Double?,
-    val rejectedSamples: Int,
-)
 
 /** CV04 context: this session's HRR against the median of the person's recent comparable sessions. */
 data class RecoveryComparison(val medianOfPrevious: Double, val delta: Double, val sessionsCompared: Int)
@@ -38,15 +23,6 @@ data class HeartRateDrift(
 
 /** CV07. Minutes above resting heart rate + offset, out of the minutes that had a reading. */
 data class ActiveThresholdTime(val thresholdBpm: Double, val minutesAbove: Double, val recordedMinutes: Double)
-
-/** AR04. Mean heart rate awake and asleep, and the relative night-time fall. */
-data class SleepingDip(
-    val wakeMeanBpm: Double,
-    val sleepMeanBpm: Double,
-    val dipPercent: Double,
-    val wakeMinutes: Double,
-    val sleepMinutes: Double,
-)
 
 object CardioMetrics {
 
@@ -75,41 +51,13 @@ object CardioMetrics {
         return InterpretationStats.describe(values)
     }
 
-    /**
-     * CV04. Heart-rate recovery, `HRR60 = HR(end) − HR(end + 60 s)` and
-     * `HRR120 = HR(end) − HR(end + 120 s)` (Cole et al. 1999, N Engl J Med).
-     *
-     * Each of the three heart rates is the mean of the plausible readings within
-     * ±[toleranceSeconds] of its time point; the ±5 s smoothing is a calibration choice that
-     * damps optical noise. Null when no reading lies near the end or near 60 s.
-     *
-     * Cole 1999 measured recovery after a symptom-limited treadmill test with a prescribed
-     * cool-down in 2,428 adults referred for testing; its cut-off (12 bpm or less at one minute)
-     * belongs to that protocol and is deliberately not applied here. From free-living wrist data
-     * the value is evidence class C: compare it only with the person's own sessions that ended
-     * the same way.
-     *
-     * @param samples readings around the end of the exercise, [TimedHeartRate.seconds] counted
-     *   from the moment it stopped (negative before, positive after).
-     */
-    fun heartRateRecovery(samples: List<TimedHeartRate>, toleranceSeconds: Double = 5.0): HeartRateRecovery? {
-        require(toleranceSeconds >= 0.0) { "toleranceSeconds must be >= 0" }
-        val valid = samples.filter { it.seconds.isFinite() && plausible(it.bpm) }
-        fun at(target: Double): Double? =
-            Stats.mean(valid.filter { abs(it.seconds - target) <= toleranceSeconds }.map { it.bpm })
-
-        val end = at(0.0) ?: return null
-        val after60 = at(60.0) ?: return null
-        return HeartRateRecovery(
-            heartRateAtEnd = end,
-            hrr60 = end - after60,
-            hrr120 = at(120.0)?.let { end - it },
-            rejectedSamples = samples.size - valid.size,
-        )
-    }
+    // CV04 heart-rate recovery itself is strain/HeartRateRecovery.kt (per-minute peak minus the first and second
+    // full minute after the workout; Cole et al. 1999 cut-off deliberately not applied). The research's duplicate
+    // (±5 s smoothing of sub-minute samples) was removed; only the session comparison below is new.
 
     /**
-     * CV04 context: [currentHrr] minus the median of the last [sessions] comparable sessions
+     * CV04 context: [currentHrr] (a drop from [com.apex.athlete.core.analytics.strain.HeartRateRecovery], e.g.
+     * `dropAt60`) minus the median of the last [sessions] comparable sessions
      * (most recent last). The research asks for the last five; accepting three is a calibration
      * choice. "Comparable" (same activity, same way of stopping) is the caller's responsibility.
      */
@@ -213,47 +161,7 @@ object CardioMetrics {
         return ActiveThresholdTime(threshold, above, recorded)
     }
 
-    /** AR04 formula: `dip % = 100 · (HR_wake − HR_sleep) / HR_wake`. */
-    fun sleepingDipPercent(wakeMeanBpm: Double, sleepMeanBpm: Double): Double? {
-        if (!plausible(wakeMeanBpm) || !plausible(sleepMeanBpm)) return null
-        return 100.0 * (wakeMeanBpm - sleepMeanBpm) / wakeMeanBpm
-    }
-
-    /**
-     * AR04. Night-time fall of heart rate from duration-weighted means of the waking and the
-     * sleeping readings of one day.
-     *
-     * Evidence class C. "Dipping" is an established concept for ambulatory blood pressure; it
-     * has not been validated for wrist heart rate, so no blood-pressure cut-off (such as 10 %)
-     * may be applied or shown. The minimum coverage (6 h awake, 3 h asleep) is a calibration
-     * choice; below it the result is null rather than a mean of a few stray minutes.
-     */
-    fun sleepingDip(
-        wakeSamples: List<HeartRateSample>,
-        sleepSamples: List<HeartRateSample>,
-        minWakeMinutes: Double = 360.0,
-        minSleepMinutes: Double = 180.0,
-    ): SleepingDip? {
-        val (wakeMean, wakeMinutes) = weightedMean(wakeSamples) ?: return null
-        val (sleepMean, sleepMinutes) = weightedMean(sleepSamples) ?: return null
-        if (wakeMinutes < minWakeMinutes || sleepMinutes < minSleepMinutes) return null
-        return SleepingDip(
-            wakeMeanBpm = wakeMean,
-            sleepMeanBpm = sleepMean,
-            dipPercent = sleepingDipPercent(wakeMean, sleepMean) ?: return null,
-            wakeMinutes = wakeMinutes,
-            sleepMinutes = sleepMinutes,
-        )
-    }
-
-    private fun weightedMean(samples: List<HeartRateSample>): Pair<Double, Double>? {
-        var sum = 0.0
-        var minutes = 0.0
-        for (s in samples) {
-            if (s.durationMinutes <= 0.0 || !plausible(s.bpm)) continue
-            sum += s.bpm * s.durationMinutes
-            minutes += s.durationMinutes
-        }
-        return if (minutes > 0.0) sum / minutes to minutes else null
-    }
+    // AR04 sleeping heart-rate dip is sleep/HeartRateDip.kt (persisted as HR_DIP since formula version 4). The
+    // research's duplicate was removed; see docs/RESEARCH_GAP_MATRIX.md for its stricter coverage rule and its
+    // objection to the 10 % blood-pressure threshold, which HeartRateDip still uses as a labelled calibration.
 }

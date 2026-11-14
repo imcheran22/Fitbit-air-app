@@ -9,8 +9,14 @@ the pipeline is in `docs/RESEARCH_GAP_MATRIX.md`. Core scores and their formulas
 
 ## Versioning and rules
 
-- `RESEARCH_METRICS_VERSION = 1` (`InterpretationStats.kt`). The package is additive: it changes no
-  existing score, so `ANALYTICS_ALGORITHM_VERSION` (2) is untouched. Bump
+- `RESEARCH_METRICS_VERSION = 2` (`InterpretationStats.kt`). The package is additive: it changes no
+  existing score, so it does not by itself bump `ANALYTICS_ALGORITHM_VERSION` (now 5, for the sleep score).
+- Version 2 (D18): metrics the app already computes were removed here and their research golden vectors now run
+  against the app's engines: SL03 SRI (`sleep/SleepRegularityIndex`), CV04 heart-rate recovery
+  (`strain/HeartRateRecovery`), AR04 sleeping dip (`sleep/HeartRateDip`), AR01 weekly ln RMSSD
+  (`trend/WeeklyHrvStatusAnalyzer`), EX03 Foster week (`load/TrainingLoadEngine`). `shortfall` is now
+  `guidelineShortfall` (D17). `RobustBaseline.center`, `RobustBaselineSpecs.HRV_LN` and `SLEEPING_HEART_RATE` added for
+  `baseline/DualBaseline` (D16). Bump
   `RESEARCH_METRICS_VERSION` on any change of a formula or default constant below, and update this
   file and a golden-vector test in `core/analytics/src/test/.../research/`.
 - Version 1 includes three floating-point fixes found while writing the tests (identical decimal
@@ -61,6 +67,12 @@ Golden vectors for every function are in the matching `*Test.kt`; the research's
 | `SLEEP_TEMPERATURE_DELTA` | 0.1 C | RT07 (applied to the provider's nightly minus baseline delta) |
 | `SLEEP_DURATION` | 15 min | SL01 |
 | `STEPS` | 500 steps | PA01 |
+| `HRV_LN` | 0.05 ln units (about 5 %) | `DualBaseline` for HRV (calibration choice, same floor as the mean/SD HRV baseline; not in the research table) |
+| `SLEEPING_HEART_RATE` | 1.0 bpm | `DualBaseline` for sleeping HR (calibration choice; not in the research table) |
+
+`center(values, spec)` returns the median, MAD and scale without a reading to compare (for "usual (median) X").
+Rule (D16): the robust baseline serves anomaly / alert and multi-signal checks only; composite scores keep the
+mean/SD baseline of `BaselineEngine`.
 
 Other functions: `sameWeekdayDeviation` (baseline = the same weekday of the previous 8 weeks,
 at least 4 of them; research method 10 "weekday-adjusted baseline", needs about 8 weeks;
@@ -77,46 +89,41 @@ choice, a plausibility range and not a physiological limit.
 | ID | Function | Formula | Constants | Evidence and source |
 |---|---|---|---|---|
 | CV02 | `restingHeartRateVariability` | `CV = 100 SD / mean` of daily resting HR over 14 days | window 14 (research); minimum 10 valid days (calibration choice) | Class C. No study supports a CV threshold for a consumer device (research evidence gap). Descriptive only. |
-| CV04 | `heartRateRecovery` | `HRR60 = HR(end) - HR(end + 60 s)`, `HRR120` likewise | each HR = mean of plausible readings within +-5 s (calibration choice, damps optical noise) | Cole et al. 1999, N Engl J Med (2,428 adults referred for exercise testing, treadmill protocol with a defined cool-down). Its cut-off (12 bpm or less at 1 min) belongs to that protocol and is not applied. Class B protocol-controlled, C for free-living wrist data. T-CV04-a: 24 and 40. |
-| CV04 | `compareWithRecentSessions` | `HRR - median(previous HRR)` | last 5 comparable sessions, minimum 3 (calibration choice) | Research CV04 card. "Comparable" is the caller's job. |
+| CV04 | (app) `strain/HeartRateRecovery` | peak of the last 3 workout minutes minus the 1st / 2nd full minute after | removed here (D18); T-CV04-a runs against the app engine | Cole et al. 1999 cut-off not applied. |
+| CV04 | `compareWithRecentSessions` | `HRR - median(previous HRR)` (HRR from `strain/HeartRateRecovery`) | last 5 comparable sessions, minimum 3 (calibration choice) | Research CV04 card. "Comparable" is the caller's job. |
 | CV05 | `heartRateDriftPercent` / `heartRateDrift` | `100 (HR2 - HR1) / HR1`, halves split at the middle of the time span | minimum 20 min and 10 readings per half (calibration choices) | Class C: training practice, no validated threshold; heat, hydration, terrain, caffeine confound. 138 to 146 is +5.8 %. |
 | CV05 | `aerobicDecouplingPercent` | `100 (EF1 - EF2) / EF1`, `EF = speed / HR` | | Class C, same confounders; needs phone-GPS speed. |
 | CV07 | `minutesAboveActiveThreshold` | minutes with HR above resting HR + 20 bpm | offset 20 bpm: calibration choice, no clinical meaning | Class C. Optical HR cannot tell movement from posture, heat or stress. Null without a resting HR or readings, so 0 means "measured and never above". |
-| AR04 | `sleepingDipPercent` / `sleepingDip` | `100 (HR_wake - HR_sleep) / HR_wake`, duration-weighted means | at least 6 h awake and 3 h asleep coverage (calibration choice) | Class C. "Dipping" is an ambulatory blood-pressure concept, not validated for wrist HR; no BP cut-off (such as 10 %) is applied. |
+| AR04 | (app) `sleep/HeartRateDip` | `(daytime mean - sleeping mean) / daytime mean`, signed | removed here (D18); the research forbids applying the 10 % blood-pressure threshold to heart rate, which `HeartRateDip` still does as a labelled calibration (open finding, gap matrix) | Class C. |
 
 ## Autonomic (`AutonomicMetrics.kt`) - AR01, AR02
 
+AR01 itself (7-night ln RMSSD mean against the 60 nights before, at least 4 and 21, z on the ln scale) is the app's
+`trend/WeeklyHrvStatusAnalyzer` (formula version 3; SD floor 0.05). This object only derives what that engine does not
+report:
+
 ```
-L7   = mean(ln RMSSD) over the last 7 nights, at least 4 valid
-mu60, sigma60 = mean and sample SD of ln RMSSD over the 60 nights before those 7, at least 21 valid
-z    = (L7 - mu60) / sigma60            pct = 100 (e^(L7 - mu60) - 1)
-CV7  = 100 SD(ln RMSSD, 7 nights) / mean(ln RMSSD, 7 nights)
-SWC  = 0.5 sigma60                      status = below / within / above mu60 +- SWC
+SWC status = below / within / above, with |z| > 0.5 (SWC = 0.5 sigma60, z from the weekly status)
+pct        = 100 (weekAverage / baselineCenter - 1) = 100 (e^(L7 - mu60) - 1)
+CV7        = 100 SD(ln RMSSD, 7 nights) / mean(ln RMSSD, 7 nights), at least 4 nights
 ```
 
-- Evidence class B. Plews et al. 2012 (Eur J Appl Physiol), 2013 (Sports Med), 2014 (Int J Sports
-  Physiol Perform); Buchheit 2014 (Front Physiol). Validated in trained endurance athletes with
-  chest-strap or ECG recordings on waking. Fitbit's sleep-time RMSSD uses an undocumented algorithm
-  and no Fitbit-specific HRV validation exists. Device dependence of wearable HRV: Dial 2025 (not
-  Fitbit).
-- The weekly mean is used because a single night is too noisy (Plews 2012). CV on the ln scale is the
-  Plews convention (research AR01 formula).
-- Windows 7 and 60, minimums 4 and 21, SWC multiplier 0.5: conventions, calibration choices.
-- RMSSD readings outside 1-200 ms are dropped.
-- `z` is null when `sigma60` is zero. T-AR01-a..d: z -3.629, -17.2 %, CV7 1.42 on the hypothetical
-  baseline (ln-mean 3.9013, SD 0.05206).
-- A low value may reflect poor sleep, alcohol, a late meal, illness, travel or cycle phase; on its own it is
-  neither a recovery verdict nor a diagnosis.
+- Evidence class B. Plews et al. 2012, 2013, 2014; Buchheit 2014. Validated in trained endurance athletes with
+  chest-strap or ECG recordings on waking; Fitbit's sleep-time RMSSD uses an undocumented algorithm.
+- SWC multiplier 0.5 and the 4-night minimum: conventions, calibration choices.
+- T-AR01-a..d (z -3.629, -17.2 %, CV7 1.42 on the hypothetical baseline ln-mean 3.9013, SD 0.05206) run through
+  `WeeklyHrvStatusAnalyzer`; sigma 0.05206 is above its 0.05 floor, so the research's z is reproduced exactly.
+- A low value may reflect poor sleep, alcohol, a late meal, illness, travel or cycle phase; never a diagnosis.
 
-## Sleep (`SleepRegularity.kt`) - SL01, SL03, SL04, SL05, SL07, SL08, SL10
+## Sleep (`SleepRegularity.kt`) - SL01, SL04, SL05, SL07, SL08, SL10
 
 | ID | Function | Formula | Constants | Evidence and source |
 |---|---|---|---|---|
-| SL03 | `sleepRegularityIndex` | `SRI = -100 + 200 / (M (N-1)) sum_days sum_epochs delta(s[i][j], s[i+1][j])` over epoch pairs 24 h apart where both states are known | 1-minute epochs; at least 7 days and 5 day-pairs (calibration choice); 14-day window; noon-to-noon blocks; epoch asleep when at least half of it is asleep; manually edited and different-UTC-offset nights left out | Class B. Phillips et al. 2017 (Sci Rep; derived from diaries of 61 undergraduates); Windred et al. 2024 (Sleep; about 61,000 UK Biobank adults, one week of accelerometry, association with mortality). No individual cut-off; compare with the person's own history. Wrist devices miss quiet wakefulness, which inflates the index. Missing nights and naps are unknown, not awake. T-SL03-a/b: 100 and 66.67. |
+| SL03 | (app) `sleep/SleepRegularityIndex` | minute-level, noon-to-noon windows, naps count as sleep, uncovered windows skipped, at least 2 pairs | removed here (D18); T-SL03-b runs against the app engine | Phillips 2017; scores the sleep consistency part. |
 | SL04 / SL10 | `midpointMinuteOfDay`, `onsetMinuteOfDay`, `wakeMinuteOfDay`, `clockVariability` | midpoint = start + (end - start) / 2; mean and sample SD of a clock time laid out around its circular mean (correct across midnight) | at least 5 nights (calibration choice; pass 10 for a 14-night window); research asks for 7 and 14 nights | Class B. Roenneberg et al. 2012 (Curr Biol); Phillips et al. 2017. T-SL04-a: mean 205.7, SD 34.7 min. |
 | SL05 | `socialJetlag` | `(mean midpoint on free days - mean midpoint on work days) / 60` hours | at least 3 work and 2 free nights (calibration choice); `isWeekendWakeDay` is only the Monday-to-Friday fallback | Class B. Roenneberg et al. 2012: associated with BMI in a population survey; no individual cut-off. Not the chronotype-corrected MSFsc; must not be shown as a chronotype. T-SL05-a: 1.43 h. |
 | SL01 | `durationSummary` | mean, median, SD, CV of total sleep time; nights at or above 420 min | guideline 420 min (7 h); at least 5 of 7 nights (calibration choice); a night of 0 min is not a night | Class A for the guideline (Watson et al. 2015, AASM/SRS consensus; Hirshkowitz et al. 2015, NSF), B for the device (de Zambotti et al. 2018; Chinoy et al. 2021: wrist trackers agree only moderately with polysomnography and count quiet wakefulness as sleep). T-SL01-a. |
-| SL08 | `shortfall` | `clipped = sum max(0, target - TST)`, `signed = sum (target - TST)` | default target 420 min or the user's own; at least 5 nights (calibration choice) | Class C. Chronic restriction accumulates deficits (Van Dongen et al. 2003, Sleep; 48 healthy adults, 14 nights) but repayment is not established as linear. Worded "estimated shortfall against your target", never "debt owed". Missing nights add nothing, so a window with gaps understates; `meanClippedPerNight` is comparable across windows. T-SL08-a/b. |
+| SL08 | `guidelineShortfall` (secondary to the personal sleep debt, D17) | `clipped = sum max(0, target - TST)`, `signed = sum (target - TST)` | default target 420 min or the user's own; at least 5 nights (calibration choice) | Class C. Chronic restriction accumulates deficits (Van Dongen et al. 2003, Sleep; 48 healthy adults, 14 nights) but repayment is not established as linear. Worded "estimated shortfall against your target", never "debt owed". Missing nights add nothing, so a window with gaps understates; `meanClippedPerNight` is comparable across windows. T-SL08-a/b. |
 | SL07 | `wasoMinutes` | minutes scored AWAKE inside the sleep period (union of stretches) | null without stage data | Class B-C: WASO from wrist devices is less accurate than total sleep time. |
 | SL07 | `awakeningsPerHour` | `awakenings / (minutes asleep / 60)` | | Class B-C. The device's own segment count, not a clinical fragmentation index; trend only. T-SL07-a: 9 over 6.87 h gives 1.31. |
 
@@ -136,13 +143,13 @@ SWC  = 0.5 sigma60                      status = below / within / above mu60 +- 
 | PA07 | `hourlyStepProfile` | `H = -sum p_h ln p_h / ln n` over the n observed hours | | Class C, descriptive. |
 | BV02 | `targetAdherence` | share of valid days meeting a user-set target; current run | the target is the user's, never a silent 10,000 | Class C-B. |
 
-## Load (`LoadMetrics.kt`) - EX02, EX03, EX01
+## Load (`LoadMetrics.kt`) - EX02, EX01 (EX03 in the engine)
 
 | ID | Function | Formula | Evidence and source |
 |---|---|---|---|
 | EX02 | `edwardsTrimp` | `sum minutes in zone k times k`, zones at 50-60-70-80-90 % of maximum HR | Class B. Edwards 1993, The Heart Rate Monitor Book (coaching book; its peer-reviewed standing is as the HR criterion for session RPE: Foster et al. 2001, J Strength Cond Res). Integer weights are part of the method. Different scale from Banister TRIMP (`strain/Trimp.kt`); never mix in one series. T-EX02-c: 95. |
 | EX02 | `sessionRpeLoad` | `RPE (CR-10) x minutes` | Foster et al. 2001. The API carries no RPE; only exists when the user rates a session. |
-| EX03 | `fosterWeek` | `monotony = mean(daily load) / SD(daily load)`, `strain = weekly load x monotony` over 7 complete days | Class C-B. Foster 1998, Med Sci Sports Exerc 30:1164 (25 athletes; illness related to load, monotony and strain). "Monotony above 2" is a heuristic from that work, not validated for individuals; no threshold applied. All seven days must be known (a rest day is 0, a day without data is null and voids the week). Monotony is null when all days are equal. T-EX03-a: 1.1446 and 1831.3. |
+| EX03 | (app) `TrainingLoadEngine.monotony` / `fosterStrain` | Foster 1998 over the last 7 days, at least 6 recorded, monotony capped at 10 | removed here (D18); T-EX03-a runs against the engine | Class C-B. |
 | EX01 | `weeklyExerciseVolume` | sum of active minutes, sessions and distinct exercise days in 7 days | Class A descriptive. A zero week is a true zero only if the week has synced; the caller must know. |
 
 Banister TRIMP (T-EX02-a/b: 63.0 and 72.1) and the descriptive EWMA ACWR (T-EX04-a: 1.363) live in
@@ -233,7 +240,7 @@ Found by golden tests with decimal constants that are not exact in binary:
 | Function | Problem | Fix |
 |---|---|---|
 | `InterpretationStats.lag1Autocorrelation` | a constant series of 0.1s gave 0.917 (rounding residue divided by itself) | null when the squared deviation sum is below the rounding noise of the mean |
-| `LoadMetrics.fosterWeek` | seven identical loads of 33.3 gave monotony 4.3e15 | monotony null when SD is under 1e-9 of the mean |
-| `AutonomicMetrics.hrvTrend` | a flat baseline gave z of -7e13 | z null when sigma60 is under 1e-9 on the ln scale |
+| `LoadMetrics.fosterWeek` (removed in version 2) | seven identical loads of 33.3 gave monotony 4.3e15 | monotony null when SD is under 1e-9 of the mean |
+| `AutonomicMetrics.hrvTrend` (removed in version 2) | a flat baseline gave z of -7e13 | z null when sigma60 is under 1e-9 on the ln scale |
 
 These are tolerances for floating-point round-off, not physiological thresholds.

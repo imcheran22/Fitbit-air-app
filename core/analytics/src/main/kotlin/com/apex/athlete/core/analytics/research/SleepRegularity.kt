@@ -23,10 +23,10 @@ data class MinuteSpan(val startMinute: Long, val endMinute: Long) {
  * @property wakeEpochDay civil date of waking; a night belongs to the day it ended on.
  * @property period sleep period from onset to final waking.
  * @property awake stretches inside [period] scored AWAKE. Empty when the source gave no stages.
- * @property manuallyEdited the user edited the log; such nights are left out of the regularity
- *   index by default.
+ * @property manuallyEdited the user edited the log; callers should leave such nights out of
+ *   regularity metrics.
  * @property offsetDiffersFromUsual the night's UTC offset differs from the person's usual one
- *   (travel); see [DataQuality.daysWithUnusualOffset]. Left out of regularity metrics.
+ *   (travel); see [DataQuality.daysWithUnusualOffset]. Callers should leave it out of regularity metrics.
  */
 data class SleepNight(
     val wakeEpochDay: Long,
@@ -37,22 +37,6 @@ data class SleepNight(
 ) {
     val usableForRegularity: Boolean get() = !manuallyEdited && !offsetDiffersFromUsual
 }
-
-/**
- * SL03. Sleep Regularity Index.
- *
- * @property index −100 … +100; 100 means the same sleep/wake state at every pair of time points
- *   24 h apart, 0 is what chance would give.
- * @property validDays noon-to-noon days with a usable night.
- * @property validDayPairs consecutive valid days that could be compared.
- * @property comparedEpochs epoch pairs behind the index.
- */
-data class SleepRegularityIndex(
-    val index: Double,
-    val validDays: Int,
-    val validDayPairs: Int,
-    val comparedEpochs: Int,
-)
 
 /**
  * Spread of a clock time over several nights.
@@ -90,14 +74,17 @@ data class SleepDurationSummary(
 )
 
 /**
- * SL08. Estimated shortfall against the person's target; never "debt owed".
+ * SL08. Guideline sleep shortfall: estimated shortfall against the 7 h guideline or the user's own target;
+ * never "debt owed". Secondary to the personal sleep debt ([com.apex.athlete.core.analytics.sleep.SleepNeed.accumulatedDebtMinutes],
+ * which is primary, docs/DECISIONS.md D17); the two names must stay distinct in the UI ("sleep debt" vs
+ * "shortfall against 7 h").
  *
  * @property clippedMinutes Σ max(0, target − TST): nights above the target earn no credit.
  * @property signedMinutes Σ (target − TST): long nights offset short ones. Negative = surplus.
  * @property missingNights nights of the window without a reading. They add nothing to either
  *   sum, so with missing nights both sums understate a real shortfall.
  */
-data class SleepShortfall(
+data class GuidelineSleepShortfall(
     val targetMinutes: Double,
     val clippedMinutes: Double,
     val signedMinutes: Double,
@@ -111,131 +98,14 @@ data class SleepShortfall(
 object SleepRegularity {
 
     private const val DAY = 1440
-    private const val HALF_DAY = 720L
 
     /** Adult guideline minimum of 7 h per night (Watson et al. 2015, AASM/SRS consensus). */
     const val GUIDELINE_MINUTES = 420.0
 
-    // ---------------------------------------------------------------------------- SL03 SRI
-
-    /**
-     * SL03. Sleep Regularity Index (Phillips et al. 2017; mortality association in UK Biobank
-     * accelerometry: Windred et al. 2024):
-     *
-     *   SRI = −100 + 200 / (M · (N − 1)) · Σ_days Σ_epochs δ(s[i][j], s[i+1][j])
-     *
-     * where s is the sleep/wake state of epoch j on day i and δ is 1 when two states 24 h apart
-     * agree. With gaps the average runs over the epoch pairs whose two states are both known.
-     *
-     * Evidence class B. Phillips 2017 derived it from sleep diaries of 61 undergraduates;
-     * Windred 2024 from a week of research accelerometry in about 61,000 adults. There is no
-     * individual cut-off: show it against the person's own history only. Wrist-device sleep
-     * detection misses quiet wakefulness, which inflates the index.
-     *
-     * @param statesByDay one entry per consecutive day, each a list of equally many epochs:
-     *   true = asleep, false = awake, null = unknown. A null day is a missing day. Missing is
-     *   never treated as awake.
-     * @param minValidDays the index needs at least a week of days (research); 7 by default.
-     * @param minValidDayPairs consecutive-day pairs required; 5 is a calibration choice.
-     */
-    fun sleepRegularityIndex(
-        statesByDay: List<List<Boolean?>?>,
-        minValidDays: Int = 7,
-        minValidDayPairs: Int = 5,
-    ): SleepRegularityIndex? {
-        val epochs = statesByDay.firstNotNullOfOrNull { it }?.size ?: return null
-        require(statesByDay.all { it == null || it.size == epochs }) { "every day needs the same number of epochs" }
-
-        var matches = 0
-        var compared = 0
-        var pairs = 0
-        for (d in 0 until statesByDay.size - 1) {
-            val a = statesByDay[d] ?: continue
-            val b = statesByDay[d + 1] ?: continue
-            var comparedHere = 0
-            for (e in 0 until epochs) {
-                val sa = a[e] ?: continue
-                val sb = b[e] ?: continue
-                comparedHere++
-                if (sa == sb) matches++
-            }
-            if (comparedHere > 0) pairs++
-            compared += comparedHere
-        }
-        val validDays = statesByDay.count { it != null }
-        if (validDays < minValidDays || pairs < minValidDayPairs || compared == 0) return null
-        return SleepRegularityIndex(
-            index = -100.0 + 200.0 * matches / compared,
-            validDays = validDays,
-            validDayPairs = pairs,
-            comparedEpochs = compared,
-        )
-    }
-
-    /**
-     * SL03 from recorded nights. Each wake date owns the 24 hours from noon the day before to
-     * noon of that date, so a night sits inside one block and a missing night makes exactly one
-     * block unknown. Inside a block with a usable night, an epoch is asleep when at least half
-     * of it lies in the sleep period outside the AWAKE stretches, and awake otherwise. Epochs
-     * touched by a nap are unknown (the research treats naps as missing, not as awake or asleep).
-     *
-     * Blocks without a usable night stay unknown: the tracker may have been off the wrist, and
-     * "no sleep recorded" is not "awake all night". A source of error that remains: a main sleep
-     * that crosses noon is split over two blocks.
-     *
-     * @param lastWakeDay last wake date of the window (normally today, once last night is in).
-     * @param windowDays wake dates in the window; 14 follows the research's insight rule.
-     * @param epochMinutes epoch length; must divide 1440. One minute matches the stage data.
-     */
-    fun sleepRegularityIndex(
-        nights: List<SleepNight>,
-        lastWakeDay: Long,
-        windowDays: Int = 14,
-        epochMinutes: Int = 1,
-        naps: List<MinuteSpan> = emptyList(),
-        minValidDays: Int = 7,
-        minValidDayPairs: Int = 5,
-    ): SleepRegularityIndex? {
-        require(windowDays >= 2) { "windowDays must be >= 2" }
-        require(epochMinutes in 1..DAY && DAY % epochMinutes == 0) { "epochMinutes must divide 1440" }
-
-        val usable = nights.filter { it.usableForRegularity }
-        val wakeDays = usable.map { it.wakeEpochDay }.toSet()
-        val asleepSpans = usable.flatMap(::asleepSpans)
-        val firstDay = lastWakeDay - windowDays + 1
-
-        val states = (firstDay..lastWakeDay).map { day ->
-            if (day !in wakeDays) return@map null
-            val blockStart = day * DAY - HALF_DAY
-            val asleep = BooleanArray(DAY)
-            val unknown = BooleanArray(DAY)
-            mark(asleep, asleepSpans, blockStart)
-            mark(unknown, naps, blockStart)
-            List(DAY / epochMinutes) { e ->
-                val from = e * epochMinutes
-                var asleepMinutes = 0
-                var isUnknown = false
-                for (m in from until from + epochMinutes) {
-                    if (unknown[m]) isUnknown = true
-                    if (asleep[m]) asleepMinutes++
-                }
-                if (isUnknown) null else asleepMinutes * 2 >= epochMinutes
-            }
-        }
-        return sleepRegularityIndex(states, minValidDays, minValidDayPairs)
-    }
-
-    private fun mark(target: BooleanArray, spans: List<MinuteSpan>, blockStart: Long) {
-        for (s in spans) {
-            val from = maxOf(s.startMinute, blockStart)
-            val until = minOf(s.endMinute, blockStart + DAY)
-            var m = from
-            while (m < until) {
-                target[(m - blockStart).toInt()] = true
-                m++
-            }
-        }
-    }
+    // ------------------------------------------------------------------- SL03 (not here)
+    // The Sleep Regularity Index lives in sleep/SleepRegularityIndex.kt (formula version 3) and scores the sleep score's
+    // consistency part. The research's own SRI variant (14 windows, naps unknown, AWAKE stages removed) was removed here
+    // as a duplicate; the convention differences are listed in docs/RESEARCH_GAP_MATRIX.md.
 
     /** The sleep period with its AWAKE stretches removed. */
     private fun asleepSpans(night: SleepNight): List<MinuteSpan> {
@@ -274,6 +144,10 @@ object SleepRegularity {
      * and the ordinary mean and SD are then taken; for nights that do not straddle midnight this
      * equals the plain arithmetic result. The research computes the spread over 7 and 14 nights;
      * the 5-night minimum is a calibration choice (pass 10 for a 14-night window).
+     *
+     * Bedtime and wake-time spread for display already exist as the circular SD in
+     * [com.apex.athlete.core.analytics.sleep.SleepScoreResult.onsetStdDevMinutes] / `wakeStdDevMinutes`; use this
+     * function for the sleep midpoint (SL04) so one screen never shows two definitions of the same spread.
      *
      * @param minutesOfDay one clock time per night, minutes after midnight.
      */
@@ -376,15 +250,15 @@ object SleepRegularity {
      * Missing nights are skipped, never counted as zero sleep and never filled with the target.
      * Requiring 5 nights is a calibration choice.
      */
-    fun shortfall(
+    fun guidelineShortfall(
         tstMinutes: List<Double?>,
         targetMinutes: Double = GUIDELINE_MINUTES,
         minNights: Int = 5,
-    ): SleepShortfall? {
+    ): GuidelineSleepShortfall? {
         require(targetMinutes > 0.0) { "targetMinutes must be > 0" }
         val valid = tstMinutes.filterNotNull().filter { it.isFinite() && it > 0.0 }
         if (valid.size < maxOf(minNights, 1)) return null
-        return SleepShortfall(
+        return GuidelineSleepShortfall(
             targetMinutes = targetMinutes,
             clippedMinutes = valid.sumOf { maxOf(0.0, targetMinutes - it) },
             signedMinutes = valid.sumOf { targetMinutes - it },

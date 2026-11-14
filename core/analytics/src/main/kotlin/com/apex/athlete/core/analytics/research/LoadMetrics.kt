@@ -1,23 +1,6 @@
 package com.apex.athlete.core.analytics.research
 
-import com.apex.athlete.core.analytics.load.DailyLoad
-import com.apex.athlete.core.analytics.stats.Stats
 import com.apex.athlete.core.analytics.strain.HeartRateZone
-
-/**
- * EX03. One complete week of daily load.
- *
- * @property monotony mean daily load / SD of daily load. Null when every day carried the same
- *   load (the ratio is undefined) or the week had no load at all.
- * @property strain weekly load × monotony; null whenever [monotony] is.
- */
-data class FosterWeek(
-    val weeklyLoad: Double,
-    val meanDailyLoad: Double,
-    val sdDailyLoad: Double,
-    val monotony: Double?,
-    val strain: Double?,
-)
 
 /** One logged exercise session, reduced to what weekly volume needs. */
 data class ExerciseSessionSummary(val epochDay: Long, val activeMinutes: Double)
@@ -28,9 +11,6 @@ data class WeeklyExerciseVolume(val activeMinutes: Double, val sessions: Int, va
 object LoadMetrics {
 
     private const val WEEK = 7
-
-    /** Relative SD below which daily loads count as identical. Floating-point tolerance, not physiology. */
-    private const val RELATIVE_SD_EPSILON = 1e-9
 
     /**
      * EX02. Edwards' summated heart-rate-zone score:
@@ -68,6 +48,9 @@ object LoadMetrics {
      * Session-RPE load, `RPE (CR-10) × minutes` (Foster et al. 2001). A 6 held for 40 minutes is
      * 240 AU. The API carries no RPE, so this only exists when the user rates a session. Null
      * for a rating outside 0–10 or a non-positive duration.
+     *
+     * Not wired into load: whether manual-workout RPE feeds load is an open owner decision (docs/FORMULAS.md
+     * section 5, "Open point: manual workouts and session-RPE"); the app's rating is 1–10, not CR-10 0–10.
      */
     fun sessionRpeLoad(rpe: Double?, minutes: Double?): Double? {
         if (rpe == null || minutes == null) return null
@@ -75,43 +58,10 @@ object LoadMetrics {
         return rpe * minutes
     }
 
-    /**
-     * EX03. Foster's training monotony and strain for one week (Foster 1998):
-     *
-     *   monotony = mean(daily load) / SD(daily load)        strain = weekly load · monotony
-     *
-     * Daily loads `[300, 0, 450, 200, 0, 500, 150]` give monotony 1.1446 and strain 1831.3.
-     * Foster 1998 followed 25 competitive athletes and related high monotony and strain to
-     * illness; the often-quoted "monotony above 2" is a heuristic from that work and has not
-     * been validated for predicting injury or illness in an individual, so no threshold is
-     * applied. Evidence class C–B; descriptive.
-     *
-     * This is the strict form: all seven days must be known. A rest day is a load of 0 and
-     * belongs in the week; a day without data is null and makes the week incomplete, because
-     * dropping it or reading it as rest would both change the ratio. (The `TrainingLoadEngine`
-     * reports the same quantities inside its daily result, tolerating one missing day and
-     * capping monotony at 10; the two agree on a complete week with varied loads.)
-     *
-     * @param dailyLoads seven daily loads on one scale (Banister TRIMP, Edwards TRIMP or session
-     *   RPE), oldest first.
-     */
-    fun fosterWeek(dailyLoads: List<Double?>): FosterWeek? {
-        if (dailyLoads.size != WEEK) return null
-        val loads = dailyLoads.map { it ?: return null }
-        if (loads.any { !it.isFinite() || it < 0.0 }) return null
-        val mean = Stats.mean(loads)!!
-        val sd = Stats.sampleStdDev(loads)!!
-        // A week of identical loads has an SD of rounding residue (about 1e-14), not zero.
-        val monotony = if (sd > RELATIVE_SD_EPSILON * maxOf(1.0, mean) && mean > 0.0) mean / sd else null
-        val total = loads.sum()
-        return FosterWeek(total, mean, sd, monotony, monotony?.let { total * it })
-    }
-
-    /** [fosterWeek] for the seven days ending on [weekEndDay] of a dated TRIMP history. */
-    fun fosterWeek(history: List<DailyLoad>, weekEndDay: Long): FosterWeek? {
-        val byDay = history.associateBy({ it.epochDay }, { it.trimp })
-        return fosterWeek(((weekEndDay - WEEK + 1)..weekEndDay).map { byDay[it] })
-    }
+    // EX03 Foster monotony and strain are reported by load/TrainingLoadEngine (monotony, fosterStrain: last 7 days,
+    // at least 6 recorded, monotony capped at 10 when the loads barely vary). The research's strict duplicate
+    // (all seven days known, undefined for identical loads) was removed; the research vector T-EX03-a is checked
+    // against the engine in LoadMetricsTest.
 
     /**
      * Weekly exercise volume and frequency: the sum of active minutes, the number of sessions

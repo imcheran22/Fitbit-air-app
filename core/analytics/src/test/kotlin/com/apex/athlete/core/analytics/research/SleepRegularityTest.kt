@@ -8,7 +8,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** SL01, SL03, SL04, SL05, SL07, SL08, SL10 against the research's worked examples. */
+/** SL01, SL04, SL05, SL07, SL08, SL10 against the research's worked examples. */
 class SleepRegularityTest {
 
     private val eps = 1e-9
@@ -30,7 +30,6 @@ class SleepRegularityTest {
         offsetDiffersFromUsual = offsetDiffers,
     )
 
-    private fun fortnight(skip: Set<Long> = emptySet()) = (87L..100L).filter { it !in skip }.map { night(it) }
 
     // --------------------------------------------------------------------------- MinuteSpan
 
@@ -40,143 +39,8 @@ class SleepRegularityTest {
         assertEquals(30L, MinuteSpan(10, 40).minutes)
     }
 
-    // ------------------------------------------------------------- SL03 on epoch state arrays
-
-    @Test
-    fun `T-SL03-a a perfectly regular schedule scores 100`() {
-        val day = List(24) { it < 8 }
-        val r = SleepRegularity.sleepRegularityIndex(List(7) { day })!!
-        assertEquals(100.0, r.index, eps)
-        assertEquals(7, r.validDays)
-        assertEquals(6, r.validDayPairs)
-        assertEquals(6 * 24, r.comparedEpochs)
-    }
-
-    @Test
-    fun `T-SL03-b a schedule alternating by two hours scores 66_67`() {
-        val days = (0 until 7).map { d ->
-            val shift = if (d % 2 == 0) 0 else 2
-            List(24) { e -> e >= 23 - shift || e < 7 - shift }
-        }
-        assertEquals(66.67, SleepRegularity.sleepRegularityIndex(days)!!.index, 0.005)
-    }
-
-    @Test
-    fun `opposite states every day score minus 100`() {
-        val days = (0 until 7).map { d -> List(24) { d % 2 == 0 } }
-        assertEquals(-100.0, SleepRegularity.sleepRegularityIndex(days)!!.index, eps)
-    }
-
-    @Test
-    fun `fewer than seven days is not enough`() {
-        assertNull(SleepRegularity.sleepRegularityIndex(List(6) { List(24) { e -> e < 8 } }))
-    }
-
-    @Test
-    fun `missing days are neither asleep nor awake and reduce the pairs`() {
-        val day: List<Boolean?> = List(24) { it < 8 }
-        val oneGap = List(8) { if (it == 3) null else day }
-        val r = SleepRegularity.sleepRegularityIndex(oneGap)!!
-        assertEquals(100.0, r.index, eps)
-        assertEquals(7, r.validDays)
-        assertEquals(5, r.validDayPairs)
-
-        val twoGaps = List(8) { if (it == 3 || it == 4) null else day }
-        assertNull(SleepRegularity.sleepRegularityIndex(twoGaps))
-    }
-
-    @Test
-    fun `unknown epochs inside a day are left out of the comparison`() {
-        val full: List<Boolean?> = List(24) { it < 8 }
-        val holey: List<Boolean?> = List(24) { if (it in 10..13) null else it < 8 }
-        val r = SleepRegularity.sleepRegularityIndex(List(8) { if (it % 2 == 0) full else holey })!!
-        assertEquals(100.0, r.index, eps)
-        assertEquals(7 * 20, r.comparedEpochs)
-    }
-
-    @Test
-    fun `no data at all or ragged days`() {
-        assertNull(SleepRegularity.sleepRegularityIndex(List(10) { null }))
-        assertNull(SleepRegularity.sleepRegularityIndex(emptyList()))
-        assertFailsWith<IllegalArgumentException> {
-            SleepRegularity.sleepRegularityIndex(listOf(List(24) { true }, List(23) { true }))
-        }
-    }
-
-    // ---------------------------------------------------------------- SL03 from recorded nights
-
-    @Test
-    fun `identical nights over two weeks score 100`() {
-        val r = SleepRegularity.sleepRegularityIndex(fortnight(), lastWakeDay = 100)!!
-        assertEquals(100.0, r.index, eps)
-        assertEquals(14, r.validDays)
-        assertEquals(13, r.validDayPairs)
-        assertEquals(13 * 1440, r.comparedEpochs)
-    }
-
-    @Test
-    fun `a week of nights is the minimum`() {
-        assertNull(SleepRegularity.sleepRegularityIndex((95L..100L).map { night(it) }, lastWakeDay = 100))
-        assertEquals(
-            100.0,
-            SleepRegularity.sleepRegularityIndex((94L..100L).map { night(it) }, lastWakeDay = 100)!!.index,
-            eps,
-        )
-    }
-
-    @Test
-    fun `a missing night is unknown not awake`() {
-        val r = SleepRegularity.sleepRegularityIndex(fortnight(skip = setOf(94L)), lastWakeDay = 100)!!
-        assertEquals(100.0, r.index, eps)
-        assertEquals(13, r.validDays)
-        assertEquals(11, r.validDayPairs)
-    }
-
-    @Test
-    fun `manually edited and travel nights are left out`() {
-        val nights = fortnight(skip = setOf(94L, 95L)) + night(94, edited = true) + night(95, offsetDiffers = true)
-        val r = SleepRegularity.sleepRegularityIndex(nights, lastWakeDay = 100)!!
-        assertEquals(12, r.validDays)
-    }
-
-    @Test
-    fun `awake minutes inside one night lower the index by the mismatching epochs`() {
-        val awake = listOf(MinuteSpan(94 * 1440L + 180, 94 * 1440L + 210))
-        val nights = fortnight(skip = setOf(94L)) + night(94, awake = awake)
-        val r = SleepRegularity.sleepRegularityIndex(nights, lastWakeDay = 100)!!
-        // 30 awake minutes disagree with the nights on both sides of it.
-        assertEquals(-100.0 + 200.0 * (13 * 1440 - 60) / (13 * 1440), r.index, 1e-9)
-        assertEquals(99.359, r.index, 1e-3)
-    }
-
-    @Test
-    fun `a nap makes its epochs unknown instead of awake`() {
-        val nap = MinuteSpan(94 * 1440L + 720, 94 * 1440L + 780)
-        val r = SleepRegularity.sleepRegularityIndex(fortnight(), lastWakeDay = 100, naps = listOf(nap))!!
-        assertEquals(100.0, r.index, eps)
-        assertEquals(13 * 1440 - 120, r.comparedEpochs)
-    }
-
-    @Test
-    fun `coarser epochs are supported`() {
-        val r = SleepRegularity.sleepRegularityIndex(fortnight(), lastWakeDay = 100, epochMinutes = 60)!!
-        assertEquals(100.0, r.index, eps)
-        assertEquals(13 * 24, r.comparedEpochs)
-    }
-
-    @Test
-    fun `an epoch is asleep when at least half of it is`() {
-        // 30 minutes awake inside a one-hour epoch: still half asleep, so no mismatch.
-        val awake = listOf(MinuteSpan(94 * 1440L + 180, 94 * 1440L + 210))
-        val nights = fortnight(skip = setOf(94L)) + night(94, awake = awake)
-        assertEquals(100.0, SleepRegularity.sleepRegularityIndex(nights, lastWakeDay = 100, epochMinutes = 60)!!.index, eps)
-    }
-
-    @Test
-    fun `invalid window or epoch length`() {
-        assertFailsWith<IllegalArgumentException> { SleepRegularity.sleepRegularityIndex(fortnight(), 100, windowDays = 1) }
-        assertFailsWith<IllegalArgumentException> { SleepRegularity.sleepRegularityIndex(fortnight(), 100, epochMinutes = 7) }
-    }
+    // SL03 (Sleep Regularity Index) is tested against the app's own engine in ../SleepRegularityTest.kt;
+    // the research's duplicate SRI implementation was removed (docs/RESEARCH_GAP_MATRIX.md).
 
     @Test
     fun `usable for regularity follows the flags`() {
@@ -324,8 +188,8 @@ class SleepRegularityTest {
     }
 
     @Test
-    fun `T-SL08-a shortfall against a 450 minute target`() {
-        val s = SleepRegularity.shortfall(sl01, targetMinutes = 450.0)!!
+    fun `T-SL08-a guideline shortfall against a 450 minute target`() {
+        val s = SleepRegularity.guidelineShortfall(sl01, targetMinutes = 450.0)!!
         assertEquals(300.0, s.clippedMinutes, eps)
         assertEquals(250.0, s.signedMinutes, eps)
         assertEquals(7, s.validNights)
@@ -333,8 +197,8 @@ class SleepRegularityTest {
     }
 
     @Test
-    fun `T-SL08-b shortfall against the 420 minute guideline`() {
-        val s = SleepRegularity.shortfall(sl01)!!
+    fun `T-SL08-b guideline shortfall against the 420 minute guideline`() {
+        val s = SleepRegularity.guidelineShortfall(sl01)!!
         assertEquals(420.0, s.targetMinutes, eps)
         assertEquals(180.0, s.clippedMinutes, eps)
         assertEquals(40.0, s.signedMinutes, eps)
@@ -342,16 +206,16 @@ class SleepRegularityTest {
 
     @Test
     fun `shortfall skips missing nights and says how many`() {
-        val s = SleepRegularity.shortfall(listOf(400.0, null, 380.0, 470.0, 450.0, 300.0, null), 450.0)!!
+        val s = SleepRegularity.guidelineShortfall(listOf(400.0, null, 380.0, 470.0, 450.0, 300.0, null), 450.0)!!
         assertEquals(5, s.validNights)
         assertEquals(2, s.missingNights)
         assertEquals(50.0 + 70.0 + 0.0 + 0.0 + 150.0, s.clippedMinutes, eps)
-        assertNull(SleepRegularity.shortfall(listOf(400.0, null, 380.0, null, 450.0, 300.0, null)))
+        assertNull(SleepRegularity.guidelineShortfall(listOf(400.0, null, 380.0, null, 450.0, 300.0, null)))
     }
 
     @Test
     fun `shortfall needs a positive target`() {
-        assertFailsWith<IllegalArgumentException> { SleepRegularity.shortfall(sl01, 0.0) }
+        assertFailsWith<IllegalArgumentException> { SleepRegularity.guidelineShortfall(sl01, 0.0) }
     }
 
     // --------------------------------------------------------------------------- SL07

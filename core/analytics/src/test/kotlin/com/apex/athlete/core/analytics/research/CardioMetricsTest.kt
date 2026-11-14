@@ -1,7 +1,11 @@
 package com.apex.athlete.core.analytics.research
 
 import com.apex.athlete.core.analytics.baseline.DailyValue
+import com.apex.athlete.core.analytics.sleep.HeartRateDip
+import com.apex.athlete.core.analytics.strain.HeartRateRecovery
+import com.apex.athlete.core.analytics.strain.HeartRateRecoveryInput
 import com.apex.athlete.core.analytics.strain.HeartRateSample
+import com.apex.athlete.core.analytics.stress.MinuteHeartRate
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -50,32 +54,17 @@ class CardioMetricsTest {
     // ------------------------------------------------------------------------------- CV04
 
     @Test
-    fun `T-CV04-a heart rate recovery`() {
-        val r = CardioMetrics.heartRateRecovery(hr(-30.0 to 150.0, 0.0 to 152.0, 60.0 to 128.0, 120.0 to 112.0))!!
-        assertEquals(152.0, r.heartRateAtEnd, eps)
-        assertEquals(24.0, r.hrr60, eps)
-        assertEquals(40.0, r.hrr120!!, eps)
-        assertEquals(0, r.rejectedSamples)
-    }
-
-    @Test
-    fun `heart rate recovery smooths within the tolerance and counts rejected readings`() {
-        val r = CardioMetrics.heartRateRecovery(
-            hr(-3.0 to 151.0, 3.0 to 153.0, 58.0 to 127.0, 62.0 to 129.0, 0.0 to 400.0, 60.0 to 10.0, 90.0 to 120.0),
-        )!!
-        assertEquals(152.0, r.heartRateAtEnd, eps)
-        assertEquals(24.0, r.hrr60, eps)
-        assertNull(r.hrr120)
-        assertEquals(2, r.rejectedSamples)
-    }
-
-    @Test
-    fun `heart rate recovery without a reading near the end or near 60 s is unknown`() {
-        assertNull(CardioMetrics.heartRateRecovery(hr(60.0 to 128.0)))
-        assertNull(CardioMetrics.heartRateRecovery(hr(0.0 to 152.0, 30.0 to 140.0)))
-        assertNull(CardioMetrics.heartRateRecovery(hr(0.0 to 152.0, 70.0 to 120.0)))
-        assertNull(CardioMetrics.heartRateRecovery(emptyList()))
-        assertFailsWith<IllegalArgumentException> { CardioMetrics.heartRateRecovery(emptyList(), -1.0) }
+    fun `T-CV04-a research vector through the app's own heart-rate recovery`() {
+        // The research's duplicate HRR was removed; its golden vector (end 152, +60 s 128, +120 s 112 -> 24 and 40 bpm)
+        // is checked against strain/HeartRateRecovery with minute means equal to the point values. That engine takes
+        // the peak of the last three workout minutes (150, 151, 152) and the first two full minutes after the end.
+        val end = 1_000L
+        val minutes = listOf(end - 3 to 150.0, end - 2 to 151.0, end - 1 to 152.0, end to 128.0, end + 1 to 112.0)
+            .map { (m, bpm) -> MinuteHeartRate(m, bpm) }
+        val r = HeartRateRecovery.compute(HeartRateRecoveryInput(workoutEndMinuteExclusive = end, heartRate = minutes))
+        assertEquals(152.0, r.peakBpm!!, eps)
+        assertEquals(24.0, r.dropAt60!!, eps)
+        assertEquals(40.0, r.dropAt120!!, eps)
     }
 
     @Test
@@ -168,32 +157,10 @@ class CardioMetricsTest {
     // ------------------------------------------------------------------------------- AR04
 
     @Test
-    fun `AR04 dip formula`() {
-        assertEquals(20.0, CardioMetrics.sleepingDipPercent(75.0, 60.0)!!, eps)
-        assertEquals(-10.0, CardioMetrics.sleepingDipPercent(60.0, 66.0)!!, eps)
-        assertNull(CardioMetrics.sleepingDipPercent(0.0, 60.0))
-        assertNull(CardioMetrics.sleepingDipPercent(75.0, 300.0))
-    }
-
-    @Test
-    fun `AR04 uses duration weighted means with minimum coverage`() {
-        val wake = listOf(HeartRateSample(80.0, 300.0), HeartRateSample(70.0, 100.0))
-        val sleep = listOf(HeartRateSample(55.0, 100.0), HeartRateSample(61.0, 100.0))
-        val d = CardioMetrics.sleepingDip(wake, sleep)!!
-        assertEquals(77.5, d.wakeMeanBpm, eps)
-        assertEquals(58.0, d.sleepMeanBpm, eps)
-        assertEquals(100.0 * 19.5 / 77.5, d.dipPercent, 1e-9)
-        assertEquals(400.0, d.wakeMinutes, eps)
-        assertEquals(200.0, d.sleepMinutes, eps)
-    }
-
-    @Test
-    fun `AR04 is unknown when coverage is thin or a side is empty`() {
-        val wake = listOf(HeartRateSample(80.0, 400.0))
-        val sleep = listOf(HeartRateSample(58.0, 200.0))
-        assertNull(CardioMetrics.sleepingDip(listOf(HeartRateSample(80.0, 300.0)), sleep))
-        assertNull(CardioMetrics.sleepingDip(wake, listOf(HeartRateSample(58.0, 100.0))))
-        assertNull(CardioMetrics.sleepingDip(wake, emptyList()))
-        assertNull(CardioMetrics.sleepingDip(emptyList(), sleep))
+    fun `AR04 research vectors through the app's own heart-rate dip`() {
+        // The research's duplicate dip was removed; its formula vectors hold for sleep/HeartRateDip (fraction, not %).
+        assertEquals(0.20, HeartRateDip.compute(75.0, 60.0).dipFraction!!, eps)
+        assertEquals(-0.10, HeartRateDip.compute(60.0, 66.0).dipFraction!!, eps)
+        assertNull(HeartRateDip.compute(0.0, 60.0).dipFraction)
     }
 }

@@ -26,5 +26,10 @@ package com.apex.athlete.core.analytics
  *   stress (day aggregate, mean level, minutes per band), sleeping heart-rate dip. Computed on read and not
  *   stored: energy bank, post-workout heart-rate recovery, journal effects, VO2 max category, fitness age.
  *   No existing formula changed; the bump makes older derived history replay so every day carries the new rows.
+ * - 5: sleep score recalibrated (docs/FORMULAS.md section 4, docs/DECISIONS.md D15): five parts, duration 0.35
+ *   (0 at target - 225 min), restoration 0.25 (new: sleeping HR and ln RMSSD z against personal mean/SD baselines,
+ *   breathing-rate penalty), stage quality 0.15 (against the personal usual), efficiency 0.15 (65/85/95 anchors),
+ *   consistency 0.10 (Sleep Regularity Index); availableWeight and confidence; recovery takes the behavioural sleep
+ *   score so overnight HRV / heart rate / breathing rate are not counted twice. Stored sleep and recovery scores replay.
  */
-const val ANALYTICS_ALGORITHM_VERSION: Int = 4
+const val ANALYTICS_ALGORITHM_VERSION: Int = 5

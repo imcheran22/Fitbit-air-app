@@ -1,119 +1,81 @@
 package com.apex.athlete.core.analytics.research
 
 import com.apex.athlete.core.analytics.baseline.DailyValue
+import com.apex.athlete.core.analytics.trend.WeeklyHrvState
+import com.apex.athlete.core.analytics.trend.WeeklyHrvStatusAnalyzer
 import kotlin.math.exp
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
-/** T-AR01-a..d: a 60-night baseline with ln-mean 3.9013 and SD 0.05206. */
+/**
+ * T-AR01-a..d: a 60-night baseline with ln-mean 3.9013 and SD 0.05206 (above the analyzer's 0.05 floor, so the
+ * research's z and the app's weekly-status z are identical). The research's duplicate weekly calculation was removed;
+ * its golden vectors now run through [WeeklyHrvStatusAnalyzer], the app's single implementation.
+ */
 class AutonomicMetricsTest {
 
     private val eps = 1e-3
     private val mu = 3.9013
     private val sigma = 0.05206
 
-    /** [n] nights whose ln RMSSD has mean [mu] and sample SD [sigma] exactly. */
-    private fun baseline(n: Int = 60): List<Double> {
+    /** Days 1..[n] whose ln RMSSD has mean [mu] and sample SD [sigma] exactly. */
+    private fun baseline(n: Int = 60): List<DailyValue> {
         val d = sigma * sqrt((n - 1.0) / n)
-        return List(n) { exp(if (it % 2 == 0) mu + d else mu - d) }
+        return List(n) { DailyValue(61L - n + it, exp(if (it % 2 == 0) mu + d else mu - d)) }
     }
+
+    private fun week(values: List<Double>) = values.mapIndexed { i, v -> DailyValue(61L + i, v) } // days 61..67
 
     private val low = listOf(41.0, 43.0, 39.0, 44.0, 42.0, 40.0, 38.0)
     private val normal = listOf(50.0, 49.0, 52.0, 48.0, 51.0, 50.0, 47.0)
 
     @Test
     fun `T-AR01-a a low week`() {
-        val t = AutonomicMetrics.hrvTrend(low, baseline())!!
-        assertEquals(3.7124, t.lnMean7, 1e-4)
-        assertEquals(mu, t.lnBaselineMean, 1e-9)
-        assertEquals(sigma, t.lnBaselineSd, 1e-9)
-        assertEquals(-3.629, t.z!!, eps)
-        assertEquals(-17.2, t.percentFromBaseline, 0.05)
-        assertEquals(1.42, t.cv7LnPercent!!, 0.005)
-        assertEquals(7, t.validNights7)
-        assertEquals(60, t.validBaselineNights)
-        assertEquals(0.5 * sigma, t.swcLn, 1e-9)
-        assertEquals(SwcStatus.BELOW_BAND, t.swcStatus)
+        val history = baseline() + week(low)
+        val s = WeeklyHrvStatusAnalyzer.analyze(history, asOfDay = 67)
+        assertEquals(-3.629, s.zScore!!, eps)
+        assertEquals(exp(3.7124), s.weekAverage!!, 0.01)
+        assertEquals(exp(mu), s.baselineCenter!!, 1e-9)
+        assertEquals(7, s.weekNights)
+        assertEquals(60, s.baselineNights)
+        assertEquals(WeeklyHrvState.MARKEDLY_BELOW, s.state)
+        assertEquals(-17.2, AutonomicMetrics.percentFromBaseline(s)!!, 0.05)
+        assertEquals(SwcStatus.BELOW_BAND, AutonomicMetrics.swcStatus(s))
+        assertEquals(1.42, AutonomicMetrics.cv7LnPercent(history, 67)!!, 0.005)
     }
 
     @Test
     fun `T-AR01-b a normal week`() {
-        val t = AutonomicMetrics.hrvTrend(normal, baseline())!!
-        assertEquals(0.030, t.z!!, eps)
-        assertEquals(0.16, t.percentFromBaseline, 0.005)
-        assertEquals(SwcStatus.WITHIN_BAND, t.swcStatus)
+        val s = WeeklyHrvStatusAnalyzer.analyze(baseline() + week(normal), 67)
+        assertEquals(0.030, s.zScore!!, eps)
+        assertEquals(0.16, AutonomicMetrics.percentFromBaseline(s)!!, 0.005)
+        assertEquals(SwcStatus.WITHIN_BAND, AutonomicMetrics.swcStatus(s))
     }
 
     @Test
     fun `a high week is above the band`() {
-        val t = AutonomicMetrics.hrvTrend(List(7) { 65.0 }, baseline())!!
-        assertEquals(SwcStatus.ABOVE_BAND, t.swcStatus)
-        assertTrue(t.z!! > 0)
+        val s = WeeklyHrvStatusAnalyzer.analyze(baseline() + week(List(7) { 65.0 }), 67)
+        assertEquals(SwcStatus.ABOVE_BAND, AutonomicMetrics.swcStatus(s))
     }
 
     @Test
-    fun `geometric means are reported in milliseconds`() {
-        val t = AutonomicMetrics.hrvTrend(low, baseline())!!
-        assertEquals(exp(mu), t.baselineRmssdMs, 1e-9)
-        assertEquals(exp(t.lnMean7), t.weeklyRmssdMs, 1e-9)
+    fun `T-AR01-c and d too few nights give no band and no percentage`() {
+        val fewRecent = WeeklyHrvStatusAnalyzer.analyze(baseline() + week(low.take(3)), 67)
+        assertNull(AutonomicMetrics.swcStatus(fewRecent))
+        assertNull(AutonomicMetrics.percentFromBaseline(fewRecent))
+        val shortBaseline = WeeklyHrvStatusAnalyzer.analyze(baseline(20) + week(low), 67)
+        assertNull(AutonomicMetrics.swcStatus(shortBaseline))
+        assertEquals(SwcStatus.BELOW_BAND, AutonomicMetrics.swcStatus(WeeklyHrvStatusAnalyzer.analyze(baseline(21) + week(low), 67)))
     }
 
     @Test
-    fun `T-AR01-c three recent nights are too few`() {
-        assertNull(AutonomicMetrics.hrvTrend(low.take(3), baseline()))
-        assertTrue(AutonomicMetrics.hrvTrend(low.take(4), baseline()) != null)
-    }
-
-    @Test
-    fun `T-AR01-d twenty baseline nights are too few`() {
-        assertNull(AutonomicMetrics.hrvTrend(low, baseline(20)))
-        assertTrue(AutonomicMetrics.hrvTrend(low, baseline(21)) != null)
-    }
-
-    @Test
-    fun `missing and out-of-range nights are dropped not filled`() {
-        val recent = listOf(41.0, null, 39.0, 0.5, 42.0, 250.0, 38.0, Double.NaN)
-        val t = AutonomicMetrics.hrvTrend(recent, baseline())!!
-        assertEquals(4, t.validNights7)
-        val base = baseline(21) + listOf(null, 0.0, 300.0)
-        assertEquals(21, AutonomicMetrics.hrvTrend(low, base)!!.validBaselineNights)
-        assertNull(AutonomicMetrics.hrvTrend(low, baseline(20) + listOf(null, 0.0, 300.0)))
-    }
-
-    @Test
-    fun `a flat baseline has no z but still reports the percentage`() {
-        val t = AutonomicMetrics.hrvTrend(low, List(30) { 50.0 })!!
-        assertNull(t.z)
-        assertEquals(0.0, t.lnBaselineSd, 1e-12)
-        assertTrue(t.percentFromBaseline < 0)
-    }
-
-    @Test
-    fun `CV7 is unknown when the weekly ln mean is not positive`() {
-        assertNull(AutonomicMetrics.hrvTrend(List(4) { 1.0 }, baseline())!!.cv7LnPercent)
-    }
-
-    @Test
-    fun `dated history uses seven recent nights and the sixty before them`() {
-        val base = baseline().mapIndexed { i, v -> DailyValue(1L + i, v) }       // days 1..60
-        val recent = low.mapIndexed { i, v -> DailyValue(61L + i, v) }           // days 61..67
-        val t = AutonomicMetrics.hrvTrend(base + recent, asOfDay = 67)!!
-        assertEquals(7, t.validNights7)
-        assertEquals(60, t.validBaselineNights)
-        assertEquals(-3.629, t.z!!, eps)
-        // The night before the baseline window is not used.
-        val extra = DailyValue(0, 5.0)
-        assertEquals(60, AutonomicMetrics.hrvTrend(listOf(extra) + base + recent, 67)!!.validBaselineNights)
-    }
-
-    @Test
-    fun `dated history with gaps keeps them as gaps`() {
-        val base = baseline().mapIndexed { i, v -> DailyValue(1L + i, v) }
-        val recent = listOf(DailyValue(61, 41.0), DailyValue(63, 39.0), DailyValue(65, 42.0))
-        assertNull(AutonomicMetrics.hrvTrend(base + recent, 67))
-        assertEquals(4, AutonomicMetrics.hrvTrend(base + recent + DailyValue(67, 40.0), 67)!!.validNights7)
+    fun `CV7 needs four nights, keeps gaps as gaps and is unknown for a non-positive ln mean`() {
+        val gaps = listOf(DailyValue(61, 41.0), DailyValue(63, 39.0), DailyValue(65, 42.0))
+        assertNull(AutonomicMetrics.cv7LnPercent(gaps, 67))
+        assertEquals(true, AutonomicMetrics.cv7LnPercent(gaps + DailyValue(67, 40.0), 67) != null)
+        assertNull(AutonomicMetrics.cv7LnPercent(List(4) { DailyValue(64L + it, 1.0) }, 67))
+        assertNull(AutonomicMetrics.cv7LnPercent(listOf(DailyValue(61, Double.NaN), DailyValue(62, -3.0)) + gaps, 67))
     }
 }

@@ -37,7 +37,11 @@ Sync opens on app start (15 min throttle) and right after onboarding.
   metric study); the Bevel review used it.
 
 ## Open for the owner (details in `docs/OPEN_POINTS.md`)
-- Sleep Poor/Sufficient/Optimal bands (FORMULAS section 4 has proposals); whether manual-workout RPE feeds load.
+- Sleep Poor/Sufficient/Optimal bands: aligned with formula version 5 in `SleepBands` (D15, FORMULAS section 4);
+  `app/.../SleepMapping.kt` still uses the old single 70/85 rule and must switch to `SleepBands` (screen work).
+- Whether manual-workout RPE feeds load.
+- Formula version 5 (sleep score recalibration, D15-D18) is uncommitted on the review branch; research metrics wiring
+  is listed in `docs/RESEARCH_GAP_MATRIX.md`.
 - Citations in `EVIDENCE.md` are unverified.
 - Everything marked `UNVERIFIED-NEEDS-REAL-BAND` / `...REAL-ACCOUNT`: run the diagnostics report on the phone and send it back.
 

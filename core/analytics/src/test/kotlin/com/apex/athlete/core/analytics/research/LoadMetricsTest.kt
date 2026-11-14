@@ -1,11 +1,11 @@
 package com.apex.athlete.core.analytics.research
 
 import com.apex.athlete.core.analytics.load.DailyLoad
+import com.apex.athlete.core.analytics.load.TrainingLoadEngine
 import com.apex.athlete.core.analytics.strain.HeartRateZone
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class LoadMetricsTest {
@@ -56,55 +56,12 @@ class LoadMetricsTest {
     }
 
     @Test
-    fun `T-EX03-a monotony and strain`() {
-        val w = LoadMetrics.fosterWeek(week)!!
-        assertEquals(1600.0, w.weeklyLoad, eps)
-        assertEquals(228.571, w.meanDailyLoad, 1e-3)
-        assertEquals(199.702, w.sdDailyLoad, 1e-3)
-        assertEquals(1.1446, w.monotony!!, 1e-4)
-        assertEquals(1831.3, w.strain!!, 0.05)
-    }
-
-    @Test
-    fun `a week with an unknown day is not a Foster week`() {
-        assertNull(LoadMetrics.fosterWeek(week.toMutableList<Double?>().also { it[3] = null }))
-        assertNull(LoadMetrics.fosterWeek(week.take(6)))
-        assertNull(LoadMetrics.fosterWeek(week + 100.0))
-    }
-
-    @Test
-    fun `invalid loads are rejected`() {
-        assertNull(LoadMetrics.fosterWeek(week.toMutableList().also { it[0] = -5.0 }))
-        assertNull(LoadMetrics.fosterWeek(week.toMutableList().also { it[0] = Double.NaN }))
-    }
-
-    @Test
-    fun `identical daily loads leave monotony undefined not infinite`() {
-        val w = LoadMetrics.fosterWeek(List(7) { 100.0 })!!
-        assertEquals(700.0, w.weeklyLoad, eps)
-        assertNull(w.monotony)
-        assertNull(w.strain)
-        assertNull(LoadMetrics.fosterWeek(List(7) { 0.0 })!!.monotony)
-    }
-
-    @Test
-    fun `identical loads that are not exact in binary still leave monotony undefined`() {
-        // The mean of seven 33.3s differs from 33.3 in the last bit; that must not become a huge ratio.
-        for (v in listOf(33.3, 0.1, 100.1, 1234.567)) {
-            val w = LoadMetrics.fosterWeek(List(7) { v })!!
-            assertNull(w.monotony, "monotony for $v was ${w.monotony}")
-            assertNull(w.strain)
-        }
-    }
-
-    @Test
-    fun `Foster week from a dated history`() {
-        val history = week.mapIndexed { i, v -> DailyLoad(10L + i, v) }
-        assertEquals(1.1446, LoadMetrics.fosterWeek(history, 16)!!.monotony!!, 1e-4)
-        assertNull(LoadMetrics.fosterWeek(history, 17))
-        assertNull(LoadMetrics.fosterWeek(history.filter { it.epochDay != 12L }, 16))
-        assertNull(LoadMetrics.fosterWeek(history.map { if (it.epochDay == 12L) DailyLoad(12, null) else it }, 16))
-        assertNotNull(LoadMetrics.fosterWeek(history + DailyLoad(5, 1.0), 16))
+    fun `T-EX03-a research monotony and strain through the training load engine`() {
+        // Daily loads 300, 0, 450, 200, 0, 500, 150: mean 228.571, SD 199.702, monotony 1.1446, strain 1600 x 1.1446.
+        val r = TrainingLoadEngine().analyze(week.mapIndexed { i, v -> DailyLoad(10L + i, v) }, asOfDay = 16)
+        assertEquals(1600.0, r.weeklyLoad!!, eps)
+        assertEquals(1.1446, r.monotony!!, 1e-4)
+        assertEquals(1831.3, r.fosterStrain!!, 0.05)
     }
 
     @Test

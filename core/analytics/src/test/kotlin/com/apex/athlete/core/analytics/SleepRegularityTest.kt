@@ -35,6 +35,19 @@ class SleepRegularityTest {
     }
 
     @Test
+    fun `T-SL03-b research vector - nights alternating by two hours give 66_67`() {
+        // Research golden vector (formerly tested against the removed research SRI): 23:00-07:00 and 01:00-09:00
+        // alternate, so each consecutive pair disagrees on 2 x 120 = 240 of 1440 minutes:
+        // SRI = 200 * (1 - 240/1440) - 100 = 66.667.
+        val spans = (0 until 7).map { i ->
+            if (i % 2 == 0) span(d0 + i, 23 * 60, 7 * 60, endDayOffset = 1) else span(d0 + i + 1, 60, 9 * 60)
+        }
+        val r = SleepRegularityIndex.compute(spans, d0, allCovered)
+        assertEquals(200.0 * (1 - 240.0 / 1440.0) - 100.0, r.index!!, 1e-9)
+        assertEquals(66.67, r.index!!, 0.005)
+    }
+
+    @Test
     fun `alternating 22-06 and 02-10 nights give 33_3`() {
         // Window i even: 22:00-06:00. Window i odd: 02:00-10:00 of the following morning (the night of window i).
         val spans = (0 until 7).map { i ->
@@ -103,9 +116,10 @@ class SleepRegularityTest {
     fun `the engine scores consistency from the index when one is given`() {
         val night = SleepNightInput(asleepMinutes = 480.0, inBedMinutes = 480.0)
         val engine = SleepScoreEngine()
-        // Duration 100 (0.40), efficiency 100 (0.20), consistency 60 (0.15), restorative absent: (40 + 20 + 9) / 0.75 = 92.
+        // Formula version 5: duration 100 (0.35), efficiency 100 (0.15), consistency 60 (0.10); quality and
+        // restoration absent: (35 + 15 + 6) / 0.60 = 93.333.
         val r = engine.evaluate(night, needMinutes = 480.0, regularityIndex = 60.0)
-        assertEquals(92.0, r.score, 1e-9)
+        assertEquals(56.0 / 0.60, r.score, 1e-9)
         assertEquals(60.0, r.regularityIndex!!, 1e-9)
     }
 

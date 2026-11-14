@@ -54,6 +54,8 @@ data class BaselineSpec(
 object BaselineSpecs {
     val HRV = BaselineSpec(transform = ValueTransform.NATURAL_LOG, relativeSdFloor = 0.05)
     val RESTING_HEART_RATE = BaselineSpec(relativeSdFloor = 0.02)
+    /** Mean heart rate during the main sleep (formula version 5, sleep-score restoration); same floor as the resting heart rate. */
+    val SLEEPING_HEART_RATE = BaselineSpec(relativeSdFloor = 0.02)
     val RESPIRATORY_RATE = BaselineSpec(relativeSdFloor = 0.02)
     val SPO2 = BaselineSpec(absoluteSdFloor = 0.5)
     val SLEEP_DURATION = BaselineSpec(relativeSdFloor = 0.05)

@@ -1,12 +1,12 @@
 # Formulas
 
 Every number the app computes, with the exact formula and the constants in use. All of it lives
-in `:core:analytics` and is covered by unit tests. Formula set version: **4**
+in `:core:analytics` and is covered by unit tests. Formula set version: **5**
 (`ANALYTICS_ALGORITHM_VERSION`). Sources, populations, known errors and evidence grades for every
 constant are in `docs/EVIDENCE.md`; what changed in version 2 and why is in `docs/AUDIT.md`
 ("Formula review"); what changed in version 3 and why is in `docs/DECISIONS.md` (D8) and in
 `docs/review/METRICS_ALIGNMENT.md` / `docs/review/BEVEL_ALIGNMENT.md`; what version 4 adds is below and in
-section 8.
+section 8; what version 5 changes (the sleep score) is below, in section 4 and in `docs/DECISIONS.md` D15.
 
 These are this app's own calculations. They are not WHOOP, Oura, Garmin or Fitbit scores, and
 they are not medical measurements or diagnoses. Constants marked *calibration* set where typical
@@ -16,6 +16,26 @@ must stay "may indicate", never "you are ill".
 
 **Missing data stays missing.** A reading that is absent, `NaN` or infinite is treated as "no
 reading": it is skipped, never replaced by zero, an average or a population norm.
+
+## Changes in version 5
+
+The sleep score was recalibrated (section 4, "Sleep score"; `docs/DECISIONS.md` D15). The owner saw 96 for a night
+the provider scored 70 and felt tired: under version 4 an ordinary 7 h night put three of four parts (60 % of the
+weight) at 100 and no part reflected the body's overnight state. Version 5:
+
+| Item | Version 4 | Version 5 |
+|---|---|---|
+| Parts and weights | duration 0.40, restorative stages 0.25, efficiency 0.20, consistency 0.15 | duration 0.35, **restoration 0.25 (new)**, stage quality 0.15, efficiency 0.15, consistency 0.10 |
+| Duration | `min(100, 100*asleep/need)` | 0 at target - 225 min, 100 at target; target = max(need, 420 min) |
+| Restoration | - | sleeping HR z and ln RMSSD z against the personal mean/SD baselines, breathing-rate penalty |
+| Stage quality | 38-50 % band worth 100, +/-5 per sigma | 80 at the personal usual, +/-10 per sigma; the band only while calibrating, capped at 80 |
+| Efficiency | 0 at 65 %, 100 at 92 % | 0 at 65 %, 75 at 85 %, 100 at 95 % |
+| Result | score | also `behaviouralScore`, `availableWeight`, `confidence`, `restorationZ`, `durationTargetMinutes` |
+| Recovery's sleep input | full sleep score | `behaviouralScore` (no double counting of HRV, heart rate, breathing rate) |
+| Pipeline | - | `SLEEPING_HEART_RATE` analysed against its own baseline (`BaselineSpecs.SLEEPING_HEART_RATE`) |
+
+Stored sleep and recovery scores carry the old version and are replayed. Sleep need, sleep debt, the Sleep Regularity
+Index and every other engine are unchanged.
 
 ## Changes in version 4
 
@@ -154,7 +174,7 @@ The first sum runs over the **weighted** inputs that are present, the second ove
 |---|---|---|---|
 | HRV | weighted | 0.40 | `100 / (1 + e^(-1.2*Z))` |
 | Resting heart rate | weighted | 0.25 | `100 / (1 + e^(1.2*Z'))`, `Z' = max(Z, -2)` |
-| Sleep | weighted | 0.25 | the sleep score (section 4), limited to 0-100 |
+| Sleep | weighted | 0.25 | the **behavioural** sleep score (section 4: duration, stage quality, efficiency, consistency; version 5), limited to 0-100. Not the full score: its restoration part reuses the overnight HRV, heart rate and breathing rate that recovery already weighs |
 | Fatigue rating (optional) | weighted | 0.10 | `100*(10 - rating)/9`, rating limited to 1 (fresh) ... 10 (exhausted) |
 | Breathing rate | penalty-only | 0.05 | `100 - 40*max(0, Z - 1)`, floored at 0 |
 | Skin temperature | penalty-only | 0.05 | `100 - 40*max(0, Z - 1) - 20*max(0, -Z - 1)`, limited to 0-100 |
@@ -268,44 +288,89 @@ recorded nights** in the window the debt is unknown (null): it is not stored, no
 added, and the screen must not show 0. (Version 2 returned 0 with no night and counted only main
 sleeps; the 4-night minimum is *calibration*.)
 
-### Sleep score (0-100)
+### Sleep score (0-100), formula version 5
 
-| Component | Weight | Sub-score |
-|---|---|---|
-| Duration | 0.40 | `min(100, 100 * asleep / need)` |
-| Restorative stages | 0.25 | share of deep + REM: 100 within 38-50 %; `100*share/0.38` below; minus 1 point per percentage point above 50 % (at most 10); then +/-5 points per sigma versus the personal usual (limited to +/-2 sigma) |
-| Efficiency | 0.20 | `asleep / in bed`: 0 at 65 %, 100 at 92 %, linear between; minus 3 points per awakening longer than 3 min beyond the first two (at most 25) |
-| Consistency | 0.15 | Sleep Regularity Index of the last 7 windows, limited to 0-100 (below) |
+Apex's own transparent calculation, not the Fitbit / Google Health score (proprietary, not exposed by the API) and not a
+clinical measurement. Scale: 100 is an ideal night; an ordinary adequate night scores about 75-85; a short or
+physiologically poor night about 55-75. Each part sits near 80 for an ordinary night.
 
-All weights and anchors are *calibration*, not validated sleep-quality cut-offs; consumer-wearable
-sleep stages are not polysomnography stages.
+| Part | Weight | Sub-score (0-100) | Status |
+|---|---|---|---|
+| Duration | 0.35 | target `T = max(need, 420)`; `100*(asleep - (T - 225))/225`, limited to 0-100 | 420 min = adult consensus minimum (Watson et al. 2015, AASM/SRS, adults 18-60; recalled, unverified). 225 min and the linear ramp: *calibration* (7 h against the default 7 h 45 min need scores 80) |
+| Restoration | 0.25 | `z = mean(-z_sleepHR, z_lnRMSSD over those present) - 0.5*max(0, z_breathing - 1)`, each z and the result limited to +/-3; `80 + 20*z` for z >= 0, `80 + 30*z` for z < 0, limited to 0-100 | z from the 30-day mean/SD baselines (section 1; ln RMSSD after Plews et al. 2013, Buchheit 2014). Lower sleeping HR and higher HRV than one's own usual are the direction of better recovery in those works; the weights, 80/20/30 and the breathing threshold and slope are *calibration* |
+| Stage quality | 0.15 | with a personal deep + REM baseline: `80 + 10*z`; while calibrating: 80 inside 38-50 %, `80*share/0.38` below, minus 1 per point above 50 % (at most 10) | *calibration*. Consumer-wearable stages are not polysomnography stages (de Zambotti et al. 2019; Chinoy et al. 2021: moderate agreement), so the absolute band is only a provisional stand-in and can never score above 80 |
+| Efficiency | 0.15 | 0 at <= 65 %, 75 at 85 %, 100 at >= 95 %, linear between; minus 3 per awakening > 3 min beyond the first two (at most 25) | 85 % = the "good sleep quality" indicator of Ohayon et al. 2017 (Sleep Health, National Sleep Foundation expert panel; recalled, unverified). 65/95 and the wake-bout penalty: *calibration* |
+| Consistency | 0.10 | Sleep Regularity Index of the last 7 windows, limited to 0-100 (below) | SRI: Phillips et al. 2017. Using `max(0, SRI)` as the sub-score is *calibration*; a typical adult SRI is around 80 (UK Biobank accelerometry, Windred et al. 2024; recalled, unverified), consistent with the "ordinary night near 80" anchor |
+
+**Behavioural score.** The same weighted mean over duration, stage quality, efficiency and consistency only
+(re-weighted to 1). It is what the recovery score receives as its sleep input (section 2), so overnight HRV, heart rate
+and breathing rate are never counted twice.
+
+**Missing parts.** A part that cannot be computed is never filled in (no z because the night had no reading or the
+baseline is calibrating; no stages; a staged night with neither deep nor REM, which is a staging failure; no time in
+bed; no regularity index). Its weight is shared among the rest and the result carries `availableWeight` (sum of the
+nominal weights present) and `confidence`: HIGH >= 0.85, MEDIUM >= 0.60, LOW below (*calibration*). Breathing rate alone
+never makes restoration available (it only subtracts, so alone it would show a constant 80: a made-up value). The
+daytime resting heart rate is never substituted for a missing sleeping heart rate (a different measurement).
+
+**Worked example (the owner's night).** 420 min asleep of 440 in bed, deep + REM 168 min (40 %), one long awakening,
+need 465 min, identical bedtimes (SRI 100):
+
+| | Duration | Restoration | Quality | Efficiency | Consistency | Score |
+|---|---|---|---|---|---|---|
+| Sub-scores | 100*(420 - 240)/225 = 80 | see rows | 80 (band, calibrating) or 80 (z = 0) | 95.45 % -> 100 | 100 | |
+| No overnight baselines yet | 0.35*80 | - | 0.15*80 | 0.15*100 | 0.10*100 | 65/0.75 = **86.7** (MEDIUM, partial) |
+| HR and HRV at baseline (z = 0) | 28 | 0.25*80 = 20 | 12 | 15 | 10 | **85.0** |
+| Sleeping HR +1.5 sigma, HRV -1.5 sigma: z = -1.5, 80 - 45 = 35 | 28 | 0.25*35 = 8.75 | 12 | 15 | 10 | **73.75** |
+| Version 4, same night | 0.40*90.3 | - | 0.25*100 | 0.20*100 | 0.15*100 | 96 |
+
+Pinned by `SleepEngineTest` (hand-computed golden vectors, monotonicity of restoration, weights and missing-part
+properties) and `SleepBandsTest`.
 
 **Sleep Regularity Index (version 3):** each minute of a local noon-to-noon window is asleep or awake
 (main sleeps and naps), and `SRI = -100 + 200 * P(same state at t and t + 24 h)` over the minute
 pairs of consecutive windows (Phillips et al. 2017, unverified). Seven identical nights give 100;
-alternating 22:00-06:00 and 02:00-10:00 nights give `200*(1 - 480/1440) - 100 = 33.3`. A window with no
-recorded main sleep is skipped together with its pairs (never counted as awake); at least 2 usable
-pairs are needed, otherwise the component drops out. The consistency sub-score is `max(0, SRI)`,
-limited to 100 (*calibration*). Clock times use the local offset recorded with each session. The
-spread of bed and wake times (circular statistics, so 23:50 and 00:10 are 20 minutes apart) is still
-reported for display but no longer scores consistency in the pipeline. Components that cannot be
-computed (no stage data, no index, non-finite inputs) drop out and the remaining weights are scaled up, exactly as for
-recovery. A night counts as sufficient for recovery when it covers at least 90 % of the need.
-`asleep` must be finite; the engine refuses a night with an unknown sleep duration (pass no night).
+alternating 22:00-06:00 and 02:00-10:00 nights give `200*(1 - 480/1440) - 100 = 33.3`; alternating by two hours gives
+66.7 (research vector T-SL03-b). A window with no recorded main sleep is skipped together with its pairs (never counted
+as awake); at least 2 usable pairs are needed, otherwise the part drops out. Clock times use the local offset recorded
+with each session. The spread of bed and wake times (circular statistics, so 23:50 and 00:10 are 20 minutes apart) is
+still reported for display; direct callers of the engine without an index may score it (100 up to 45 min, 0 at 150),
+the pipeline does not. A night counts as sufficient for recovery when it covers at least 90 % of the need. `asleep`
+must be finite; the engine refuses a night with an unknown sleep duration (pass no night).
 
-### Sleep screen bands (Poor / Sufficient / Optimal) - assessment, not implemented
+**Not scored, by decision.** Provider-reported time to fall asleep (`SLEEP_LATENCY`) is stored and shown as reported;
+`SleepNightInput` has no field for it (`SleepEngineTest`). A reported 0 is captioned "not measured" through
+`SleepLatency` (for automatically detected sleep the Fitbit sleep log reports 0; recalled, unverified for the Google
+Health API). The sleeping heart-rate dip (8.3) is shown separately and is not part of the score (blood-pressure concept,
+not validated for wrist heart rate).
 
-The app (`SleepMapping.kt`, `statusOfPercent`) labels a 0-100 figure Poor below 70, Sufficient from 70
-and Optimal from 85, and applies it to five different quantities. These bands are presentation
-choices with no source, and the review finds them defensible only for some of those uses.
+**Known limits.** No part is validated against an outcome; the score is a within-person summary. A very short night is
+held down by duration (35 %) and by the band cap below, not by a hard score cap. Restoration needs 7 nights of sleeping
+heart rate or HRV before it exists.
 
-| Row | Figure the bands are applied to | Assessment | Proposed (calibration, unvalidated) |
-|---|---|---|---|
-| Overall score | composite 0-100 | Acceptable as a display convention, but **leaky**: duration is only 40 % of the score, so with every other component perfect a night of 70 % of need (5 h 25 min) scores 88 (Optimal) and 3 h 53 min scores 80 (Sufficient). Pinned by `SleepEngineTest` | Keep 70/85, and cap the label at Sufficient when the night is below 90 % of need (`sufficientForRecovery` is false) and at Poor below 70 % |
-| Duration | duration sub-score = % of need | **Not defensible**: 70 % of need is Sufficient, yet it is below the 7 h adult floor (Watson 2015) and below the engine's own 90 % "sufficient for recovery" rule | Poor below 90 %, Sufficient 90 to under 100 %, Optimal at 100 % (need met) |
-| Consistency | consistency sub-score | Defensible as a presentation of the sub-score (70 is 76 min of spread, 85 is 61 min); anchors are Apex's | Keep 70/85 |
-| Efficiency | **raw** asleep/in-bed % | Roughly in line with the commonly quoted 85 % efficiency mark (Ohayon et al. 2017, Sleep Health; recalled, unverified), but 70 % is lenient and the row ignores the engine's 65/92 anchors | Use the efficiency sub-score with 70/85 (about 84 % and 88 % efficiency), or raw 75/85 |
-| Restorative | **raw** deep + REM share of sleep, e.g. 45 | **Wrong**: a share of 45 % earns the engine's full marks (benchmark 38-50 %) yet the bands call anything under 70 "Poor"; every normal night shows Poor | Classify the engine's restorative sub-score with 70/85, or use shares: Poor below 30 %, Sufficient 30 to under 38 %, Optimal from 38 % |
+### Sleep debt and guideline shortfall: two distinct figures
+
+- **Sleep debt** (primary, `SleepNeed.accumulatedDebtMinutes`, above): against the personal need, 7 nights, naps count,
+  at most 60 min repaid per night, unknown below 4 recorded nights. Drives the debt surcharge.
+- **Guideline shortfall** (secondary, `research.SleepRegularity.guidelineShortfall`): against 420 min or the user's own
+  target, clipped `sum max(0, target - TST)` and signed `sum (target - TST)`, at least 5 nights, missing nights skipped
+  (*calibration*; Van Dongen et al. 2003 for cumulative restriction effects, not for minute-for-minute repayment).
+  Shown, if at all, as "shortfall against 7 h", never as "debt" (`docs/DECISIONS.md` D17).
+
+### Sleep screen bands (Poor / Sufficient / Optimal), version 5 - implemented in `SleepBands`, not yet wired
+
+The app's `SleepMapping.kt` (`statusOfPercent`) still labels five different figures with one 70/85 rule. `SleepBands`
+(`:core:analytics`, `SleepBandsTest`) holds the aligned rules for the screen to adopt; every threshold is
+*calibration*, not a validated cut-off.
+
+| Row | Figure | Poor | Sufficient | Optimal | Why |
+|---|---|---|---|---|---|
+| Overall | score | < 70 | 70-85 | >= 85 | Matches the version-5 scale: ordinary nights land Sufficient (75-85), nights calmer than usual Optimal, strained or short nights Poor. **Capped by duration**: under 90 % of the target at most Sufficient, under 70 % Poor (the version-4 leak, a 5 h 25 min night labelled Optimal, is closed; version 5 itself already scores it 78.3, not 88) |
+| Duration | asleep / target | < 90 % | 90-100 % | need met | The engine's own 90 % "sufficient for recovery" rule; 70 % of need is below the 7 h floor |
+| Efficiency | raw asleep / in bed | < 75 % | 75-85 % | >= 85 % | 85 % after Ohayon et al. 2017; 75 % *calibration* |
+| Stage quality | QUALITY sub-score | < 70 | 70-85 | >= 85 | The usual share (80) is Sufficient, +0.5 sigma Optimal, below -1 sigma Poor. Never the raw share: a normal 45 % share read as Poor under the old row |
+| Consistency | consistency sub-score (SRI) | < 70 | 70-85 | >= 85 | Typical SRI ~80 is Sufficient |
+| Restoration | combined z | <= -1 sigma (sub-score <= 50) | -1 to +0.5 sigma | >= +0.5 sigma (>= 90) | Outside the personal normal range (+/-1 sigma, section 1) on the strained side is Poor |
 
 ## 5. Training load
 

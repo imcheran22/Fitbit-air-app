@@ -96,6 +96,11 @@ data class DayAnalysis(
     val restingHeartRate: MetricIntelligence,
     /** Which stored series [restingHeartRate] was built from (resting or sleeping heart rate). */
     val restingHeartRateMetric: MetricType,
+    /**
+     * Mean heart rate during the main sleep against its own baseline (formula version 5); feeds the sleep score's
+     * restoration part. Never substituted by the daytime resting heart rate.
+     */
+    val sleepingHeartRate: MetricIntelligence,
     val respiratoryRate: MetricIntelligence,
     val skinTemperature: MetricIntelligence,
     val spo2: MetricIntelligence,
@@ -256,6 +261,10 @@ class DailyIntelligencePipeline(
             RestingHeartRateSeries.SLEEPING -> MetricType.SLEEPING_HEART_RATE
         }
         val rhr = analyzeMetric(rhrMetric, BaselineSpecs.RESTING_HEART_RATE)
+        // Last night's sleeping heart rate against its own baseline (the evaluated day is excluded from the window).
+        // Only this series feeds the sleep score's restoration part: when it is missing the daytime resting heart rate
+        // is not substituted for it (a different measurement).
+        val sleepingHr = analyzeMetric(MetricType.SLEEPING_HEART_RATE, BaselineSpecs.SLEEPING_HEART_RATE)
         val resp = analyzeMetric(MetricType.RESPIRATORY_RATE, BaselineSpecs.RESPIRATORY_RATE)
         val skin = analyzeMetric(MetricType.SKIN_TEMP_DEVIATION, BaselineSpecs.SKIN_TEMPERATURE_DEVIATION)
         val spo2 = analyzeMetric(MetricType.SPO2_AVG, BaselineSpecs.SPO2)
@@ -288,11 +297,15 @@ class DailyIntelligencePipeline(
         val regularity = regularityOf(day, sessions, allSessions)
         val sleepResult = night?.let { n ->
             val timings = sessions.filter { it.epochDay in (day - 6)..day }.map(::timingOf)
-            val restorativeHistory = earlier.filter { it.hasStages && it.minutesAsleep > 0 }
-                .map { DailyValue(it.epochDay, ((it.minutesDeep ?: 0) + (it.minutesRem ?: 0)).toDouble() / it.minutesAsleep) }
-            val restorativeZ = if (n.hasStages && n.minutesAsleep > 0) {
+            // A staged night with neither deep nor REM is a staging failure, not a measurement: it is kept out of the
+            // personal baseline and gets no z-score (the engine leaves the quality part out).
+            fun restorativeMinutes(s: SleepSessionEntity) = (s.minutesDeep ?: 0) + (s.minutesRem ?: 0)
+            fun hasUsableStages(s: SleepSessionEntity) = s.hasStages && s.minutesAsleep > 0 && restorativeMinutes(s) > 0
+            val restorativeHistory = earlier.filter { hasUsableStages(it) }
+                .map { DailyValue(it.epochDay, restorativeMinutes(it).toDouble() / it.minutesAsleep) }
+            val restorativeZ = if (hasUsableStages(n)) {
                 val base = BaselineEngine.baseline(restorativeHistory, day, BaselineSpecs.RESTORATIVE_SLEEP_FRACTION)
-                BaselineEngine.zScore(((n.minutesDeep ?: 0) + (n.minutesRem ?: 0)).toDouble() / n.minutesAsleep, base)
+                BaselineEngine.zScore(restorativeMinutes(n).toDouble() / n.minutesAsleep, base)
             } else null
             sleepEngine.evaluate(
                 night = SleepNightInput(
@@ -308,6 +321,12 @@ class DailyIntelligencePipeline(
                 recentTimings = timings,
                 restorativeZ = restorativeZ,
                 regularityIndex = regularity.index,
+                // Restoration (version 5): the night's own readings against the personal mean/SD baselines. Each z is
+                // null when the night has no reading or the baseline is still calibrating; the engine then leaves the
+                // part out (partial score, lower confidence) rather than assuming a typical night.
+                sleepingHeartRateZ = sleepingHr.zScore,
+                hrvZ = hrv.zScore,
+                respiratoryRateZ = resp.zScore,
             )
         }
 
@@ -367,7 +386,10 @@ class DailyIntelligencePipeline(
             RecoveryInputs(
                 hrvZ = hrv.zScore,
                 restingHeartRateZ = rhr.zScore,
-                sleepScore = sleepResult?.score,
+                // The behavioural sleep score (duration, stages, efficiency, consistency). The full score also contains
+                // last night's heart rate, HRV and breathing rate, which recovery already weighs directly; passing it
+                // would count those signals twice (formula version 5).
+                sleepScore = sleepResult?.behaviouralScore,
                 respiratoryRateZ = resp.zScore,
                 skinTemperatureZ = skin.zScore,
                 subjectiveFatigue = subjectiveFatigue,
@@ -450,6 +472,7 @@ class DailyIntelligencePipeline(
             hrv = hrv,
             restingHeartRate = rhr,
             restingHeartRateMetric = rhrMetric,
+            sleepingHeartRate = sleepingHr,
             respiratoryRate = resp,
             skinTemperature = skin,
             spo2 = spo2,

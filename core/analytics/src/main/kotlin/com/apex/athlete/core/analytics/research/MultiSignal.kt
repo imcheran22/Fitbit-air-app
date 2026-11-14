@@ -13,7 +13,7 @@ enum class PatternSignal(val label: String) {
     RESTING_HEART_RATE("Resting heart rate"),
     /** z of last night's ln RMSSD against the 60-night baseline. */
     HRV_NIGHT("HRV (last night)"),
-    /** [HrvTrend.z]: the 7-night ln RMSSD mean against the 60-night baseline. */
+    /** [com.apex.athlete.core.analytics.trend.WeeklyHrvStatus.zScore]: the 7-night ln RMSSD mean against the 60-night baseline. */
     HRV_WEEKLY("HRV (7-night average)"),
     /** z that held on each of the last two nights; see [MultiSignal.persistentZ]. */
     HRV_LAST_TWO_NIGHTS("HRV (last two nights)"),
@@ -523,10 +523,10 @@ object MultiSignal {
 
     /**
      * MV01 from nightly series. Applies the two-night persistence to resting heart rate, HRV
-     * (last two nights) and breathing rate, and takes the weekly HRV z from [HrvTrend.z].
+     * (last two nights) and breathing rate, and takes the weekly HRV z from the app's weekly HRV status.
      *
      * @param rhrNightlyZ robust z of resting heart rate per night, oldest first.
-     * @param hrvWeeklyZ [HrvTrend.z]; null when the HRV baseline is immature.
+     * @param hrvWeeklyZ [com.apex.athlete.core.analytics.trend.WeeklyHrvStatus.zScore]; null when the HRV baseline is immature.
      * @param hrvNightlyZ z of each night's ln RMSSD, oldest first.
      * @param rrNightlyZ robust z of breathing rate per night, oldest first.
      * @param temperatureDeltaC the provider's nightly minus baseline temperature, °C.

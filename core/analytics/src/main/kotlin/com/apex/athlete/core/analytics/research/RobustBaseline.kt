@@ -42,7 +42,27 @@ object RobustBaselineSpecs {
     val SLEEP_DURATION = RobustBaselineSpec(scaleFloor = 15.0)
     /** PA01. Floor 500 steps. */
     val STEPS = RobustBaselineSpec(scaleFloor = 500.0)
+    /**
+     * HRV on the ln(RMSSD) scale ([com.apex.athlete.core.analytics.baseline.DualBaselines] applies the log). Floor
+     * 0.05 ln units (about 5 %), the same floor as the mean/SD HRV baseline. Calibration choice; not in the research table.
+     */
+    val HRV_LN = RobustBaselineSpec(scaleFloor = 0.05)
+    /** Mean sleeping heart rate; floor 1.0 bpm as for resting heart rate. Calibration choice; not in the research table. */
+    val SLEEPING_HEART_RATE = RobustBaselineSpec(scaleFloor = 1.0)
 }
+
+/**
+ * Median and MAD of a baseline window, without a reading to compare (for "usual (median) X" on a screen).
+ *
+ * @property scale max(1.4826 · MAD, floor), the spread a robust z divides by.
+ */
+data class RobustCenter(
+    val median: Double,
+    val mad: Double,
+    val scale: Double,
+    val floorApplied: Boolean,
+    val validDays: Int,
+)
 
 /**
  * One reading against the robust personal baseline.
@@ -84,6 +104,15 @@ object RobustBaseline {
 
     /** Scales a MAD to a standard deviation under normality (Rousseeuw & Croux 1993). */
     const val MAD_TO_SD = 1.4826
+
+    /** Median, MAD and scale of [baselineValues] (gaps dropped); null below [RobustBaselineSpec.minValidDays] readings. */
+    fun center(baselineValues: List<Double?>, spec: RobustBaselineSpec): RobustCenter? {
+        val valid = baselineValues.filterNotNull().filter { it.isFinite() }
+        if (valid.size < spec.minValidDays) return null
+        val mad = InterpretationStats.medianAbsoluteDeviation(valid)!!
+        val scaled = MAD_TO_SD * mad
+        return RobustCenter(Stats.median(valid)!!, mad, maxOf(scaled, spec.scaleFloor), scaled < spec.scaleFloor, valid.size)
+    }
 
     /**
      * Deviation of [value] from [baselineValues]. Nulls and non-finite entries are gaps and are

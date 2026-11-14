@@ -9,8 +9,13 @@ import kotlin.math.sqrt
  * Version of the formulas in the `research` package. These metrics are additive: they change no
  * existing score, so `ANALYTICS_ALGORITHM_VERSION` is untouched. Bump this constant whenever a
  * formula or default constant in this package changes and record it in docs/RESEARCH_METRICS.md.
+ *
+ * - 1: initial port from the research report.
+ * - 2: de-duplicated against the app's formula set 4/5 (docs/DECISIONS.md D18): the research SRI, heart-rate recovery,
+ *   sleeping dip, weekly ln RMSSD trend and Foster week were removed in favour of the app's engines; `shortfall` renamed
+ *   `guidelineShortfall`; `RobustBaseline.center` and the HRV_LN / SLEEPING_HEART_RATE robust specs added (D16).
  */
-const val RESEARCH_METRICS_VERSION: Int = 1
+const val RESEARCH_METRICS_VERSION: Int = 2
 
 /**
  * Plain description of a set of readings.
