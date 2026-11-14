@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Usual vs average (Recovery) -->
+    <string name="research_usual_title">Your usual vs average</string>
+    <string name="research_usual_label">%1$s, your usual</string>
+    <string name="research_average_label">%1$s, average</string>
+    <string name="research_usual_note">Your usual is the median of your recent days, so one odd night barely moves it. The average is the mean and does follow outliers. Today is placed against your usual and is never a diagnosis.</string>
+    <string name="research_usual_missing">No baseline yet. Apex needs more recorded days before it can say what is usual for you.</string>
+    <string name="research_vs_about">Today: about usual</string>
+    <string name="research_vs_somewhat_higher">Today: somewhat higher than usual</string>
+    <string name="research_vs_much_higher">Today: much higher than usual</string>
+    <string name="research_vs_somewhat_lower">Today: somewhat lower than usual</string>
+    <string name="research_vs_much_lower">Today: much lower than usual</string>
+    <string name="research_vs_none">Today: no reading to compare yet</string>
+
+    <!-- HRV stability -->
+    <string name="research_hrv_title">HRV stability</string>
+    <string name="research_hrv_cv">HRV stability, 7 nights (CV)</string>
+    <string name="research_hrv_cv_missing">Needs several nights of HRV.</string>
+    <string name="research_hrv_cv_note">How much your overnight HRV varied across the last 7 nights, in percent. Lower means steadier.</string>
+    <string name="research_swc_label">Weekly HRV vs normal range</string>
+    <string name="research_swc_within">Within normal range</string>
+    <string name="research_swc_above">Above normal range</string>
+    <string name="research_swc_below">Below normal range</string>
+    <string name="research_swc_missing">Needs a weekly HRV baseline first.</string>
+    <string name="research_hrv_pct">HRV change from baseline</string>
+    <string name="research_hrv_pct_missing">Needs a weekly HRV baseline first.</string>
+    <string name="research_swc_note">Your 7-night HRV against your baseline. The normal range is half a standard deviation either side of it.</string>
+
+    <!-- Sleep -->
+    <string name="sleep_shortfall_row">Shortfall vs 7 h guideline (7 nights)</string>
+    <string name="sleep_shortfall_missing">No sleep recorded in the last 7 nights.</string>
+    <string name="sleep_shortfall_note">Only nights shorter than 7 h add up; a long night does not make up for a short one. Your personal sleep debt above stays the main figure.</string>
+    <string name="sleep_shortfall_missing_nights">%1$d of the last 7 nights have no sleep recorded. They add nothing, so this may understate the shortfall.</string>
+    <string name="sleep_timing_title">Sleep timing</string>
+    <string name="sleep_midpoint_row">Sleep midpoint</string>
+    <string name="sleep_midpoint_missing">No sleep session for this night.</string>
+    <string name="sleep_midpoint_sd_row">Midpoint variability (7 nights)</string>
+    <string name="sleep_midpoint_sd_missing">Needs at least two recorded nights.</string>
+    <string name="sleep_midpoint_sd_nights">Spread of the sleep midpoint over %1$d nights. Smaller is steadier.</string>
+    <string name="sleep_waso_row">Awake after falling asleep (WASO)</string>
+    <string name="sleep_waso_missing">Needs sleep stages for this night.</string>
+    <string name="sleep_awakenings_row">Awakenings per hour</string>
+    <string name="sleep_awakenings_missing">Wake events were not reported for this night.</string>
+    <string name="sleep_timing_note">The midpoint is halfway between falling asleep and waking. Awakenings count wake events longer than 3 minutes per hour asleep. Descriptive only.</string>
+
+    <!-- Activity -->
+    <string name="research_activity_title">Sitting and cadence</string>
+    <string name="research_sedentary_row">Sedentary time (minute steps)</string>
+    <string name="research_bouts_row">Prolonged sitting bouts</string>
+    <string name="research_longest_row">Longest sitting bout</string>
+    <string name="research_breaks_row">Breaks per sedentary hour</string>
+    <string name="research_cadence_row">Peak 30-minute cadence</string>
+    <string name="research_activity_note">Counted from minute-by-minute steps while awake, once the day has finished. A prolonged bout is %1$d minutes or more without steps.</string>
+    <string name="research_activity_note_plain">Counted from minute-by-minute steps while awake, once the day has finished.</string>
+    <string name="research_activity_missing_day">Counted once the day has finished.</string>
+    <string name="research_activity_missing_steps">No step data for this day.</string>
+    <string name="research_activity_missing_coarse">Steps arrived in blocks longer than a minute, so minutes cannot be told apart.</string>
+    <string name="research_activity_missing_few">Fewer than 10 hours of observed waking time.</string>
+    <string name="research_row_missing">Not available for this day.</string>
+
+    <!-- Patterns -->
+    <string name="research_pattern_title">Pattern noticed</string>
+    <string name="research_pattern_signals">Signals that moved together</string>
+    <string name="research_pattern_signal_line">%1$s: %2$s</string>
+    <string name="research_dev_higher">higher than usual</string>
+    <string name="research_dev_lower">lower than usual</string>
+    <string name="research_dev_stable">about usual</string>
+    <string name="research_confidence_high">Confidence: high</string>
+    <string name="research_confidence_moderate">Confidence: moderate</string>
+    <string name="research_confidence_low">Confidence: low</string>
+    <string name="research_pattern_quiet">Data quality or a note you logged is too weak to raise an alert, so this is shown for information only.</string>
+    <string name="research_pattern_description">%1$s. %2$s %3$s: %4$s. %5$s. %6$s</string>
+
+    <!-- How it works -->
+    <string name="howitworks_research_title">Research metrics</string>
+    <string name="howitworks_research_p1">Usual and average: your usual is the median of your recent days and your average is the mean. The usual resists one odd night; the average follows it. Apex shows both and places today against your usual.</string>
+    <string name="howitworks_research_p2">HRV stability is how much your overnight HRV varied over 7 nights. The normal range is half a standard deviation around your baseline; the weekly HRV can sit within, above or below it.</string>
+    <string name="howitworks_research_p3">Shortfall vs 7 h adds up the nights shorter than 7 hours in the last week. It is a secondary view next to your personal sleep debt, not a debt you owe.</string>
+    <string name="howitworks_research_p4">Sleep midpoint is halfway through the night; midpoint variability is how much it moved over 7 nights. WASO is time awake after falling asleep, awakenings per hour counts wake events longer than 3 minutes, and the Sleep Regularity Index is how repeatable your sleep and wake times are.</string>
+    <string name="howitworks_research_p5">Sedentary time, prolonged sitting bouts, the longest bout, breaks per hour and peak 30-minute cadence are counted from minute-by-minute steps for a finished day. When the steps are missing or too coarse, Apex says so instead of guessing.</string>
+    <string name="howitworks_research_p6">A pattern card appears only when several signals moved away from your usual together. It uses cautious wording, is not a diagnosis, and stays quiet when data quality is low.</string>
+</resources>

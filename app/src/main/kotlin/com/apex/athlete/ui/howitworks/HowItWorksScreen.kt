@@ -66,6 +66,13 @@ internal val explainerSections: List<ExplainerSection> = listOf(
         R.string.howitworks_maxhr_title,
         listOf(R.string.howitworks_maxhr_p1, R.string.howitworks_maxhr_p2),
     ),
+    ExplainerSection(
+        R.string.howitworks_research_title,
+        listOf(
+            R.string.howitworks_research_p1, R.string.howitworks_research_p2, R.string.howitworks_research_p3,
+            R.string.howitworks_research_p4, R.string.howitworks_research_p5, R.string.howitworks_research_p6,
+        ),
+    ),
 )
 
 @Composable

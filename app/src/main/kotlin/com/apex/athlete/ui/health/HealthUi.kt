@@ -112,6 +112,21 @@ fun metricTitleRes(metric: MetricType): Int = when (metric) {
     MetricType.STRAIN_SCORE -> R.string.health_metric_strain
     MetricType.DAILY_TRIMP -> R.string.health_metric_trimp
     MetricType.STEPS -> R.string.health_metric_steps
+    MetricType.HRV_CV7_LN -> R.string.health_metric_hrv_cv7
+    MetricType.SLEEP_REGULARITY_INDEX -> R.string.health_metric_sri
+    MetricType.SLEEP_MIDPOINT -> R.string.health_metric_sleep_midpoint
+    MetricType.SLEEP_MIDPOINT_SD_7D -> R.string.health_metric_sleep_midpoint_sd
+    MetricType.GUIDELINE_SHORTFALL_CLIPPED_7D -> R.string.health_metric_shortfall_clipped
+    MetricType.GUIDELINE_SHORTFALL_SIGNED_7D -> R.string.health_metric_shortfall_signed
+    MetricType.SLEEP_WASO -> R.string.health_metric_waso
+    MetricType.AWAKENINGS_PER_HOUR -> R.string.health_metric_awakenings
+    MetricType.SEDENTARY_PROLONGED_BOUTS -> R.string.health_metric_sed_bouts
+    MetricType.SEDENTARY_LONGEST_BOUT -> R.string.health_metric_sed_longest
+    MetricType.SEDENTARY_BREAKS_PER_HOUR -> R.string.health_metric_sed_breaks
+    MetricType.PEAK_CADENCE_30 -> R.string.health_metric_peak_cadence
+    MetricType.HRV_ROBUST_Z -> R.string.health_metric_hrv_rz
+    MetricType.RHR_ROBUST_Z -> R.string.health_metric_rhr_rz
+    MetricType.RESP_RATE_ROBUST_Z -> R.string.health_metric_resp_rz
     else -> R.string.health_metric_other
 }
 

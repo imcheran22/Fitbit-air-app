@@ -69,6 +69,9 @@ import com.apex.athlete.ui.common.LocalFormatter
 import com.apex.athlete.ui.common.MetricStateMapper
 import com.apex.athlete.ui.common.apexViewModel
 import com.apex.athlete.ui.nap.NapsSectionRoute
+import com.apex.athlete.ui.research.ResearchNote
+import com.apex.athlete.ui.research.SleepResearchUi
+import com.apex.athlete.ui.research.withReason
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -157,6 +160,7 @@ fun SleepScreen(
         secondary = {
             if (ui != null) {
                 SectionShell(stringResource(R.string.sleep_need_title)) { NeedCard(ui) }
+                SectionShell(stringResource(R.string.sleep_timing_title)) { TimingCard(ui) }
                 SectionShell(stringResource(R.string.sleep_patterns_title)) { PatternsCard(ui) }
                 SectionShell(stringResource(R.string.sleep_details_title)) { DetailsCard(ui) }
                 SectionShell(stringResource(R.string.sleep_tonight_title)) { TonightCard(ui) }
@@ -423,6 +427,15 @@ private fun NeedCard(ui: SleepUi) {
                 modifier = Modifier.padding(vertical = 4.dp),
             )
         }
+        // Secondary line: shortfall against the 7 h guideline, a different figure from the personal debt above.
+        KeyStatRow(
+            stringResource(R.string.sleep_shortfall_row),
+            ui.research.shortfall.withReason(R.string.sleep_shortfall_missing),
+        )
+        ResearchNote(stringResource(R.string.sleep_shortfall_note))
+        if (ui.research.shortfall is MetricState.Value && ui.research.shortfallMissingNights > 0) {
+            ResearchNote(stringResource(R.string.sleep_shortfall_missing_nights, ui.research.shortfallMissingNights))
+        }
         Text(
             stringResource(if (ui.need.usesDefaultBase) R.string.sleep_need_default_base else R.string.sleep_need_personal_base),
             style = ApexTheme.type.caption,
@@ -432,7 +445,7 @@ private fun NeedCard(ui: SleepUi) {
     }
 }
 
-/** Sleep Regularity Index and the sleeping heart-rate dip: both describe habits and context, never a diagnosis. */
+/** The sleeping heart-rate dip: context, never a diagnosis. */
 @Composable
 private fun PatternsCard(ui: SleepUi) {
     val colors = ApexTheme.colors
@@ -442,15 +455,6 @@ private fun PatternsCard(ui: SleepUi) {
         ui.hrDip.state
     }
     ApexCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
-        KeyStatRow(stringResource(R.string.sleep_regularity_row), ui.regularity, icon = ApexIcons.Sync)
-        Text(
-            stringResource(
-                if (ui.regularity is MetricState.Calibrating) R.string.sleep_regularity_needs else R.string.sleep_regularity_note,
-            ),
-            style = ApexTheme.type.caption,
-            color = colors.mutedForeground,
-            modifier = Modifier.padding(vertical = 4.dp),
-        )
         KeyStatRow(stringResource(R.string.sleep_dip_row), dipState, icon = ApexIcons.Heart)
         val category = ui.hrDip.category
         if (category != null && dipState is MetricState.Value) {
@@ -462,6 +466,31 @@ private fun PatternsCard(ui: SleepUi) {
             color = colors.mutedForeground,
             modifier = Modifier.padding(vertical = 8.dp),
         )
+    }
+}
+
+/** Midpoint, its 7-night variability, raw Sleep Regularity Index, WASO and awakenings per hour. Descriptive, never a diagnosis. */
+@Composable
+private fun TimingCard(ui: SleepUi) {
+    val r = ui.research
+    ApexCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+        ClockRow(stringResource(R.string.sleep_midpoint_row), r.midpointMinute, R.string.sleep_midpoint_missing)
+        KeyStatRow(stringResource(R.string.sleep_midpoint_sd_row), r.midpointSd.withReason(R.string.sleep_midpoint_sd_missing), icon = ApexIcons.Moon)
+        val nights = r.midpointSdNights
+        if (nights != null && r.midpointSd is MetricState.Value) ResearchNote(stringResource(R.string.sleep_midpoint_sd_nights, nights))
+        KeyStatRow(stringResource(R.string.sleep_regularity_row), ui.regularity, icon = ApexIcons.Sync)
+        ResearchNote(
+            stringResource(
+                if (ui.regularity is MetricState.Calibrating) R.string.sleep_regularity_needs else R.string.sleep_regularity_note,
+            ),
+        )
+        KeyStatRow(stringResource(R.string.sleep_waso_row), r.waso.withReason(R.string.sleep_waso_missing), icon = ApexIcons.Hourglass)
+        KeyStatRow(
+            stringResource(R.string.sleep_awakenings_row),
+            r.awakeningsPerHour.withReason(R.string.sleep_awakenings_missing),
+            icon = ApexIcons.Bolt,
+        )
+        ResearchNote(stringResource(R.string.sleep_timing_note), Modifier.padding(vertical = 4.dp))
     }
 }
 
@@ -518,11 +547,11 @@ private fun TonightCard(ui: SleepUi) {
 
 /** A time of day as a metric: the clock time when known, otherwise `--` with the reason. */
 @Composable
-private fun ClockRow(label: String, minuteOfDay: Int?) {
+private fun ClockRow(label: String, minuteOfDay: Int?, @StringRes missingRes: Int = R.string.sleep_tonight_needs_history) {
     val formatter = LocalFormatter.current
     val colors = ApexTheme.colors
     val state: MetricState = if (minuteOfDay == null) {
-        MetricState.Unavailable(MetricReason.NO_DATA, stringResource(R.string.sleep_tonight_needs_history))
+        MetricState.Unavailable(MetricReason.NO_DATA, stringResource(missingRes))
     } else {
         MetricState.Value(minuteOfDay.toDouble(), 0, null, DataProvenance.MATHEMATICALLY_DERIVED)
     }
@@ -615,6 +644,15 @@ private fun previewUi(): SleepUi {
         regularity = MetricState.Value(82.0, 0, null, derived),
         hrDip = HrDipUi(MetricState.Value(11.4, 1, "%", derived), DipCategory.DIPPER, null),
         debt = MetricState.Calibrating(null),
+        research = SleepResearchUi(
+            shortfall = MetricState.Value(1.4, 1, "h", derived),
+            shortfallMissingNights = 1,
+            midpointMinute = 3 * 60 + 20,
+            midpointSd = MetricState.Value(38.0, 0, "min", derived),
+            midpointSdNights = 6,
+            waso = MetricState.Unavailable(MetricReason.NO_DATA),
+            awakeningsPerHour = MetricState.Value(1.2, 1, "/h", derived),
+        ),
     )
 }
 
@@ -629,10 +667,10 @@ private fun PreviewBody(dark: Boolean) {
     }
 }
 
-@Preview(name = "Sleep dark", heightDp = 2200)
+@Preview(name = "Sleep dark", heightDp = 2800)
 @Composable
 private fun SleepPreviewDark() = PreviewBody(dark = true)
 
-@Preview(name = "Sleep light", heightDp = 2200)
+@Preview(name = "Sleep light", heightDp = 2800)
 @Composable
 private fun SleepPreviewLight() = PreviewBody(dark = false)

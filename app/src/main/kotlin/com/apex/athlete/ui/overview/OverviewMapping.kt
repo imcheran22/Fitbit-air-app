@@ -15,6 +15,8 @@ import com.apex.athlete.core.ui.shell.SyncStatus
 import com.apex.athlete.core.ui.state.MetricReason
 import com.apex.athlete.core.ui.state.MetricState
 import com.apex.athlete.ui.common.ApexFormatter
+import com.apex.athlete.ui.research.PatternUi
+import com.apex.athlete.ui.research.patternsOf
 import com.apex.athlete.ui.common.MetricStateMapper
 import java.time.LocalDate
 
@@ -61,6 +63,8 @@ data class OverviewUi(
     val monitorEvaluated: Int,
     val alerts: List<AlertUi>,
     val coachHeadline: String?,
+    /** Detected multi-signal patterns with hedged wording; empty when none was detected. */
+    val patterns: List<PatternUi> = emptyList(),
 )
 
 private val MONITOR_PLACEHOLDERS = listOf(
@@ -171,6 +175,7 @@ fun buildOverviewUi(dashboard: DailyDashboardState?, day: LocalDate, formatter: 
         monitorEvaluated = evaluated,
         alerts = alerts,
         coachHeadline = d.briefing.headline,
+        patterns = patternsOf(a.research),
     )
 }
 

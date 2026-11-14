@@ -81,6 +81,12 @@ fun metricDisplay(
         if (units == UnitSystem.IMPERIAL) MetricDisplay(1, labels.lb) { it * POUNDS_PER_KG } else MetricDisplay(1, labels.kg, identity)
     MetricType.BODY_FAT, MetricType.HR_DIP -> MetricDisplay(1, "%", identity)
     MetricType.BMI -> MetricDisplay(1, "kg/m²", identity)
+    MetricType.HRV_CV7_LN -> MetricDisplay(1, "%", identity)
+    MetricType.GUIDELINE_SHORTFALL_CLIPPED_7D, MetricType.GUIDELINE_SHORTFALL_SIGNED_7D -> MetricDisplay(1, "h", minutesToHours)
+    MetricType.AWAKENINGS_PER_HOUR, MetricType.SEDENTARY_BREAKS_PER_HOUR -> MetricDisplay(1, "/h", identity)
+    MetricType.SLEEP_REGULARITY_INDEX, MetricType.SEDENTARY_PROLONGED_BOUTS -> MetricDisplay(0, null, identity)
+    MetricType.PEAK_CADENCE_30 -> MetricDisplay(0, "steps/min", identity)
+    MetricType.HRV_ROBUST_Z, MetricType.RHR_ROBUST_Z, MetricType.RESP_RATE_ROBUST_Z -> MetricDisplay(1, null, identity)
     MetricType.STRESS_SCORE -> MetricDisplay(1, null, identity)
     else -> MetricDisplay(0, metric.unit.takeIf { it.isNotBlank() }, identity)
 }

@@ -66,7 +66,7 @@ val oauthRedirectScheme: String = redirectSchemeFor(googleClientId, oauthClientT
 // versionCode = major * 10000 + minor * 100 + patch  (0.1.0 -> 100, 1.4.2 -> 10402).
 // Each component stays below 100, so codes are monotonic and readable. Bump here only.
 val versionMajor = 0
-val versionMinor = 1
+val versionMinor = 2
 val versionPatch = 0
 
 android {

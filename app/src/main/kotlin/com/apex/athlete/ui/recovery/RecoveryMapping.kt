@@ -14,9 +14,12 @@ import com.apex.athlete.core.data.repository.RecoveryDetailState
 import com.apex.athlete.core.domain.DataProvenance
 import com.apex.athlete.core.domain.MetricType
 import com.apex.athlete.core.ui.components.GoodDirection
+import com.apex.athlete.core.data.pipeline.ResearchInsights
 import com.apex.athlete.core.ui.state.MetricReason
 import com.apex.athlete.core.ui.state.MetricState
 import com.apex.athlete.ui.common.MetricStateMapper
+import com.apex.athlete.ui.research.RecoveryResearchUi
+import com.apex.athlete.ui.research.recoveryResearchOf
 
 /** One KeyStatRow: today's state against the personal 30-day centre. The sd is half the normal range, on the raw scale. */
 data class RecoveryStatUi(
@@ -55,6 +58,8 @@ data class RecoveryUi(
     val weeklyHrv: WeeklyHrvUi,
     val calibration: List<CalibrationItem>,
     val drivers: List<RecoveryDriverUi>,
+    /** Usual (median) vs average (mean) for HRV, resting and sleeping heart rate and breathing, plus HRV stability. */
+    val research: RecoveryResearchUi = recoveryResearchOf(ResearchInsights.EMPTY),
 )
 
 /** Smallest recovery impact (in points) that counts as having moved the score. */
@@ -177,5 +182,6 @@ fun buildRecoveryUi(detail: RecoveryDetailState, mapper: MetricStateMapper): Rec
         weeklyHrv = weeklyHrvOf(a.weeklyHrvStatus),
         calibration = calibrationOf(a),
         drivers = driversOf(a.recovery),
+        research = recoveryResearchOf(a.research),
     )
 }

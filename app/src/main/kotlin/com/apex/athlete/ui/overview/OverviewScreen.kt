@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -51,6 +52,7 @@ import com.apex.athlete.core.ui.components.KeyStatRow
 import com.apex.athlete.core.ui.components.MetricProvenance
 import com.apex.athlete.core.ui.components.MiniRing
 import com.apex.athlete.core.ui.components.ProvenanceLabel
+import com.apex.athlete.ui.research.PatternCard
 import com.apex.athlete.core.ui.components.ReasonPlaceholder
 import com.apex.athlete.core.ui.components.ReasonSize
 import com.apex.athlete.core.ui.components.ScoreDial
@@ -248,6 +250,7 @@ internal fun OverviewContent(
                     if (ui.alerts.isNotEmpty()) {
                         item(key = "alert") { AlertCard(ui.alerts, actions.onTrend) }
                     }
+                    items(ui.patterns, key = { "pattern-" + it.id }) { PatternCard(it) }
                 }
             }
         }

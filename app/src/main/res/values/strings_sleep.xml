@@ -54,7 +54,7 @@
     <string name="sleep_debt_needs">Needs at least 4 recorded nights in the last week before Apex counts a debt.</string>
 
     <!-- Regularity and heart-rate dip -->
-    <string name="sleep_patterns_title">Regularity and heart rate</string>
+    <string name="sleep_patterns_title">Heart rate during sleep</string>
     <string name="sleep_regularity_row">Sleep regularity</string>
     <string name="sleep_regularity_note">100 means the same sleep and wake times every day, 0 is no more regular than chance, and below 0 is the opposite pattern. Calculated over the last week.</string>
     <string name="sleep_regularity_needs">Needs at least two comparable days of sleep in the last week.</string>

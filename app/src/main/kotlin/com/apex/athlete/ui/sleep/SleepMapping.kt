@@ -16,6 +16,7 @@ import com.apex.athlete.core.analytics.sleep.SleepLatencyNote
 import com.apex.athlete.core.analytics.sleep.SleepScoreConfidence
 import com.apex.athlete.core.analytics.trend.MetricIntelligence
 import com.apex.athlete.core.analytics.sleep.SleepScoreResult
+import com.apex.athlete.core.data.pipeline.ResearchInsights
 import com.apex.athlete.core.data.repository.SleepDetailState
 import com.apex.athlete.core.database.entity.SleepSessionEntity
 import com.apex.athlete.core.database.entity.SleepStageSegmentEntity
@@ -26,6 +27,8 @@ import com.apex.athlete.core.ui.components.ContributorStatus
 import com.apex.athlete.core.ui.state.MetricReason
 import com.apex.athlete.core.ui.state.MetricState
 import com.apex.athlete.ui.common.MetricStateMapper
+import com.apex.athlete.ui.research.SleepResearchUi
+import com.apex.athlete.ui.research.sleepResearchOf
 
 fun SleepBand?.toStatus(): ContributorStatus? = when (this) {
     null -> null
@@ -114,8 +117,8 @@ data class SleepUi(
     val hrDip: HrDipUi,
     /** Net shortfall over the last 7 nights in hours; Calibrating below 4 recorded nights. */
     val debt: MetricState,
-    // TODO: show the secondary "Shortfall vs 7 h guideline" line once DayAnalysis exposes GuidelineSleepShortfall
-    //  (SleepRegularity.guidelineShortfall); it is not in the UI state yet. Personal debt above stays primary.
+    /** Secondary "Shortfall vs 7 h guideline" line (personal debt above stays primary), midpoint, variability, WASO, awakenings. */
+    val research: SleepResearchUi = sleepResearchOf(ResearchInsights.EMPTY),
 )
 
 /**
@@ -303,5 +306,6 @@ fun buildSleepUi(detail: SleepDetailState, mapper: MetricStateMapper): SleepUi {
         regularity = sleepRegularityState(a.sleepRegularity),
         hrDip = hrDipOf(a.heartRateDip),
         debt = sleepDebtState(a.sleepNeedTonight.accumulatedDebtMinutes),
+        research = sleepResearchOf(a.research),
     )
 }

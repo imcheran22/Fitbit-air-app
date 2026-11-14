@@ -53,6 +53,8 @@ import com.apex.athlete.ui.health.HealthThemePreviews
 import com.apex.athlete.ui.health.metricTitleRes
 import kotlinx.coroutines.flow.map
 import com.apex.athlete.core.data.store.StoreStatus
+import com.apex.athlete.ui.research.ActivityResearchCard
+import com.apex.athlete.ui.research.ActivityResearchUi
 import java.time.LocalDate
 
 /** Activity detail: the day's totals and active minutes, and a 7, 30 or 90 day history of any figure. */
@@ -139,6 +141,7 @@ internal fun ActivityDetailScreen(
                 if (shown.isProvisional) Caption(stringResource(R.string.detail_provisional_note))
             }
             SectionShell(stringResource(R.string.activitydetail_section_minutes)) { RowsCard(shown.levels) }
+            SectionShell(stringResource(R.string.research_activity_title)) { ActivityResearchCard(shown.research) }
             SectionShell(stringResource(R.string.activitydetail_section_history)) {
                 ChoiceScrollRow(
                     options = ACTIVITY_CHART_METRICS.map { m ->
@@ -208,6 +211,17 @@ private fun previewUi(provisional: Boolean) = ActivityDetailUi(
         ActivityRowUi(MetricType.SEDENTARY_MINUTES, MetricState.Unavailable(detail = "Counted once the day has finished.")),
     ),
     isProvisional = provisional,
+    research = if (provisional) {
+        val none = MetricState.Unavailable(MetricReason.NO_DATA)
+        ActivityResearchUi(none, none, none, none, none, null, R.string.research_activity_missing_day)
+    } else {
+        val derived = DataProvenance.MATHEMATICALLY_DERIVED
+        ActivityResearchUi(
+            MetricState.Value(612.0, 0, "min", derived), MetricState.Value(4.0, 0, null, derived),
+            MetricState.Value(96.0, 0, "min", derived), MetricState.Value(2.1, 1, "/h", derived),
+            MetricState.Value(104.0, 0, "steps/min", derived), 30, null,
+        )
+    },
 )
 
 private fun previewPanel(): SeriesPanel.Ready {

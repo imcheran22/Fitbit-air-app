@@ -2,6 +2,7 @@ package com.apex.athlete.ui.activity
 
 import androidx.compose.runtime.Immutable
 import com.apex.athlete.R
+import com.apex.athlete.core.data.pipeline.ResearchInsights
 import com.apex.athlete.core.data.repository.ACTIVITY_METRICS
 import com.apex.athlete.core.data.repository.ActivityDayState
 import com.apex.athlete.core.data.repository.MetricReading
@@ -10,6 +11,8 @@ import com.apex.athlete.core.ui.state.MetricState
 import com.apex.athlete.ui.common.ActivityRowUi
 import com.apex.athlete.ui.common.ApexFormatter
 import com.apex.athlete.ui.common.activityRows
+import com.apex.athlete.ui.research.ActivityResearchUi
+import com.apex.athlete.ui.research.activityResearchOf
 
 /*
  * Activity detail: the day's totals and active minutes as MetricState rows. Pure mapping, no Compose. A missing figure is
@@ -51,6 +54,8 @@ data class ActivityDetailUi(
     val totals: List<ActivityRowUi>,
     val levels: List<ActivityRowUi>,
     val isProvisional: Boolean,
+    /** Sedentary bouts and peak cadence from minute steps; every figure is missing with a reason when the day cannot give them. */
+    val research: ActivityResearchUi = activityResearchOf(ResearchInsights.EMPTY),
 ) {
     companion object {
         /** Skeletons in the final shape while the day loads. */
@@ -60,12 +65,15 @@ data class ActivityDetailUi(
             totals = ACTIVITY_TOTAL_METRICS.map { ActivityRowUi(it, MetricState.Loading) },
             levels = ACTIVITY_LEVEL_METRICS.map { ActivityRowUi(it, MetricState.Loading) },
             isProvisional = false,
+            research = ActivityResearchUi(
+                MetricState.Loading, MetricState.Loading, MetricState.Loading, MetricState.Loading, MetricState.Loading, null, null,
+            ),
         )
     }
 }
 
 fun buildActivityDetail(s: ActivityDayState, f: ApexFormatter): ActivityDetailUi =
-    buildActivityDetail(s.epochDay, s.isProvisional, s.readings, f)
+    buildActivityDetail(s.epochDay, s.isProvisional, s.readings, f).copy(research = activityResearchOf(s.analysis.research))
 
 /** The same mapping from the three fields it reads, so it can be tested without a full day analysis. */
 fun buildActivityDetail(

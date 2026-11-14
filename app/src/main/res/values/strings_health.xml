@@ -25,6 +25,21 @@
     <string name="health_metric_strain">Strain</string>
     <string name="health_metric_trimp">Training load</string>
     <string name="health_metric_steps">Steps</string>
+    <string name="health_metric_hrv_cv7">HRV stability (7 nights)</string>
+    <string name="health_metric_sri">Sleep regularity</string>
+    <string name="health_metric_sleep_midpoint">Sleep midpoint</string>
+    <string name="health_metric_sleep_midpoint_sd">Sleep midpoint variability</string>
+    <string name="health_metric_shortfall_clipped">Shortfall vs 7 h (7 nights)</string>
+    <string name="health_metric_shortfall_signed">Net sleep vs 7 h (7 nights)</string>
+    <string name="health_metric_waso">Awake after falling asleep</string>
+    <string name="health_metric_awakenings">Awakenings per hour</string>
+    <string name="health_metric_sed_bouts">Prolonged sitting bouts</string>
+    <string name="health_metric_sed_longest">Longest sitting bout</string>
+    <string name="health_metric_sed_breaks">Breaks per sedentary hour</string>
+    <string name="health_metric_peak_cadence">Peak 30-minute cadence</string>
+    <string name="health_metric_hrv_rz">HRV vs usual (robust z)</string>
+    <string name="health_metric_rhr_rz">Resting heart rate vs usual (robust z)</string>
+    <string name="health_metric_resp_rz">Breathing rate vs usual (robust z)</string>
     <string name="health_metric_other">Metric</string>
 
     <!-- Metric names added with the activity, body, vitals and stress streams -->

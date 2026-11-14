@@ -61,6 +61,8 @@ import com.apex.athlete.navigation.ApexNavigator
 import com.apex.athlete.ui.common.ApexFormatter
 import com.apex.athlete.ui.common.LocalFormatter
 import com.apex.athlete.ui.common.MetricStateMapper
+import com.apex.athlete.ui.research.HrvStabilityCard
+import com.apex.athlete.ui.research.UsualVsAverageCard
 import com.apex.athlete.ui.common.apexViewModel
 import java.time.LocalDate
 import kotlin.math.roundToInt
@@ -144,6 +146,8 @@ fun RecoveryScreen(
                 WeeklyHrvCard(ui.weeklyHrv)
                 FatigueCard(ui.fatigue)
                 if (ui.calibration.isNotEmpty()) CalibrationCard(ui.calibration)
+                SectionShell(stringResource(R.string.research_usual_title)) { UsualVsAverageCard(ui.research.rows) }
+                SectionShell(stringResource(R.string.research_hrv_title)) { HrvStabilityCard(ui.research.hrv) }
             }
         },
         secondary = {
